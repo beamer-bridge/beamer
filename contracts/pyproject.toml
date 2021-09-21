@@ -2,7 +2,7 @@
 name = "raisync"
 version = "0.0.1"
 description = "Bridging rollups with L1 guaranteed security"
-authors = ["Your Name <you@example.com>"]
+authors = ["brainbot technologies"]
 license = "MIT"
 
 [tool.poetry.dependencies]
