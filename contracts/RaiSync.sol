@@ -15,8 +15,7 @@ contract RaiSync {
         uint256 request_id,
         uint256 indexed chain_id,
         address indexed token_address,
-        uint256 amount,
-        bool claimed
+        uint256 amount
     );
 
     uint256 public request_counter;
@@ -41,6 +40,7 @@ contract RaiSync {
         new_request.target_address = target_address;
 
         emit RequestCreated(
+            request_id,
             chain_id,
             token_address,
             amount
