@@ -15,12 +15,13 @@ contract RaiSync {
         uint256 request_id,
         uint256 indexed chain_id,
         address indexed token_address,
-        uint256 amount
+        uint256 amount,
+        bool claimed
     );
 
     uint256 public request_counter;
-    uint256 public claim_counter;
     mapping (uint256 => Request) public requests;
+
 
     function request(
         uint256 chain_id,
@@ -47,18 +48,6 @@ contract RaiSync {
 
         return request_id;
     }
-
-    function claim(
-        uint256 request_id
-    )
-    {}
-
-    function challenge(
-        uint256 claim_id,
-        uint256 challenge_amount
-    )
-    external
-    {}
 
     function withdraw(
         address target_address
