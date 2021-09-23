@@ -31,6 +31,12 @@ contract ClaimManager is Ownable{
         uint256 termination
     );
 
+    event ChallengeOutbid(
+        uint256 claimId,
+        address leader,
+        uint256 highestBid
+    );
+
     event ClaimChallenged(
         uint256 claimId,
         address challenger
@@ -116,6 +122,13 @@ contract ClaimManager is Ownable{
         }
 
         challenge.termination = Math.max(challenge.termination, block.number + challengeExtensionTime);
+
+        emit ChallengeOutbid(
+            claimId,
+            msg.sender,
+            Math.max(challenge.challengerStake, challenge.claimerStake)
+        );
+
     }
 
 
