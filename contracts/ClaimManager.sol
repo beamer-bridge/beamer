@@ -32,13 +32,13 @@ contract ClaimManager is Ownable{
     );
 
     event ChallengeOutbid(
-        uint256 claimId,
+        uint256 indexed claimId,
         address leader,
         uint256 highestBid
     );
 
     event ClaimChallenged(
-        uint256 claimId,
+        uint256 indexed claimId,
         address challenger
     );
 
