@@ -52,7 +52,7 @@ contract ClaimManager is Ownable{
     uint256 public challengeExtensionTime;
     mapping (uint256 => Challenge) public challenges;
 
-    constructor(uint256 _claimStake, uint256 _claimPeriod, uint256 _challengePeriod, uint256 _challengeExtensionTime) public {
+    constructor(uint256 _claimStake, uint256 _claimPeriod, uint256 _challengePeriod, uint256 _challengeExtensionTime) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriod = _challengePeriod;
@@ -115,7 +115,7 @@ contract ClaimManager is Ownable{
         require(msg.sender == claim.claimer || msg.sender == challenge.challenger,"Already challenged by another address");
 
         bool claimerStakeBigger = challenge.claimerStake > challenge.challengerStake;
-        address nextActor = claimerStakeBigger ? challenge.claimer : claim.challenger;
+        address nextActor = claimerStakeBigger ? claim.claimer : challenge.challenger;
         require(msg.sender == nextActor, "Not eligible to outbid");
 
         uint256 minStake = claimerStakeBigger ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
