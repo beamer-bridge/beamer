@@ -58,7 +58,7 @@ contract ClaimManager is Ownable{
         _;
     }
 
-    function claimRequest(uint256 requestId) public payable returns (uint256){
+    function claimRequest(uint256 requestId) external payable returns (uint256){
         require(msg.value == claimStake, "Stake provided not correct");
         claimCounter += 1;
         uint256 newClaimId = claimCounter;
@@ -77,14 +77,13 @@ contract ClaimManager is Ownable{
         return claimCounter;
     }
 
-    function claimSuccessful(uint256 claimId) public validClaimId(claimId) returns (bool){
+    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool){
         require(challenges[claimId].termination == 0 , "Claim was challenged");
 
         return block.number >= claims[claimId].termination;
     }
 
-    function challengeClaim(uint256 claimId) public validClaimId(claimId) payable{
-
+    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
         Challenge storage challenge = challenges[claimId];
 
         require(challenge.challenger == address(0), "Already challenged");
@@ -102,7 +101,7 @@ contract ClaimManager is Ownable{
         );
     }
 
-    function outbidChallenge(uint claimId) validClaimId(claimId) public payable {
+    function outbidChallenge(uint claimId) external validClaimId(claimId) payable {
         Claim storage claim = claims[claimId];
         Challenge storage challenge = challenges[claimId];
         require(challenge.challenger != address(0), "Claim not yet challenged");
@@ -128,8 +127,5 @@ contract ClaimManager is Ownable{
             msg.sender,
             Math.max(challenge.challengerStake, challenge.claimerStake)
         );
-
     }
-
-
 }
