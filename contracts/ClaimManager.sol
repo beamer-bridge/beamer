@@ -42,6 +42,7 @@ contract ClaimManager is Ownable{
         address challenger
     );
 
+
     uint256 public claimStake;
     uint256 public claimPeriod;
     mapping (uint256 => Claim) public claims;
@@ -51,6 +52,12 @@ contract ClaimManager is Ownable{
     uint256 public challengeExtensionTime;
     mapping (uint256 => Challenge) public challenges;
 
+    constructor(uint256 _claimStake, uint256 _claimPeriod, uint256 _challengePeriod, uint256 _challengeExtensionTime) public {
+        claimStake = _claimStake;
+        claimPeriod = _claimPeriod;
+        challengePeriod = _challengePeriod;
+        challengeExtensionTime = _challengeExtensionTime;
+    }
 
 
     modifier validClaimId(uint256 claimId){
@@ -128,7 +135,6 @@ contract ClaimManager is Ownable{
             msg.sender,
             Math.max(challenge.challengerStake, challenge.claimerStake)
         );
-
     }
 
 
