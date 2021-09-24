@@ -32,13 +32,13 @@ contract ClaimManager is Ownable{
     );
 
     event ChallengeOutbid(
-        uint256 claimId,
+        uint256 indexed claimId,
         address leader,
         uint256 highestBid
     );
 
     event ClaimChallenged(
-        uint256 claimId,
+        uint256 indexed claimId,
         address challenger
     );
 
@@ -65,7 +65,7 @@ contract ClaimManager is Ownable{
         _;
     }
 
-    function claimRequest(uint256 requestId) public payable returns (uint256){
+    function claimRequest(uint256 requestId) external payable returns (uint256){
         require(msg.value == claimStake, "Stake provided not correct");
         claimCounter += 1;
         uint256 newClaimId = claimCounter;
@@ -84,14 +84,13 @@ contract ClaimManager is Ownable{
         return claimCounter;
     }
 
-    function claimSuccessful(uint256 claimId) public validClaimId(claimId) returns (bool){
+    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool){
         require(challenges[claimId].termination == 0 , "Claim was challenged");
 
         return block.number >= claims[claimId].termination;
     }
 
-    function challengeClaim(uint256 claimId) public validClaimId(claimId) payable{
-
+    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
         Challenge storage challenge = challenges[claimId];
 
         require(challenge.challenger == address(0), "Already challenged");
@@ -109,16 +108,17 @@ contract ClaimManager is Ownable{
         );
     }
 
-    function outbidChallenge(uint claimId) validClaimId(claimId) public payable {
+    function outbidChallenge(uint claimId) external validClaimId(claimId) payable {
         Claim storage claim = claims[claimId];
         Challenge storage challenge = challenges[claimId];
         require(challenge.challenger != address(0), "Claim not yet challenged");
         require(msg.sender == claim.claimer || msg.sender == challenge.challenger,"Already challenged by another address");
 
-        address is_turn = (challenge.claimerStake > challenge.challengerStake) ? claims[claimId].claimer : challenge.challenger;
-        require(msg.sender == is_turn, "Not eligible to outbid");
+        bool claimerStakeBigger = challenge.claimerStake > challenge.challengerStake;
+        address nextActor = claimerStakeBigger ? challenge.claimer : claim.challenger;
+        require(msg.sender == nextActor, "Not eligible to outbid");
 
-        uint256 minStake = (challenge.claimerStake > challenge.challengerStake) ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
+        uint256 minStake = claimerStakeBigger ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
         require(msg.value > minStake, "Not enough funds provided");
 
         if(msg.sender == claim.claimer){
@@ -136,6 +136,4 @@ contract ClaimManager is Ownable{
             Math.max(challenge.challengerStake, challenge.claimerStake)
         );
     }
-
-
 }
