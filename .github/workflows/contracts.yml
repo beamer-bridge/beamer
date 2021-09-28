@@ -1,0 +1,48 @@
+name: CI Contracts
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - uses: Gr1N/setup-poetry@v7
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pypoetry/virtualenvs
+            ~/.solcx
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+
+      - name: Install ganache
+        run: npm install ganache-cli ganache --global
+
+      - name: Install dependencies
+        run: |
+          cd contracts
+          poetry install
+
+      - name: Install brownie contract libraries
+        run: |
+          cd contracts
+          poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
+
+      - name: Run contract tests
+        run: |
+          cd contracts
+          poetry run brownie test tests
