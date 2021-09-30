@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "./lib/arbitrum/Inbox.sol";
+import "./lib/arbitrum/Outbox.sol";
 import "./ResolveRegistry.sol";
 
 contract L1Resolver{
@@ -43,8 +44,21 @@ contract L1Resolver{
         );
     }
 
-
-
-
-
+    function getOutboxData() public
+    {
+        // this data comes from `NodeInterface.lookupMessageBatchProof`
+        // see also https://github.com/OffchainLabs/arbitrum-tutorials/blob/master/packages/outbox-execute/scripts/exec.js
+        Outbox.executeTransaction(
+            //uint256 outboxIndex,
+            //bytes32[] calldata proof,
+            //uint256 index,
+            //address l2Sender,
+            //address destAddr,
+            //uint256 l2Block,
+            //uint256 l1Block,
+            //uint256 l2Timestamp,
+            //uint256 amount,
+            //bytes calldata calldataForL1
+        );
+    }
 }
