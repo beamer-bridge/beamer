@@ -9,9 +9,10 @@ contract Fill {
 
     address l1Resolver;
 
-    function fillRequest(uint256 requestId, address token_address, uint256 amount)
+    function fillRequest(uint256 sourceChainId, uint256 requestId, address targetTokenAddress, uint256 amount)
+    external returns (bool)
     {
-        IERC20 token = IERC20(token_address);
+        IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         bytes memory proofData = abi.encodeWithSelector(
@@ -28,5 +29,7 @@ contract Fill {
             l1Resolver, // destination
             proofData // callDataForL1
         );
+
+        return true;
     }
 }

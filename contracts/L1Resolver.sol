@@ -22,9 +22,13 @@ contract L1Resolver{
         arbitrumInbox = IInbox(arbitrumInboxAddress);
     }
 
-    function resolve(uint256 requestId, address eligibleClaimer, uint256 maxSubmissionCost, uint256 maxGas, uint256 gasPriceBid) external {
-
-        bytes memory resolveData = abi.encodeWithSelector(ResolveRegistry.resolveRequest.selector, requestId, eligibleClaimer);
+    function resolve(uint256 fillChainId, uint256 requestId, address eligibleClaimer, uint256 maxSubmissionCost, uint256 maxGas, uint256 gasPriceBid) external {
+        // TODO: use `fillChainId` here to select correct `ResolveRegistry`
+        bytes memory resolveData = abi.encodeWithSelector(
+            ResolveRegistry.resolveRequest.selector,
+            requestId,
+            eligibleClaimer
+        );
 
         uint256 ticketID = arbitrumInbox.createRetryableTicket(
             arbitrumResolveRegistry,
