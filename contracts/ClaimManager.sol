@@ -17,7 +17,7 @@ contract ClaimManager is Ownable{
         uint256 termination;
     }
 
-    struct Challenge{
+    struct Challenge {
         address challenger;
         uint256 challengerStake;
         uint256 claimerStake;
