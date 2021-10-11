@@ -7,6 +7,9 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+flake8 = "^4.0.1"
+flake8-tuple = "^0.4.1"
+flake8-bugbear = "^21.9.2"
 
 [tool.poetry.dev-dependencies]
 eth-brownie = "^1.16.4"

@@ -41,6 +41,7 @@ jobs:
         run: |
           cd contracts
           poetry run black --check .
+          poetry run flake8 .
 
       - name: Install brownie contract libraries
         run: |
