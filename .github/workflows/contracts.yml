@@ -37,6 +37,11 @@ jobs:
           cd contracts
           poetry install
 
+      - name: Lint
+        run: |
+          cd contracts
+          poetry run black --check .
+
       - name: Install brownie contract libraries
         run: |
           cd contracts
