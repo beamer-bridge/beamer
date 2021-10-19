@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
@@ -24,12 +22,14 @@ jobs:
         with:
           python-version: 3.9
       - uses: Gr1N/setup-poetry@v7
-      - uses: actions/cache@v2
+
+      - name: Cache Python packages
+        uses: actions/cache@v2
         with:
           path: |
             ~/.cache/pypoetry/virtualenvs
             ~/.solcx
-          key: ${{ runner.os }}-poetry-${{ hashFiles('~/raisync/contracts/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('contracts/poetry.lock') }}
 
       - name: Install ganache
         run: npm install ganache-cli ganache --global
@@ -45,7 +45,15 @@ jobs:
           poetry run black --check .
           poetry run flake8 .
 
+      - name: Cache brownie packages
+        id: cache-brownie-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.brownie/packages
+          key: ${{ runner.os }}-brownie-${{ hashFiles('contracts/brownie-config.yaml') }}
+
       - name: Install brownie contract libraries
+        if: steps.cache-brownie-packages.outputs.cache-hit != 'true'
         run: |
           cd contracts
           poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
