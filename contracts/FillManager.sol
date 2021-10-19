@@ -3,12 +3,12 @@ pragma solidity ^0.8.7;
 
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/token/ERC20/IERC20.sol";
 
-interface IProofWriter {
-    function writeProof(address l1Resolver, uint256 requestId) external returns (bool);
+interface IProofSubmitter {
+    function submitProof(address l1Resolver, uint256 requestId) external returns (bool);
 }
 
-contract DummyProofWriter {
-    function writeProof(address l1Resolver, uint256 requestId) external returns (bool)
+contract DummyProofSubmitter {
+    function submitProof(address l1Resolver, uint256 requestId) external returns (bool)
     {
         return true;
     }
@@ -16,14 +16,14 @@ contract DummyProofWriter {
 
 contract FillManager {
     address l1Resolver;
-    IProofWriter proofWriter;
+    IProofSubmitter proofSubmitter;
 
     mapping(bytes32 => bool) fills;
 
-    constructor(address _l1Resolver, address _proofWriter)
+    constructor(address _l1Resolver, address _proofSubmitter)
     {
         l1Resolver = _l1Resolver;
-        proofWriter = IProofWriter(_proofWriter);
+        proofSubmitter = IProofSubmitter(_proofSubmitter);
     }
 
     function fillRequest(
@@ -46,6 +46,6 @@ contract FillManager {
         IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
 
-        require(proofWriter.writeProof(l1Resolver, requestId), "Writing proof data failed");
+        require(proofSubmitter.submitProof(l1Resolver, requestId), "Submitting proof data failed");
     }
 }

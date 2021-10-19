@@ -19,13 +19,13 @@ def l1_resolver():
 
 
 @pytest.fixture
-def dummy_proof_writer(DummyProofWriter):
-    return accounts[0].deploy(DummyProofWriter)
+def dummy_proof_submitter(DummyProofSubmitter):
+    return accounts[0].deploy(DummyProofSubmitter)
 
 
 @pytest.fixture
-def fill_manager(FillManager, l1_resolver, dummy_proof_writer):
-    return accounts[0].deploy(FillManager, l1_resolver, dummy_proof_writer.address)
+def fill_manager(FillManager, l1_resolver, dummy_proof_submitter):
+    return accounts[0].deploy(FillManager, l1_resolver, dummy_proof_submitter.address)
 
 
 @pytest.fixture
