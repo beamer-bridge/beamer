@@ -1,0 +1,3 @@
+docker-compose-nobuild.yml and the required env files were taken from the
+Optimism github repo (https://github.com/ethereum-optimism/optimism), branch
+regenesis/0.5.0.
