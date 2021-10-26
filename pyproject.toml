@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "raisync"
+version = "0.0.1"
+description = "Bridging rollups with L1 guaranteed security"
+authors = ["brainbot technologies"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+web3 = "^5.24.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+black = "^21.9b0"
+isort = "^5.9.3"
+flake8 = "^4.0.1"
+flake8-bugbear = "^21.9.2"
+mypy = "^0.910"
+eth-account = "^0.5.6"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+line_length = 99
+profile = "black"
+multi_line_output = 3
