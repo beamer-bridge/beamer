@@ -2,10 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/token/ERC20/IERC20.sol";
-
-interface IProofSubmitter {
-    function submitProof(address l1Resolver, uint256 requestId) external returns (bool);
-}
+import "../interfaces/IProofSubmitter.sol";
 
 contract DummyProofSubmitter {
     function submitProof(address l1Resolver, uint256 requestId) external returns (bool)
