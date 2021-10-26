@@ -1,2 +1,7 @@
-build
+build/
 **/__pycache__/**
+venv/
+.vscode/
+
+.mypy_cache
+.pytest_cache

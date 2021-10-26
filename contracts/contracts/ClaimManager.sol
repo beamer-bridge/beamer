@@ -11,13 +11,13 @@ contract ClaimManager is Ownable{
     using SafeMath for uint256;
     using Math for uint256;
 
-    struct Claim{
+    struct Claim {
         uint256 requestId;
         address claimer;
         uint256 termination;
     }
 
-    struct Challenge{
+    struct Challenge {
         address challenger;
         uint256 challengerStake;
         uint256 claimerStake;
