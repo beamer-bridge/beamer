@@ -1,4 +1,4 @@
-name: CI Contracts
+name: Raisync CI
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,21 +29,13 @@ jobs:
           path: |
             ~/.cache/pypoetry/virtualenvs
             ~/.solcx
-          key: ${{ runner.os }}-poetry-${{ hashFiles('contracts/poetry.lock') }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
       - name: Install ganache
         run: npm install ganache-cli ganache --global
 
       - name: Install dependencies
-        run: |
-          cd contracts
-          poetry install
-
-      - name: Lint
-        run: |
-          cd contracts
-          poetry run black --check .
-          poetry run flake8 .
+        run: poetry install
 
       - name: Cache brownie packages
         id: cache-brownie-packages
@@ -57,6 +49,17 @@ jobs:
         run: |
           cd contracts
           poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
+
+      - name: Lint contracts
+        run: |
+          poetry run black --check contracts
+          poetry run flake8 contracts
+
+      - name: Lint raisync
+        run: |
+          poetry run black --check raisync
+          poetry run flake8 raisync
+          poetry run mypy raisync
 
       - name: Run contract tests
         run: |
