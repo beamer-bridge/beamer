@@ -1,5 +1,6 @@
 from brownie import RequestManager, FillManager, DummyProofSubmitter, accounts
 
+
 def main():
     l1_resolver_address = "0x0000000000000000000000000000000000000001"
 
