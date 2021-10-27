@@ -13,3 +13,4 @@ black:
 	black $(CODE_DIRS)
 
 format: black
+	isort $(ISORT_PARAMS)
