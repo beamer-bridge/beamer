@@ -1,5 +1,5 @@
-from brownie import accounts
 import brownie
+from brownie import accounts
 
 
 def test_claim_with_different_values(claim_manager, claim_stake):
