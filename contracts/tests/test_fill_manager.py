@@ -1,5 +1,5 @@
-from brownie import accounts
 import brownie
+from brownie import accounts
 
 
 def test_fill_request(fill_manager, token):

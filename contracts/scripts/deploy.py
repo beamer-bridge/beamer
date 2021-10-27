@@ -1,4 +1,4 @@
-from brownie import RequestManager, FillManager, DummyProofSubmitter, accounts
+from brownie import DummyProofSubmitter, FillManager, RequestManager, accounts
 
 
 def main():
