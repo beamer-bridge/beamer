@@ -8,7 +8,7 @@ eth_account.Account.enable_unaudited_hdwallet_features()
 
 
 def test_l2_send_transaction():
-    acc = eth_account.Account.from_mnemonic(_MNEMONIC)
+    acc = eth_account.Account.from_mnemonic(_MNEMONIC)  # pylint: disable=no-value-for-parameter
 
     web3 = Web3(HTTPProvider("http://127.0.0.1:8545"))
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
