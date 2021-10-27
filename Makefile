@@ -1,5 +1,5 @@
 CODE_DIRS = contracts/ raisync/
-ISORT_PARAMS = --ignore-whitespace $(CODE_DIRS)
+ISORT_PARAMS = $(CODE_DIRS)
 
 all: lint
 

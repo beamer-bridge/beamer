@@ -41,3 +41,4 @@ extend-exclude = '''
 line_length = 99
 profile = "black"
 multi_line_output = 3
+ignore_whitespace = true
