@@ -12,6 +12,14 @@ contract DummyProofSubmitter {
 }
 
 contract FillManager {
+
+    event RequestFilled(
+        uint256 indexed requestId,
+        uint256 indexed sourceChainId,
+        address indexed targetTokenAddress,
+        uint256 amount
+    );
+
     address l1Resolver;
     IProofSubmitter proofSubmitter;
 
@@ -39,6 +47,8 @@ contract FillManager {
         );
         require(!fills[requestHash], "Already filled");
         fills[requestHash] = true;
+
+        emit RequestFilled(requestId, sourceChainId, targetTokenAddress, amount);
 
         IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
