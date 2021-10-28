@@ -37,7 +37,6 @@ enable=
     inconsistent-return-statements,
     no-member,
     no-self-use,
-    no-value-for-parameter,
     pointless-statement,
     redefined-builtin,
     reimported,
