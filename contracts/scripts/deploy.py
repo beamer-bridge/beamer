@@ -1,4 +1,4 @@
-from brownie import DummyProofSubmitter, FillManager, RequestManager, accounts
+from brownie import DummyProofSubmitter, FillManager, MintableToken, RequestManager, accounts
 
 
 def main():
@@ -6,6 +6,8 @@ def main():
     deployer = accounts.at("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
 
     l1_resolver_address = "0x0000000000000000000000000000000000000001"
+
+    MintableToken.deploy(int(1e18), {"from": deployer})
 
     proof_submitter = DummyProofSubmitter.deploy({"from": deployer})
     RequestManager.deploy({"from": deployer})

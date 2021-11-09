@@ -29,5 +29,5 @@ def fill_manager(FillManager, l1_resolver, dummy_proof_submitter):
 
 
 @pytest.fixture
-def token(TestToken):
-    return accounts[0].deploy(TestToken, int(1e18))
+def token(MintableToken):
+    return accounts[0].deploy(MintableToken, int(1e18))
