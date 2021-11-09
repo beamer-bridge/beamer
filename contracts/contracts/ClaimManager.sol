@@ -118,17 +118,17 @@ contract ClaimManager is Ownable{
         require(msg.sender == claim.claimer || msg.sender == challenge.challenger,"Already challenged by another address");
 
         bool claimerStakeBigger = challenge.claimerStake > challenge.challengerStake;
-        address nextActor = claimerStakeBigger ? claim.claimer : challenge.challenger;
+        address nextActor = claimerStakeBigger ? challenge.challenger : claim.claimer;
         require(msg.sender == nextActor, "Not eligible to outbid");
 
         uint256 minStake = claimerStakeBigger ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
         require(msg.value > minStake, "Not enough funds provided");
 
         if (msg.sender == claim.claimer) {
-            challenge.challengerStake += msg.value;
+            challenge.claimerStake += msg.value;
         }
         else {
-            challenge.claimerStake += msg.value;
+            challenge.challengerStake += msg.value;
         }
 
         challenge.termination = Math.max(challenge.termination, block.timestamp + challengePeriodExtension);
