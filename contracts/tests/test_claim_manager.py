@@ -92,4 +92,36 @@ def test_claim_challenge_outbid(claim_manager, claim_stake):
         claim_manager.outbidChallenge(claim_id, {"from": challenger, "value": 1})
     claim_manager.outbidChallenge(claim_id, {"from": challenger, "value": 2})
 
-    # TODO: add tests for termination updates
+
+def test_claim_period_extension(
+    claim_manager, claim_stake, claim_period, challenge_period, challenge_period_extension
+):
+    claimer = accounts[0]
+    challenger = accounts[1]
+
+    claim = claim_manager.claimRequest(123, {"from": claimer, "value": claim_stake})
+    claim_id = claim.return_value
+
+    assert claim.timestamp + claim_period == claim_manager.claims(claim_id)[2]
+
+    challenge = claim_manager.challengeClaim(
+        claim_id, {"from": challenger, "value": claim_stake + 1}
+    )
+    assert challenge.timestamp + challenge_period == claim_manager.challenges(claim_id)[3]
+
+    # Another challenge with big margin to the end of the termination
+    # shouldn't increase the termination
+    claim_manager.outbidChallenge(claim_id, {"from": claimer, "value": 2})
+    assert challenge.timestamp + challenge_period == claim_manager.challenges(claim_id)[3]
+
+    # Timetravel close to end of challenge period
+    chain.mine(timedelta=challenge_period * 8 / 10)
+    rechallenge = claim_manager.outbidChallenge(claim_id, {"from": challenger, "value": 2})
+    assert (
+        rechallenge.timestamp + challenge_period_extension == claim_manager.challenges(claim_id)[3]
+    )
+
+    # Timetravel over the end of challenge period
+    chain.mine(timedelta=challenge_period_extension)
+    with brownie.reverts("Challenge period finished"):
+        claim_manager.outbidChallenge(claim_id, {"from": claimer, "value": 2})
