@@ -31,32 +31,33 @@ contract ClaimManager is Ownable{
         uint256 termination
     );
 
+    event ClaimChallenged(
+        uint256 indexed claimId,
+        address challenger
+    );
+
     event ChallengeOutbid(
         uint256 indexed claimId,
         address leader,
         uint256 highestBid
     );
 
-    event ClaimChallenged(
-        uint256 indexed claimId,
-        address challenger
-    );
-
-
     uint256 public claimStake;
     uint256 public claimPeriod;
-    mapping (uint256 => Claim) public claims;
-    uint256 public claimCounter;
-
     uint256 public challengePeriod;
-    uint256 public challengeExtensionTime;
+    uint256 public challengePeriodExtension;
+
+
+    uint256 public claimCounter;
+    mapping (uint256 => Claim) public claims;
+
     mapping (uint256 => Challenge) public challenges;
 
-    constructor(uint256 _claimStake, uint256 _claimPeriod, uint256 _challengePeriod, uint256 _challengeExtensionTime) {
+    constructor(uint256 _claimStake, uint256 _claimPeriod, uint256 _challengePeriod, uint256 _challengePeriodExtension) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriod = _challengePeriod;
-        challengeExtensionTime = _challengeExtensionTime;
+        challengePeriodExtension = _challengePeriodExtension;
     }
 
 
@@ -65,14 +66,16 @@ contract ClaimManager is Ownable{
         _;
     }
 
-    function claimRequest(uint256 requestId) external payable returns (uint256){
+    function claimRequest(uint256 requestId) external payable returns (uint256) {
         require(msg.value == claimStake, "Stake provided not correct");
+
         claimCounter += 1;
         uint256 newClaimId = claimCounter;
+
         Claim storage newClaim = claims[claimCounter];
         newClaim.requestId = requestId;
         newClaim.claimer = msg.sender;
-        newClaim.termination = block.number + claimPeriod;
+        newClaim.termination = block.timestamp + claimPeriod;
 
         emit ClaimCreated(
             newClaimId,
@@ -84,17 +87,17 @@ contract ClaimManager is Ownable{
         return claimCounter;
     }
 
-    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool){
+    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool) {
         require(challenges[claimId].termination == 0 , "Claim was challenged");
 
-        return block.number >= claims[claimId].termination;
+        return block.timestamp >= claims[claimId].termination;
     }
 
     function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
         Challenge storage challenge = challenges[claimId];
 
         require(challenge.challenger == address(0), "Already challenged");
-        require(block.number < claims[claimId].termination, "Already claimed successfully");
+        require(block.timestamp < claims[claimId].termination, "Already claimed successfully");
         require(msg.value > claimStake, "Not enough funds provided");
 
         challenge.challenger = msg.sender;
@@ -121,14 +124,14 @@ contract ClaimManager is Ownable{
         uint256 minStake = claimerStakeBigger ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
         require(msg.value > minStake, "Not enough funds provided");
 
-        if(msg.sender == claim.claimer){
+        if (msg.sender == claim.claimer) {
             challenge.challengerStake += msg.value;
         }
-        else{
+        else {
             challenge.claimerStake += msg.value;
         }
 
-        challenge.termination = Math.max(challenge.termination, block.number + challengeExtensionTime);
+        challenge.termination = Math.max(challenge.termination, block.timestamp + challengePeriodExtension);
 
         emit ChallengeOutbid(
             claimId,
