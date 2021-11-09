@@ -103,7 +103,7 @@ contract ClaimManager is Ownable{
         challenge.challenger = msg.sender;
         challenge.challengerStake = msg.value;
         challenge.claimerStake = claimStake;
-        challenge.termination = challengePeriod;
+        challenge.termination = block.timestamp + challengePeriod;
 
         emit ClaimChallenged(
             claimId,
@@ -115,7 +115,7 @@ contract ClaimManager is Ownable{
         Claim storage claim = claims[claimId];
         Challenge storage challenge = challenges[claimId];
         require(challenge.challenger != address(0), "Claim not yet challenged");
-        require(msg.sender == claim.claimer || msg.sender == challenge.challenger,"Already challenged by another address");
+        require(msg.sender == claim.claimer || msg.sender == challenge.challenger, "Already challenged by another address");
 
         bool claimerStakeBigger = challenge.claimerStake > challenge.challengerStake;
         address nextActor = claimerStakeBigger ? challenge.challenger : claim.claimer;
@@ -123,6 +123,7 @@ contract ClaimManager is Ownable{
 
         uint256 minStake = claimerStakeBigger ? challenge.claimerStake - challenge.challengerStake : challenge.challengerStake - challenge.claimerStake;
         require(msg.value > minStake, "Not enough funds provided");
+        require(block.timestamp < challenge.termination, "Challenge period finished");
 
         if (msg.sender == claim.claimer) {
             challenge.claimerStake += msg.value;

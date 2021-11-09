@@ -20,12 +20,12 @@ def claim_period():
 
 @pytest.fixture
 def challenge_period():
-    return 100
+    return 200
 
 
 @pytest.fixture
 def challenge_period_extension():
-    return 100
+    return 50
 
 
 @pytest.fixture
