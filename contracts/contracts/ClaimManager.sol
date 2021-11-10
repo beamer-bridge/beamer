@@ -36,7 +36,7 @@ contract ClaimManager is Ownable{
         address challenger
     );
 
-    event ChallengeOutbid(
+    event ChallengeCountered(
         uint256 indexed claimId,
         address leader,
         uint256 highestBid
@@ -111,7 +111,7 @@ contract ClaimManager is Ownable{
         );
     }
 
-    function outbidChallenge(uint claimId) external validClaimId(claimId) payable {
+    function counterChallenge(uint claimId) external validClaimId(claimId) payable {
         Claim storage claim = claims[claimId];
         Challenge storage challenge = challenges[claimId];
         require(challenge.challenger != address(0), "Claim not yet challenged");
@@ -133,7 +133,7 @@ contract ClaimManager is Ownable{
 
         challenge.termination = Math.max(challenge.termination, block.timestamp + challengePeriodExtension);
 
-        emit ChallengeOutbid(
+        emit ChallengeCountered(
             claimId,
             msg.sender,
             Math.max(challenge.challengerStake, challenge.claimerStake)
