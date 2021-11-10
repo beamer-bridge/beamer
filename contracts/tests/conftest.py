@@ -29,11 +29,16 @@ def challenge_period_extension():
 
 
 @pytest.fixture
-def claim_manager(
-    deployer, ClaimManager, claim_stake, claim_period, challenge_period, challenge_period_extension
+def request_manager(
+    deployer,
+    RequestManager,
+    claim_stake,
+    claim_period,
+    challenge_period,
+    challenge_period_extension,
 ):
     return deployer.deploy(
-        ClaimManager, claim_stake, claim_period, challenge_period, challenge_period_extension
+        RequestManager, claim_stake, claim_period, challenge_period, challenge_period_extension
     )
 
 
