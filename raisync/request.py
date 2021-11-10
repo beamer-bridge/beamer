@@ -14,8 +14,8 @@ from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 from raisync.cli import validate_address
-from raisync.logging import setup_logging
 from raisync.typing import Address, ChainId, PrivateKey, TokenAmount
+from raisync.util import setup_logging
 
 log = structlog.get_logger(__name__)
 
