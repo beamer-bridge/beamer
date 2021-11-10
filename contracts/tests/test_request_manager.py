@@ -102,7 +102,7 @@ def test_claim_period_extension(
     claim = request_manager.claimRequest(123, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
 
-    assert claim.timestamp + claim_period == request_manager.claims(claim_id)[2]
+    assert claim.timestamp + claim_period == request_manager.claims(claim_id)[3]
 
     challenge = request_manager.challengeClaim(
         claim_id, {"from": challenger, "value": claim_stake + 1}
@@ -126,3 +126,46 @@ def test_claim_period_extension(
     chain.mine(timedelta=challenge_period_extension)
     with brownie.reverts("Challenge period finished"):
         request_manager.counterChallenge(claim_id, {"from": claimer, "value": 2})
+
+
+def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
+    requester = accounts[1]
+    claimer = accounts[2]
+
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+
+    token.approve(request_manager.address, transfer_amount, {"from": requester})
+    request_tx = request_manager.request(
+        1,
+        token.address,
+        token.address,
+        "0x5d5640575161450A674a094730365A223B226649",
+        transfer_amount,
+        {"from": requester},
+    )
+    request_id = request_tx.return_value
+    claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+    claim_id = claim_tx.return_value
+
+    # Withdraw must fail when claim pariod is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=claim_period)
+    assert request_manager.claimSuccessful(claim_id)
+
+    # Even if the requester calls withdraw, the funds go to the claimer
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(claimer) == transfer_amount
+
+    # Another withdraw must fail
+    with brownie.reverts("Already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
