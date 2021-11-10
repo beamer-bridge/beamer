@@ -12,6 +12,7 @@ contract RequestManager is Ownable {
 
     // Structs
     struct Request {
+        address sourceTokenAddress;
         uint256 targetChainId;
         address targetTokenAddress;
         address targetAddress;
@@ -21,6 +22,7 @@ contract RequestManager is Ownable {
     struct Claim {
         uint256 requestId;
         address claimer;
+        bool withdrawn;
         uint256 termination;
     }
 
@@ -45,6 +47,12 @@ contract RequestManager is Ownable {
         uint256 requestId,
         address claimer,
         uint256 termination
+    );
+
+    event ClaimWithdrawn(
+        uint256 indexed claimId,
+        uint256 requestId,
+        address claimeReceiver
     );
 
     event ClaimChallenged(
@@ -102,6 +110,7 @@ contract RequestManager is Ownable {
         uint256 requestId = requestCounter;
 
         Request storage newRequest = requests[requestId];
+        newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
         newRequest.targetTokenAddress = targetTokenAddress;
         newRequest.targetAddress = targetAddress;
@@ -130,6 +139,7 @@ contract RequestManager is Ownable {
         Claim storage newClaim = claims[claimCounter];
         newClaim.requestId = requestId;
         newClaim.claimer = msg.sender;
+        newClaim.withdrawn = false;
         newClaim.termination = block.timestamp + claimPeriod;
 
         emit ClaimCreated(
@@ -140,12 +150,6 @@ contract RequestManager is Ownable {
         );
 
         return claimCounter;
-    }
-
-    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool) {
-        require(challenges[claimId].termination == 0 , "Claim was challenged");
-
-        return block.timestamp >= claims[claimId].termination;
     }
 
     function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
@@ -193,5 +197,31 @@ contract RequestManager is Ownable {
             msg.sender,
             Math.max(challenge.challengerStake, challenge.claimerStake)
         );
+    }
+
+    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool) {
+        require(challenges[claimId].termination == 0 , "Claim was challenged");
+
+        return block.timestamp >= claims[claimId].termination;
+    }
+
+    function withdraw(uint256 claimId) external validClaimId(claimId) {
+        Claim storage claim = claims[claimId];
+        Request storage request = requests[claim.requestId];
+        require(!claim.withdrawn, "Already withdrawn");
+        require(claimSuccessful(claimId), "Claim period not finished");
+
+        // check if l1 resolved?
+
+        claim.withdrawn = true;
+
+        emit ClaimWithdrawn(
+            claimId,
+            claim.requestId,
+            claim.claimer
+        );
+
+        IERC20 token = IERC20(request.sourceTokenAddress);
+        require(token.transfer(claim.claimer, request.amount), "Transfer failed");
     }
 }
