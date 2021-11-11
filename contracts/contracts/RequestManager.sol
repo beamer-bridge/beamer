@@ -36,6 +36,7 @@ contract RequestManager is Ownable {
         uint256 indexed requestId,
         uint256 indexed targetChainId,
         address indexed targetTokenAddress,
+        address targetAddress,
         uint256 amount
     );
 
@@ -110,6 +111,7 @@ contract RequestManager is Ownable {
             requestId,
             targetChainId,
             targetTokenAddress,
+            targetAddress,
             amount
         );
 
