@@ -35,9 +35,8 @@ def open_keystore(keystore_file: str, password: str) -> PrivateKey:
             sys.exit(1)
 
 
-def get_contract_infos() -> Dict[str, Dict]:
+def get_contract_infos(base_path: Path) -> Dict[str, Dict]:
     contracts = {}
-    base_path = Path("contracts/build/deployments/420")
     for path in base_path.glob("*.json"):
         with open(path) as f:
             contracts_infos = json.load(f)
@@ -55,6 +54,7 @@ def get_contract_infos() -> Dict[str, Dict]:
 
 
 def connect_to_blockchain(
+    contracts_deployment: str,
     eth_rpc: URI,
 ) -> Tuple[Web3, Dict[str, Dict], Dict[str, Contract]]:
     try:
@@ -73,7 +73,7 @@ def connect_to_blockchain(
     # Add POA middleware for geth POA chains, no/op for other chains
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    contract_infos = get_contract_infos()
+    contract_infos = get_contract_infos(Path(contracts_deployment))
     contracts = {
         name: web3.eth.contract(abi=infos["abi"], address=infos["address"])
         for name, infos in contract_infos.items()
@@ -83,6 +83,13 @@ def connect_to_blockchain(
 
 
 @click.command()
+@click.option(
+    "--contracts-deployment",
+    type=str,
+    default=Path(__file__).parent.parent.joinpath("contracts/build/deployments/dev"),
+    metavar="DIR",
+    help="The directory that stores contract deployment files.",
+)
 @click.option(
     "--keystore-file",
     required=True,
@@ -125,6 +132,7 @@ def connect_to_blockchain(
 )
 def submit_request(
     keystore_file: str,
+    contracts_deployment: str,
     password: str,
     eth_rpc: URI,
     target_chain_id: ChainId,
@@ -136,7 +144,7 @@ def submit_request(
     """Register a RaiSync request"""
     setup_logging(log_level="DEBUG", log_json=False)
 
-    web3, _, contracts = connect_to_blockchain(eth_rpc=eth_rpc)
+    web3, _, contracts = connect_to_blockchain(contracts_deployment, eth_rpc=eth_rpc)
     privkey = open_keystore(keystore_file, password)
 
     account = Account.from_key(privkey)
