@@ -1,5 +1,5 @@
 import brownie
-from brownie import accounts, chain
+from brownie import accounts, chain, web3
 
 
 def test_claim_with_different_stakes(request_manager, claim_stake):
@@ -165,6 +165,69 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer) == transfer_amount
+
+    # Another withdraw must fail
+    with brownie.reverts("Already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+
+def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_period):
+    requester = accounts[1]
+    claimer = accounts[2]
+    challenger = accounts[3]
+
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+    assert token.balanceOf(challenger) == 0
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+
+    token.approve(request_manager.address, transfer_amount, {"from": requester})
+    request_tx = request_manager.request(
+        1,
+        token.address,
+        token.address,
+        "0x5d5640575161450A674a094730365A223B226649",
+        transfer_amount,
+        {"from": requester},
+    )
+    request_id = request_tx.return_value
+    claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+    claim_id = claim_tx.return_value
+
+    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+
+    # Withdraw must fail when claim pariod is not over
+    with brownie.reverts("Challenge period not finished"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=challenge_period)
+
+    claimer_eth_balance_before = web3.eth.get_balance(claimer.address)
+    challenger_eth_balance_before = web3.eth.get_balance(challenger.address)
+
+    assert web3.eth.get_balance(request_manager.address) == 2 * claim_stake + 1
+
+    # The challenger sent the last bet
+    # Even if the requester calls withdraw, the funds go to the challenger
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(claimer) == 0
+    assert token.balanceOf(challenger) == transfer_amount
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+
+    claimer_eth_balance_after = web3.eth.get_balance(claimer.address)
+    challenger_eth_balance_after = web3.eth.get_balance(challenger.address)
+
+    assert claimer_eth_balance_before == claimer_eth_balance_after
+    assert challenger_eth_balance_before + 2 * claim_stake + 1 == challenger_eth_balance_after
 
     # Another withdraw must fail
     with brownie.reverts("Already withdrawn"):
