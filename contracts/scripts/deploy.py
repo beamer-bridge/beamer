@@ -1,4 +1,4 @@
-from brownie import DummyProofSubmitter, FillManager, MintableToken, RequestManager, accounts
+from brownie import DummyProofSubmitter, FillManager, MintableToken, RequestManager, Wei, accounts
 
 
 def main():
@@ -10,6 +10,13 @@ def main():
     MintableToken.deploy(int(1e18), {"from": deployer})
 
     proof_submitter = DummyProofSubmitter.deploy({"from": deployer})
-    RequestManager.deploy({"from": deployer})
+
+    claim_stake = Wei("0.01 ether")
+    claim_period = 60 * 60  # 1 hour
+    challenge_period = 60 * 60 * 5  # 5 hours
+    challenge_period_extension = 60 * 60  # 1 hour
+    RequestManager.deploy(
+        claim_stake, claim_period, challenge_period, challenge_period_extension, {"from": deployer}
+    )
 
     FillManager.deploy(l1_resolver_address, proof_submitter.address, {"from": deployer})
