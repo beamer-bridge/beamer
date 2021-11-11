@@ -1,0 +1,7 @@
+{
+  "plugins": [
+    "stylelint-scss",
+    "@namics/stylelint-bem"
+  ],
+  "extends": "stylelint-config-recommended-scss",
+}
