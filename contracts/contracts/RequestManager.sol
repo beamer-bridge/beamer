@@ -205,23 +205,64 @@ contract RequestManager is Ownable {
         return block.timestamp >= claims[claimId].termination;
     }
 
-    function withdraw(uint256 claimId) external validClaimId(claimId) {
+    function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Already withdrawn");
-        require(claimSuccessful(claimId), "Claim period not finished");
 
-        // check if l1 resolved?
+        bool claimChallenged = challenges[claimId].termination != 0;
+        address claimReceiver;
+        if (!claimChallenged) {
+            require(block.timestamp >= claim.termination, "Claim period not finished");
+            claimReceiver = claim.claimer;
+        } else {
+            require(block.timestamp >= challenges[claimId].termination, "Challenge period not finished");
+            // check if l1 resolved
+            Challenge storage challenge = challenges[claimId];
 
+            bool claimerStakeBigger = challenge.claimerStake > challenge.challengerStake;
+            claimReceiver = claimerStakeBigger ? claim.claimer : challenge.challenger;
+        }
+
+        withdraw_claim(claimId, request, claim, claimReceiver);
+        // The claim is set the `withdrawn` state above, so the following effects
+        // needs to happen afterwards to avoid reentrency problems
+        if (claimChallenged) {
+            withdraw_challenge(claimId, claim, claimReceiver);
+        }
+
+        return claimReceiver;
+    }
+
+    function withdraw_claim(
+        uint256 claimId,
+        Request storage request,
+        Claim storage claim,
+        address claimReceiver
+    ) private {
         claim.withdrawn = true;
 
         emit ClaimWithdrawn(
             claimId,
             claim.requestId,
-            claim.claimer
+            claimReceiver
         );
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        require(token.transfer(claim.claimer, request.amount), "Transfer failed");
+        require(token.transfer(claimReceiver, request.amount), "Transfer failed");
+    }
+
+    function withdraw_challenge(
+        uint256 claimId,
+        Claim storage claim,
+        address claimReceiver
+    ) private {
+        Challenge storage challenge = challenges[claimId];
+        uint256 challengeStake = challenge.claimerStake + challenge.challengerStake;
+
+        (bool sent, bytes memory data) = claimReceiver.call{value: challengeStake}("");
+        require(sent, "Failed to send Ether");
+
+        delete challenges[claimId];
     }
 }
