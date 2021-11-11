@@ -5,8 +5,8 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
 
-contract DummyProofSubmitter {
-    function submitProof(address l1Resolver, uint256 requestId) external returns (bool)
+contract DummyProofSubmitter is IProofSubmitter {
+    function submitProof(address l1Resolver, uint256 requestId, uint256 sourceChainId, address eligibleClaimer) external returns (bool)
     {
         return true;
     }
@@ -57,7 +57,7 @@ contract FillManager is Ownable {
         IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
 
-        require(proofSubmitter.submitProof(l1Resolver, requestId), "Submitting proof data failed");
+        require(proofSubmitter.submitProof(l1Resolver, requestId, sourceChainId, msg.sender), "Submitting proof data failed");
     }
 
     function addAllowedLP(address newLP) public onlyOwner {
