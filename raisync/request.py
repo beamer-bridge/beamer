@@ -97,8 +97,7 @@ def connect_to_blockchain(
 @click.option("--eth-rpc", default="http://localhost:8545", type=str, help="Ethereum node RPC URI")
 @click.option(
     "--target-chain-id",
-    type=str,
-    callback=validate_address,
+    type=int,
     help="Id of the target chain",
 )
 @click.option(
@@ -140,10 +139,17 @@ def submit_request(
     web3, _, contracts = connect_to_blockchain(eth_rpc=eth_rpc)
     privkey = open_keystore(keystore_file, password)
 
+    account = Account.from_key(privkey)
+    web3.eth.default_account = account.address
+
     # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(privkey))
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
     request_manager = contracts["RequestManager"]
+    token = contracts["MintableToken"]
+    tx_hash = token.functions.approve(request_manager.address, amount).transact()
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
     tx_hash = request_manager.functions.request(
         target_chain_id,
         source_token_address,
