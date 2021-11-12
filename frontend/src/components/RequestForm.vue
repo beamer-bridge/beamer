@@ -94,7 +94,7 @@ export default class RequestForm extends Vue {
     border-radius: 10px;
     padding: 10px;
     color: $text-color-light;
-    background-color: $dark-background-color;
+    background-color: $background-color-dark;
     height: 40px;
     margin-bottom: 16px;
 

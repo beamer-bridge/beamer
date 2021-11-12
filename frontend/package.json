@@ -10,6 +10,7 @@
     "lint:fix": "vue-cli-service lint --fix && stylelint --fix ./src/**/**.{vue,scss}"
   },
   "dependencies": {
+    "@metamask/detect-provider": "^1.2.0",
     "core-js": "^3.6.5",
     "ethers": "^5.5.1",
     "ress": "^4.0.0",
