@@ -1,4 +1,4 @@
-CODE_DIRS = contracts/ raisync/
+CODE_DIRS = contracts/ raisync/ scripts/
 
 all: lint
 
