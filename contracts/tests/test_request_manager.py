@@ -113,6 +113,12 @@ def test_claim_period_extension(
         request_manager.counterChallenge(claim_id, {"from": claimer, "value": 2})
 
 
+def test_withdraw_nonexistent_claim(request_manager):
+    """Test withdrawing a non-existant claim"""
+    with brownie.reverts("claimId not valid"):
+        request_manager.withdraw(1234, {"from": accounts[0]})
+
+
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
     """Test withdraw when a claim was not challenged"""
     requester = accounts[1]
