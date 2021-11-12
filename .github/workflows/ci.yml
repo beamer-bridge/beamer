@@ -24,6 +24,7 @@ jobs:
       - uses: Gr1N/setup-poetry@v7
 
       - name: Cache Python packages
+        id: cache-python-packages
         uses: actions/cache@v2
         with:
           path: |
@@ -36,6 +37,7 @@ jobs:
 
       - name: Install dependencies
         run: poetry install
+        if: steps.cache-python-packages.outputs.cache-hit != 'true'
 
       - name: Cache brownie packages
         id: cache-brownie-packages
