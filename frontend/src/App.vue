@@ -13,7 +13,7 @@
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: $text-color;
-  background: linear-gradient(90deg, $primary, $dark-background-color);
+  background: linear-gradient(90deg, $primary, $background-color-dark);
   width: 100%;
   min-height: 100vh;
   display: flex;
