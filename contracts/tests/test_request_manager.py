@@ -17,22 +17,6 @@ def test_claim_with_different_stakes(request_manager, claim_stake):
         request_manager.claimRequest(123, {"from": accounts[0]})
 
 
-def test_claim_successful(request_manager, claim_stake, claim_period):
-    """Test that a claim completes after the claim period"""
-    claim = request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake})
-
-    assert not request_manager.claimSuccessful(claim.return_value)
-
-    # Timetravel after claim period
-    chain.mine(timedelta=claim_period)
-
-    assert request_manager.claimSuccessful(claim.return_value)
-
-    # Challenge shouldn't work any more
-    with brownie.reverts("Already claimed successfully"):
-        request_manager.challengeClaim(claim.return_value)
-
-
 def test_claim_challenge(request_manager, claim_stake):
     """Test challenging a claim"""
     claim = request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake})
@@ -157,7 +141,6 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
     # Timetravel after claim period
     chain.mine(timedelta=claim_period)
-    assert request_manager.claimSuccessful(claim_id)
 
     # Even if the requester calls withdraw, the funds go to the claimer
     withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})

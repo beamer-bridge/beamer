@@ -199,12 +199,6 @@ contract RequestManager is Ownable {
         );
     }
 
-    function claimSuccessful(uint256 claimId) public view validClaimId(claimId) returns (bool) {
-        require(challenges[claimId].termination == 0 , "Claim was challenged");
-
-        return block.timestamp >= claims[claimId].termination;
-    }
-
     function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
