@@ -7,13 +7,13 @@ from typing import Dict, Tuple
 import click
 import requests
 import structlog
+from _util import validate_address
 from eth_account import Account
 from eth_typing import URI
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-from raisync.cli import validate_address
 from raisync.typing import Address, ChainId, PrivateKey, TokenAmount
 from raisync.util import setup_logging
 
