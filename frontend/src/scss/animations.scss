@@ -1,0 +1,13 @@
+$spinning-animation: spinning 0.9s linear infinite;
+
+@keyframes spinning {
+  0% {
+    transform: rotate(0deg);
+  }
+  60% {
+    transform: rotate(270deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
