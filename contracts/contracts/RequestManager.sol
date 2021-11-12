@@ -35,32 +35,32 @@ contract RequestManager {
     // Events
     event RequestCreated(
         uint256 indexed requestId,
-        uint256 indexed targetChainId,
-        address indexed targetTokenAddress,
+        uint256 targetChainId,
+        address targetTokenAddress,
         address targetAddress,
         uint256 amount
     );
 
     event ClaimCreated(
-        uint256 indexed claimId,
+        bytes32 indexed claimId,
         uint256 requestId,
         address claimer,
         uint256 termination
     );
 
     event ClaimWithdrawn(
-        uint256 indexed claimId,
+        bytes32 indexed claimId,
         uint256 requestId,
         address claimeReceiver
     );
 
     event ClaimChallenged(
-        uint256 indexed claimId,
+        bytes32 indexed claimId,
         address challenger
     );
 
     event ChallengeCountered(
-        uint256 indexed claimId,
+        bytes32 indexed claimId,
         address leader,
         uint256 highestBid
     );
@@ -73,16 +73,9 @@ contract RequestManager {
 
     // Variables
     uint256 public requestCounter;
-    uint256 public claimCounter;
     mapping (uint256 => Request) public requests;
-    mapping (uint256 => Claim) public claims;
-    mapping (uint256 => Challenge) public challenges;
-
-    // Modifiers
-    modifier validClaimId(uint256 claimId) {
-        require(claimId <= claimCounter && claimId > 0, "claimId not valid");
-        _;
-    }
+    mapping (bytes32 => Claim) public claims;
+    mapping (bytes32 => Challenge) public challenges;
 
     constructor(
         uint256 _claimStake,
@@ -129,13 +122,14 @@ contract RequestManager {
         return requestId;
     }
 
-    function claimRequest(uint256 requestId) external payable returns (uint256) {
+    function claimRequest(uint256 requestId) external payable returns (bytes32) {
         require(msg.value == claimStake, "Stake provided not correct");
 
-        claimCounter += 1;
-        uint256 newClaimId = claimCounter;
+        bytes32 newClaimId = keccak256(abi.encodePacked(requestId, msg.sender));
+        Claim storage newClaim = claims[newClaimId];
 
-        Claim storage newClaim = claims[claimCounter];
+        require(newClaim.requestId == 0, "Request has already been claimed");
+
         newClaim.requestId = requestId;
         newClaim.claimer = msg.sender;
         newClaim.withdrawn = false;
@@ -148,10 +142,10 @@ contract RequestManager {
             newClaim.termination
         );
 
-        return claimCounter;
+        return newClaimId;
     }
 
-    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
+    function challengeClaim(bytes32 claimId) external payable {
         Challenge storage challenge = challenges[claimId];
 
         require(challenge.challenger == address(0), "Already challenged");
@@ -169,7 +163,7 @@ contract RequestManager {
         );
     }
 
-    function counterChallenge(uint256 claimId) external validClaimId(claimId) payable {
+    function counterChallenge(bytes32 claimId) external payable {
         Claim storage claim = claims[claimId];
         Challenge storage challenge = challenges[claimId];
         require(challenge.challenger != address(0), "Claim not yet challenged");
@@ -198,7 +192,7 @@ contract RequestManager {
         );
     }
 
-    function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
+    function withdraw(bytes32 claimId) external returns (address) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Already withdrawn");
@@ -228,7 +222,7 @@ contract RequestManager {
     }
 
     function withdraw_claim(
-        uint256 claimId,
+        bytes32 claimId,
         Request storage request,
         Claim storage claim,
         address claimReceiver
@@ -246,7 +240,7 @@ contract RequestManager {
     }
 
     function withdraw_challenge(
-        uint256 claimId,
+        bytes32 claimId,
         Claim storage claim,
         address claimReceiver
     ) private {
