@@ -80,6 +80,7 @@ def test_claim_counter_challenge(request_manager, claim_stake):
 def test_claim_period_extension(
     request_manager, claim_stake, claim_period, challenge_period, challenge_period_extension
 ):
+    """Test the extension of the claim/challenge period"""
     claimer = accounts[0]
     challenger = accounts[1]
 
@@ -113,6 +114,7 @@ def test_claim_period_extension(
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
+    """Test withdraw when a claim was not challenged"""
     requester = accounts[1]
     claimer = accounts[2]
 
@@ -155,6 +157,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
 
 def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_period):
+    """Test withdraw when a claim was challenged"""
     requester = accounts[1]
     claimer = accounts[2]
     challenger = accounts[3]
