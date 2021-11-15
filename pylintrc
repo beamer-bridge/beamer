@@ -47,6 +47,7 @@ enable=
     unused-import,
     unused-variable,
     useless-object-inheritance,
+    singleton-comparison,
 
 [REPORTS]
 
