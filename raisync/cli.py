@@ -20,7 +20,7 @@ def _load_contracts_info(contracts_path: Path) -> dict[str, Any]:
     for path in contracts_path.glob("*.json"):
         with path.open() as fp:
             info = json.load(fp)
-        contracts[info["contractName"]] = info["deployment"]["address"], info["abi"]
+        contracts[info["contractName"]] = info["deployment"], info["abi"]
     return contracts
 
 

@@ -1,10 +1,9 @@
 import json
 import pathlib
-import queue
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generator
 
 import structlog
 import web3
@@ -40,20 +39,75 @@ _ERC20_ABI = _load_ERC20_abi()
 _STOP_TIMEOUT = 2
 
 
+def _make_contracts(w3: web3.Web3, contracts_info: dict) -> dict:
+    return {
+        name: w3.eth.contract(deployment["address"], abi=abi)
+        for name, (deployment, abi) in contracts_info.items()
+    }
+
+
+class _EventFetcher:
+    def __init__(self, event: web3.contract.ContractEvent, start_block: int):
+        self._event = event
+        self._next_block_number = start_block
+
+    def fetch(self) -> list:
+        block_number = self._event.web3.eth.block_number
+        if block_number >= self._next_block_number:
+            log.debug(
+                "Fetching %s events" % self._event.event_name,
+                from_block=self._next_block_number,
+                to_block=block_number,
+            )
+            events = self._event.getLogs(fromBlock=self._next_block_number, toBlock=block_number)
+            self._next_block_number = block_number + 1
+            if events:
+                log.debug("Got new events", events=events)
+            return events
+        return []
+
+
+class PendingRequests:
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._map: dict[RequestId, Request] = {}
+
+    def add(self, request: Request) -> None:
+        with self._lock:
+            self._map[request.id] = request
+
+    def remove(self, request_id: RequestId) -> None:
+        with self._lock:
+            del self._map[request_id]
+
+    def __contains__(self, request_id: RequestId) -> bool:
+        with self._lock:
+            return request_id in self._map
+
+    def __iter__(self) -> Any:
+        def locked_iter() -> Generator:
+            with self._lock:
+                it = iter(self._map.values())
+                while True:
+                    try:
+                        yield next(it)
+                    except StopIteration:
+                        return
+
+        return locked_iter()
+
+
 class ChainMonitor:
-    def __init__(self, url: str, contracts_info: dict, request_queue: queue.Queue[Request]):
+    def __init__(self, url: str, contracts_info: dict, pending_requests: PendingRequests):
         self.url = url
         self._stop = False
         self._contracts_info = contracts_info
-        self._request_queue = request_queue
+        self._pending_requests = pending_requests
 
     def start(self) -> None:
         name = "ChainMonitor: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
-        self._contracts = {
-            name: self._w3.eth.contract(address, abi=abi)
-            for name, (address, abi) in self._contracts_info.items()
-        }
+        self._contracts = _make_contracts(self._w3, self._contracts_info)
         self._thread = threading.Thread(name=name, target=self._thread_func)
         self._thread.start()
 
@@ -65,12 +119,12 @@ class ChainMonitor:
         chain_id = ChainId(self._w3.eth.chain_id)
         log.info("Chain monitor started", url=self.url, chain_id=chain_id)
         request_manager = self._contracts["RequestManager"]
-        event_filter = request_manager.events.RequestCreated.createFilter(fromBlock=0)
+
+        deployment_block = self._contracts_info["RequestManager"][0]["blockHeight"]
+        fetcher = _EventFetcher(request_manager.events.RequestCreated, deployment_block)
 
         while not self._stop:
-            events = event_filter.get_new_entries()
-            if events:
-                log.debug("Got new events", chain_monitor=self, events=events)
+            events = fetcher.fetch()
             for event in events:
                 args = event.args
                 request = Request(
@@ -81,7 +135,7 @@ class ChainMonitor:
                     target_address=args.targetAddress,
                     amount=args.amount,
                 )
-                self._request_queue.put(request)
+                self._pending_requests.add(request)
             time.sleep(1)
 
 
@@ -91,40 +145,60 @@ class RequestHandler:
         url: str,
         contracts_info: dict,
         account: LocalAccount,
-        request_queue: queue.Queue[Request],
+        pending_requests: PendingRequests,
     ):
         self._stop = False
         self.url = url
         self._account = account
         self._contracts_info = contracts_info
-        self._request_queue = request_queue
+        self._pending_requests = pending_requests
 
     def start(self) -> None:
         name = "RequestHandler: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
         self._w3.eth.default_account = self._account.address
-        self._contracts = {
-            name: self._w3.eth.contract(address, abi=abi)
-            for name, (address, abi) in self._contracts_info.items()
-        }
+        self._contracts = _make_contracts(self._w3, self._contracts_info)
+
+        # Create a thread, but don't start it immediately; wait until we get
+        # the first batch of RequestFilled events in _fill_monitor_thread.
         self._thread = threading.Thread(name=name, target=self._thread_func)
-        self._thread.start()
+
+        self._thread_fill_monitor = threading.Thread(target=self._fill_monitor_thread)
+        self._thread_fill_monitor.start()
 
     def stop(self) -> None:
         self._stop = True
         self._thread.join(_STOP_TIMEOUT)
+        self._thread_fill_monitor.join(_STOP_TIMEOUT)
+
+    def _prune_filled_requests(self, fetcher: _EventFetcher) -> None:
+        events = fetcher.fetch()
+        for event in events:
+            log.debug("Request filled", request_id=event.args.requestId)
+            self._pending_requests.remove(event.args.requestId)
+
+    def _fill_monitor_thread(self) -> None:
+        fill_manager = self._contracts["FillManager"]
+        deployment_block = self._contracts_info["FillManager"][0]["blockHeight"]
+        fetcher = _EventFetcher(fill_manager.events.RequestFilled, deployment_block)
+
+        # We need to first prune all filled requests so that the other thread
+        # can start filling (we do not want to try filling already filled
+        # requests).
+        self._prune_filled_requests(fetcher)
+        self._thread.start()
+
+        while not self._stop:
+            self._prune_filled_requests(fetcher)
+            time.sleep(1)
 
     def _thread_func(self) -> None:
         chain_id = self._w3.eth.chain_id
         log.info("Request handler started", url=self.url, chain_id=chain_id)
         while not self._stop:
-            try:
-                request = self._request_queue.get(timeout=1)
-            except queue.Empty:
-                pass
-            else:
-                log.debug("Got a request", request=request)
+            for request in self._pending_requests:
                 self._fulfill_request(request)
+            time.sleep(1)
 
     def _fulfill_request(self, request: Request) -> None:
         fill_manager = self._contracts["FillManager"]

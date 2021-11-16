@@ -1,4 +1,3 @@
-import queue
 import threading
 from dataclasses import dataclass
 
@@ -6,7 +5,7 @@ import structlog
 from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 
-from raisync.chain import ChainMonitor, Request, RequestHandler
+from raisync.chain import ChainMonitor, PendingRequests, RequestHandler
 from raisync.typing import URL
 
 log = structlog.get_logger(__name__)
@@ -25,12 +24,12 @@ class Node:
         self._config = config
         self._stopped = threading.Event()
         self._stopped.set()
-        self.request_queue: queue.Queue[Request] = queue.Queue()
+        self._pending_requests = PendingRequests()
         self._chain_monitor = ChainMonitor(
-            config.l2a_rpc_url, config.contracts_info, self.request_queue
+            config.l2a_rpc_url, config.contracts_info, self._pending_requests
         )
         self._request_handler = RequestHandler(
-            config.l2b_rpc_url, config.contracts_info, config.account, self.request_queue
+            config.l2b_rpc_url, config.contracts_info, config.account, self._pending_requests
         )
 
     def start(self) -> None:
