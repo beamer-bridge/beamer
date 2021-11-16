@@ -4,10 +4,11 @@ import queue
 import threading
 import time
 from dataclasses import dataclass
+from typing import Any
 
 import structlog
 import web3
-from eth_account import Account
+from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
 
 from raisync.typing import ChainId, RequestId, TokenAmount
@@ -25,7 +26,7 @@ class Request:
     amount: TokenAmount
 
 
-def _load_ERC20_abi():
+def _load_ERC20_abi() -> list[Any]:
     path = pathlib.Path(__file__)
     path = path.parent.parent.joinpath("contracts/abi/StandardToken.json")
     with path.open("rt") as fp:
@@ -40,13 +41,13 @@ _STOP_TIMEOUT = 2
 
 
 class ChainMonitor:
-    def __init__(self, url: str, contracts_info: dict[str, tuple], request_queue: queue.Queue):
+    def __init__(self, url: str, contracts_info: dict, request_queue: queue.Queue[Request]):
         self.url = url
         self._stop = False
         self._contracts_info = contracts_info
         self._request_queue = request_queue
 
-    def start(self):
+    def start(self) -> None:
         name = "ChainMonitor: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
         self._contracts = {
@@ -56,12 +57,12 @@ class ChainMonitor:
         self._thread = threading.Thread(name=name, target=self._thread_func)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop = True
         self._thread.join(_STOP_TIMEOUT)
 
-    def _thread_func(self):
-        chain_id = self._w3.eth.chain_id
+    def _thread_func(self) -> None:
+        chain_id = ChainId(self._w3.eth.chain_id)
         log.info("Chain monitor started", url=self.url, chain_id=chain_id)
         request_manager = self._contracts["RequestManager"]
         event_filter = request_manager.events.RequestCreated.createFilter(fromBlock=0)
@@ -88,9 +89,9 @@ class RequestHandler:
     def __init__(
         self,
         url: str,
-        contracts_info: dict[str, tuple],
-        account: Account,
-        request_queue: queue.Queue,
+        contracts_info: dict,
+        account: LocalAccount,
+        request_queue: queue.Queue[Request],
     ):
         self._stop = False
         self.url = url
@@ -98,7 +99,7 @@ class RequestHandler:
         self._contracts_info = contracts_info
         self._request_queue = request_queue
 
-    def start(self):
+    def start(self) -> None:
         name = "RequestHandler: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
         self._w3.eth.default_account = self._account.address
@@ -109,11 +110,11 @@ class RequestHandler:
         self._thread = threading.Thread(name=name, target=self._thread_func)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop = True
         self._thread.join(_STOP_TIMEOUT)
 
-    def _thread_func(self):
+    def _thread_func(self) -> None:
         chain_id = self._w3.eth.chain_id
         log.info("Request handler started", url=self.url, chain_id=chain_id)
         while not self._stop:
@@ -125,7 +126,7 @@ class RequestHandler:
                 log.debug("Got a request", request=request)
                 self._fulfill_request(request)
 
-    def _fulfill_request(self, request):
+    def _fulfill_request(self, request: Request) -> None:
         fill_manager = self._contracts["FillManager"]
         token = self._w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
 
