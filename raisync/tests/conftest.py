@@ -30,8 +30,8 @@ def l1_resolver():
 @pytest.fixture
 def node(request_manager, fill_manager, token):
     contracts_info = dict(
-        RequestManager=(request_manager.address, request_manager.abi),
-        FillManager=(fill_manager.address, fill_manager.abi),
+        RequestManager=(dict(blockHeight=0, address=request_manager.address), request_manager.abi),
+        FillManager=(dict(blockHeight=0, address=fill_manager.address), fill_manager.abi),
     )
     account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
     token.mint(account.address, 300)
