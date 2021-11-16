@@ -2,7 +2,7 @@ import json
 import sys
 from pathlib import Path
 from pprint import pprint
-from typing import Dict, Tuple
+from typing import Any
 
 import click
 import requests
@@ -35,7 +35,7 @@ def open_keystore(keystore_file: str, password: str) -> PrivateKey:
             sys.exit(1)
 
 
-def get_contract_infos(base_path: Path) -> Dict[str, Dict]:
+def get_contract_infos(base_path: Path) -> dict[str, dict[str, Any]]:
     contracts = {}
     for path in base_path.glob("*.json"):
         with open(path) as f:
@@ -56,7 +56,7 @@ def get_contract_infos(base_path: Path) -> Dict[str, Dict]:
 def connect_to_blockchain(
     contracts_deployment: str,
     eth_rpc: URI,
-) -> Tuple[Web3, Dict[str, Dict], Dict[str, Contract]]:
+) -> tuple[Web3, dict[str, dict[str, Any]], dict[str, Contract]]:
     try:
         provider = HTTPProvider(eth_rpc)
         web3 = Web3(provider)
@@ -140,7 +140,7 @@ def submit_request(
     target_token_address: Address,
     target_address: Address,
     amount: TokenAmount,
-):
+) -> None:
     """Register a RaiSync request"""
     setup_logging(log_level="DEBUG", log_json=False)
 
