@@ -26,4 +26,4 @@ def test_l2_send_transaction():
     signed_txn = acc.sign_transaction(txn)
     txn_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
     receipt = web3.eth.wait_for_transaction_receipt(txn_hash)
-    assert receipt.transactionHash == txn_hash
+    assert receipt.transactionHash == txn_hash  # type: ignore

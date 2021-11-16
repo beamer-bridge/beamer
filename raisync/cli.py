@@ -1,33 +1,36 @@
 import json
 import signal
 from pathlib import Path
+from typing import Any
 
 import click
 import structlog
 from eth_account import Account
+from eth_account.signers.local import LocalAccount
 
 import raisync.util
 from raisync.node import Config, Node
+from raisync.typing import URL
 
 log = structlog.get_logger(__name__)
 
 
-def _load_contracts_info(path):
+def _load_contracts_info(contracts_path: Path) -> dict[str, Any]:
     contracts = {}
-    for path in Path(path).glob("*.json"):
+    for path in contracts_path.glob("*.json"):
         with path.open() as fp:
             info = json.load(fp)
         contracts[info["contractName"]] = info["deployment"]["address"], info["abi"]
     return contracts
 
 
-def _account_from_keyfile(keyfile, password):
+def _account_from_keyfile(keyfile: str, password: str) -> LocalAccount:
     with open(keyfile, "rt") as fp:
         privkey = Account.decrypt(json.load(fp), password)
     return Account.from_key(privkey)
 
 
-def _sigint_handler(node):
+def _sigint_handler(node: Node) -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     log.info("Received SIGINT, shutting down")
     node.stop()
@@ -64,12 +67,18 @@ def _sigint_handler(node):
     help="The directory containing contract deployment files.",
 )
 @click.version_option()
-def main(keystore_file, password, l2a_rpc_url, l2b_rpc_url, contracts_deployment_dir):
+def main(
+    keystore_file: str,
+    password: str,
+    l2a_rpc_url: URL,
+    l2b_rpc_url: URL,
+    contracts_deployment_dir: str,
+) -> None:
     raisync.util.setup_logging(log_level="DEBUG", log_json=False)
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
-    contracts_info = _load_contracts_info(contracts_deployment_dir)
+    contracts_info = _load_contracts_info(Path(contracts_deployment_dir))
     config = Config(
         contracts_info=contracts_info,
         account=account,
