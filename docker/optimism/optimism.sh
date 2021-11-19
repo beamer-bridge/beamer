@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-ROOT=$(dirname $(dirname "$(realpath "$0")"))
-DOCKER_COMPOSE_FILE="${ROOT}/docker/docker-compose-nobuild.yml"
+ROOT=$(dirname $(dirname $(dirname "$(realpath "$0")")))
+DOCKER_COMPOSE_FILE="${ROOT}/docker/optimism/docker-compose-nobuild.yml"
 
 function down {
     echo -e "\nShutting down the end-to-end environment"
