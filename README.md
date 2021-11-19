@@ -2,6 +2,24 @@
 Raisync - Bridging Roll ups with the L1 inherited security
 
 
+### Working with a local Optimism instance
+
+To setup a local Optimism instance and deploy Raisync contracts on it,
+run
+
+```
+sh ./docker/optimism/optimism.sh up
+```
+
+This will start all the required containers, compile and deploy the contracts.
+Note that it takes a while (~1 minute) for all the services to become ready
+before we can deploy the contracts.
+
+To stop and remove all the containers, simply run
+```
+sh ./docker/optimism/optimism.sh down
+```
+
 ### Testing
 
 First make sure raisync is installed:
