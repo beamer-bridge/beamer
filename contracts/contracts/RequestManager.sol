@@ -222,12 +222,12 @@ contract RequestManager {
             claimReceiver = claimerStakeBigger ? claim.claimer : challenge.challenger;
         }
 
-        uint256 ethToTransfer = 0;
+        claim.withdrawn = true;
+        uint256 ethToTransfer = claimStake;
         if (!requestClaimed) {
             request.depositWithdrawn = true;
-            ethToTransfer += claimStake;
+            withdraw_deposit(claimId, request, claim, claimReceiver);
         }
-        withdraw_claim(claimId, request, claim, claimReceiver);
         // The claim is set the `withdrawn` state above, so the following effects
         // needs to happen afterwards to avoid reentrency problems
         if (claimChallenged) {
@@ -240,14 +240,12 @@ contract RequestManager {
         return claimReceiver;
     }
 
-    function withdraw_claim(
+    function withdraw_deposit(
         uint256 claimId,
         Request storage request,
         Claim storage claim,
         address claimReceiver
     ) private {
-        claim.withdrawn = true;
-
         emit ClaimWithdrawn(
             claimId,
             claim.requestId,
