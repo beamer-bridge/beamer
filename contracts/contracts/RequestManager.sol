@@ -16,6 +16,7 @@ contract RequestManager {
         address targetTokenAddress;
         address targetAddress;
         uint256 amount;
+        bool depositWithdrawn;
     }
 
     struct Claim {
@@ -114,6 +115,7 @@ contract RequestManager {
         newRequest.targetTokenAddress = targetTokenAddress;
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
+        newRequest.depositWithdrawn = false;
 
         emit RequestCreated(
             requestId,
@@ -130,6 +132,7 @@ contract RequestManager {
     }
 
     function claimRequest(uint256 requestId) external payable returns (uint256) {
+        require(!requests[requestId].depositWithdrawn, "Deposit already withdrawn");
         require(msg.value == claimStake, "Stake provided not correct");
 
         claimCounter += 1;
@@ -203,6 +206,8 @@ contract RequestManager {
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Already withdrawn");
 
+        bool requestClaimed = request.depositWithdrawn;
+
         bool claimChallenged = challenges[claimId].termination != 0;
         address claimReceiver;
         if (!claimChallenged) {
@@ -217,12 +222,20 @@ contract RequestManager {
             claimReceiver = claimerStakeBigger ? claim.claimer : challenge.challenger;
         }
 
+        uint256 ethToTransfer = 0;
+        if (!requestClaimed) {
+            request.depositWithdrawn = true;
+            ethToTransfer += claimStake;
+        }
         withdraw_claim(claimId, request, claim, claimReceiver);
         // The claim is set the `withdrawn` state above, so the following effects
         // needs to happen afterwards to avoid reentrency problems
         if (claimChallenged) {
-            withdraw_challenge(claimId, claim, claimReceiver);
+            ethToTransfer += withdraw_challenge(claimId, claim, claimReceiver);
         }
+
+        (bool sent, bytes memory data) = claimReceiver.call{value: ethToTransfer}("");
+        require(sent, "Failed to send Ether");
 
         return claimReceiver;
     }
@@ -249,13 +262,14 @@ contract RequestManager {
         uint256 claimId,
         Claim storage claim,
         address claimReceiver
-    ) private {
+    ) private returns (uint256) {
         Challenge storage challenge = challenges[claimId];
         uint256 challengeStake = challenge.claimerStake + challenge.challengerStake;
-
-        (bool sent, bytes memory data) = claimReceiver.call{value: challengeStake}("");
-        require(sent, "Failed to send Ether");
+        // This should never happen, but the check is cheap
+        require(challengeStake >= claimStake, "Challenge stake to small");
 
         delete challenges[claimId];
+
+        return challengeStake - claimStake;
     }
 }
