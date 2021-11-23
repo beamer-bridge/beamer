@@ -35,8 +35,8 @@ contract RequestManager {
     // Events
     event RequestCreated(
         uint256 indexed requestId,
-        uint256 indexed targetChainId,
-        address indexed targetTokenAddress,
+        uint256 targetChainId,
+        address targetTokenAddress,
         address targetAddress,
         uint256 amount
     );
