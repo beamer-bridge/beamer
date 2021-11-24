@@ -11,6 +11,7 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
 from requests.exceptions import ReadTimeout
 
+from raisync.contracts import ContractInfo, make_contracts
 from raisync.typing import BlockNumber, ChainId, RequestId, TokenAmount
 
 log = structlog.get_logger(__name__)
@@ -38,13 +39,6 @@ _ERC20_ABI = _load_ERC20_abi()
 # The time we're waiting for our thread in stop(), in seconds.
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
-
-
-def _make_contracts(w3: web3.Web3, contracts_info: dict) -> dict:
-    return {
-        name: w3.eth.contract(deployment["address"], abi=abi)
-        for name, (deployment, abi) in contracts_info.items()
-    }
 
 
 class _EventFetcher:
@@ -136,7 +130,9 @@ class PendingRequests:
 
 
 class ChainMonitor:
-    def __init__(self, url: str, contracts_info: dict, pending_requests: PendingRequests):
+    def __init__(
+        self, url: str, contracts_info: dict[str, ContractInfo], pending_requests: PendingRequests
+    ):
         self.url = url
         self._stop = False
         self._contracts_info = contracts_info
@@ -145,7 +141,7 @@ class ChainMonitor:
     def start(self) -> None:
         name = "ChainMonitor: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
-        self._contracts = _make_contracts(self._w3, self._contracts_info)
+        self._contracts = make_contracts(self._w3, self._contracts_info)
         self._thread = threading.Thread(name=name, target=self._thread_func)
         self._thread.start()
 
@@ -158,7 +154,7 @@ class ChainMonitor:
         log.info("Chain monitor started", url=self.url, chain_id=chain_id)
         request_manager = self._contracts["RequestManager"]
 
-        deployment_block = self._contracts_info["RequestManager"][0]["blockHeight"]
+        deployment_block = self._contracts_info["RequestManager"].deployment_block
         fetcher = _EventFetcher(request_manager.events.RequestCreated, deployment_block)
 
         while not self._stop:
@@ -181,7 +177,7 @@ class RequestHandler:
     def __init__(
         self,
         url: str,
-        contracts_info: dict,
+        contracts_info: dict[str, ContractInfo],
         account: LocalAccount,
         pending_requests: PendingRequests,
     ):
@@ -195,7 +191,7 @@ class RequestHandler:
         name = "RequestHandler: %s" % self.url
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
         self._w3.eth.default_account = self._account.address
-        self._contracts = _make_contracts(self._w3, self._contracts_info)
+        self._contracts = make_contracts(self._w3, self._contracts_info)
 
         # Create a thread, but don't start it immediately; wait until we get
         # the first batch of RequestFilled events in _fill_monitor_thread.
@@ -217,7 +213,7 @@ class RequestHandler:
 
     def _fill_monitor_thread(self) -> None:
         fill_manager = self._contracts["FillManager"]
-        deployment_block = self._contracts_info["FillManager"][0]["blockHeight"]
+        deployment_block = self._contracts_info["FillManager"].deployment_block
         fetcher = _EventFetcher(fill_manager.events.RequestFilled, deployment_block)
 
         # We need to first prune all filled requests so that the other thread

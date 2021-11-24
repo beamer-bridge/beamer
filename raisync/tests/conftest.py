@@ -3,7 +3,8 @@ import eth_account
 import pytest
 from brownie import Wei, accounts
 
-import raisync.node
+from raisync.node import Config, ContractInfo, Node
+from raisync.typing import BlockNumber
 
 # brownie local account, to be used for fulfilling requests.
 # The private key here corresponds to the 10th account ganache creates on
@@ -30,16 +31,22 @@ def l1_resolver():
 @pytest.fixture
 def node(request_manager, fill_manager, token):
     contracts_info = dict(
-        RequestManager=(dict(blockHeight=0, address=request_manager.address), request_manager.abi),
-        FillManager=(dict(blockHeight=0, address=fill_manager.address), fill_manager.abi),
+        RequestManager=ContractInfo(
+            deployment_block=BlockNumber(0),
+            address=request_manager.address,
+            abi=request_manager.abi,
+        ),
+        FillManager=ContractInfo(
+            deployment_block=BlockNumber(0), address=fill_manager.address, abi=fill_manager.abi
+        ),
     )
     account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
     token.mint(account.address, 300)
     url = brownie.web3.provider.endpoint_uri
-    config = raisync.node.Config(
+    config = Config(
         l2a_rpc_url=url, l2b_rpc_url=url, contracts_info=contracts_info, account=account
     )
-    return raisync.node.Node(config)
+    return Node(config)
 
 
 @pytest.fixture
