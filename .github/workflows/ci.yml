@@ -73,4 +73,4 @@ jobs:
       - name: Run contract tests
         run: |
           cd contracts
-          poetry run brownie test tests
+          poetry run brownie test -v tests
