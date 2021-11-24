@@ -3,12 +3,13 @@ import pathlib
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 
 import structlog
 import web3
 from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
+from requests.exceptions import ReadTimeout
 
 from raisync.typing import ChainId, RequestId, TokenAmount
 
@@ -47,23 +48,60 @@ def _make_contracts(w3: web3.Web3, contracts_info: dict) -> dict:
 
 
 class _EventFetcher:
+    _DEFAULT_BLOCKS = 1_000
+    _MIN_BLOCKS = 2
+    _MAX_BLOCKS = 100_000
+    _ETH_GET_LOGS_THRESHOLD_FAST = 2
+    _ETH_GET_LOGS_THRESHOLD_SLOW = 5
+
     def __init__(self, event: web3.contract.ContractEvent, start_block: int):
         self._event = event
         self._next_block_number = start_block
+        self._blocks_to_fetch = _EventFetcher._DEFAULT_BLOCKS
+
+    def _fetch_range(self, from_block: int, to_block: int) -> Optional[list]:
+        """Returns a list of events that happened in the period [from_block, to_block],
+        or None if a timeout occurs."""
+        log.debug(
+            "Fetching %s events" % self._event.event_name, from_block=from_block, to_block=to_block
+        )
+        try:
+            before_query = time.monotonic()
+            events = self._event.getLogs(fromBlock=from_block, toBlock=to_block)
+            after_query = time.monotonic()
+        except ReadTimeout:
+            old = self._blocks_to_fetch
+            self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, old // 5)
+            log.debug(
+                "Failed to get events in time, reducing number of blocks",
+                old=old,
+                new=self._blocks_to_fetch,
+            )
+            return None
+        else:
+            if events:
+                log.debug("Got new events", events=events)
+            duration = after_query - before_query
+            if duration < _EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
+                self._blocks_to_fetch = min(_EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
+            elif duration > _EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
+                self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
+            return events
 
     def fetch(self) -> list:
         block_number = self._event.web3.eth.block_number
         if block_number >= self._next_block_number:
-            log.debug(
-                "Fetching %s events" % self._event.event_name,
-                from_block=self._next_block_number,
-                to_block=block_number,
-            )
-            events = self._event.getLogs(fromBlock=self._next_block_number, toBlock=block_number)
-            self._next_block_number = block_number + 1
-            if events:
-                log.debug("Got new events", events=events)
-            return events
+            result = []
+            from_block = self._next_block_number
+            while from_block <= block_number:
+                to_block = min(block_number, from_block + self._blocks_to_fetch)
+                events = self._fetch_range(from_block, to_block)
+                if events is not None:
+                    result.extend(events)
+                    from_block = to_block + 1
+
+            self._next_block_number = from_block
+            return result
         return []
 
 
