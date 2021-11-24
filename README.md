@@ -20,6 +20,11 @@ To stop and remove all the containers, simply run
 sh ./docker/optimism/optimism.sh down
 ```
 
+To get the contracts' addresses, run
+```
+sh ./docker/optimism/optimism.sh addresses
+```
+
 ### Testing
 
 First make sure raisync is installed:

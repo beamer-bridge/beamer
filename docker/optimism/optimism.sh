@@ -31,12 +31,18 @@ function up {
 
 function usage() {
     cat <<EOF
-$0  [up | down]
+$0  [up | down | addresses]
 
 Commands:
-  up        Bring up a private Optimism instance. Deploy Raisync contracts on it.
-  down      Stop the Optimism instance.
+  up           Bring up a private Optimism instance. Deploy Raisync contracts on it.
+  down         Stop the Optimism instance.
+  addresses    List deployed contracts' addresses.
 EOF
+}
+
+function addresses {
+    docker logs optimism-deployer-1 2>/dev/null | \
+    sed -nE 's/deploying "([^"]+)" .+ deployed at (.+) with.*$/\1: \2/p' | sort
 }
 
 case $1 in
@@ -46,6 +52,10 @@ case $1 in
 
     down)
         down
+        ;;
+
+    addresses)
+        addresses
         ;;
 
     *)
