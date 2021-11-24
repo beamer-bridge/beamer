@@ -11,7 +11,7 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
 from requests.exceptions import ReadTimeout
 
-from raisync.typing import ChainId, RequestId, TokenAmount
+from raisync.typing import BlockNumber, ChainId, RequestId, TokenAmount
 
 log = structlog.get_logger(__name__)
 
@@ -54,12 +54,12 @@ class _EventFetcher:
     _ETH_GET_LOGS_THRESHOLD_FAST = 2
     _ETH_GET_LOGS_THRESHOLD_SLOW = 5
 
-    def __init__(self, event: web3.contract.ContractEvent, start_block: int):
+    def __init__(self, event: web3.contract.ContractEvent, start_block: BlockNumber):
         self._event = event
         self._next_block_number = start_block
         self._blocks_to_fetch = _EventFetcher._DEFAULT_BLOCKS
 
-    def _fetch_range(self, from_block: int, to_block: int) -> Optional[list]:
+    def _fetch_range(self, from_block: BlockNumber, to_block: BlockNumber) -> Optional[list]:
         """Returns a list of events that happened in the period [from_block, to_block],
         or None if a timeout occurs."""
         log.debug(
@@ -94,11 +94,11 @@ class _EventFetcher:
             result = []
             from_block = self._next_block_number
             while from_block <= block_number:
-                to_block = min(block_number, from_block + self._blocks_to_fetch)
+                to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
                 events = self._fetch_range(from_block, to_block)
                 if events is not None:
                     result.extend(events)
-                    from_block = to_block + 1
+                    from_block = BlockNumber(to_block + 1)
 
             self._next_block_number = from_block
             return result
