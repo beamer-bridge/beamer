@@ -264,7 +264,7 @@ contract RequestManager {
         Challenge storage challenge = challenges[claimId];
         uint256 challengeStake = challenge.claimerStake + challenge.challengerStake;
         // This should never happen, but the check is cheap
-        require(challengeStake >= claimStake, "Challenge stake to small");
+        require(challengeStake >= claimStake, "Challenge stake too small");
 
         delete challenges[claimId];
 
