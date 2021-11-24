@@ -114,7 +114,7 @@ def test_claim_period_extension(
 
 
 def test_withdraw_nonexistent_claim(request_manager):
-    """Test withdrawing a non-existant claim"""
+    """Test withdrawing a non-existent claim"""
     with brownie.reverts("claimId not valid"):
         request_manager.withdraw(1234, {"from": accounts[0]})
 
