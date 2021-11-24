@@ -6,6 +6,7 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 
 from raisync.chain import ChainMonitor, PendingRequests, RequestHandler
+from raisync.contracts import ContractInfo
 from raisync.typing import URL
 
 log = structlog.get_logger(__name__)
@@ -13,7 +14,7 @@ log = structlog.get_logger(__name__)
 
 @dataclass(frozen=True)
 class Config:
-    contracts_info: dict
+    contracts_info: dict[str, ContractInfo]
     account: LocalAccount
     l2a_rpc_url: URL
     l2b_rpc_url: URL

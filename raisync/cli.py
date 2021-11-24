@@ -9,7 +9,7 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
 import raisync.util
-from raisync.node import Config, Node
+from raisync.node import Config, ContractInfo, Node
 from raisync.typing import URL
 
 log = structlog.get_logger(__name__)
@@ -20,7 +20,11 @@ def _load_contracts_info(contracts_path: Path) -> dict[str, Any]:
     for path in contracts_path.glob("*.json"):
         with path.open() as fp:
             info = json.load(fp)
-        contracts[info["contractName"]] = info["deployment"], info["abi"]
+        contracts[info["contractName"]] = ContractInfo(
+            address=info["deployment"]["address"],
+            deployment_block=info["deployment"]["blockHeight"],
+            abi=info["abi"],
+        )
     return contracts
 
 
