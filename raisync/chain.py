@@ -11,6 +11,8 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
 from requests.exceptions import ReadTimeout
 
+from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
+
 from raisync.contracts import ContractInfo, make_contracts
 from raisync.typing import BlockNumber, ChainId, RequestId, TokenAmount
 
@@ -189,8 +191,14 @@ class RequestHandler:
 
     def start(self) -> None:
         name = "RequestHandler: %s" % self.url
+
         self._w3 = web3.Web3(web3.HTTPProvider(self.url))
+
+        # Add POA middleware for geth POA chains, no/op for other chains
+        self._w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self._w3.middleware_onion.add(construct_sign_and_send_raw_middleware(self._account))
         self._w3.eth.default_account = self._account.address
+
         self._contracts = make_contracts(self._w3, self._contracts_info)
 
         # Create a thread, but don't start it immediately; wait until we get
