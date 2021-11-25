@@ -44,7 +44,11 @@ def node(request_manager, fill_manager, token):
     token.mint(account.address, 300)
     url = brownie.web3.provider.endpoint_uri
     config = Config(
-        l2a_rpc_url=url, l2b_rpc_url=url, contracts_info=contracts_info, account=account
+        l2a_rpc_url=url,
+        l2b_rpc_url=url,
+        l2a_contracts_info=contracts_info,
+        l2b_contracts_info=contracts_info,
+        account=account,
     )
     return Node(config)
 
