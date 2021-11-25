@@ -28,7 +28,7 @@ def _load_contracts_info(contracts_path: Path) -> dict[str, Any]:
     return contracts
 
 
-def _account_from_keyfile(keyfile: str, password: str) -> LocalAccount:
+def _account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
     with open(keyfile, "rt") as fp:
         privkey = Account.decrypt(json.load(fp), password)
     return Account.from_key(privkey)
@@ -43,7 +43,7 @@ def _sigint_handler(node: Node) -> None:
 @click.command()
 @click.option(
     "--keystore-file",
-    type=str,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
     metavar="FILE",
     help="The file that stores the key for the account to be used.",
@@ -65,33 +65,33 @@ def _sigint_handler(node: Node) -> None:
 )
 @click.option(
     "--l2a-contracts-deployment-dir",
-    type=str,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     required=True,
     metavar="DIR",
     help="The directory containing contract deployment files of the first L2 chain.",
 )
 @click.option(
     "--l2b-contracts-deployment-dir",
-    type=str,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     required=True,
     metavar="DIR",
     help="The directory containing contract deployment files of the second L2 chain.",
 )
 @click.version_option()
 def main(
-    keystore_file: str,
+    keystore_file: Path,
     password: str,
     l2a_rpc_url: URL,
     l2b_rpc_url: URL,
-    l2a_contracts_deployment_dir: str,
-    l2b_contracts_deployment_dir: str,
+    l2a_contracts_deployment_dir: Path,
+    l2b_contracts_deployment_dir: Path,
 ) -> None:
     raisync.util.setup_logging(log_level="DEBUG", log_json=False)
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
-    l2a_contracts_info = _load_contracts_info(Path(l2a_contracts_deployment_dir))
-    l2b_contracts_info = _load_contracts_info(Path(l2b_contracts_deployment_dir))
+    l2a_contracts_info = _load_contracts_info(l2a_contracts_deployment_dir)
+    l2b_contracts_info = _load_contracts_info(l2b_contracts_deployment_dir)
     config = Config(
         account=account,
         l2a_contracts_info=l2a_contracts_info,
