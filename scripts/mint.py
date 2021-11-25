@@ -8,6 +8,7 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 from web3 import HTTPProvider, Web3
+from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 log = structlog.get_logger(__name__)
 
@@ -66,11 +67,18 @@ def main(
     address, abi = _load_contract_info(contract_deployment)
 
     web3 = Web3(HTTPProvider(eth_rpc))
+
+    # Add POA middleware for geth POA chains, no/op for other chains
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
     web3.eth.default_account = account.address
 
     token = web3.eth.contract(abi=abi, address=cast(Address, address))
     decimals = token.functions.decimals().call()
-    token.functions.mint(recipient, amount * 10 ** decimals).transact()
+    txhash = token.functions.mint(recipient, amount * 10 ** decimals).transact()
+
+    web3.eth.wait_for_transaction_receipt(txhash)
+    print(f"Tokens minted successfully in {txhash.hex()}")
 
 
 if __name__ == "__main__":
