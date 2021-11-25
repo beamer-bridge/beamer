@@ -39,10 +39,6 @@ import RequestForm, { RequestFormResult } from '@/components/RequestForm.vue';
   },
 })
 export default class Home extends Vue {
-  private static CHAIN_ID = 5;
-  private static REQUEST_MANAGER_ADDRESS = '0x6d18F474C0a16a96E3D24c9eC85BC82311B111c6';
-  private static ETHERSCAN_TX_URL = 'https://goerli.etherscan.io/tx/';
-
   executingRequest = false;
   criticalErrorMessage = '';
   transactionErrorMessage = '';
@@ -69,7 +65,8 @@ export default class Home extends Vue {
         formResult.targetAddress,
         formResult.amount,
       );
-      this.successfulTransactionUrl = Home.ETHERSCAN_TX_URL + transactionReceipt.transactionHash;
+      this.successfulTransactionUrl =
+        process.env.VUE_APP_ETHERSCAN_TX_URL! + transactionReceipt.transactionHash;
     } catch (error) {
       console.error(error);
       this.transactionErrorMessage = error.message;
@@ -89,8 +86,9 @@ export default class Home extends Vue {
 
   private async checkChainId(): Promise<void> {
     const { chainId } = await this.web3Provider.getNetwork();
-    if (chainId !== Home.CHAIN_ID) {
-      this.criticalErrorMessage = `Not connected to chain id ${Home.CHAIN_ID}!`;
+    const expectedChainId = Number(process.env.VUE_APP_CHAIN_ID!);
+    if (chainId !== expectedChainId) {
+      this.criticalErrorMessage = `Not connected to chain id ${expectedChainId}!`;
     }
   }
 
@@ -109,12 +107,13 @@ export default class Home extends Vue {
   ): Promise<void> {
     const tokenContract = new Contract(tokenAddress, CustomToken.abi, signer);
     const signerAddress = await signer.getAddress();
+    const requestManagerAddress = process.env.VUE_APP_REQUEST_MANAGER_ADDRESS!;
     const allowance: BigNumber = await tokenContract.allowance(
       signerAddress,
-      Home.REQUEST_MANAGER_ADDRESS,
+      requestManagerAddress,
     );
     if (allowance.lt(amount)) {
-      const transaction = await tokenContract.approve(Home.REQUEST_MANAGER_ADDRESS, amount);
+      const transaction = await tokenContract.approve(requestManagerAddress, amount);
       await transaction.wait();
     }
   }
@@ -128,7 +127,7 @@ export default class Home extends Vue {
     amount: BigNumber,
   ): Promise<TransactionReceipt> {
     const requestManagerContract = new Contract(
-      Home.REQUEST_MANAGER_ADDRESS,
+      process.env.VUE_APP_REQUEST_MANAGER_ADDRESS!,
       RequestManager.abi,
       signer,
     );
