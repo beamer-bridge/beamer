@@ -85,3 +85,24 @@ Then enter the virtual environment:
                                --target-chain-id 1337 \
                                --amount 1
 ```
+
+### Running the frontend prototype
+
+Requires:
+- Node.js
+- yarn
+
+First install the dependencies:
+
+```
+cd frontend
+yarn install
+```
+
+Run the development server:
+
+```
+yarn serve
+```
+
+To configure the used deployment, make your changes to the `frontend/.env.development` file and rerun the development server.
