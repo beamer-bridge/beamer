@@ -10,7 +10,6 @@ import web3
 from eth_account.signers.local import LocalAccount
 from eth_typing import ChecksumAddress as Address
 from requests.exceptions import ReadTimeout
-
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 from raisync.contracts import ContractInfo, make_contracts

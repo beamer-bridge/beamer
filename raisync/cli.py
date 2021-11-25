@@ -64,11 +64,18 @@ def _sigint_handler(node: Node) -> None:
     help="The URL of the second L2 chain RPC server (e.g. http://10.0.0.3:8545).",
 )
 @click.option(
-    "--contracts-deployment-dir",
+    "--l2a-contracts-deployment-dir",
     type=str,
     required=True,
     metavar="DIR",
-    help="The directory containing contract deployment files.",
+    help="The directory containing contract deployment files of the first L2 chain.",
+)
+@click.option(
+    "--l2b-contracts-deployment-dir",
+    type=str,
+    required=True,
+    metavar="DIR",
+    help="The directory containing contract deployment files of the second L2 chain.",
 )
 @click.version_option()
 def main(
@@ -76,16 +83,19 @@ def main(
     password: str,
     l2a_rpc_url: URL,
     l2b_rpc_url: URL,
-    contracts_deployment_dir: str,
+    l2a_contracts_deployment_dir: str,
+    l2b_contracts_deployment_dir: str,
 ) -> None:
     raisync.util.setup_logging(log_level="DEBUG", log_json=False)
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
-    contracts_info = _load_contracts_info(Path(contracts_deployment_dir))
+    l2a_contracts_info = _load_contracts_info(Path(l2a_contracts_deployment_dir))
+    l2b_contracts_info = _load_contracts_info(Path(l2b_contracts_deployment_dir))
     config = Config(
-        contracts_info=contracts_info,
         account=account,
+        l2a_contracts_info=l2a_contracts_info,
+        l2b_contracts_info=l2b_contracts_info,
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
     )

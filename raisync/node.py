@@ -14,8 +14,9 @@ log = structlog.get_logger(__name__)
 
 @dataclass(frozen=True)
 class Config:
-    contracts_info: dict[str, ContractInfo]
     account: LocalAccount
+    l2a_contracts_info: dict[str, ContractInfo]
+    l2b_contracts_info: dict[str, ContractInfo]
     l2a_rpc_url: URL
     l2b_rpc_url: URL
 
@@ -27,10 +28,10 @@ class Node:
         self._stopped.set()
         self._pending_requests = PendingRequests()
         self._chain_monitor = ChainMonitor(
-            config.l2a_rpc_url, config.contracts_info, self._pending_requests
+            config.l2a_rpc_url, config.l2a_contracts_info, self._pending_requests
         )
         self._request_handler = RequestHandler(
-            config.l2b_rpc_url, config.contracts_info, config.account, self._pending_requests
+            config.l2b_rpc_url, config.l2b_contracts_info, config.account, self._pending_requests
         )
 
     def start(self) -> None:
