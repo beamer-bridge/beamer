@@ -250,20 +250,24 @@ class RequestHandler:
             log.debug("Unable to fulfill request", balance=balance, request_amount=request.amount)
             return
 
-        token.functions.approve(fill_manager.address, request.amount).transact()
+        try:
+            approve_tx = token.functions.approve(fill_manager.address, request.amount).transact()
+            self._w3.eth.wait_for_transaction_receipt(approve_tx)
 
-        txn_hash = fill_manager.functions.fillRequest(
-            sourceChainId=request.source_chain_id,
-            requestId=request.id,
-            targetTokenAddress=request.target_token_address,
-            targetReceiverAddress=request.target_address,
-            amount=request.amount,
-        ).transact()
-        self._w3.eth.wait_for_transaction_receipt(txn_hash)
+            fill_tx = fill_manager.functions.fillRequest(
+                sourceChainId=request.source_chain_id,
+                requestId=request.id,
+                targetTokenAddress=request.target_token_address,
+                targetReceiverAddress=request.target_address,
+                amount=request.amount,
+            ).transact()
+            self._w3.eth.wait_for_transaction_receipt(fill_tx)
 
-        log.debug(
-            "Fulfilled request",
-            request=request,
-            txn_hash=txn_hash.hex(),
-            token=token.functions.symbol().call(),
-        )
+            log.info(
+                "Fulfilled request",
+                request=request,
+                txn_hash=fill_tx.hex(),
+                token=token.functions.symbol().call(),
+            )
+        except Exception as exc:
+            log.error("Sending tx failed", exc_info=True, err=exc)
