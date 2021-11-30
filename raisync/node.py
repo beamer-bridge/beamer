@@ -5,7 +5,7 @@ import structlog
 from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 
-from raisync.chain import ChainMonitor, PendingRequests, RequestHandler
+from raisync.chain import ChainMonitor, RequestHandler, RequestTracker
 from raisync.contracts import ContractInfo
 from raisync.typing import URL
 
@@ -26,12 +26,10 @@ class Node:
         self._config = config
         self._stopped = threading.Event()
         self._stopped.set()
-        self._pending_requests = PendingRequests()
-        self._chain_monitor = ChainMonitor(
-            config.l2a_rpc_url, config.l2a_contracts_info, self._pending_requests
-        )
+        tracker = RequestTracker()
+        self._chain_monitor = ChainMonitor(config.l2a_rpc_url, config.l2a_contracts_info, tracker)
         self._request_handler = RequestHandler(
-            config.l2b_rpc_url, config.l2b_contracts_info, config.account, self._pending_requests
+            config.l2b_rpc_url, config.l2b_contracts_info, config.account, tracker
         )
 
     def start(self) -> None:
