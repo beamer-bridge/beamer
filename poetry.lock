@@ -1037,6 +1037,14 @@ python-versions = "*"
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-statemachine"
+version = "0.8.0"
+description = "Python Finite State Machines made easy."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pythx"
 version = "1.6.1"
 description = "A Python library for the MythX platform"
@@ -1341,7 +1349,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9, <3.10"
-content-hash = "d9311466c27d533af64bd1332704806345d6c0202470c5e64f80aa1fd0af2f4a"
+content-hash = "bc4014a40e5c142469646903e2f7349bd34f4673ecac5b898dc94f84976d0517"
 
 [metadata.files]
 aiohttp = [
@@ -1907,6 +1915,10 @@ python-dateutil = [
 python-dotenv = [
     {file = "python-dotenv-0.16.0.tar.gz", hash = "sha256:9fa413c37d4652d3fa02fea0ff465c384f5db75eab259c4fc5d0c5b8bf20edd4"},
     {file = "python_dotenv-0.16.0-py2.py3-none-any.whl", hash = "sha256:31d752f5b748f4e292448c9a0cac6a08ed5e6f4cefab85044462dcad56905cec"},
+]
+python-statemachine = [
+    {file = "python-statemachine-0.8.0.tar.gz", hash = "sha256:f6a70c1f4ed8b1198487eac09114ec9ea1166be6d793996f8c1b92d590a9ebae"},
+    {file = "python_statemachine-0.8.0-py2.py3-none-any.whl", hash = "sha256:b816ec61639ddd3b1d3a8ad06a62840d30b9e7176b4b94fc183cebd1c7d5caf2"},
 ]
 pythx = [
     {file = "pythx-1.6.1-py2.py3-none-any.whl", hash = "sha256:44cb6c88f5213a3dd516e8322dbd17551fc7d435dc6290d3a6145333258d901f"},
