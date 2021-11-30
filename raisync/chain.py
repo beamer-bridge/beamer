@@ -8,13 +8,16 @@ import structlog
 import web3
 from eth_abi.codec import ABICodec
 from eth_account.signers.local import LocalAccount
+from eth_utils import to_checksum_address
 from eth_utils.abi import event_abi_to_log_topic
 from requests.exceptions import ReadTimeout
 from web3.contract import Contract, get_event_data
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 from web3.types import ABIEvent, LogReceipt
 
+import raisync.events
 from raisync.contracts import ContractInfo, make_contracts
+from raisync.events import Event
 from raisync.request import Request, RequestTracker
 from raisync.typing import BlockNumber, ChainId, RequestId
 
@@ -45,10 +48,11 @@ def _make_topics_to_abi(contract: web3.contract.Contract) -> dict[bytes, ABIEven
 
 def _decode_event(
     codec: ABICodec, log_entry: LogReceipt, event_abis: dict[bytes, ABIEvent]
-) -> dict:
+) -> Event:
     topic = log_entry["topics"][0]
     event_abi = event_abis[topic]
-    return get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
+    data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
+    return raisync.events.parse_event(data)
 
 
 class _EventFetcher:
@@ -65,7 +69,9 @@ class _EventFetcher:
         self._chain_id = contract.web3.eth.block_number
         self._event_abis = _make_topics_to_abi(contract)
 
-    def _fetch_range(self, from_block: BlockNumber, to_block: BlockNumber) -> Optional[list]:
+    def _fetch_range(
+        self, from_block: BlockNumber, to_block: BlockNumber
+    ) -> Optional[list[Event]]:
         """Returns a list of events that happened in the period [from_block, to_block],
         or None if a timeout occurs."""
         log.debug(
@@ -101,7 +107,7 @@ class _EventFetcher:
                 self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
             return events
 
-    def fetch(self) -> list:
+    def fetch(self) -> list[Event]:
         block_number = self._contract.web3.eth.block_number
         if block_number >= self._next_block_number:
             result = []
@@ -150,16 +156,15 @@ class ChainMonitor:
                 self._process_event(event, chain_id)
             time.sleep(1)
 
-    def _process_event(self, event: Any, chain_id: ChainId) -> None:
-        args = event.args
-        if event.event == "RequestCreated":
+    def _process_event(self, event: Event, chain_id: ChainId) -> None:
+        if isinstance(event, raisync.events.RequestCreated):
             request = Request(
-                request_id=args.requestId,
+                request_id=event.request_id,
                 source_chain_id=chain_id,
-                target_chain_id=args.targetChainId,
-                target_token_address=args.targetTokenAddress,
-                target_address=args.targetAddress,
-                amount=args.amount,
+                target_chain_id=event.target_chain_id,
+                target_token_address=to_checksum_address(event.target_token_address),
+                target_address=to_checksum_address(event.target_address),
+                amount=event.amount,
             )
             self._tracker.add(request)
 
@@ -216,9 +221,9 @@ class RequestHandler:
         unknown: set[RequestId] = set()
         events = fetcher.fetch()
         for event in events:
-            request_id = event.args.requestId
-            if not self._mark_filled_single(request_id):
-                unknown.add(request_id)
+            assert isinstance(event, raisync.events.RequestFilled)
+            if not self._mark_filled_single(event.request_id):
+                unknown.add(event.request_id)
         return unknown
 
     def _fill_monitor_thread(self) -> None:
