@@ -76,7 +76,8 @@ Then enter the virtual environment:
              --password '' \
              --l2a-rpc-url http://127.0.0.1:8545 \
              --l2b-rpc-url http://127.0.0.1:8545 \
-             --contracts-deployment-dir contracts/build/deployments/dev
+             --l2a-contracts-deployment-dir contracts/build/deployments/dev \
+             --l2b-contracts-deployment-dir contracts/build/deployments/dev
 ```
 
 - Submit a request:
