@@ -21,8 +21,6 @@ from raisync.events import Event
 from raisync.request import Request, RequestTracker
 from raisync.typing import BlockNumber, ChainId, RequestId
 
-log = structlog.get_logger(__name__)
-
 
 def _load_ERC20_abi() -> list[Any]:
     path = pathlib.Path(__file__)
@@ -68,13 +66,14 @@ class _EventFetcher:
         self._blocks_to_fetch = _EventFetcher._DEFAULT_BLOCKS
         self._chain_id = contract.web3.eth.block_number
         self._event_abis = _make_topics_to_abi(contract)
+        self._log = structlog.get_logger(type(self).__name__)
 
     def _fetch_range(
         self, from_block: BlockNumber, to_block: BlockNumber
     ) -> Optional[list[Event]]:
         """Returns a list of events that happened in the period [from_block, to_block],
         or None if a timeout occurs."""
-        log.debug(
+        self._log.debug(
             "Fetching events",
             chain_id=self._chain_id,
             address=self._contract.address,
@@ -89,7 +88,7 @@ class _EventFetcher:
         except ReadTimeout:
             old = self._blocks_to_fetch
             self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, old // 5)
-            log.debug(
+            self._log.debug(
                 "Failed to get events in time, reducing number of blocks",
                 old=old,
                 new=self._blocks_to_fetch,
@@ -99,7 +98,7 @@ class _EventFetcher:
             if events:
                 codec = self._contract.web3.codec
                 events = [_decode_event(codec, event, self._event_abis) for event in events]
-                log.debug("Got new events", events=events)
+                self._log.debug("Got new events", events=events)
             duration = after_query - before_query
             if duration < _EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
                 self._blocks_to_fetch = min(_EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
@@ -130,6 +129,7 @@ class ChainMonitor:
         self._stop = False
         self._contracts_info = contracts_info
         self._tracker = tracker
+        self._log = structlog.get_logger(type(self).__name__)
 
     def start(self) -> None:
         name = "ChainMonitor: %s" % self.url
@@ -144,7 +144,7 @@ class ChainMonitor:
 
     def _thread_func(self) -> None:
         chain_id = ChainId(self._w3.eth.chain_id)
-        log.info("Chain monitor started", url=self.url, chain_id=chain_id)
+        self._log.info("Chain monitor started", url=self.url, chain_id=chain_id)
         request_manager = self._contracts["RequestManager"]
 
         deployment_block = self._contracts_info["RequestManager"].deployment_block
@@ -182,6 +182,7 @@ class RequestHandler:
         self._account = account
         self._contracts_info = contracts_info
         self._tracker = tracker
+        self._log = structlog.get_logger(type(self).__name__)
 
     def start(self) -> None:
         name = "RequestHandler: %s" % self.url
@@ -211,7 +212,7 @@ class RequestHandler:
         request = self._tracker.get(request_id)
         if request is not None:
             request.fill()
-            log.debug("Confirmed fill", request_id=request_id)
+            self._log.debug("Confirmed fill", request_id=request_id)
             return True
         return False
 
@@ -227,7 +228,7 @@ class RequestHandler:
         return unknown
 
     def _fill_monitor_thread(self) -> None:
-        log.debug("Fill monitor started")
+        self._log.debug("Fill monitor started")
         fill_manager = self._contracts["FillManager"]
         deployment_block = self._contracts_info["FillManager"].deployment_block
         fetcher = _EventFetcher(fill_manager, deployment_block)
@@ -239,7 +240,7 @@ class RequestHandler:
 
         while not self._stop:
             if unknown:
-                log.debug("Unknown request IDs", unknown=unknown)
+                self._log.debug("Unknown request IDs", unknown=unknown)
             for request_id in unknown.copy():
                 if self._mark_filled_single(request_id):
                     unknown.remove(request_id)
@@ -249,7 +250,7 @@ class RequestHandler:
 
     def _thread_func(self) -> None:
         chain_id = self._w3.eth.chain_id
-        log.info("Request handler started", url=self.url, chain_id=chain_id)
+        self._log.info("Request handler started", url=self.url, chain_id=chain_id)
         while not self._stop:
             for request in self._tracker:
                 if request.is_pending:
@@ -262,7 +263,9 @@ class RequestHandler:
 
         balance = token.functions.balanceOf(self._account.address).call()
         if balance < request.amount:
-            log.debug("Unable to fulfill request", balance=balance, request_amount=request.amount)
+            self._log.debug(
+                "Unable to fulfill request", balance=balance, request_amount=request.amount
+            )
             return
 
         token.functions.approve(fill_manager.address, request.amount).transact()
@@ -276,15 +279,13 @@ class RequestHandler:
                 amount=request.amount,
             ).transact()
         except web3.exceptions.ContractLogicError as exc:
-            if exc.args[0].endswith("Already filled"):
-                log.debug("fillRequest execution reverted: already filled", request_id=request.id)
-                return
-            raise exc
+            self._log.debug("fillRequest failed", request_id=request.id, exc_args=exc.args)
+            return
 
         self._w3.eth.wait_for_transaction_receipt(txn_hash)
 
         request.fill_unconfirmed()
-        log.debug(
+        self._log.debug(
             "Fulfilled request",
             request=request,
             txn_hash=txn_hash.hex(),
