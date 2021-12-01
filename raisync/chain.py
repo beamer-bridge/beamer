@@ -2,24 +2,19 @@ import json
 import pathlib
 import threading
 import time
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 import web3
-from eth_abi.codec import ABICodec
 from eth_account.signers.local import LocalAccount
 from eth_utils import to_checksum_address
-from eth_utils.abi import event_abi_to_log_topic
-from requests.exceptions import ReadTimeout
-from web3.contract import Contract, get_event_data
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
-from web3.types import ABIEvent, LogReceipt
 
 import raisync.events
 from raisync.contracts import ContractInfo, make_contracts
-from raisync.events import Event
+from raisync.events import Event, EventFetcher
 from raisync.request import Request, RequestTracker
-from raisync.typing import BlockNumber, ChainId, RequestId
+from raisync.typing import ChainId, RequestId
 
 
 def _load_ERC20_abi() -> list[Any]:
@@ -34,93 +29,6 @@ _ERC20_ABI = _load_ERC20_abi()
 # The time we're waiting for our thread in stop(), in seconds.
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
-
-
-def _make_topics_to_abi(contract: web3.contract.Contract) -> dict[bytes, ABIEvent]:
-    event_abis = {}
-    for abi in contract.abi:
-        if abi["type"] == "event":
-            event_abis[event_abi_to_log_topic(abi)] = abi  # type: ignore
-    return event_abis
-
-
-def _decode_event(
-    codec: ABICodec, log_entry: LogReceipt, event_abis: dict[bytes, ABIEvent]
-) -> Event:
-    topic = log_entry["topics"][0]
-    event_abi = event_abis[topic]
-    data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
-    return raisync.events.parse_event(data)
-
-
-class _EventFetcher:
-    _DEFAULT_BLOCKS = 1_000
-    _MIN_BLOCKS = 2
-    _MAX_BLOCKS = 100_000
-    _ETH_GET_LOGS_THRESHOLD_FAST = 2
-    _ETH_GET_LOGS_THRESHOLD_SLOW = 5
-
-    def __init__(self, contract: Contract, start_block: BlockNumber):
-        self._contract = contract
-        self._next_block_number = start_block
-        self._blocks_to_fetch = _EventFetcher._DEFAULT_BLOCKS
-        self._chain_id = contract.web3.eth.block_number
-        self._event_abis = _make_topics_to_abi(contract)
-        self._log = structlog.get_logger(type(self).__name__)
-
-    def _fetch_range(
-        self, from_block: BlockNumber, to_block: BlockNumber
-    ) -> Optional[list[Event]]:
-        """Returns a list of events that happened in the period [from_block, to_block],
-        or None if a timeout occurs."""
-        self._log.debug(
-            "Fetching events",
-            chain_id=self._chain_id,
-            address=self._contract.address,
-            from_block=from_block,
-            to_block=to_block,
-        )
-        try:
-            before_query = time.monotonic()
-            params = dict(fromBlock=from_block, toBlock=to_block, address=self._contract.address)
-            events = self._contract.web3.eth.getLogs(params)
-            after_query = time.monotonic()
-        except ReadTimeout:
-            old = self._blocks_to_fetch
-            self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, old // 5)
-            self._log.debug(
-                "Failed to get events in time, reducing number of blocks",
-                old=old,
-                new=self._blocks_to_fetch,
-            )
-            return None
-        else:
-            if events:
-                codec = self._contract.web3.codec
-                events = [_decode_event(codec, event, self._event_abis) for event in events]
-                self._log.debug("Got new events", events=events)
-            duration = after_query - before_query
-            if duration < _EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
-                self._blocks_to_fetch = min(_EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
-            elif duration > _EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
-                self._blocks_to_fetch = max(_EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
-            return events
-
-    def fetch(self) -> list[Event]:
-        block_number = self._contract.web3.eth.block_number
-        if block_number >= self._next_block_number:
-            result = []
-            from_block = self._next_block_number
-            while from_block <= block_number:
-                to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
-                events = self._fetch_range(from_block, to_block)
-                if events is not None:
-                    result.extend(events)
-                    from_block = BlockNumber(to_block + 1)
-
-            self._next_block_number = from_block
-            return result
-        return []
 
 
 class ChainMonitor:
@@ -148,7 +56,7 @@ class ChainMonitor:
         request_manager = self._contracts["RequestManager"]
 
         deployment_block = self._contracts_info["RequestManager"].deployment_block
-        fetcher = _EventFetcher(request_manager, deployment_block)
+        fetcher = EventFetcher(request_manager, deployment_block)
 
         while not self._stop:
             events = fetcher.fetch()
@@ -216,7 +124,7 @@ class RequestHandler:
             return True
         return False
 
-    def _mark_filled(self, fetcher: _EventFetcher) -> set[RequestId]:
+    def _mark_filled(self, fetcher: EventFetcher) -> set[RequestId]:
         """Fetch new Filled events and mark corresponding requests as filled.
         Return the set of request IDs that our tracker does not know about."""
         unknown: set[RequestId] = set()
@@ -231,7 +139,7 @@ class RequestHandler:
         self._log.debug("Fill monitor started")
         fill_manager = self._contracts["FillManager"]
         deployment_block = self._contracts_info["FillManager"].deployment_block
-        fetcher = _EventFetcher(fill_manager, deployment_block)
+        fetcher = EventFetcher(fill_manager, deployment_block)
 
         # Mark all filled requests so that the other thread can start filling
         # (we do not want to try filling already filled requests).
