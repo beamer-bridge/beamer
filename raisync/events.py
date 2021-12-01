@@ -8,7 +8,7 @@ from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
 from requests.exceptions import ReadTimeout
 from web3.contract import Contract, get_event_data
-from web3.types import ABIEvent, LogReceipt
+from web3.types import ABIEvent, FilterParams, LogReceipt
 
 from raisync.typing import (
     Address,
@@ -133,8 +133,10 @@ class EventFetcher:
         )
         try:
             before_query = time.monotonic()
-            params = dict(fromBlock=from_block, toBlock=to_block, address=self._contract.address)
-            events = self._contract.web3.eth.getLogs(params)
+            params: FilterParams = dict(
+                fromBlock=from_block, toBlock=to_block, address=self._contract.address
+            )
+            logs = self._contract.web3.eth.get_logs(params)
             after_query = time.monotonic()
         except ReadTimeout:
             old = self._blocks_to_fetch
@@ -146,9 +148,9 @@ class EventFetcher:
             )
             return None
         else:
-            if events:
+            if logs:
                 codec = self._contract.web3.codec
-                events = [_decode_event(codec, event, self._event_abis) for event in events]
+                events = [_decode_event(codec, entry, self._event_abis) for entry in logs]
                 self._log.debug("Got new events", events=events)
             duration = after_query - before_query
             if duration < EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
