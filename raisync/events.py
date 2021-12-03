@@ -23,7 +23,7 @@ from raisync.typing import (
 
 @dataclass(frozen=True)
 class Event:
-    pass
+    chain_id: ChainId
 
 
 @dataclass(frozen=True)
@@ -94,12 +94,13 @@ def _make_topics_to_abi(contract: web3.contract.Contract) -> dict[bytes, ABIEven
 
 
 def _decode_event(
-    codec: ABICodec, log_entry: LogReceipt, event_abis: dict[bytes, ABIEvent]
+    codec: ABICodec, log_entry: LogReceipt, chain_id: ChainId, event_abis: dict[bytes, ABIEvent]
 ) -> Event:
     topic = log_entry["topics"][0]
     event_abi = event_abis[topic]
     data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
     kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
+    kwargs["chain_id"] = chain_id
     assert data.event in _EVENT_TYPES
     return _EVENT_TYPES[data.event](**kwargs)
 
@@ -115,7 +116,7 @@ class EventFetcher:
         self._contract = contract
         self._next_block_number = start_block
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
-        self._chain_id = contract.web3.eth.block_number
+        self._chain_id = ChainId(contract.web3.eth.chain_id)
         self._event_abis = _make_topics_to_abi(contract)
         self._log = structlog.get_logger(type(self).__name__)
 
@@ -154,9 +155,9 @@ class EventFetcher:
             elif duration > EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
                 self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
             codec = self._contract.web3.codec
-            events = [_decode_event(codec, entry, self._event_abis) for entry in logs]
-            if events:
-                self._log.debug("Got new events", events=events)
+            events = [
+                _decode_event(codec, entry, self._chain_id, self._event_abis) for entry in logs
+            ]
             return events
 
     def fetch(self) -> list[Event]:
