@@ -113,8 +113,9 @@ class RequestHandler:
 
     def stop(self) -> None:
         self._stop = True
-        self._thread.join(_STOP_TIMEOUT)
         self._thread_fill_monitor.join(_STOP_TIMEOUT)
+        if self._thread.is_alive():
+            self._thread.join(_STOP_TIMEOUT)
 
     def _mark_filled_single(self, request_id: RequestId) -> bool:
         request = self._tracker.get(request_id)
