@@ -148,15 +148,15 @@ class EventFetcher:
             )
             return None
         else:
-            if logs:
-                codec = self._contract.web3.codec
-                events = [_decode_event(codec, entry, self._event_abis) for entry in logs]
-                self._log.debug("Got new events", events=events)
             duration = after_query - before_query
             if duration < EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
                 self._blocks_to_fetch = min(EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
             elif duration > EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
                 self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
+            codec = self._contract.web3.codec
+            events = [_decode_event(codec, entry, self._event_abis) for entry in logs]
+            if events:
+                self._log.debug("Got new events", events=events)
             return events
 
     def fetch(self) -> list[Event]:
