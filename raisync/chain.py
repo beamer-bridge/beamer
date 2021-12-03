@@ -2,19 +2,17 @@ import json
 import pathlib
 import threading
 import time
-from typing import Any
+from typing import Any, Callable
 
 import structlog
 import web3
-from eth_account.signers.local import LocalAccount
 from eth_utils import to_checksum_address
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
+from statemachine.exceptions import TransitionNotAllowed
 
 import raisync.events
-from raisync.contracts import ContractInfo, make_contracts
 from raisync.events import Event, EventFetcher
 from raisync.request import Request, RequestTracker
-from raisync.typing import ChainId, RequestId
+from raisync.typing import BlockNumber, ChainId
 
 
 def _load_ERC20_abi() -> list[Any]:
@@ -31,19 +29,25 @@ _ERC20_ABI = _load_ERC20_abi()
 _STOP_TIMEOUT = 2
 
 
-class ChainMonitor:
-    def __init__(self, url: str, contracts_info: dict[str, ContractInfo], tracker: RequestTracker):
-        self.url = url
+class ContractEventMonitor:
+    def __init__(
+        self,
+        name: str,
+        contract: web3.contract.Contract,
+        deployment_block: BlockNumber,
+        on_new_events: Callable[[list[Event]], None],
+        on_sync_done: Callable[[], None],
+    ):
+        self._name = name
+        self._contract = contract
+        self._deployment_block = deployment_block
         self._stop = False
-        self._contracts_info = contracts_info
-        self._tracker = tracker
-        self._log = structlog.get_logger(type(self).__name__)
+        self._on_new_events = on_new_events
+        self._on_sync_done = on_sync_done
+        self._log = structlog.get_logger(type(self).__name__).bind(contract=name)
 
     def start(self) -> None:
-        name = "ChainMonitor: %s" % self.url
-        self._w3 = web3.Web3(web3.HTTPProvider(self.url))
-        self._contracts = make_contracts(self._w3, self._contracts_info)
-        self._thread = threading.Thread(name=name, target=self._thread_func)
+        self._thread = threading.Thread(name=self._name, target=self._thread_func)
         self._thread.start()
 
     def stop(self) -> None:
@@ -51,136 +55,176 @@ class ChainMonitor:
         self._thread.join(_STOP_TIMEOUT)
 
     def _thread_func(self) -> None:
-        chain_id = ChainId(self._w3.eth.chain_id)
-        self._log.info("Chain monitor started", url=self.url, chain_id=chain_id)
-        request_manager = self._contracts["RequestManager"]
-
-        deployment_block = self._contracts_info["RequestManager"].deployment_block
-        fetcher = EventFetcher(request_manager, deployment_block)
-
+        chain_id = ChainId(self._contract.web3.eth.chain_id)
+        self._log.info("ContractEventMonitor started", chain_id=chain_id)
+        fetcher = EventFetcher(self._contract, self._deployment_block)
+        events = fetcher.fetch()
+        if events:
+            self._on_new_events(events)
+        self._on_sync_done()
+        self._log.info("Sync done", chain_id=chain_id)
         while not self._stop:
             events = fetcher.fetch()
-            for event in events:
-                self._process_event(event, chain_id)
+            if events:
+                self._on_new_events(events)
+            # TODO: wait for new block instead of the sleep here
             time.sleep(1)
+        self._log.info("ContractEventMonitor stopped", chain_id=chain_id)
 
-    def _process_event(self, event: Event, chain_id: ChainId) -> None:
+
+class EventProcessor:
+    def __init__(self, tracker: RequestTracker, request_manager: Any, fill_manager: Any):
+        # This lock protects the following objects:
+        #   - self._events
+        #   - self._num_syncs_done
+        self._lock = threading.Lock()
+        self._have_new_events = threading.Event()
+        self._events: list[Event] = []
+        self._tracker = tracker
+        self._request_manager = request_manager
+        self._fill_manager = fill_manager
+        self._stop = False
+        self._log = structlog.get_logger(type(self).__name__)
+        # The number of times we synced with a chain:
+        # 0 = we're still waiting for sync to complete for both chains
+        # 1 = one of the chains was synced, waiting for the other one
+        # 2 = both chains synced
+        self._num_syncs_done = 0
+
+    def mark_sync_done(self) -> None:
+        with self._lock:
+            assert self._num_syncs_done < 2
+            self._num_syncs_done += 1
+
+    def start(self) -> None:
+        self._thread = threading.Thread(name="EventProcessor", target=self._thread_func)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop = True
+        self._thread.join(_STOP_TIMEOUT)
+
+    def add_events(self, events: list[Event]) -> None:
+        with self._lock:
+            self._events.extend(events)
+            self._log.debug("New events", events=events)
+        self._have_new_events.set()
+
+    def _thread_func(self) -> None:
+        self._log.info("EventProcessor started")
+        while not self._stop:
+            if self._have_new_events.wait(1):
+                self._have_new_events.clear()
+                self._process_events()
+                self._process_requests()
+        self._log.info("EventProcessor stopped")
+
+    def _process_events(self) -> None:
+        iteration = 0
+        while True:
+            with self._lock:
+                events = self._events[:]
+
+            unprocessed = []
+            any_state_changed = False
+            for event in events:
+                state_changed = self._process_event(event)
+                any_state_changed |= state_changed
+                if not state_changed:
+                    unprocessed.append(event)
+
+            # Return the unprocessed events to the event list.
+            # Note that the event list might have been changed in the meantime
+            # by one of the event monitors. Placing unprocessed events at the
+            # back of the list, as opposed to the front, may avoid an extra
+            # iteration over all events.
+            with self._lock:
+                del self._events[: len(events)]
+                self._events.extend(unprocessed)
+
+            self._log.debug(
+                "Finished iteration",
+                iteration=iteration,
+                any_state_changed=any_state_changed,
+                num_events=len(self._events),
+            )
+            iteration += 1
+            if not any_state_changed:
+                break
+
+    def _process_event(self, event: Event) -> bool:
         if isinstance(event, raisync.events.RequestCreated):
-            request = Request(
+            req = Request(
                 request_id=event.request_id,
-                source_chain_id=chain_id,
+                source_chain_id=event.chain_id,
                 target_chain_id=event.target_chain_id,
                 target_token_address=to_checksum_address(event.target_token_address),
                 target_address=to_checksum_address(event.target_address),
                 amount=event.amount,
             )
-            self._tracker.add(request)
-
-
-class RequestHandler:
-    def __init__(
-        self,
-        url: str,
-        contracts_info: dict[str, ContractInfo],
-        account: LocalAccount,
-        tracker: RequestTracker,
-    ):
-        self._stop = False
-        self.url = url
-        self._account = account
-        self._contracts_info = contracts_info
-        self._tracker = tracker
-        self._log = structlog.get_logger(type(self).__name__)
-
-    def start(self) -> None:
-        name = "RequestHandler: %s" % self.url
-
-        self._w3 = web3.Web3(web3.HTTPProvider(self.url))
-
-        # Add POA middleware for geth POA chains, no/op for other chains
-        self._w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        self._w3.middleware_onion.add(construct_sign_and_send_raw_middleware(self._account))
-        self._w3.eth.default_account = self._account.address
-
-        self._contracts = make_contracts(self._w3, self._contracts_info)
-
-        # Create a thread, but don't start it immediately; wait until we get
-        # the first batch of RequestFilled events in _fill_monitor_thread.
-        self._thread = threading.Thread(name=name, target=self._thread_func)
-
-        self._thread_fill_monitor = threading.Thread(target=self._fill_monitor_thread)
-        self._thread_fill_monitor.start()
-
-    def stop(self) -> None:
-        self._stop = True
-        self._thread_fill_monitor.join(_STOP_TIMEOUT)
-        if self._thread.is_alive():
-            self._thread.join(_STOP_TIMEOUT)
-
-    def _mark_filled_single(self, request_id: RequestId) -> bool:
-        request = self._tracker.get(request_id)
-        if request is not None:
-            request.fill()
-            self._log.debug("Confirmed fill", request_id=request_id)
+            self._tracker.add(req)
             return True
+        elif isinstance(event, raisync.events.RequestFilled):
+            request = self._tracker.get(event.request_id)
+            if request is None:
+                return False
+
+            try:
+                request.fill(our_fill=request.is_filled_unconfirmed)
+            except TransitionNotAllowed:
+                return False
+            self._log.info("Request filled", _event=event)
+            return True
+        elif isinstance(event, raisync.events.ClaimCreated):
+            request = self._tracker.get(event.request_id)
+            if request is None:
+                return False
+
+            address = self._request_manager.web3.eth.default_account
+            try:
+                request.claim(event=event, our_claim=event.claimer == address)
+            except TransitionNotAllowed:
+                return False
+            self._log.info("Request claimed", _event=event)
+            return True
+        else:
+            raise RuntimeError("Unrecognized event type")
+
         return False
 
-    def _mark_filled(self, fetcher: EventFetcher) -> set[RequestId]:
-        """Fetch new Filled events and mark corresponding requests as filled.
-        Return the set of request IDs that our tracker does not know about."""
-        unknown: set[RequestId] = set()
-        events = fetcher.fetch()
-        for event in events:
-            assert isinstance(event, raisync.events.RequestFilled)
-            if not self._mark_filled_single(event.request_id):
-                unknown.add(event.request_id)
-        return unknown
+    def _process_requests(self) -> None:
+        with self._lock:
+            if self._num_syncs_done < 2:
+                # We need to wait until we are synced with both chains.
+                return
 
-    def _fill_monitor_thread(self) -> None:
-        self._log.debug("Fill monitor started")
-        fill_manager = self._contracts["FillManager"]
-        deployment_block = self._contracts_info["FillManager"].deployment_block
-        fetcher = EventFetcher(fill_manager, deployment_block)
+        for request in self._tracker:
+            self._log.debug("Processing request", request=request)
+            if request.is_pending:
+                self._fill_request(request)
+            elif request.is_filled and request.our_fill:
+                self._claim_request(request)
 
-        # Mark all filled requests so that the other thread can start filling
-        # (we do not want to try filling already filled requests).
-        unknown = self._mark_filled(fetcher)
-        self._thread.start()
+    def _fill_request(self, request: Request) -> None:
+        w3 = self._fill_manager.web3
+        token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
 
-        while not self._stop:
-            if unknown:
-                self._log.debug("Unknown request IDs", unknown=unknown)
-            for request_id in unknown.copy():
-                if self._mark_filled_single(request_id):
-                    unknown.remove(request_id)
-
-            unknown.update(self._mark_filled(fetcher))
-            time.sleep(1)
-
-    def _thread_func(self) -> None:
-        chain_id = self._w3.eth.chain_id
-        self._log.info("Request handler started", url=self.url, chain_id=chain_id)
-        while not self._stop:
-            for request in self._tracker:
-                if request.is_pending:
-                    self._fulfill_request(request)
-            time.sleep(1)
-
-    def _fulfill_request(self, request: Request) -> None:
-        fill_manager = self._contracts["FillManager"]
-        token = self._w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
-
-        balance = token.functions.balanceOf(self._account.address).call()
+        address = w3.eth.default_account
+        balance = token.functions.balanceOf(address).call()
         if balance < request.amount:
             self._log.debug(
-                "Unable to fulfill request", balance=balance, request_amount=request.amount
+                "Unable to fill request", balance=balance, request_amount=request.amount
             )
             return
 
-        token.functions.approve(fill_manager.address, request.amount).transact()
+        try:
+            token.functions.approve(self._fill_manager.address, request.amount).transact()
+        except web3.exceptions.ContractLogicError as exc:
+            self._log.error("approve failed", request_id=request.id, exc_args=exc.args)
+            return
 
         try:
-            txn_hash = fill_manager.functions.fillRequest(
+            txn_hash = self._fill_manager.functions.fillRequest(
                 sourceChainId=request.source_chain_id,
                 requestId=request.id,
                 targetTokenAddress=request.target_token_address,
@@ -188,15 +232,37 @@ class RequestHandler:
                 amount=request.amount,
             ).transact()
         except web3.exceptions.ContractLogicError as exc:
-            self._log.debug("fillRequest failed", request_id=request.id, exc_args=exc.args)
+            self._log.error("fillRequest failed", request_id=request.id, exc_args=exc.args)
             return
 
-        self._w3.eth.wait_for_transaction_receipt(txn_hash)
+        w3.eth.wait_for_transaction_receipt(txn_hash)
 
         request.fill_unconfirmed()
         self._log.debug(
-            "Fulfilled request",
+            "Filled request",
             request=request,
             txn_hash=txn_hash.hex(),
             token=token.functions.symbol().call(),
+        )
+
+    def _claim_request(self, request: Request) -> None:
+        w3 = self._request_manager.web3
+        stake = self._request_manager.functions.claimStake().call()
+
+        try:
+            txn_hash = self._request_manager.functions.claimRequest(request.id).transact(
+                dict(value=stake)
+            )
+        except web3.exceptions.ContractLogicError as exc:
+            self._log.error(
+                "claimRequest failed", request_id=request.id, exc_args=exc.args, stake=stake
+            )
+            return
+
+        w3.eth.wait_for_transaction_receipt(txn_hash)
+
+        self._log.debug(
+            "Claimed request",
+            request=request,
+            txn_hash=txn_hash.hex(),
         )
