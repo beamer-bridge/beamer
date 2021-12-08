@@ -187,6 +187,17 @@ class EventProcessor:
                 return False
             self._log.info("Request claimed", _event=event)
             return True
+        elif isinstance(event, raisync.events.ClaimWithdrawn):
+            request = self._tracker.get(event.request_id)
+            if request is None:
+                return False
+
+            try:
+                request.withdraw()
+            except TransitionNotAllowed:
+                return False
+            self._log.info("Claim withdrawn", _event=event)
+            return True
         else:
             raise RuntimeError("Unrecognized event type")
 
@@ -204,6 +215,8 @@ class EventProcessor:
                 self._fill_request(request)
             elif request.is_filled and request.our_fill:
                 self._claim_request(request)
+            elif request.is_claimed and request.our_claim:
+                self._try_withdraw(request)
 
     def _fill_request(self, request: Request) -> None:
         w3 = self._fill_manager.web3
@@ -266,3 +279,21 @@ class EventProcessor:
             request=request,
             txn_hash=txn_hash.hex(),
         )
+
+    def _try_withdraw(self, request: Request) -> None:
+        w3 = self._request_manager.web3
+        address = w3.eth.default_account
+        claim = next(c for c in request.iter_claims() if c.claimer == address)
+
+        # check whether the claim period expired
+        if time.time() < claim.termination:
+            return
+
+        try:
+            txn_hash = self._request_manager.functions.withdraw(claim.claim_id).transact()
+        except web3.exceptions.ContractLogicError as exc:
+            self._log.error("withdraw failed", claim, exc_args=exc.args)
+            return
+
+        w3.eth.wait_for_transaction_receipt(txn_hash)
+        self._log.debug("Withdrew", claim=claim, txn_hash=txn_hash.hex())
