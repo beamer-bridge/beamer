@@ -34,10 +34,12 @@ class Request(StateMachine):
     filled = State("Filled")
     filled_unconfirmed = State("Filled-unconfirmed")
     claimed = State("Claimed")
+    withdrawn = State("Withdrawn")
 
     fill = pending.to(filled) | filled_unconfirmed.to(filled)
     fill_unconfirmed = pending.to(filled_unconfirmed)
     claim = filled.to(claimed)
+    withdraw = claimed.to(withdrawn)
 
     def on_fill(self, our_fill: bool) -> None:
         self.our_fill = our_fill
