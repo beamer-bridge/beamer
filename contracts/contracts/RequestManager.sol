@@ -52,7 +52,7 @@ contract RequestManager {
     event ClaimWithdrawn(
         uint256 indexed claimId,
         uint256 requestId,
-        address claimeReceiver
+        address claimReceiver
     );
 
     event ClaimChallenged(
