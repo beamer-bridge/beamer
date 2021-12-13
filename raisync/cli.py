@@ -77,6 +77,13 @@ def _sigint_handler(node: Node) -> None:
     metavar="DIR",
     help="The directory containing contract deployment files of the second L2 chain.",
 )
+@click.option(
+    "--log-level",
+    type=click.Choice(("debug", "info", "warning", "error", "critical")),
+    default="info",
+    show_default=True,
+    help="The log level.",
+)
 @click.version_option()
 def main(
     keystore_file: Path,
@@ -85,8 +92,9 @@ def main(
     l2b_rpc_url: URL,
     l2a_contracts_deployment_dir: Path,
     l2b_contracts_deployment_dir: Path,
+    log_level: str,
 ) -> None:
-    raisync.util.setup_logging(log_level="DEBUG", log_json=False)
+    raisync.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
