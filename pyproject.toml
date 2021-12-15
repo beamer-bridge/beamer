@@ -72,3 +72,7 @@ disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore:Development network has a block height of"
+
+[tool.coverage.run]
+source = ["raisync"]
+omit = ["raisync/tests/*"]
