@@ -1,7 +1,10 @@
 import logging
 import sys
+from typing import Dict, Set, Tuple
 
 import structlog
+
+from raisync.typing import Address, ChainId
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:
@@ -34,3 +37,21 @@ def setup_logging(log_level: str, log_json: bool) -> None:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+
+
+class TokenMatchChecker:
+    pairings: Dict[Tuple[ChainId, Address], Set[Tuple[ChainId, Address]]]
+
+    def is_valid_pair(
+        self,
+        source_chain_id: ChainId,
+        source_token_address: Address,
+        target_chain_id: ChainId,
+        target_token_address: Address,
+    ) -> bool:
+        target_pairs = self.pairings.get((source_chain_id, source_token_address))
+
+        if target_pairs is not None and (target_chain_id, target_token_address) in target_pairs:
+            return True
+
+        return False
