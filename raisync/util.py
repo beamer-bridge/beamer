@@ -1,8 +1,10 @@
+import json
 import logging
 import sys
-from typing import Dict, Set, Tuple
+from typing import Dict, Set, TextIO, Tuple
 
 import structlog
+from eth_utils import to_canonical_address
 
 from raisync.typing import Address, ChainId
 
@@ -40,7 +42,24 @@ def setup_logging(log_level: str, log_json: bool) -> None:
 
 
 class TokenMatchChecker:
-    pairings: Dict[Tuple[ChainId, Address], Set[Tuple[ChainId, Address]]]
+    def __init__(self, f: TextIO) -> None:
+        self.pairings: Dict[Tuple[ChainId, Address], Set[Tuple[ChainId, Address]]] = {}
+
+        data = json.load(f)
+
+        for source_chain_id_text, source_data in data.items():
+            source_chain_id = ChainId(int(source_chain_id_text))
+
+            for source_address, target_data in source_data.items():
+
+                for target_chain_id_text, target_address in target_data.items():
+
+                    target_chain_id = ChainId(int(target_chain_id_text))
+                    # check if already exists
+                    # add symmetric case
+                    self.pairings.setdefault(
+                        (source_chain_id, to_canonical_address(source_address)), set()
+                    ).add((target_chain_id, to_canonical_address(target_address)))
 
     def is_valid_pair(
         self,
