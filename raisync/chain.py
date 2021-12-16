@@ -16,6 +16,7 @@ import raisync.events
 from raisync.events import Event, EventFetcher
 from raisync.request import Request, RequestTracker
 from raisync.typing import BlockNumber, ChainId
+from raisync.util import TokenMatchChecker
 
 
 def _load_ERC20_abi() -> list[Any]:
@@ -101,6 +102,7 @@ class EventProcessor:
         self._tracker = tracker
         self._request_manager = request_manager
         self._fill_manager = fill_manager
+        self._match_checker = TokenMatchChecker()
         self._stop = False
         self._log = structlog.get_logger(type(self).__name__)
         # The number of times we synced with a chain:
@@ -174,6 +176,17 @@ class EventProcessor:
 
     def _process_event(self, event: Event) -> bool:
         if isinstance(event, raisync.events.RequestCreated):
+
+            is_valid_request = self._match_checker.is_valid_pair(
+                event.chain_id,
+                event.source_token_address,
+                event.target_chain_id,
+                event.target_token_address,
+            )
+            if not is_valid_request:
+                self._log.debug("Invaid token pair in request", _event=event)
+                return False
+
             req = Request(
                 request_id=event.request_id,
                 source_chain_id=event.chain_id,
