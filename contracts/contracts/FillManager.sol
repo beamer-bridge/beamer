@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/token/ERC20/IERC20.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
 
 contract DummyProofSubmitter {
@@ -11,7 +12,7 @@ contract DummyProofSubmitter {
     }
 }
 
-contract FillManager {
+contract FillManager is Ownable {
 
     event RequestFilled(
         uint256 indexed requestId,
@@ -24,6 +25,7 @@ contract FillManager {
     IProofSubmitter proofSubmitter;
 
     mapping(bytes32 => bool) fills;
+    mapping(address => bool) allowedLPs;
 
     constructor(address _l1Resolver, address _proofSubmitter)
     {
@@ -40,6 +42,7 @@ contract FillManager {
     )
     external
     {
+        require(allowedLPs[msg.sender], "Sender not whitelisted");
         bytes32 requestHash = keccak256(
             abi.encodePacked(
                 requestId, sourceChainId, targetTokenAddress, targetReceiverAddress, amount
@@ -54,5 +57,13 @@ contract FillManager {
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
 
         require(proofSubmitter.submitProof(l1Resolver, requestId), "Submitting proof data failed");
+    }
+
+    function addAllowedLP(address newLP) public onlyOwner {
+        allowedLPs[newLP] = true;
+    }
+
+    function removeAllowedLP(address oldLP) public onlyOwner {
+        delete allowedLPs[oldLP];
     }
 }
