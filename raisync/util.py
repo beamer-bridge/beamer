@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 from typing import Dict, Set, TextIO, Tuple
 
@@ -71,6 +72,9 @@ class TokenMatchChecker:
         target_pairs = self.pairings.get((source_chain_id, source_token_address))
 
         if target_pairs is not None and (target_chain_id, target_token_address) in target_pairs:
+            return True
+
+        if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
             return True
 
         return False
