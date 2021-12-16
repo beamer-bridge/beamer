@@ -11,6 +11,7 @@ import structlog
 import web3
 from eth_utils import to_checksum_address
 from statemachine.exceptions import TransitionNotAllowed
+from web3.contract import Contract
 
 import raisync.events
 from raisync.events import Event, EventFetcher
@@ -92,7 +93,13 @@ class ContractEventMonitor:
 
 
 class EventProcessor:
-    def __init__(self, tracker: RequestTracker, request_manager: Any, fill_manager: Any):
+    def __init__(
+        self,
+        tracker: RequestTracker,
+        request_manager: Contract,
+        fill_manager: Contract,
+        match_checker: TokenMatchChecker,
+    ):
         # This lock protects the following objects:
         #   - self._events
         #   - self._num_syncs_done
@@ -102,7 +109,7 @@ class EventProcessor:
         self._tracker = tracker
         self._request_manager = request_manager
         self._fill_manager = fill_manager
-        self._match_checker = TokenMatchChecker()
+        self._match_checker = match_checker
         self._stop = False
         self._log = structlog.get_logger(type(self).__name__)
         # The number of times we synced with a chain:
@@ -216,7 +223,7 @@ class EventProcessor:
 
             address = self._request_manager.web3.eth.default_account
             try:
-                request.claim(event=event, our_claim=event.claimer == address)
+                request.claim(event=event, our_claim=to_checksum_address(event.claimer) == address)
             except TransitionNotAllowed:
                 return False
             self._log.info("Request claimed", _event=event)
@@ -317,7 +324,7 @@ class EventProcessor:
     def _try_withdraw(self, request: Request) -> None:
         w3 = self._request_manager.web3
         address = w3.eth.default_account
-        claim = next(c for c in request.iter_claims() if c.claimer == address)
+        claim = next(c for c in request.iter_claims() if to_checksum_address(c.claimer) == address)
 
         # check whether the claim period expired
         # TODO: avoid making these calls every time

@@ -1,5 +1,6 @@
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 
 import structlog
 import web3
@@ -10,6 +11,7 @@ from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_mid
 from raisync.chain import ContractEventMonitor, EventProcessor, RequestTracker
 from raisync.contracts import ContractInfo, make_contracts
 from raisync.typing import URL
+from raisync.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
 
@@ -21,6 +23,7 @@ class Config:
     l2b_contracts_info: dict[str, ContractInfo]
     l2a_rpc_url: URL
     l2b_rpc_url: URL
+    token_match_file: Path
 
 
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
@@ -48,7 +51,12 @@ class Node:
         fill_manager = l2b_contracts["FillManager"]
 
         self.request_tracker = RequestTracker()
-        self._event_processor = EventProcessor(self.request_tracker, request_manager, fill_manager)
+        with open(config.token_match_file, "r") as f:
+            match_checker = TokenMatchChecker(f)
+
+        self._event_processor = EventProcessor(
+            self.request_tracker, request_manager, fill_manager, match_checker
+        )
 
         self._contract_monitor_l2a = ContractEventMonitor(
             "RequestManager",

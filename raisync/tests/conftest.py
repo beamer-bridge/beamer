@@ -1,3 +1,4 @@
+from pathlib import Path
 import brownie
 import eth_account
 import pytest
@@ -48,6 +49,7 @@ def config(request_manager, fill_manager, token):
         l2b_rpc_url=url,
         l2a_contracts_info=contracts_info,
         l2b_contracts_info=contracts_info,
+        token_match_file=Path(),
         account=account,
     )
     return config
