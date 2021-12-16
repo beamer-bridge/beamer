@@ -15,6 +15,7 @@ class Request(StateMachine):
         request_id: RequestId,
         source_chain_id: ChainId,
         target_chain_id: ChainId,
+        source_token_address: Address,
         target_token_address: Address,
         target_address: Address,
         amount: TokenAmount,
@@ -23,6 +24,7 @@ class Request(StateMachine):
         self.id = request_id
         self.source_chain_id = source_chain_id
         self.target_chain_id = target_chain_id
+        self.source_token_address = source_token_address
         self.target_token_address = target_token_address
         self.target_address = target_address
         self.amount = amount
