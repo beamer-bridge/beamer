@@ -78,6 +78,13 @@ def _sigint_handler(node: Node) -> None:
     help="The directory containing contract deployment files of the second L2 chain.",
 )
 @click.option(
+    "--token-match-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    metavar="FILE",
+    help="The file containing token matching information.",
+)
+@click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
     default="info",
@@ -92,6 +99,7 @@ def main(
     l2b_rpc_url: URL,
     l2a_contracts_deployment_dir: Path,
     l2b_contracts_deployment_dir: Path,
+    token_match_file: Path,
     log_level: str,
 ) -> None:
     raisync.util.setup_logging(log_level=log_level.upper(), log_json=False)
@@ -106,6 +114,7 @@ def main(
         l2b_contracts_info=l2b_contracts_info,
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
+        token_match_file=token_match_file,
     )
 
     signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(node))
