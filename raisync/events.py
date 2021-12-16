@@ -38,6 +38,7 @@ class RequestFilled(Event):
 class RequestCreated(Event):
     request_id: RequestId
     target_chain_id: ChainId
+    source_token_address: Address
     target_token_address: Address
     target_address: Address
     amount: TokenAmount
