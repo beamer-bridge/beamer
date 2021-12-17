@@ -14,7 +14,7 @@ from raisync.typing import URL
 log = structlog.get_logger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Config:
     account: LocalAccount
     l2a_contracts_info: dict[str, ContractInfo]
