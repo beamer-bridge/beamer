@@ -92,3 +92,26 @@ def test_fill_and_claim(request_manager, token, node):
     assert claims[0].claimer == node.address
 
     node.stop()
+
+
+def test_withdraw(request_manager, token, node):
+    node.start()
+    token.approve(request_manager.address, 1, {"from": accounts[0]})
+    target_address = accounts[1]
+
+    tx = request_manager.request(1337, token.address, token.address, target_address, 1)
+    request_id = tx.return_value
+
+    while (request := node.request_tracker.get(request_id)) is None:
+        time.sleep(0.1)
+
+    while not request.is_claimed:
+        time.sleep(0.1)
+
+    claim_period = request_manager.claimPeriod()
+    brownie.chain.mine(timedelta=claim_period)
+
+    while not request.is_withdrawn:
+        time.sleep(0.1)
+
+    node.stop()
