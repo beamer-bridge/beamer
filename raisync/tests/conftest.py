@@ -29,7 +29,7 @@ def l1_resolver():
 
 
 @pytest.fixture
-def node(request_manager, fill_manager, token):
+def config(request_manager, fill_manager, token):
     contracts_info = dict(
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(0),
@@ -50,6 +50,11 @@ def node(request_manager, fill_manager, token):
         l2b_contracts_info=contracts_info,
         account=account,
     )
+    return config
+
+
+@pytest.fixture
+def node(config):
     return Node(config)
 
 
