@@ -2,11 +2,11 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+import requests.exceptions
 import structlog
 import web3
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
-from requests.exceptions import ReadTimeout
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, FilterParams, LogReceipt
 
@@ -139,7 +139,7 @@ class EventFetcher:
             )
             logs = self._contract.web3.eth.get_logs(params)
             after_query = time.monotonic()
-        except ReadTimeout:
+        except requests.exceptions.ReadTimeout:
             old = self._blocks_to_fetch
             self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, old // 5)
             self._log.debug(
@@ -148,6 +148,12 @@ class EventFetcher:
                 new=self._blocks_to_fetch,
             )
             return None
+        except requests.exceptions.ConnectionError as exc:
+            assert isinstance(self._contract.web3.provider, web3.HTTPProvider)
+            url = self._contract.web3.provider.endpoint_uri
+            self._log.error("Connection error", url=url, exc=exc)
+            # Propagate the exception upwards so we don't make further attempts.
+            raise exc
         else:
             duration = after_query - before_query
             if duration < EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
@@ -167,7 +173,10 @@ class EventFetcher:
             from_block = self._next_block_number
             while from_block <= block_number:
                 to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
-                events = self._fetch_range(from_block, to_block)
+                try:
+                    events = self._fetch_range(from_block, to_block)
+                except requests.exceptions.ConnectionError:
+                    break
                 if events is not None:
                     result.extend(events)
                     from_block = BlockNumber(to_block + 1)
