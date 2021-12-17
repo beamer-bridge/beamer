@@ -47,8 +47,8 @@ class Node:
         request_manager = l2a_contracts["RequestManager"]
         fill_manager = l2b_contracts["FillManager"]
 
-        tracker = RequestTracker()
-        self._event_processor = EventProcessor(tracker, request_manager, fill_manager)
+        self.request_tracker = RequestTracker()
+        self._event_processor = EventProcessor(self.request_tracker, request_manager, fill_manager)
 
         self._contract_monitor_l2a = ContractEventMonitor(
             "RequestManager",
