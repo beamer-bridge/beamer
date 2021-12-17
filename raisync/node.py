@@ -24,7 +24,7 @@ class Config:
 
 
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
-    w3 = web3.Web3(web3.HTTPProvider(url))
+    w3 = web3.Web3(web3.HTTPProvider(url, request_kwargs=dict(timeout=5)))
     # Add POA middleware for geth POA chains, no/op for other chains
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
