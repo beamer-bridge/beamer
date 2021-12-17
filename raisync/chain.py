@@ -116,7 +116,7 @@ class EventProcessor:
             if self._have_new_events.wait(1):
                 self._have_new_events.clear()
                 self._process_events()
-                self._process_requests()
+            self._process_requests()
         self._log.info("EventProcessor stopped")
 
     def _process_events(self) -> None:
@@ -286,7 +286,9 @@ class EventProcessor:
         claim = next(c for c in request.iter_claims() if c.claimer == address)
 
         # check whether the claim period expired
-        if time.time() < claim.termination:
+        # TODO: avoid making these calls every time
+        block = w3.eth.get_block(w3.eth.block_number)
+        if block.timestamp < claim.termination:
             return
 
         try:
