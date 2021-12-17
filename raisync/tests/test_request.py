@@ -71,3 +71,24 @@ def test_read_timeout(config):
     node.stop()
     proxy_l2a.stop()
     proxy_l2b.stop()
+
+
+def test_fill_and_claim(request_manager, token, node):
+    node.start()
+    token.approve(request_manager.address, 1, {"from": accounts[0]})
+    target_address = accounts[1]
+
+    tx = request_manager.request(1337, token.address, token.address, target_address, 1)
+    request_id = tx.return_value
+
+    while (request := node.request_tracker.get(request_id)) is None:
+        time.sleep(0.1)
+    assert request.id == request_id
+
+    while not request.is_claimed:
+        time.sleep(0.1)
+    claims = tuple(request.iter_claims())
+    assert len(claims) == 1
+    assert claims[0].claimer == node.address
+
+    node.stop()
