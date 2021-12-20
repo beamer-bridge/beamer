@@ -74,3 +74,15 @@ jobs:
         run: |
           cd contracts
           poetry run brownie test -v tests
+
+      - name: Run node tests
+        run: |
+          # Generate deployment artifacts under contracts/build/deployments/dev.
+          # Start ganache separately so that brownie does not need to start
+          # it. If brownie starts ganache, it will remove the generated
+          # deployment artifacts after it is done.
+          ganache-cli --accounts 10 --hardfork istanbul --gasLimit 12000000 --mnemonic brownie --port 8545 -q &
+          pushd contracts && poetry run brownie run deploy && popd
+          killall node
+
+          poetry run pytest -v --cov-report=term --cov raisync raisync/tests
