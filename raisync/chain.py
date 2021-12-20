@@ -329,7 +329,7 @@ class EventProcessor:
         # check whether the claim period expired
         # TODO: avoid making these calls every time
         block = w3.eth.get_block(w3.eth.block_number)
-        if block.timestamp < claim.termination:
+        if block["timestamp"] < claim.termination:
             return
 
         try:
