@@ -1,7 +1,10 @@
 import json
+import os
 import pathlib
+import sys
 import threading
 import time
+import traceback
 from typing import Any, Callable
 
 import structlog
@@ -29,6 +32,19 @@ _ERC20_ABI = _load_ERC20_abi()
 _STOP_TIMEOUT = 2
 
 
+def _wrap_thread_func(func: Callable) -> Callable:
+    def wrapper(*args, **kwargs):  # type: ignore
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            traceback.print_exception(*sys.exc_info())
+            os._exit(1)
+            # should never be reached
+            return None
+
+    return wrapper
+
+
 class ContractEventMonitor:
     def __init__(
         self,
@@ -47,7 +63,9 @@ class ContractEventMonitor:
         self._log = structlog.get_logger(type(self).__name__).bind(contract=name)
 
     def start(self) -> None:
-        self._thread = threading.Thread(name=self._name, target=self._thread_func)
+        self._thread = threading.Thread(
+            name=self._name, target=_wrap_thread_func(self._thread_func)
+        )
         self._thread.start()
 
     def stop(self) -> None:
@@ -97,7 +115,9 @@ class EventProcessor:
             self._num_syncs_done += 1
 
     def start(self) -> None:
-        self._thread = threading.Thread(name="EventProcessor", target=self._thread_func)
+        self._thread = threading.Thread(
+            name="EventProcessor", target=_wrap_thread_func(self._thread_func)
+        )
         self._thread.start()
 
     def stop(self) -> None:
