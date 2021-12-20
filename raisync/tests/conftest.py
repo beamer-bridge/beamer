@@ -65,7 +65,9 @@ def dummy_proof_submitter(DummyProofSubmitter):
 
 @pytest.fixture
 def fill_manager(FillManager, l1_resolver, dummy_proof_submitter):
-    return accounts[0].deploy(FillManager, l1_resolver, dummy_proof_submitter.address)
+    manager = accounts[0].deploy(FillManager, l1_resolver, dummy_proof_submitter.address)
+    manager.addAllowedLP(_LOCAL_ACCOUNT)
+    return manager
 
 
 @pytest.fixture
