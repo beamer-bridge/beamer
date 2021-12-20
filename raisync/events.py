@@ -95,14 +95,26 @@ def _make_topics_to_abi(contract: web3.contract.Contract) -> dict[bytes, ABIEven
 
 def _decode_event(
     codec: ABICodec, log_entry: LogReceipt, chain_id: ChainId, event_abis: dict[bytes, ABIEvent]
-) -> Event:
+) -> Optional[Event]:
     topic = log_entry["topics"][0]
     event_abi = event_abis[topic]
     data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
-    kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
-    kwargs["chain_id"] = chain_id
-    assert data.event in _EVENT_TYPES
-    return _EVENT_TYPES[data.event](**kwargs)
+    if data.event in _EVENT_TYPES:
+        kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
+        kwargs["chain_id"] = chain_id
+        return _EVENT_TYPES[data.event](**kwargs)
+    return None
+
+
+def _decode_events(
+    logs: list[LogReceipt], codec: ABICodec, chain_id: ChainId, event_abis: dict[bytes, ABIEvent]
+) -> list[Event]:
+    events = []
+    for entry in logs:
+        event = _decode_event(codec, entry, chain_id, event_abis)
+        if event is not None:
+            events.append(event)
+    return events
 
 
 class EventFetcher:
@@ -161,9 +173,7 @@ class EventFetcher:
             elif duration > EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
                 self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
             codec = self._contract.web3.codec
-            events = [
-                _decode_event(codec, entry, self._chain_id, self._event_abis) for entry in logs
-            ]
+            events = _decode_events(logs, codec, self._chain_id, self._event_abis)
             return events
 
     def fetch(self) -> list[Event]:
