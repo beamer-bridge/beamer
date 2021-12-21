@@ -1,6 +1,8 @@
-from pathlib import Path
+import os
+import pathlib
 import brownie
 import eth_account
+
 import pytest
 from brownie import Wei, accounts
 
@@ -31,6 +33,9 @@ def l1_resolver():
 
 @pytest.fixture
 def config(request_manager, fill_manager, token):
+    root = pathlib.Path(__file__).parents[2]
+    token_match_file = root / "raisync/data/tokens.example.json"
+
     contracts_info = dict(
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(0),
@@ -49,7 +54,7 @@ def config(request_manager, fill_manager, token):
         l2b_rpc_url=url,
         l2a_contracts_info=contracts_info,
         l2b_contracts_info=contracts_info,
-        token_match_file=Path(),
+        token_match_file=token_match_file,
         account=account,
     )
     return config
@@ -57,6 +62,7 @@ def config(request_manager, fill_manager, token):
 
 @pytest.fixture
 def node(config):
+    os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = "1"
     return Node(config)
 
 

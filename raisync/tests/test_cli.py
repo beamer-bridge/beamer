@@ -14,9 +14,8 @@ def test_cli(config, tmp_path):
     obj = eth_account.account.create_keyfile_json(acc.key, b"")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
-    contracts_deployment_dir = str(
-        pathlib.Path(__file__).parents[2] / "contracts/build/deployments/dev"
-    )
+    root = pathlib.Path(__file__).parents[2]
+    contracts_deployment_dir = str(root / "contracts/build/deployments/dev")
 
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
@@ -37,6 +36,8 @@ def test_cli(config, tmp_path):
             contracts_deployment_dir,
             "--l2b-contracts-deployment-dir",
             contracts_deployment_dir,
+            "--token-match-file",
+            str(root / "raisync/data/tokens.example.json"),
         ],
     )
     assert result.exit_code == 0
