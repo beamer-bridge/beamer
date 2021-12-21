@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import sys
-from typing import Dict, Set, TextIO, Tuple
+from typing import TextIO
 
 import structlog
 from eth_utils import to_canonical_address
@@ -42,25 +42,22 @@ def setup_logging(log_level: str, log_json: bool) -> None:
     )
 
 
+_Token = tuple[ChainId, Address]
+
+
 class TokenMatchChecker:
     def __init__(self, f: TextIO) -> None:
-        self.pairings: Dict[Tuple[ChainId, Address], Set[Tuple[ChainId, Address]]] = {}
+        # A mapping of tokens to equivalence classes. Each frozenset contains
+        # tokens that are considered mutually equivalent.
+        self._tokens: dict[_Token, frozenset[_Token]] = {}
 
         data = json.load(f)
-
-        for source_chain_id_text, source_data in data.items():
-            source_chain_id = ChainId(int(source_chain_id_text))
-
-            for source_address, target_data in source_data.items():
-
-                for target_chain_id_text, target_address in target_data.items():
-
-                    target_chain_id = ChainId(int(target_chain_id_text))
-                    # check if already exists
-                    # add symmetric case
-                    self.pairings.setdefault(
-                        (source_chain_id, to_canonical_address(source_address)), set()
-                    ).add((target_chain_id, to_canonical_address(target_address)))
+        for equiv_class in data:
+            equiv_class = frozenset(
+                (chain_id, to_canonical_address(address)) for (chain_id, address) in equiv_class
+            )
+            for token in equiv_class:
+                self._tokens[token] = equiv_class
 
     def is_valid_pair(
         self,
@@ -69,12 +66,9 @@ class TokenMatchChecker:
         target_chain_id: ChainId,
         target_token_address: Address,
     ) -> bool:
-        target_pairs = self.pairings.get((source_chain_id, source_token_address))
-
-        if target_pairs is not None and (target_chain_id, target_token_address) in target_pairs:
-            return True
-
         if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
             return True
 
-        return False
+        source_token = source_chain_id, source_token_address
+        target_token = target_chain_id, target_token_address
+        return target_token in self._tokens.get(source_token, frozenset())
