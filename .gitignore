@@ -6,5 +6,6 @@ venv/
 
 .mypy_cache
 .pytest_cache
+.coverage
 
 vetur.config.js
