@@ -1,7 +1,9 @@
 import time
 
 import brownie
+import pytest
 from brownie import accounts
+
 import raisync.node
 from raisync.tests.util import HTTPProxy
 
@@ -73,7 +75,8 @@ def test_read_timeout(config):
     proxy_l2b.stop()
 
 
-def test_fill_and_claim(request_manager, token, node):
+@pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
+def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     node.start()
     token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
@@ -81,12 +84,22 @@ def test_fill_and_claim(request_manager, token, node):
     tx = request_manager.request(1337, token.address, token.address, target_address, 1)
     request_id = tx.return_value
 
-    while (request := node.request_tracker.get(request_id)) is None:
+    timeout = 5.0
+    wait_time = 0.0
+    while (request := node.request_tracker.get(request_id)) is None and wait_time < timeout:
         time.sleep(0.1)
-    assert request.id == request_id
+        wait_time += 0.1
+
+    if not allow_unlisted_pairs:
+        assert request is None
+        node.stop()
+        return
+    else:
+        assert request.id == request_id
 
     while not request.is_claimed:
         time.sleep(0.1)
+
     claims = tuple(request.iter_claims())
     assert len(claims) == 1
     assert claims[0].claimer == node.address
