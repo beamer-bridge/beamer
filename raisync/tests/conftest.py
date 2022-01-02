@@ -61,8 +61,21 @@ def config(request_manager, fill_manager, token):
 
 
 @pytest.fixture
-def node(config):
-    os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = "1"
+def allow_unlisted_pairs() -> bool:
+    return True
+
+
+@pytest.fixture
+def set_allow_unlisted_pairs(allow_unlisted_pairs: bool) -> None:
+    if allow_unlisted_pairs:
+        os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = "1"
+    else:
+        if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
+            del os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"]
+
+
+@pytest.fixture
+def node(config, set_allow_unlisted_pairs):
     return Node(config)
 
 
