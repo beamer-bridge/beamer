@@ -108,9 +108,8 @@ contract RequestManager {
     external returns (uint256)
     {
         requestCounter += 1;
-        uint256 requestId = requestCounter;
 
-        Request storage newRequest = requests[requestId];
+        Request storage newRequest = requests[requestCounter];
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
         newRequest.targetTokenAddress = targetTokenAddress;
@@ -119,7 +118,7 @@ contract RequestManager {
         newRequest.depositWithdrawn = false;
 
         emit RequestCreated(
-            requestId,
+            requestCounter,
             targetChainId,
             sourceTokenAddress,
             targetTokenAddress,
@@ -130,7 +129,7 @@ contract RequestManager {
         IERC20 token = IERC20(sourceTokenAddress);
         require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
-        return requestId;
+        return requestCounter;
     }
 
     function claimRequest(uint256 requestId) external payable returns (uint256) {
@@ -138,7 +137,6 @@ contract RequestManager {
         require(msg.value == claimStake, "Stake provided not correct");
 
         claimCounter += 1;
-        uint256 newClaimId = claimCounter;
 
         Claim storage newClaim = claims[claimCounter];
         newClaim.requestId = requestId;
@@ -147,7 +145,7 @@ contract RequestManager {
         newClaim.termination = block.timestamp + claimPeriod;
 
         emit ClaimCreated(
-            newClaimId,
+            claimCounter,
             requestId,
             newClaim.claimer,
             newClaim.termination
@@ -156,7 +154,7 @@ contract RequestManager {
         return claimCounter;
     }
 
-    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable{
+    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable {
         Challenge storage challenge = challenges[claimId];
 
         require(challenge.challenger == address(0), "Already challenged");
