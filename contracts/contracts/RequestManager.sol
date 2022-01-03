@@ -11,6 +11,7 @@ contract RequestManager {
 
     // Structs
     struct Request {
+        address sender;
         address sourceTokenAddress;
         uint256 targetChainId;
         address targetTokenAddress;
@@ -33,6 +34,11 @@ contract RequestManager {
         uint256 termination;
     }
 
+    struct Cancellation {
+        uint256 requestId;
+        uint256 termination;
+    }
+
     // Events
     event RequestCreated(
         uint256 indexed requestId,
@@ -41,6 +47,10 @@ contract RequestManager {
         address targetTokenAddress,
         address targetAddress,
         uint256 amount
+    );
+
+    event RequestCancelled(
+        uint256 indexed requestId
     );
 
     event ClaimCreated(
@@ -72,15 +82,24 @@ contract RequestManager {
     uint256 public claimPeriod;
     uint256 public challengePeriod;
     uint256 public challengePeriodExtension;
+    uint256 public cancellationPeriod;
 
     // Variables
     uint256 public requestCounter;
     uint256 public claimCounter;
+    uint256 public cancellationCounter;
     mapping (uint256 => Request) public requests;
     mapping (uint256 => Claim) public claims;
+    // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
+    mapping (uint256 => Cancellation) public cancellations;
 
     // Modifiers
+    modifier validRequestId(uint256 requestId) {
+        require(requestId <= requestCounter && requestId > 0, "requestId not valid");
+        _;
+    }
+
     modifier validClaimId(uint256 claimId) {
         require(claimId <= claimCounter && claimId > 0, "claimId not valid");
         _;
@@ -90,12 +109,14 @@ contract RequestManager {
         uint256 _claimStake,
         uint256 _claimPeriod,
         uint256 _challengePeriod,
-        uint256 _challengePeriodExtension
+        uint256 _challengePeriodExtension,
+        uint256 _cancellationPeriod
     ) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriod = _challengePeriod;
         challengePeriodExtension = _challengePeriodExtension;
+        cancellationPeriod = _cancellationPeriod;
     }
 
     function request(
@@ -110,6 +131,7 @@ contract RequestManager {
         requestCounter += 1;
 
         Request storage newRequest = requests[requestCounter];
+        newRequest.sender = msg.sender;
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
         newRequest.targetTokenAddress = targetTokenAddress;
@@ -130,6 +152,34 @@ contract RequestManager {
         require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         return requestCounter;
+    }
+
+    function cancelRequest(uint256 requestId) external validRequestId(requestId) returns (uint256) {
+        require(!requests[requestId].depositWithdrawn, "Deposit already withdrawn");
+        require(msg.sender == requests[requestId].sender, "Sender is not requester");
+
+        cancellationCounter += 1;
+
+        Cancellation storage newCancellation = cancellations[cancellationCounter];
+        newCancellation.requestId = requestId;
+        newCancellation.termination = block.timestamp + cancellationPeriod;
+
+        emit RequestCancelled(requestId);
+
+        return cancellationCounter;
+    }
+
+    function withdrawCancelledRequest(uint256 cancellationId) external {
+        Cancellation storage cancellation = cancellations[cancellationId];
+        Request storage request = requests[cancellation.requestId];
+
+        require(!request.depositWithdrawn , "Cancellation already withdrawn");
+        require(block.timestamp >= cancellation.termination, "Cancellation period not over yet");
+
+        // Somehow check that no claims exist
+
+        IERC20 token = IERC20(request.sourceTokenAddress);
+        require(token.transfer(request.sender, request.amount), "Transfer failed");
     }
 
     function claimRequest(uint256 requestId) external payable returns (uint256) {
