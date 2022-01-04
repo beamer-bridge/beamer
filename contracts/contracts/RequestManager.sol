@@ -206,7 +206,7 @@ contract RequestManager {
     function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
-        require(!claim.withdrawn, "Already withdrawn");
+        require(!claim.withdrawn, "Claim already withdrawn");
 
         bool requestClaimed = request.depositWithdrawn;
 
@@ -226,7 +226,7 @@ contract RequestManager {
 
         claim.withdrawn = true;
         uint256 ethToTransfer = claimStake;
-        if (!requestClaimed) {
+        if (!requestClaimed && claimReceiver == claim.claimer) {
             request.depositWithdrawn = true;
             withdraw_deposit(claimId, request, claim, claimReceiver);
         }
