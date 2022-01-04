@@ -81,7 +81,7 @@ def set_allow_unlisted_pairs(allow_unlisted_pairs: bool) -> None:
 
 
 @pytest.fixture
-def node(config, set_allow_unlisted_pairs):
+def node(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
     return Node(config)
 
 

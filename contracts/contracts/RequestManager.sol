@@ -10,6 +10,8 @@ contract RequestManager {
     using Math for uint256;
 
     // Structs
+    // TODO: check if we can use a smaller type for `targetChainId`, so that the
+    // fileds can be packed into one storage slot
     struct Request {
         address sender;
         address sourceTokenAddress;
@@ -18,6 +20,8 @@ contract RequestManager {
         address targetAddress;
         uint256 amount;
         bool depositWithdrawn;
+        uint192 activeClaims;
+        uint256 cancellationTermination;
     }
 
     struct Claim {
@@ -34,11 +38,6 @@ contract RequestManager {
         uint256 termination;
     }
 
-    struct Cancellation {
-        uint256 requestId;
-        uint256 termination;
-    }
-
     // Events
     event RequestCreated(
         uint256 indexed requestId,
@@ -50,7 +49,7 @@ contract RequestManager {
     );
 
     event RequestCancelled(
-        uint256 indexed requestId
+        uint256 requestId
     );
 
     event ClaimCreated(
@@ -87,12 +86,11 @@ contract RequestManager {
     // Variables
     uint256 public requestCounter;
     uint256 public claimCounter;
-    uint256 public cancellationCounter;
+
     mapping (uint256 => Request) public requests;
     mapping (uint256 => Claim) public claims;
     // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
-    mapping (uint256 => Cancellation) public cancellations;
 
     // Modifiers
     modifier validRequestId(uint256 requestId) {
@@ -154,38 +152,38 @@ contract RequestManager {
         return requestCounter;
     }
 
-    function cancelRequest(uint256 requestId) external validRequestId(requestId) returns (uint256) {
-        require(!requests[requestId].depositWithdrawn, "Deposit already withdrawn");
-        require(msg.sender == requests[requestId].sender, "Sender is not requester");
+    function cancelRequest(uint256 requestId) external validRequestId(requestId) {
+        Request storage request = requests[requestId];
 
-        cancellationCounter += 1;
+        require(!request.depositWithdrawn, "Deposit already withdrawn");
+        require(msg.sender == request.sender, "Sender is not requester");
 
-        Cancellation storage newCancellation = cancellations[cancellationCounter];
-        newCancellation.requestId = requestId;
-        newCancellation.termination = block.timestamp + cancellationPeriod;
+        request.cancellationTermination = block.timestamp + cancellationPeriod;
 
         emit RequestCancelled(requestId);
-
-        return cancellationCounter;
     }
 
-    function withdrawCancelledRequest(uint256 cancellationId) external {
-        Cancellation storage cancellation = cancellations[cancellationId];
-        Request storage request = requests[cancellation.requestId];
+    function withdrawCancelledRequest(uint256 requestId) external validRequestId(requestId) {
+        Request storage request = requests[requestId];
 
-        require(!request.depositWithdrawn , "Cancellation already withdrawn");
-        require(block.timestamp >= cancellation.termination, "Cancellation period not over yet");
+        require(!request.depositWithdrawn , "Deposit already withdrawn");
+        require(block.timestamp >= request.cancellationTermination, "Cancellation period not over yet");
+        require(request.activeClaims == 0, "Active claims running");
 
-        // Somehow check that no claims exist
+        request.depositWithdrawn = true;
+        // TODO: emit event?
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(request.sender, request.amount), "Transfer failed");
     }
 
     function claimRequest(uint256 requestId) external payable returns (uint256) {
-        require(!requests[requestId].depositWithdrawn, "Deposit already withdrawn");
+        Request storage request = requests[requestId];
+
+        require(!request.depositWithdrawn, "Deposit already withdrawn");
         require(msg.value == claimStake, "Stake provided not correct");
 
+        request.activeClaims += 1;
         claimCounter += 1;
 
         Claim storage newClaim = claims[claimCounter];
@@ -273,6 +271,8 @@ contract RequestManager {
         }
 
         claim.withdrawn = true;
+        request.activeClaims -= 1;
+
         uint256 ethToTransfer = claimStake;
         if (!requestClaimed && claimReceiver == claim.claimer) {
             request.depositWithdrawn = true;
