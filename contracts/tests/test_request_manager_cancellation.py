@@ -182,3 +182,37 @@ def test_cancelled_request_claim_failed(
     assert token.balanceOf(claimer) == 0
     assert token.balanceOf(challenger) == 0
     assert token.balanceOf(request_manager.address) == 0
+
+
+def test_claim_after_cancelled_request_fails(
+    request_manager, token, cancellation_period, claim_stake
+):
+    """Test that claiming after withdrawing a cancelled request fails"""
+
+    requester = accounts[1]
+    claimer = accounts[2]
+
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+
+    token.approve(request_manager.address, transfer_amount, {"from": requester})
+    request_tx = request_manager.request(
+        1,
+        token.address,
+        token.address,
+        "0x5d5640575161450A674a094730365A223B226649",
+        transfer_amount,
+        {"from": requester},
+    )
+    request_id = request_tx.return_value
+
+    request_manager.cancelRequest(request_id, {"from": requester})
+
+    # Timetravel after cancellation period
+    chain.mine(timedelta=cancellation_period)
+    request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+
+    with brownie.reverts("Deposit already withdrawn"):
+        request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
