@@ -177,7 +177,7 @@ contract RequestManager {
         require(token.transfer(request.sender, request.amount), "Transfer failed");
     }
 
-    function claimRequest(uint256 requestId) external payable returns (uint256) {
+    function claimRequest(uint256 requestId) external validRequestId(requestId) payable returns (uint256) {
         Request storage request = requests[requestId];
 
         require(!request.depositWithdrawn, "Deposit already withdrawn");
