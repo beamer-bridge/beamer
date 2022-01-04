@@ -2,24 +2,43 @@ import brownie
 from brownie import accounts, chain, web3
 
 
-def test_claim_with_different_stakes(request_manager, claim_stake):
+def make_request(request_manager, token, requester, amount) -> int:
+    token.mint(requester, amount, {"from": requester})
+
+    token.approve(request_manager.address, amount, {"from": requester})
+    request_tx = request_manager.request(
+        1,
+        token.address,
+        token.address,
+        "0x5d5640575161450A674a094730365A223B226649",
+        amount,
+        {"from": requester},
+    )
+    return request_tx.return_value
+
+
+def test_claim_with_different_stakes(token, request_manager, claim_stake):
     """Test that only claims with the correct stake can be submitted"""
-    claim = request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake})
+    request_id = make_request(request_manager, token, accounts[0], 1)
+
+    claim = request_manager.claimRequest(request_id, {"from": accounts[0], "value": claim_stake})
     assert "ClaimCreated" in claim.events
 
     with brownie.reverts("Stake provided not correct"):
-        request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake - 1})
+        request_manager.claimRequest(request_id, {"from": accounts[0], "value": claim_stake - 1})
 
     with brownie.reverts("Stake provided not correct"):
-        request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake + 1})
+        request_manager.claimRequest(request_id, {"from": accounts[0], "value": claim_stake + 1})
 
     with brownie.reverts("Stake provided not correct"):
-        request_manager.claimRequest(123, {"from": accounts[0]})
+        request_manager.claimRequest(request_id, {"from": accounts[0]})
 
 
-def test_claim_challenge(request_manager, claim_stake):
+def test_claim_challenge(request_manager, token, claim_stake):
     """Test challenging a claim"""
-    claim = request_manager.claimRequest(123, {"from": accounts[0], "value": claim_stake})
+    request_id = make_request(request_manager, token, accounts[0], 1)
+
+    claim = request_manager.claimRequest(request_id, {"from": accounts[0], "value": claim_stake})
 
     with brownie.reverts("Not enough funds provided"):
         request_manager.challengeClaim(
@@ -41,12 +60,13 @@ def test_claim_challenge(request_manager, claim_stake):
         )
 
 
-def test_claim_counter_challenge(request_manager, claim_stake):
+def test_claim_counter_challenge(request_manager, token, claim_stake):
     """Test counter-challenging a challenge"""
     claimer = accounts[0]
     challenger = accounts[1]
+    request_id = make_request(request_manager, token, accounts[2], 1)
 
-    claim = request_manager.claimRequest(123, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
 
     with brownie.reverts("Claim not yet challenged"):
@@ -78,13 +98,14 @@ def test_claim_counter_challenge(request_manager, claim_stake):
 
 
 def test_claim_period_extension(
-    request_manager, claim_stake, claim_period, challenge_period, challenge_period_extension
+    request_manager, token, claim_stake, claim_period, challenge_period, challenge_period_extension
 ):
     """Test the extension of the claim/challenge period"""
     claimer = accounts[0]
     challenger = accounts[1]
+    request_id = make_request(request_manager, token, accounts[2], 1)
 
-    claim = request_manager.claimRequest(123, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
 
     assert claim.timestamp + claim_period == request_manager.claims(claim_id)[3]
@@ -117,6 +138,12 @@ def test_withdraw_nonexistent_claim(request_manager):
     """Test withdrawing a non-existent claim"""
     with brownie.reverts("claimId not valid"):
         request_manager.withdraw(1234, {"from": accounts[0]})
+
+
+def test_claim_nonexistent_request(request_manager):
+    """Test claiming a non-existent request"""
+    with brownie.reverts("requestId not valid"):
+        request_manager.claimRequest(1234, {"from": accounts[0]})
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
