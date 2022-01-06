@@ -23,7 +23,6 @@ import {
   JsonRpcSigner,
   TransactionReceipt,
   TransactionResponse,
-  Web3Provider,
 } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { BigNumber, Contract } from 'ethers';
@@ -32,6 +31,7 @@ import { Options, Vue } from 'vue-class-component';
 import CustomToken from '@/assets/CustomToken.json';
 import RequestManager from '@/assets/RequestManager.json';
 import RequestForm, { RequestFormResult } from '@/components/RequestForm.vue';
+import { EthereumProvider, MetaMaskProvider } from '@/services/web3-provider';
 
 @Options({
   components: {
@@ -43,11 +43,13 @@ export default class Home extends Vue {
   criticalErrorMessage = '';
   transactionErrorMessage = '';
   successfulTransactionUrl = '';
-  web3Provider!: Web3Provider;
+  ethereumProvider!: EthereumProvider;
 
   async created(): Promise<void> {
-    await this.detectEthereumProvider();
-    this.checkChainId();
+    await this.createMetaMaskProvider();
+    if (this.ethereumProvider) {
+      this.checkChainId();
+    }
   }
 
   private async executeRequestTransaction(formResult: RequestFormResult) {
@@ -55,10 +57,14 @@ export default class Home extends Vue {
     this.transactionErrorMessage = '';
 
     try {
-      const signer = await this.getDefaultSigner();
-      await this.ensureTokenAllowance(signer, formResult.sourceTokenAddress, formResult.amount);
+      await this.ensureSigner();
+      await this.ensureTokenAllowance(
+        this.ethereumProvider.signer!,
+        formResult.sourceTokenAddress,
+        formResult.amount,
+      );
       const transactionReceipt = await this.sendRequestTransaction(
-        signer,
+        this.ethereumProvider.signer!,
         formResult.targetChainId,
         formResult.sourceTokenAddress,
         formResult.targetTokenAddress,
@@ -75,29 +81,31 @@ export default class Home extends Vue {
     this.executingRequest = false;
   }
 
-  private async detectEthereumProvider(): Promise<void> {
-    const detectedProvider = await detectEthereumProvider();
-    if (detectedProvider) {
-      this.web3Provider = new Web3Provider(detectedProvider as ExternalProvider);
+  private async createMetaMaskProvider(): Promise<void> {
+    const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;
+    if (detectedProvider && detectedProvider.isMetaMask) {
+      this.ethereumProvider = new MetaMaskProvider(detectedProvider);
     } else {
-      this.criticalErrorMessage = 'No web3 provider detected!';
+      this.criticalErrorMessage = 'Could not detect MetaMask!';
     }
   }
 
   private async checkChainId(): Promise<void> {
-    const { chainId } = await this.web3Provider.getNetwork();
+    const chainId = await this.ethereumProvider.getChainId();
     const expectedChainId = Number(process.env.VUE_APP_CHAIN_ID!);
     if (chainId !== expectedChainId) {
       this.criticalErrorMessage = `Not connected to chain id ${expectedChainId}!`;
     }
   }
 
-  private async getDefaultSigner(): Promise<JsonRpcSigner> {
-    const accounts = await this.web3Provider.listAccounts();
-    if (accounts.length === 0) {
-      await this.web3Provider.send('eth_requestAccounts', []);
+  private async ensureSigner(): Promise<void> {
+    if (this.ethereumProvider.signer) {
+      return;
     }
-    return this.web3Provider.getSigner();
+    await this.ethereumProvider.requestSigner();
+    if (!this.ethereumProvider.signer) {
+      throw Error('Accessing wallet failed!');
+    }
   }
 
   private async ensureTokenAllowance(
