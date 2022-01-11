@@ -550,3 +550,33 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
     # Claiming the same request again must fail
     with brownie.reverts("Deposit already withdrawn"):
         request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+
+
+def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
+    """Test that one can withdraw a claim immediately after the request
+    deposit has been withdrawn via another claim."""
+    requester, claimer1, claimer2 = accounts[:3]
+
+    request_id = make_request(request_manager, token, accounts[0], 23)
+    claimer2_eth_balance = web3.eth.get_balance(claimer2.address)
+
+    claim1_tx = request_manager.claimRequest(request_id, {"from": claimer1, "value": claim_stake})
+    claim1_id = claim1_tx.return_value
+
+    # Timetravel after claim period / 2.
+    chain.mine(timedelta=claim_period / 2)
+    claim2_tx = request_manager.claimRequest(request_id, {"from": claimer2, "value": claim_stake})
+    claim2_id = claim2_tx.return_value
+
+    # Timetravel after claim period / 2. At this point claim 1 can be
+    # withdrawn (its claim period is over), but not claim 2 (its claim period
+    # is not over yet).
+    chain.mine(timedelta=claim_period / 2)
+    withdraw_tx = request_manager.withdraw(claim1_id, {"from": claimer1})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    # Withdrawing the second claim must now succeed immediately because the
+    # deposit has been withdrawn and we do not need to wait for the claim
+    # period.
+    withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
+    assert claimer2_eth_balance == web3.eth.get_balance(claimer2.address)
