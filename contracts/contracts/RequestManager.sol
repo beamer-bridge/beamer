@@ -4,8 +4,9 @@ pragma solidity ^0.8.7;
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/token/ERC20/IERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/utils/math/SafeMath.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/utils/math/Math.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/access/Ownable.sol";
 
-contract RequestManager {
+contract RequestManager is Ownable {
     using SafeMath for uint256;
     using Math for uint256;
 
@@ -370,5 +371,16 @@ contract RequestManager {
         delete challenges[claimId];
 
         return challengeStake - claimStake;
+    }
+
+    function withdrawRaisyncFees() external onlyOwner {
+        uint256 ethToTransfer = collectedRaisyncFees;
+        collectedRaisyncFees = 0;
+
+        (bool sent, bytes memory data) = msg.sender.call{value: ethToTransfer}("");
+        require(sent, "Failed to send Ether");
+
+        // As this is transferring Eth, no reentrancy is possible here
+        collectedRaisyncFees = 0;
     }
 }
