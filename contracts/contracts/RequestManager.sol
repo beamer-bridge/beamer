@@ -121,7 +121,7 @@ contract RequestManager {
         cancellationPeriod = _cancellationPeriod;
     }
 
-    function request(
+    function createRequest(
         uint256 targetChainId,
         address sourceTokenAddress,
         address targetTokenAddress,

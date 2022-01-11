@@ -2,7 +2,7 @@ def make_request(request_manager, token, requester, amount) -> int:
     token.mint(requester, amount, {"from": requester})
 
     token.approve(request_manager.address, amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,

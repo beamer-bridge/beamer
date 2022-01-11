@@ -14,7 +14,7 @@ def test_request(request_manager, token, node):
     target_address = accounts[1]
 
     assert not brownie.history.of_address(request_manager.address)
-    request_manager.request(1337, token.address, token.address, target_address, 1)
+    request_manager.createRequest(1337, token.address, token.address, target_address, 1)
     txs = brownie.history.of_address(request_manager.address)
     assert len(txs) == 1
     tx = txs[0]
@@ -81,7 +81,7 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
 
-    tx = request_manager.request(1337, token.address, token.address, target_address, 1)
+    tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
     request_id = tx.return_value
 
     timeout = 5.0
@@ -112,7 +112,7 @@ def test_withdraw(request_manager, token, node):
     token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
 
-    tx = request_manager.request(1337, token.address, token.address, target_address, 1)
+    tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
     request_id = tx.return_value
 
     while (request := node.request_tracker.get(request_id)) is None:
