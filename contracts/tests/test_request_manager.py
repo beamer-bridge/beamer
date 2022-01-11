@@ -149,7 +149,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     assert web3.eth.get_balance(request_manager.address) == 0
 
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
@@ -207,7 +207,7 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
     assert web3.eth.get_balance(request_manager.address) == 0
 
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
@@ -277,7 +277,7 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
     assert web3.eth.get_balance(request_manager.address) == 0
 
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
@@ -357,7 +357,7 @@ def test_withdraw_with_two_claims_and_challenge(
     assert web3.eth.get_balance(request_manager.address) == 0
 
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
@@ -451,7 +451,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
     assert web3.eth.get_balance(request_manager.address) == 0
 
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
@@ -530,7 +530,7 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
 
     token.mint(requester, transfer_amount, {"from": requester})
     token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
+    request_tx = request_manager.createRequest(
         1,
         token.address,
         token.address,
