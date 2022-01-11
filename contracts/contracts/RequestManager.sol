@@ -52,6 +52,10 @@ contract RequestManager {
         uint256 requestId
     );
 
+    event DepositWithdrawn(
+        uint256 requestId
+    );
+
     event ClaimCreated(
         uint256 indexed claimId,
         uint256 requestId,
@@ -173,7 +177,8 @@ contract RequestManager {
         require(request.activeClaims == 0, "Active claims running");
 
         request.depositWithdrawn = true;
-        // TODO: emit event?
+
+        emit DepositWithdrawn(requestId);
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(request.sender, request.amount), "Transfer failed");
