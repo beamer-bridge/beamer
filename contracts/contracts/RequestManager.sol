@@ -168,6 +168,7 @@ contract RequestManager {
         Request storage request = requests[requestId];
 
         require(!request.depositWithdrawn , "Deposit already withdrawn");
+        require(request.cancellationTermination > 0, "Request not cancelled");
         require(block.timestamp >= request.cancellationTermination, "Cancellation period not over yet");
         require(request.activeClaims == 0, "Active claims running");
 
