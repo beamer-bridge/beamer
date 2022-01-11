@@ -22,6 +22,7 @@ contract RequestManager {
         bool depositWithdrawn;
         uint192 activeClaims;
         uint256 cancellationTermination;
+        uint256 lpFees;
     }
 
     struct Claim {
@@ -96,6 +97,43 @@ contract RequestManager {
     // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
 
+    // fee related stuff
+    uint256 ethPrice = 4_000; // where to get this from? chainlink
+    // TODO: update those values
+    uint fillGas = 74593;
+    uint claimGas = 133879;
+    uint withdrawGas = 70892;
+
+    // 25e16 = $0.25
+    uint256 lpServiceFeeUSD = 25e16;
+    uint256 raisyncServiceFeeUSD = 25e16;
+
+    // raisync fee tracking
+    uint256 public collectedRaisyncFees = 0;
+
+    function gasReimbursementFee() public view returns (uint256) {
+        // Problem: the target chains gas price is unknown
+        // return (fillGas + claimGas + withdrawGas) * block.basefee;  // need to update ganache to be able to use this
+        // this is also unsupported on optimism (https://community.optimism.io/docs/developers/l2/differences.html#modified-opcodes)
+        // arbitrum is unclear
+        return (fillGas + claimGas + withdrawGas) * 1e9;
+    }
+
+    function raisyncServiceFee() public view returns (uint256) {
+        // This returns value in wei
+        return raisyncServiceFeeUSD / ethPrice;
+    }
+
+    function lpServiceFee() public view returns (uint256) {
+        // This returns value in wei
+        return lpServiceFeeUSD / ethPrice;
+    }
+
+    function totalFee() public view returns (uint256) {
+        return gasReimbursementFee() + lpServiceFee() + raisyncServiceFee();
+    }
+
+
     // Modifiers
     modifier validRequestId(uint256 requestId) {
         require(requestId <= requestCounter && requestId > 0, "requestId not valid");
@@ -128,10 +166,15 @@ contract RequestManager {
         address targetAddress,
         uint256 amount
     )
-    external returns (uint256)
+    external payable returns (uint256)
     {
-        requestCounter += 1;
+        uint256 lpFees = gasReimbursementFee() + lpServiceFee();
+        uint256 raisyncFee = raisyncServiceFee();
+        require(lpFees + raisyncFee == msg.value, "Wrong amount of fees sent");
 
+        collectedRaisyncFees += raisyncFee;
+
+        requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
         newRequest.sender = msg.sender;
         newRequest.sourceTokenAddress = sourceTokenAddress;
@@ -140,6 +183,7 @@ contract RequestManager {
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
         newRequest.depositWithdrawn = false;
+        newRequest.lpFees = lpFees;
 
         emit RequestCreated(
             requestCounter,
