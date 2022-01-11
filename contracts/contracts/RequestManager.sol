@@ -261,15 +261,15 @@ contract RequestManager {
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Claim already withdrawn");
 
-        bool requestClaimed = request.depositWithdrawn;
+        bool depositWithdrawn = request.depositWithdrawn;
 
         bool claimChallenged = challenges[claimId].termination != 0;
         address claimReceiver;
         if (!claimChallenged) {
-            require(block.timestamp >= claim.termination, "Claim period not finished");
+            require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimer;
         } else {
-            require(block.timestamp >= challenges[claimId].termination, "Challenge period not finished");
+            require(depositWithdrawn || block.timestamp >= challenges[claimId].termination, "Challenge period not finished");
             // check if l1 resolved
             Challenge storage challenge = challenges[claimId];
 
@@ -281,7 +281,7 @@ contract RequestManager {
         request.activeClaims -= 1;
 
         uint256 ethToTransfer = claimStake;
-        if (!requestClaimed && claimReceiver == claim.claimer) {
+        if (!depositWithdrawn && claimReceiver == claim.claimer) {
             request.depositWithdrawn = true;
             withdraw_deposit(claimId, request, claim, claimReceiver);
         }
