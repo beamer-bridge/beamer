@@ -40,7 +40,7 @@ contract RequestManager {
 
     // Events
     event RequestCreated(
-        uint256 indexed requestId,
+        uint256 requestId,
         uint256 targetChainId,
         address sourceTokenAddress,
         address targetTokenAddress,
@@ -57,25 +57,25 @@ contract RequestManager {
     );
 
     event ClaimCreated(
-        uint256 indexed claimId,
+        uint256 claimId,
         uint256 requestId,
         address claimer,
         uint256 termination
     );
 
     event ClaimWithdrawn(
-        uint256 indexed claimId,
+        uint256 claimId,
         uint256 requestId,
         address claimReceiver
     );
 
     event ClaimChallenged(
-        uint256 indexed claimId,
+        uint256 claimId,
         address challenger
     );
 
     event ChallengeCountered(
-        uint256 indexed claimId,
+        uint256 claimId,
         address leader,
         uint256 highestBid
     );
