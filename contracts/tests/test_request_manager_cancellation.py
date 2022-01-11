@@ -26,6 +26,28 @@ def test_only_sender_can_cancel_request(request_manager, token):
     request_manager.cancelRequest(request_id, {"from": requester})
 
 
+def test_request_can_be_cancelled_only_once(request_manager, token):
+    requester = accounts[1]
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    token.approve(request_manager.address, transfer_amount, {"from": requester})
+    request_tx = request_manager.request(
+        1,
+        token.address,
+        token.address,
+        "0x5d5640575161450A674a094730365A223B226649",
+        transfer_amount,
+        {"from": requester},
+    )
+    request_id = request_tx.return_value
+
+    request_manager.cancelRequest(request_id, {"from": requester})
+
+    with brownie.reverts("Request already cancelled"):
+        request_manager.cancelRequest(request_id, {"from": requester})
+
+
 def test_cancelled_request_withdraw(request_manager, token, cancellation_period):
     requester = accounts[1]
     other = accounts[2]
