@@ -2,6 +2,7 @@ dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.3.2
 
 compiler:
+  evm_version: london
   solc:
     version: 0.8.11
 
