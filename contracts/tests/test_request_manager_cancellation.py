@@ -53,7 +53,8 @@ def test_cancelled_request_withdraw(request_manager, token, cancellation_period)
     chain.mine(timedelta=cancellation_period)
 
     # The tx sender is not important here, the funds are sent to the request sender
-    request_manager.withdrawCancelledRequest(request_id, {"from": other})
+    withdraw_tx = request_manager.withdrawCancelledRequest(request_id, {"from": other})
+    assert "DepositWithdrawn" in withdraw_tx.events
 
     assert token.balanceOf(requester) == transfer_amount
     assert token.balanceOf(other) == 0
@@ -140,7 +141,10 @@ def test_cancelled_request_claim_failed(
     assert token.balanceOf(request_manager.address) == transfer_amount
 
     # The requester can now withdraw the funds
-    request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+    withdraw_cancelled_tx = request_manager.withdrawCancelledRequest(
+        request_id, {"from": requester}
+    )
+    assert "DepositWithdrawn" in withdraw_cancelled_tx.events
 
     assert token.balanceOf(requester) == transfer_amount
     assert token.balanceOf(claimer) == 0
@@ -163,7 +167,8 @@ def test_claim_after_cancelled_request_fails(
 
     # Timetravel after cancellation period
     chain.mine(timedelta=cancellation_period)
-    request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+    withdraw_tx = request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+    assert "DepositWithdrawn" in withdraw_tx.events
 
     with brownie.reverts("Deposit already withdrawn"):
         request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
