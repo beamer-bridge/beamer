@@ -155,6 +155,7 @@ contract RequestManager {
     function cancelRequest(uint256 requestId) external validRequestId(requestId) {
         Request storage request = requests[requestId];
 
+        require(request.cancellationTermination == 0, "Request already cancelled");
         require(!request.depositWithdrawn, "Deposit already withdrawn");
         require(msg.sender == request.sender, "Sender is not requester");
 
