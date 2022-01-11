@@ -71,6 +71,9 @@ def test_cancelled_request_withdraw(request_manager, token, cancellation_period)
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(other) == 0
 
+    with brownie.reverts("Request not cancelled"):
+        request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+
     cancel_tx = request_manager.cancelRequest(request_id, {"from": requester})
 
     assert "RequestCancelled" in cancel_tx.events
