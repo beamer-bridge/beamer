@@ -1,24 +1,15 @@
 import brownie
 from brownie import accounts, chain, web3
 
+from contracts.tests.utils import make_request
+
 
 def test_only_sender_can_cancel_request(request_manager, token):
     requester = accounts[1]
     other = accounts[2]
 
     transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     with brownie.reverts("Sender is not requester"):
         request_manager.cancelRequest(request_id, {"from": other})
@@ -29,18 +20,7 @@ def test_only_sender_can_cancel_request(request_manager, token):
 def test_request_can_be_cancelled_only_once(request_manager, token):
     requester = accounts[1]
     transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     request_manager.cancelRequest(request_id, {"from": requester})
 
@@ -53,20 +33,7 @@ def test_cancelled_request_withdraw(request_manager, token, cancellation_period)
     other = accounts[2]
 
     transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    assert token.balanceOf(requester) == transfer_amount
-
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(other) == 0
@@ -105,20 +72,7 @@ def test_cancelled_request_claim_successful(
     claimer = accounts[2]
 
     transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    assert token.balanceOf(requester) == transfer_amount
-
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     request_manager.cancelRequest(request_id, {"from": requester})
 
@@ -152,22 +106,7 @@ def test_cancelled_request_claim_failed(
     claimer1_eth_balance = web3.eth.get_balance(claimer.address)
     challenger_eth_balance = web3.eth.get_balance(challenger.address)
 
-    token.mint(requester, transfer_amount, {"from": requester})
-    assert token.balanceOf(requester) == transfer_amount
-    assert token.balanceOf(claimer) == 0
-    assert token.balanceOf(challenger) == 0
-    assert token.balanceOf(request_manager.address) == 0
-
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer) == 0
@@ -218,20 +157,7 @@ def test_claim_after_cancelled_request_fails(
     claimer = accounts[2]
 
     transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    assert token.balanceOf(requester) == transfer_amount
-
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.request(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     request_manager.cancelRequest(request_id, {"from": requester})
 
