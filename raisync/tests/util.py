@@ -7,6 +7,27 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import requests
 
 
+class Timeout(Exception):
+    pass
+
+
+class Sleeper:
+    def __init__(self, timeout: float) -> None:
+        self.timeout = timeout
+
+    def __enter__(self):
+        self._end = time.time() + self.timeout
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        pass
+
+    def sleep(self, interval: float) -> None:
+        if time.time() > self._end:
+            raise Timeout()
+        time.sleep(interval)
+
+
 class _HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         self.server: HTTPProxy  # make mypy happy
