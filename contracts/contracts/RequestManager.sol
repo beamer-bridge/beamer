@@ -98,19 +98,18 @@ contract RequestManager is Ownable {
     // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
 
+    uint256 gasPrice = 5e9;
     uint256 serviceFeePPM = 45_000;  //4.5%
 
     // raisync fee tracking
     uint256 public collectedRaisyncFees = 0;
 
     // The optimizer should take care of eval'ing this
-    function gasReimbursementFee() public pure returns (uint256) {
+    function gasReimbursementFee() public view returns (uint256) {
         // TODO: update those values
-        uint256 fillGas = 74593;
-        uint256 claimGas = 133879;
-        uint256 withdrawGas = 70892;
-
-        uint256 gasPrice = 5e9;
+        uint256 fillGas = 67105;
+        uint256 claimGas = 126402;
+        uint256 withdrawGas = 61954;
 
         return (fillGas + claimGas + withdrawGas) * gasPrice;
     }
@@ -376,5 +375,9 @@ contract RequestManager is Ownable {
 
         // As this is transferring Eth, no reentrancy is possible here
         collectedRaisyncFees = 0;
+    }
+
+    function updateGasPrice(uint256 newGasPrice) external onlyOwner {
+        gasPrice = newGasPrice;
     }
 }
