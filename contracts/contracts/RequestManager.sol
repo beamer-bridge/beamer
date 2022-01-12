@@ -333,10 +333,10 @@ contract RequestManager is Ownable {
         // The claim is set the `withdrawn` state above, so the following effects
         // needs to happen afterwards to avoid reentrency problems
         if (claimChallenged) {
-            ethToTransfer += withdraw_challenge(claimId, claim, claimReceiver);
+            ethToTransfer += withdraw_challenge(claimId);
         }
 
-        (bool sent, bytes memory data) = claimReceiver.call{value: ethToTransfer}("");
+        (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
         return claimReceiver;
@@ -357,14 +357,12 @@ contract RequestManager is Ownable {
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(claimReceiver, request.amount), "Transfer failed");
 
-        (bool sent, bytes memory data) = claimReceiver.call{value: request.lpFees}("");
+        (bool sent,) = claimReceiver.call{value: request.lpFees}("");
         require(sent, "Failed to send Ether");
     }
 
     function withdraw_challenge(
-        uint256 claimId,
-        Claim storage claim,
-        address claimReceiver
+        uint256 claimId
     ) private returns (uint256) {
         Challenge storage challenge = challenges[claimId];
         uint256 challengeStake = challenge.claimerStake + challenge.challengerStake;
@@ -380,7 +378,7 @@ contract RequestManager is Ownable {
         uint256 ethToTransfer = collectedRaisyncFees;
         collectedRaisyncFees = 0;
 
-        (bool sent, bytes memory data) = msg.sender.call{value: ethToTransfer}("");
+        (bool sent,) = msg.sender.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
         // As this is transferring Eth, no reentrancy is possible here
