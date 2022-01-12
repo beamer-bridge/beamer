@@ -98,36 +98,29 @@ contract RequestManager is Ownable {
     // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
 
-    // fee related stuff
-    uint256 ethPrice = 4_000; // where to get this from? chainlink
-    // TODO: update those values
-    uint fillGas = 74593;
-    uint claimGas = 133879;
-    uint withdrawGas = 70892;
-
-    // 25e16 = $0.25
-    uint256 lpServiceFeeUSD = 25e16;
-    uint256 raisyncServiceFeeUSD = 25e16;
+    uint256 serviceFeePPM = 45_000;  //4.5%
 
     // raisync fee tracking
     uint256 public collectedRaisyncFees = 0;
 
-    function gasReimbursementFee() public view returns (uint256) {
-        // Problem: the target chains gas price is unknown
-        // return (fillGas + claimGas + withdrawGas) * block.basefee;  // need to update ganache to be able to use this
-        // this is also unsupported on optimism (https://community.optimism.io/docs/developers/l2/differences.html#modified-opcodes)
-        // arbitrum is unclear
-        return (fillGas + claimGas + withdrawGas) * 1e9;
-    }
+    // The optimizer should take care of eval'ing this
+    function gasReimbursementFee() public pure returns (uint256) {
+        // TODO: update those values
+        uint256 fillGas = 74593;
+        uint256 claimGas = 133879;
+        uint256 withdrawGas = 70892;
 
-    function raisyncServiceFee() public view returns (uint256) {
-        // This returns value in wei
-        return raisyncServiceFeeUSD / ethPrice;
+        uint256 gasPrice = 5e9;
+
+        return (fillGas + claimGas + withdrawGas) * gasPrice;
     }
 
     function lpServiceFee() public view returns (uint256) {
-        // This returns value in wei
-        return lpServiceFeeUSD / ethPrice;
+        return gasReimbursementFee() * serviceFeePPM / 1_000_000;
+    }
+
+    function raisyncServiceFee() public view returns (uint256) {
+        return gasReimbursementFee() * serviceFeePPM / 1_000_000;
     }
 
     function totalFee() public view returns (uint256) {

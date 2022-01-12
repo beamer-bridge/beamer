@@ -21,5 +21,5 @@ def test_only_sender_can_cancel_request(request_manager, token):
     )
     request_id = request_tx.return_value
 
-    assert request_manager.collectedRaisyncFees() == int(25e16) / 4000
-    assert request_manager.requests(request_id)[9] == 65500000000000
+    assert request_manager.collectedRaisyncFees() == 62856900000000
+    assert request_manager.requests(request_id)[9] == 1459676900000000
