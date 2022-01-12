@@ -5,7 +5,7 @@ import pytest
 from brownie import accounts
 
 import raisync.node
-from raisync.tests.util import HTTPProxy
+from raisync.tests.util import HTTPProxy, Sleeper, Timeout
 
 
 def test_request(request_manager, token, node):
@@ -84,11 +84,12 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
     request_id = tx.return_value
 
-    timeout = 5.0
-    wait_time = 0.0
-    while (request := node.request_tracker.get(request_id)) is None and wait_time < timeout:
-        time.sleep(0.1)
-        wait_time += 0.1
+    try:
+        with Sleeper(5) as sleeper:
+            while (request := node.request_tracker.get(request_id)) is None:
+                sleeper.sleep(0.1)
+    except Timeout:
+        pass
 
     if not allow_unlisted_pairs:
         assert request is None
@@ -97,8 +98,9 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     else:
         assert request.id == request_id
 
-    while not request.is_claimed:
-        time.sleep(0.1)
+    with Sleeper(5) as sleeper:
+        while not request.is_claimed:
+            sleeper.sleep(0.1)
 
     claims = tuple(request.iter_claims())
     assert len(claims) == 1
@@ -115,16 +117,18 @@ def test_withdraw(request_manager, token, node):
     tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
     request_id = tx.return_value
 
-    while (request := node.request_tracker.get(request_id)) is None:
-        time.sleep(0.1)
+    with Sleeper(10) as sleeper:
+        while (request := node.request_tracker.get(request_id)) is None:
+            sleeper.sleep(0.1)
 
-    while not request.is_claimed:
-        time.sleep(0.1)
+        while not request.is_claimed:
+            sleeper.sleep(0.1)
 
     claim_period = request_manager.claimPeriod()
     brownie.chain.mine(timedelta=claim_period)
 
-    while not request.is_withdrawn:
-        time.sleep(0.1)
+    with Sleeper(5) as sleeper:
+        while not request.is_withdrawn:
+            sleeper.sleep(0.1)
 
     node.stop()
