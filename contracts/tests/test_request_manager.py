@@ -523,22 +523,9 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
 def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
     """Test that the same account can not claim a already withdrawn fill again"""
-    requester = accounts[1]
-    claimer = accounts[2]
+    requester, claimer = accounts[:2]
+    request_id = make_request(request_manager, token, requester, 23)
 
-    transfer_amount = 23
-
-    token.mint(requester, transfer_amount, {"from": requester})
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
     claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
@@ -556,8 +543,8 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
     """Test that one can withdraw a claim immediately after the request
     deposit has been withdrawn via another claim."""
     requester, claimer1, claimer2 = accounts[:3]
+    request_id = make_request(request_manager, token, requester, 23)
 
-    request_id = make_request(request_manager, token, accounts[0], 23)
     claimer2_eth_balance = web3.eth.get_balance(claimer2.address)
 
     claim1_tx = request_manager.claimRequest(request_id, {"from": claimer1, "value": claim_stake})
