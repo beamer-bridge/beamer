@@ -356,6 +356,9 @@ contract RequestManager is Ownable {
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(claimReceiver, request.amount), "Transfer failed");
+
+        (bool sent, bytes memory data) = claimReceiver.call{value: request.lpFees}("");
+        require(sent, "Failed to send Ether");
     }
 
     function withdraw_challenge(
