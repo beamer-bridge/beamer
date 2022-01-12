@@ -148,16 +148,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
     claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
@@ -206,16 +197,7 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
     claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
@@ -276,16 +258,7 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(request_id, {"from": claimer1, "value": claim_stake})
     claim1_id = claim1_tx.return_value
@@ -356,16 +329,7 @@ def test_withdraw_with_two_claims_and_challenge(
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(request_id, {"from": claimer1, "value": claim_stake})
     claim1_id = claim1_tx.return_value
@@ -450,16 +414,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    token.approve(request_manager.address, transfer_amount, {"from": requester})
-    request_tx = request_manager.createRequest(
-        1,
-        token.address,
-        token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": requester},
-    )
-    request_id = request_tx.return_value
+    request_id = make_request(request_manager, token, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(request_id, {"from": claimer1, "value": claim_stake})
     claim1_id = claim1_tx.return_value
