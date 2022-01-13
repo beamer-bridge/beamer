@@ -82,9 +82,9 @@ def test_fee_gas_price_updatable_by_owner(request_manager, token):
     new_gas_price = old_gas_price * 2
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        request_manager.updateGasPrice(new_gas_price, {"from": requester})
+        request_manager.updateFeeData(new_gas_price, 45_000, {"from": requester})
 
-    request_manager.updateGasPrice(new_gas_price, {"from": owner})
+    request_manager.updateFeeData(new_gas_price, 45_000, {"from": owner})
     assert request_manager.gasPrice() == new_gas_price
     assert request_manager.totalFee() == 2 * old_fee
 
