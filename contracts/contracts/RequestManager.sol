@@ -23,7 +23,8 @@ contract RequestManager is Ownable {
         bool depositWithdrawn;
         uint192 activeClaims;
         uint256 cancellationTermination;
-        uint256 lpFees;
+        uint256 lpFee;
+        uint256 raisyncFee;
     }
 
     struct Claim {
@@ -98,7 +99,7 @@ contract RequestManager is Ownable {
     // claimId -> Challenge
     mapping (uint256 => Challenge) public challenges;
 
-    uint256 gasPrice = 5e9;
+    uint256 public gasPrice = 5e9;
     uint256 serviceFeePPM = 45_000;  //4.5%
 
     // raisync fee tracking
@@ -161,11 +162,9 @@ contract RequestManager is Ownable {
     )
     external payable returns (uint256)
     {
-        uint256 lpFees = gasReimbursementFee() + lpServiceFee();
+        uint256 lpFee = gasReimbursementFee() + lpServiceFee();
         uint256 raisyncFee = raisyncServiceFee();
-        require(lpFees + raisyncFee == msg.value, "Wrong amount of fees sent");
-
-        collectedRaisyncFees += raisyncFee;
+        require(lpFee + raisyncFee == msg.value, "Wrong amount of fees sent");
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
@@ -176,7 +175,8 @@ contract RequestManager is Ownable {
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
         newRequest.depositWithdrawn = false;
-        newRequest.lpFees = lpFees;
+        newRequest.lpFee = lpFee;
+        newRequest.raisyncFee = raisyncFee;
 
         emit RequestCreated(
             requestCounter,
@@ -219,6 +219,9 @@ contract RequestManager is Ownable {
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(request.sender, request.amount), "Transfer failed");
+
+        (bool sent,) = request.sender.call{value: request.lpFee + request.raisyncFee}("");
+        require(sent, "Failed to send Ether");
     }
 
     function claimRequest(uint256 requestId) external validRequestId(requestId) payable returns (uint256) {
@@ -340,6 +343,8 @@ contract RequestManager is Ownable {
         Claim storage claim,
         address claimReceiver
     ) private {
+        collectedRaisyncFees += request.raisyncFee;
+
         emit ClaimWithdrawn(
             claimId,
             claim.requestId,
@@ -349,7 +354,7 @@ contract RequestManager is Ownable {
         IERC20 token = IERC20(request.sourceTokenAddress);
         require(token.transfer(claimReceiver, request.amount), "Transfer failed");
 
-        (bool sent,) = claimReceiver.call{value: request.lpFees}("");
+        (bool sent,) = claimReceiver.call{value: request.lpFee}("");
         require(sent, "Failed to send Ether");
     }
 
@@ -367,10 +372,9 @@ contract RequestManager is Ownable {
     }
 
     function withdrawRaisyncFees() external onlyOwner {
-        uint256 ethToTransfer = collectedRaisyncFees;
-        collectedRaisyncFees = 0;
+        require(collectedRaisyncFees > 0, "Zero fees available");
 
-        (bool sent,) = msg.sender.call{value: ethToTransfer}("");
+        (bool sent,) = msg.sender.call{value: collectedRaisyncFees}("");
         require(sent, "Failed to send Ether");
 
         // As this is transferring Eth, no reentrancy is possible here
