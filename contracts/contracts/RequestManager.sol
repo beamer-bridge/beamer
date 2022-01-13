@@ -379,7 +379,8 @@ contract RequestManager is Ownable {
         collectedRaisyncFees = 0;
     }
 
-    function updateGasPrice(uint256 newGasPrice) external onlyOwner {
+    function updateFeeData(uint256 newGasPrice, uint256 newServiceFeePPM) external onlyOwner {
         gasPrice = newGasPrice;
+        serviceFeePPM = newServiceFeePPM;
     }
 }

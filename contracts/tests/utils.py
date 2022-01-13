@@ -3,7 +3,7 @@ def make_request(request_manager, token, requester, amount, zero_fees=True) -> i
         token.mint(requester, amount, {"from": requester})
 
     if zero_fees:
-        request_manager.updateGasPrice(0)
+        request_manager.updateFeeData(0, 0)
 
     token.approve(request_manager.address, amount, {"from": requester})
 
