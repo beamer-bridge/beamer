@@ -28,57 +28,46 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { BigNumber } from 'ethers';
-import { Options } from 'vue-class-component';
-import { Emit, Prop, Vue } from 'vue-property-decorator';
+import { computed, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
+import { RequestFormResult } from '@/types/form';
 
-export type RequestFormResult = {
-  targetChainId: BigNumber;
-  sourceTokenAddress: string;
-  targetTokenAddress: string;
-  targetAddress: string;
-  amount: BigNumber;
-};
-
-@Options({
-  components: {
-    Spinner,
-  },
-})
-export default class RequestForm extends Vue {
-  @Prop(Boolean)
-  readonly loading!: boolean;
-
-  targetChainId = '';
-  sourceTokenAddress = '';
-  targetTokenAddress = '';
-  targetAddress = '';
-  amount = '';
-
-  get emptyInput(): boolean {
-    return (
-      !this.targetChainId ||
-      !this.sourceTokenAddress ||
-      !this.targetTokenAddress ||
-      !this.targetAddress ||
-      !this.amount
-    );
-  }
-
-  @Emit('formAccepted')
-  emitFormAccepted(): RequestFormResult {
-    return {
-      targetChainId: BigNumber.from(this.targetChainId),
-      sourceTokenAddress: this.sourceTokenAddress,
-      targetTokenAddress: this.targetTokenAddress,
-      targetAddress: this.targetAddress,
-      amount: BigNumber.from(this.amount),
-    };
-  }
+interface Props {
+  readonly loading: boolean;
 }
+interface Emits {
+  (e: 'formAccepted', formResult: RequestFormResult): void;
+}
+
+defineProps<Props>();
+const emit = defineEmits<Emits>();
+
+const targetChainId = ref('');
+const sourceTokenAddress = ref('');
+const targetTokenAddress = ref('');
+const targetAddress = ref('');
+const amount = ref('');
+
+const emptyInput = computed(
+  () =>
+    !targetChainId.value ||
+    !sourceTokenAddress.value ||
+    !targetTokenAddress.value ||
+    !targetAddress.value ||
+    !amount.value,
+);
+
+const emitFormAccepted = () =>
+  emit('formAccepted', {
+    targetChainId: BigNumber.from(targetChainId.value),
+    sourceTokenAddress: sourceTokenAddress.value,
+    targetTokenAddress: targetTokenAddress.value,
+    targetAddress: targetAddress.value,
+    amount: BigNumber.from(amount.value),
+  });
 </script>
 
 <style scoped lang="scss">

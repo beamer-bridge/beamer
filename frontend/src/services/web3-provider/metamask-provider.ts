@@ -1,6 +1,17 @@
 import { ExternalProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 import { EthereumProvider } from './types';
+
+export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
+  const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;
+  if (detectedProvider && detectedProvider.isMetaMask) {
+    const metaMaskProvider = new MetaMaskProvider(detectedProvider);
+    await metaMaskProvider.init();
+    return metaMaskProvider;
+  }
+  return undefined;
+}
 
 export class MetaMaskProvider implements EthereumProvider {
   signer: JsonRpcSigner | undefined;

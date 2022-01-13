@@ -2,12 +2,6 @@
   <div class="spinner" />
 </template>
 
-<script lang="ts">
-import { Vue } from 'vue-property-decorator';
-
-export default class Spinner extends Vue {}
-</script>
-
 <style scoped lang="scss">
 @import '@/scss/colors';
 @import '@/scss/animations';
