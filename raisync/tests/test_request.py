@@ -8,13 +8,27 @@ import raisync.node
 from raisync.tests.util import HTTPProxy, Sleeper, Timeout
 
 
+def make_request(request_manager, token, requester, target_address, amount) -> int:
+    token.approve(request_manager.address, amount, {"from": requester})
+
+    total_fee = request_manager.totalFee()
+    request_tx = request_manager.createRequest(
+        1337,
+        token.address,
+        token.address,
+        target_address,
+        amount,
+        {"from": requester, "value": total_fee},
+    )
+    return request_tx.return_value
+
+
 def test_request(request_manager, token, node):
     node.start()
-    token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
 
     assert not brownie.history.of_address(request_manager.address)
-    request_manager.createRequest(1337, token.address, token.address, target_address, 1)
+    make_request(request_manager, token, accounts[0], target_address, 1)
     txs = brownie.history.of_address(request_manager.address)
     assert len(txs) == 1
     tx = txs[0]
@@ -78,11 +92,8 @@ def test_read_timeout(config):
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
 def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     node.start()
-    token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
-
-    tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
-    request_id = tx.return_value
+    request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
     try:
         with Sleeper(5) as sleeper:
@@ -111,11 +122,8 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
 
 def test_withdraw(request_manager, token, node):
     node.start()
-    token.approve(request_manager.address, 1, {"from": accounts[0]})
     target_address = accounts[1]
-
-    tx = request_manager.createRequest(1337, token.address, token.address, target_address, 1)
-    request_id = tx.return_value
+    request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
     with Sleeper(10) as sleeper:
         while (request := node.request_tracker.get(request_id)) is None:
