@@ -24,7 +24,6 @@ def make_request(request_manager, token, requester, target_address, amount) -> i
 
 
 def test_request(request_manager, token, node):
-    node.start()
     target_address = accounts[1]
 
     assert not brownie.history.of_address(request_manager.address)
@@ -48,7 +47,6 @@ def test_request(request_manager, token, node):
     assert request["targetAddress"] == target_address
     assert request["amount"] == 1
     time.sleep(1)
-    node.stop()
 
 
 def _get_delay(request_data):
@@ -91,7 +89,6 @@ def test_read_timeout(config):
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
 def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
-    node.start()
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
@@ -104,7 +101,6 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
 
     if not allow_unlisted_pairs:
         assert request is None
-        node.stop()
         return
     else:
         assert request.id == request_id
@@ -117,11 +113,8 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     assert len(claims) == 1
     assert claims[0].claimer == node.address
 
-    node.stop()
-
 
 def test_withdraw(request_manager, token, node):
-    node.start()
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
@@ -138,5 +131,3 @@ def test_withdraw(request_manager, token, node):
     with Sleeper(5) as sleeper:
         while not request.is_withdrawn:
             sleeper.sleep(0.1)
-
-    node.stop()
