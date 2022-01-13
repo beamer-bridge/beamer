@@ -23,32 +23,6 @@ def make_request(request_manager, token, requester, target_address, amount) -> i
     return request_tx.return_value
 
 
-def test_request(request_manager, token, node):
-    target_address = accounts[1]
-
-    assert not brownie.history.of_address(request_manager.address)
-    make_request(request_manager, token, accounts[0], target_address, 1)
-    txs = brownie.history.of_address(request_manager.address)
-    assert len(txs) == 1
-    tx = txs[0]
-
-    # We must have 3 events, Approval, Transfer and RequestCreated.
-    assert (
-        len(tx.events) == 3
-        and "Approval" in tx.events
-        and "Transfer" in tx.events
-        and "RequestCreated" in tx.events
-    )
-
-    request = tx.events["RequestCreated"]
-    assert request["requestId"] == 1
-    assert request["targetChainId"] == brownie.chain.id
-    assert request["targetTokenAddress"] == token.address
-    assert request["targetAddress"] == target_address
-    assert request["amount"] == 1
-    time.sleep(1)
-
-
 def _get_delay(request_data):
     params = request_data["params"][0]
     to_block = int(params["toBlock"], 16)
