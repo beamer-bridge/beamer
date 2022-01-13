@@ -1,0 +1,59 @@
+<template>
+  <div class="request-dialog">
+    <h1 class="request-dialog__title">Request</h1>
+    <div v-if="successfulTransactionUrl">
+      Request successful! Click
+      <a :href="successfulTransactionUrl" target="_blank" class="request-dialog__link">here</a>
+      to see transaction details.
+    </div>
+    <RequestForm
+      v-else
+      class="request-dialog__form"
+      :loading="executingRequest"
+      @formAccepted="executeRequestTransaction"
+    />
+    <div v-if="transactionErrorMessage" class="request-dialog__error">
+      {{ transactionErrorMessage }}
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import RequestForm from '@/components/RequestForm.vue';
+import useRequestTransaction from '@/composables/useRequestTransaction';
+import { EthereumProviderKey } from '@/symbols';
+import { injectStrict } from '@/utils/vue-utils';
+
+const ethereumProvider = injectStrict(EthereumProviderKey);
+
+const {
+  executingRequest,
+  transactionErrorMessage,
+  successfulTransactionUrl,
+  executeRequestTransaction,
+} = useRequestTransaction(ethereumProvider);
+</script>
+
+<style scoped lang="scss">
+@import '@/scss/colors';
+
+.request-dialog {
+  &__title {
+    font-size: 36px;
+    line-height: 48px;
+    margin-bottom: 32px;
+  }
+
+  &__form {
+    margin-bottom: 16px;
+  }
+
+  &__error {
+    color: $error-color;
+  }
+
+  &__link {
+    color: $primary;
+  }
+}
+</style>

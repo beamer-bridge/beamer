@@ -10,13 +10,12 @@
     "lint:fix": "vue-cli-service lint --fix && stylelint --fix ./src/**/**.{vue,scss}"
   },
   "dependencies": {
+    "@ethersproject/providers": "^5.5.2",
     "@metamask/detect-provider": "^1.2.0",
     "core-js": "^3.6.5",
     "ethers": "^5.5.1",
     "ress": "^4.0.0",
     "vue": "^3.0.0",
-    "vue-class-component": "^8.0.0-0",
-    "vue-property-decorator": "10.0.0-rc.2",
     "vue-router": "^4.0.0-0"
   },
   "devDependencies": {
