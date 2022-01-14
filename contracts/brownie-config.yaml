@@ -1,5 +1,5 @@
 dependencies:
-  - OpenZeppelin/openzeppelin-contracts@4.3.2
+  - OpenZeppelin/openzeppelin-contracts@4.4.2
 
 compiler:
   evm_version: london

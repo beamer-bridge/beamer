@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/token/ERC20/IERC20.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/utils/math/Math.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.3.2/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/utils/math/Math.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 
 contract RequestManager is Ownable {
     using Math for uint256;
