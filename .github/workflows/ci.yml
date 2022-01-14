@@ -58,7 +58,7 @@ jobs:
         if: steps.cache-brownie-packages.outputs.cache-hit != 'true'
         run: |
           cd contracts
-          poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
+          poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.4.2
 
       - name: Lint contracts
         run: |
