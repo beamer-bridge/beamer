@@ -112,3 +112,20 @@ yarn serve
 ```
 
 To configure the used deployment, make your changes to the `frontend/.env.development` file and rerun the development server.
+
+### Measuring gas costs
+
+To measure gas costs, simply invoke the following command within the
+`contracts` directory:
+
+```
+   $ brownie run --silent -g measure_gas_prices
+```
+
+
+A difference between two brownie gas profiles can be shown by using the
+following command:
+
+```
+   $ python scripts/diff_gas_profiles.py <path-to-profile1> <path-to-profile2>
+```
