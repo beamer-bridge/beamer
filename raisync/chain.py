@@ -216,14 +216,15 @@ class EventProcessor:
                 return False
             self._log.info("Request filled", _event=event)
             return True
-        elif isinstance(event, raisync.events.ClaimCreated):
+        elif isinstance(event, raisync.events.ClaimMade):
             request = self._tracker.get(event.request_id)
             if request is None:
                 return False
 
             address = self._request_manager.web3.eth.default_account
+            our_claim = to_checksum_address(event.claimer) == address
             try:
-                request.claim(event=event, our_claim=to_checksum_address(event.claimer) == address)
+                request.claim(event=event, our_claim=our_claim)
             except TransitionNotAllowed:
                 return False
             self._log.info("Request claimed", _event=event)

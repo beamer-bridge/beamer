@@ -45,10 +45,13 @@ class RequestCreated(Event):
 
 
 @dataclass(frozen=True)
-class ClaimCreated(Event):
+class ClaimMade(Event):
     claim_id: ClaimId
     request_id: RequestId
     claimer: Address
+    claimer_stake: TokenAmount
+    challenger: Address
+    challenger_stake: TokenAmount
     termination: Termination
 
 
@@ -59,19 +62,6 @@ class ClaimWithdrawn(Event):
     claim_receiver: Address
 
 
-@dataclass(frozen=True)
-class ClaimChallenged(Event):
-    claim_id: ClaimId
-    challenger: Address
-
-
-@dataclass(frozen=True)
-class ChallengeCountered(Event):
-    claim_id: ClaimId
-    leader: Address
-    highest_bid: TokenAmount
-
-
 def _camel_to_snake(s: str) -> str:
     return "".join("_" + c.lower() if c.isupper() else c for c in s).lstrip("_")
 
@@ -79,10 +69,8 @@ def _camel_to_snake(s: str) -> str:
 _EVENT_TYPES = dict(
     RequestFilled=RequestFilled,
     RequestCreated=RequestCreated,
-    ClaimCreated=ClaimCreated,
+    ClaimMade=ClaimMade,
     ClaimWithdrawn=ClaimWithdrawn,
-    ClaimChallenged=ClaimChallenged,
-    ChallengeCountered=ChallengeCountered,
 )
 
 
