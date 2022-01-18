@@ -7,6 +7,20 @@ from typing import Sequence
 
 _CONTRACT_PAT = re.compile(r"(\w+) <Contract>")
 _FUNCTION_PAT = re.compile(r".+─ (\w+)\s+-\s+avg:\s+(\d+)")
+_ANSI_ESCAPE_PAT = re.compile(
+    r"""
+    \x1B  # ESC
+    (?:   # 7-bit C1 Fe (except CSI)
+        [@-Z\\-_]
+    |     # or [ for CSI, followed by a control sequence
+        \[
+        [0-?]*  # Parameter bytes
+        [ -/]*  # Intermediate bytes
+        [@-~]   # Final byte
+    )
+""",
+    re.VERBOSE,
+)
 
 
 @dataclass
@@ -20,9 +34,12 @@ def _read_profile(filename: str) -> Profile:
     profile = Profile(filename=filename)
     with open(filename) as fp:
         for line in fp:
+            line = _ANSI_ESCAPE_PAT.sub("", line)
             m = _CONTRACT_PAT.match(line)
             if m is not None:
                 contract = m.group(1)
+                continue
+            if contract is None:
                 continue
             m = _FUNCTION_PAT.match(line)
             if m is not None:
