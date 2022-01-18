@@ -5,7 +5,7 @@ from typing import Any, Generator, Optional
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
 
-from raisync.events import ClaimCreated
+from raisync.events import ClaimMade
 from raisync.typing import ChainId, RequestId, TokenAmount
 
 
@@ -28,7 +28,7 @@ class Request(StateMachine):
         self.target_token_address = target_token_address
         self.target_address = target_address
         self.amount = amount
-        self._claims: list[ClaimCreated] = []
+        self._claims: list[ClaimMade] = []
         self.our_fill = False
         self.our_claim = False
 
@@ -40,17 +40,17 @@ class Request(StateMachine):
 
     fill = pending.to(filled) | filled_unconfirmed.to(filled)
     fill_unconfirmed = pending.to(filled_unconfirmed)
-    claim = filled.to(claimed)
+    claim = filled.to(claimed) | claimed.to(claimed)
     withdraw = claimed.to(withdrawn)
 
     def on_fill(self, our_fill: bool) -> None:
         self.our_fill = our_fill
 
-    def on_claim(self, event: ClaimCreated, our_claim: bool) -> None:
+    def on_claim(self, event: ClaimMade, our_claim: bool) -> None:
         self._claims.append(event)
         self.our_claim |= our_claim
 
-    def iter_claims(self) -> Iterator[ClaimCreated]:
+    def iter_claims(self) -> Iterator[ClaimMade]:
         return iter(self._claims)
 
     def __repr__(self) -> str:
