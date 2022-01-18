@@ -158,13 +158,14 @@ def submit_request(
     tx_hash = token.functions.approve(request_manager.address, amount).transact()
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
-    tx_hash = request_manager.functions.request(
+    fee = request_manager.functions.totalFee().call()
+    tx_hash = request_manager.functions.createRequest(
         target_chain_id,
         source_token_address,
         target_token_address,
         target_address,
         amount,
-    ).transact()
+    ).transact({'value': fee})
 
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
