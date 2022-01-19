@@ -18,6 +18,7 @@ contract FillManager is Ownable {
         uint256 indexed requestId,
         uint256 indexed sourceChainId,
         address indexed targetTokenAddress,
+        address filler,
         uint256 amount
     );
 
@@ -51,7 +52,7 @@ contract FillManager is Ownable {
         require(!fills[requestHash], "Already filled");
         fills[requestHash] = true;
 
-        emit RequestFilled(requestId, sourceChainId, targetTokenAddress, amount);
+        emit RequestFilled(requestId, sourceChainId, targetTokenAddress, msg.sender, amount);
 
         IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
