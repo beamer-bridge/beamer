@@ -1,5 +1,11 @@
-import { ExternalProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
+import {
+  ExternalProvider,
+  getNetwork,
+  JsonRpcSigner,
+  Web3Provider,
+} from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { hexValue } from 'ethers/lib/utils';
 
 import { EthereumProvider } from './types';
 
@@ -41,6 +47,25 @@ export class MetaMaskProvider implements EthereumProvider {
       this.signer = this.web3Provider.getSigner();
     } catch (error) {
       this.signer = undefined;
+    }
+  }
+
+  async switchChain(newChainId: number, rpcUrl?: string): Promise<void> {
+    const newChainIdHex = hexValue(newChainId);
+    try {
+      await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
+    } catch (switchError) {
+      // This error code indicates that the chain has not been added to MetaMask.
+      // TODO add proper typing for error
+      if (rpcUrl && (switchError as { code?: number })?.code === 4902) {
+        try {
+          const { name } = getNetwork(newChainId);
+          await this.web3Provider.send('wallet_addEthereumChain', [
+            { chainId: newChainIdHex, chainName: name, rpcUrls: [rpcUrl] },
+          ]);
+          // eslint-disable-next-line no-empty
+        } catch {}
+      }
     }
   }
 

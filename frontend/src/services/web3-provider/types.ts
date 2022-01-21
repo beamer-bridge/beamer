@@ -5,4 +5,5 @@ export interface EthereumProvider {
   init(): Promise<void>;
   getChainId(): Promise<number>;
   requestSigner(): Promise<void>;
+  switchChain?(newChainId: number, rpcUrl?: string): Promise<void>;
 }
