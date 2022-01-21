@@ -17,12 +17,14 @@ export async function sendRequestTransaction(
     RequestManager.abi,
     signer,
   );
+  const fee = await requestManagerContract.totalFee();
   const transaction: TransactionResponse = await requestManagerContract.request(
     targetChainId,
     sourceTokenAddress,
     targetTokenAddress,
     targetAddress,
     amount,
+    { value: fee },
   );
   return await transaction.wait();
 }
