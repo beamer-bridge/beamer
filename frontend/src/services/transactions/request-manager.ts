@@ -6,17 +6,14 @@ import RequestManager from '@/assets/RequestManager.json';
 
 export async function sendRequestTransaction(
   signer: DeepReadonly<JsonRpcSigner>,
+  requestManagerAddress: string,
   targetChainId: BigNumber,
   sourceTokenAddress: string,
   targetTokenAddress: string,
   targetAddress: string,
   amount: BigNumber,
 ): Promise<TransactionReceipt> {
-  const requestManagerContract = new Contract(
-    process.env.VUE_APP_REQUEST_MANAGER_ADDRESS,
-    RequestManager.abi,
-    signer,
-  );
+  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
   const fee = await requestManagerContract.totalFee();
   const transaction: TransactionResponse = await requestManagerContract.createRequest(
     targetChainId,

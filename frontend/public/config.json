@@ -1,0 +1,8 @@
+{
+  "chains": {
+    "5": {
+      "requestManagerAddress": "0x6d18F474C0a16a96E3D24c9eC85BC82311B111c6",
+      "explorerTransactionUrl": "https://goerli.etherscan.io/tx/"
+    }
+  }
+}

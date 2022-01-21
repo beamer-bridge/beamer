@@ -4,6 +4,7 @@ import { ref, ShallowRef } from 'vue';
 import { sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
+import { RaisyncConfig } from '@/types/config';
 import { RequestFormResult } from '@/types/form';
 
 async function getSignerStrictly(ethereumProvider: EthereumProvider): Promise<JsonRpcSigner> {
@@ -20,6 +21,7 @@ async function getSignerStrictly(ethereumProvider: EthereumProvider): Promise<Js
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useRequestTransaction(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
+  raisyncConfig: Readonly<RaisyncConfig>,
 ) {
   const executingRequest = ref(false);
   const transactionErrorMessage = ref('');
@@ -30,10 +32,20 @@ export default function useRequestTransaction(
     transactionErrorMessage.value = '';
 
     try {
+      const chainId = await ethereumProvider.value.getChainId();
+      const chainConfig = raisyncConfig.chains[String(chainId)];
+      const requestManagerAddress = chainConfig.requestManagerAddress;
+
       const signer = await getSignerStrictly(ethereumProvider.value);
-      await ensureTokenAllowance(signer, formResult.sourceTokenAddress, formResult.amount);
+      await ensureTokenAllowance(
+        signer,
+        formResult.sourceTokenAddress,
+        requestManagerAddress,
+        formResult.amount,
+      );
       const transactionReceipt = await sendRequestTransaction(
         signer,
+        requestManagerAddress,
         formResult.targetChainId,
         formResult.sourceTokenAddress,
         formResult.targetTokenAddress,
@@ -41,7 +53,7 @@ export default function useRequestTransaction(
         formResult.amount,
       );
       successfulTransactionUrl.value =
-        process.env.VUE_APP_ETHERSCAN_TX_URL + transactionReceipt.transactionHash;
+        chainConfig.explorerTransactionUrl + transactionReceipt.transactionHash;
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
