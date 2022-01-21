@@ -7,14 +7,14 @@ import StandardToken from '@/assets/StandardToken.json';
 export async function ensureTokenAllowance(
   signer: DeepReadonly<JsonRpcSigner>,
   tokenAddress: string,
+  allowedSpender: string,
   amount: BigNumber,
 ): Promise<void> {
   const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
   const signerAddress = await signer.getAddress();
-  const requestManagerAddress = process.env.VUE_APP_REQUEST_MANAGER_ADDRESS;
-  const allowance: BigNumber = await tokenContract.allowance(signerAddress, requestManagerAddress);
+  const allowance: BigNumber = await tokenContract.allowance(signerAddress, allowedSpender);
   if (allowance.lt(amount)) {
-    const transaction = await tokenContract.approve(requestManagerAddress, amount);
+    const transaction = await tokenContract.approve(allowedSpender, amount);
     await transaction.wait();
   }
 }

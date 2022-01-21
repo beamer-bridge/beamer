@@ -21,17 +21,18 @@
 <script setup lang="ts">
 import RequestForm from '@/components/RequestForm.vue';
 import useRequestTransaction from '@/composables/useRequestTransaction';
-import { EthereumProviderKey } from '@/symbols';
+import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
 import { injectStrict } from '@/utils/vue-utils';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
+const raisyncConfig = injectStrict(RaisyncConfigKey);
 
 const {
   executingRequest,
   transactionErrorMessage,
   successfulTransactionUrl,
   executeRequestTransaction,
-} = useRequestTransaction(ethereumProvider);
+} = useRequestTransaction(ethereumProvider, raisyncConfig.value);
 </script>
 
 <style scoped lang="scss">

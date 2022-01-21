@@ -1,8 +1,23 @@
 <template>
   <div class="view">
-    <router-view class="view__route" />
+    <router-view v-if="config" class="view__route" />
+    <div v-else class="view__spinner-container">
+      <spinner></spinner>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { provide } from 'vue';
+
+import Spinner from '@/components/Spinner.vue';
+import useRaisyncConfig from '@/composables/useRaisyncConfig';
+import { RaisyncConfigKey } from '@/symbols';
+
+const { config } = useRaisyncConfig();
+
+provide(RaisyncConfigKey, config);
+</script>
 
 <style lang="scss">
 @import '@/scss/colors';
@@ -36,6 +51,11 @@
     align-items: center;
     padding: 32px 32px 24px 32px;
     max-width: 554px;
+  }
+
+  &__spinner-container {
+    width: 200px;
+    height: 200px;
   }
 }
 </style>

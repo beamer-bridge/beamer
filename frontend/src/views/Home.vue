@@ -6,30 +6,32 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, provide, ref, shallowReadonly, ShallowRef, shallowRef } from 'vue';
+import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef } from 'vue';
 
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
-import { EthereumProviderKey } from '@/symbols';
+import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
+import { injectStrict } from '@/utils/vue-utils';
 
 const criticalErrorMessage = ref('');
 const ethereumProvider = shallowRef<EthereumProvider | undefined>(undefined);
 const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
 
+const raisyncConfig = injectStrict(RaisyncConfigKey);
+
 provide(EthereumProviderKey, readonlyEthereumProvider);
 
-onBeforeMount(async () => {
+onMounted(async () => {
   ethereumProvider.value = await createMetaMaskProvider();
 
   if (ethereumProvider.value) {
-    const { chainMatchesExpected } = useChainCheck(
+    const { connectedChainSupported } = useChainCheck(
       readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
     );
-    const expectedChainId = Number(process.env.VUE_APP_CHAIN_ID);
 
-    if (!(await chainMatchesExpected(expectedChainId))) {
-      criticalErrorMessage.value = `Not connected to chain id ${expectedChainId}!`;
+    if (!(await connectedChainSupported(raisyncConfig.value))) {
+      criticalErrorMessage.value = `Connected chain not supported!`;
     }
   } else {
     criticalErrorMessage.value = 'Could not detect MetaMask!';
