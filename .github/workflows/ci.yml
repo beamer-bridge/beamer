@@ -41,7 +41,7 @@ jobs:
           key: poetry-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
 
       - name: Install ganache
-        run: npm install ganache-cli ganache --global
+        run: npm install ganache-cli --global
 
       - name: Install dependencies
         run: poetry install
