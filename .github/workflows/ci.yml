@@ -38,7 +38,7 @@ jobs:
           path: |
             ~/.cache/pypoetry/virtualenvs
             ~/.solcx
-          key: poetry-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
+          key: poetry-1-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
 
       - name: Install ganache
         run: npm install ganache-cli --global
