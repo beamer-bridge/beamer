@@ -18,7 +18,7 @@ export async function sendRequestTransaction(
     signer,
   );
   const fee = await requestManagerContract.totalFee();
-  const transaction: TransactionResponse = await requestManagerContract.request(
+  const transaction: TransactionResponse = await requestManagerContract.createRequest(
     targetChainId,
     sourceTokenAddress,
     targetTokenAddress,
