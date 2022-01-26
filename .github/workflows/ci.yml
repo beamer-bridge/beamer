@@ -67,7 +67,7 @@ jobs:
 
       - name: Lint raisync
         run: |
-          poetry run black --check raisync
+          poetry run black --check raisync scripts
           poetry run flake8 raisync
           poetry run mypy raisync
 
