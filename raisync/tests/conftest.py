@@ -16,7 +16,12 @@ _LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d99007
 
 
 @pytest.fixture
-def request_manager(RequestManager):
+def resolution_registry(ResolutionRegistry):
+    return accounts[0].deploy(ResolutionRegistry)
+
+
+@pytest.fixture
+def request_manager(RequestManager, resolution_registry):
     claim_stake = Wei("0.01 ether")
     claim_period = 60 * 60  # 1 hour
     challenge_period = 60 * 60 * 5  # 5 hours
@@ -29,6 +34,7 @@ def request_manager(RequestManager):
         challenge_period,
         challenge_period_extension,
         cancellation_period,
+        resolution_registry.address,
     )
 
 

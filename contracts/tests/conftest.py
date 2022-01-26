@@ -34,6 +34,14 @@ def cancellation_period():
 
 
 @pytest.fixture
+def resolution_registry(
+    deployer,
+    ResolutionRegistry,
+):
+    return deployer.deploy(ResolutionRegistry)
+
+
+@pytest.fixture
 def request_manager(
     deployer,
     RequestManager,
@@ -42,6 +50,7 @@ def request_manager(
     challenge_period,
     challenge_period_extension,
     cancellation_period,
+    resolution_registry,
 ):
     return deployer.deploy(
         RequestManager,
@@ -50,6 +59,7 @@ def request_manager(
         challenge_period,
         challenge_period_extension,
         cancellation_period,
+        resolution_registry.address,
     )
 
 
