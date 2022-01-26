@@ -521,3 +521,42 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
     # period.
     withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
     assert claimer2_eth_balance == web3.eth.get_balance(claimer2.address)
+
+
+def test_withdraw_without_challenge_with_resolution(
+    request_manager, resolution_registry, token, claim_stake, claim_period
+):
+    """Test withdraw when a claim was not challenged, but L1 resolved"""
+    deployer, requester, claimer = accounts[:3]
+    transfer_amount = 23
+
+    claimer_eth_balance = web3.eth.get_balance(claimer.address)
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+
+    request_id = make_request(request_manager, token, requester, transfer_amount)
+    claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+    claim_id = claim_tx.return_value
+
+    assert web3.eth.get_balance(request_manager.address) == claim_stake
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
+
+    # Register a L1 resolution
+    resolution_registry.resolveRequest(request_id, claimer.address, {"from": deployer})
+    # The claim pariod is not over, but the resolution must allow withdrawal now
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(claimer) == transfer_amount
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance
+
+    # Another withdraw must fail
+    with brownie.reverts("Claim already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
