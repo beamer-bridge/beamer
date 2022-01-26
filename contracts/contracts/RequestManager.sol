@@ -5,6 +5,8 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 
+import "./ResolutionRegistry.sol";
+
 contract RequestManager is Ownable {
     using Math for uint256;
 
@@ -80,6 +82,7 @@ contract RequestManager is Ownable {
     // Variables
     uint256 public requestCounter;
     uint256 public claimCounter;
+    ResolutionRegistry public resolutionRegistry;
 
     mapping (uint256 => Request) public requests;
     mapping (uint256 => Claim) public claims;
@@ -128,13 +131,15 @@ contract RequestManager is Ownable {
         uint256 _claimPeriod,
         uint256 _challengePeriod,
         uint256 _challengePeriodExtension,
-        uint256 _cancellationPeriod
+        uint256 _cancellationPeriod,
+        address _resolutionRegistry
     ) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriod = _challengePeriod;
         challengePeriodExtension = _challengePeriodExtension;
         cancellationPeriod = _cancellationPeriod;
+        resolutionRegistry = ResolutionRegistry(_resolutionRegistry);
     }
 
     function createRequest(
@@ -288,17 +293,23 @@ contract RequestManager is Ownable {
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Claim already withdrawn");
 
-        bool depositWithdrawn = request.depositWithdrawn;
-        bool claimChallenged = claim.challenger != address(0);
-
-        require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
-
         address claimReceiver;
-        if (!claimChallenged) {
-            claimReceiver = claim.claimer;
+        bool depositWithdrawn = request.depositWithdrawn;
+
+        address eligibleClaimer = resolutionRegistry.eligibleClaimers(claim.requestId);
+        if (eligibleClaimer != address(0)) {
+            // L1 resolution has been triggered, the filler is known
+            claimReceiver = eligibleClaimer;
         } else {
-            // check if l1 resolved
-            claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
+            bool claimChallenged = claim.challenger != address(0);
+
+            require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
+
+            if (!claimChallenged) {
+                claimReceiver = claim.claimer;
+            } else {
+                claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
+            }
         }
 
         claim.withdrawn = true;
