@@ -341,11 +341,11 @@ contract RequestManager is Ownable {
     function withdrawRaisyncFees() external onlyOwner {
         require(collectedRaisyncFees > 0, "Zero fees available");
 
-        (bool sent,) = msg.sender.call{value: collectedRaisyncFees}("");
-        require(sent, "Failed to send Ether");
-
-        // As this is transferring Eth, no reentrancy is possible here
+        uint256 feeAmount = collectedRaisyncFees;
         collectedRaisyncFees = 0;
+
+        (bool sent,) = msg.sender.call{value: feeAmount}("");
+        require(sent, "Failed to send Ether");
     }
 
     function updateFeeData(uint256 newGasPrice, uint256 newServiceFeePPM) external onlyOwner {
