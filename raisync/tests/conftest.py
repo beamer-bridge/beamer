@@ -32,6 +32,14 @@ def request_manager(RequestManager):
     )
 
 
+# Make sure that the chain is reset after each test since brownie
+# launches ganache only once for the entire test suite run.
+@pytest.fixture(autouse=True)
+def _reset_chain():
+    yield
+    brownie.chain.reset()
+
+
 @pytest.fixture
 def l1_resolver():
     return "0x5d5640575161450A674a094730365A223B226641"
