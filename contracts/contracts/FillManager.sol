@@ -5,12 +5,6 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
 
-contract DummyProofSubmitter is IProofSubmitter {
-    function submitProof(address l1Resolver, uint256 requestId, uint256 sourceChainId, address eligibleClaimer) external returns (bool)
-    {
-        return true;
-    }
-}
 
 contract FillManager is Ownable {
 
