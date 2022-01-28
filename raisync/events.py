@@ -106,7 +106,8 @@ class EventFetcher:
     _ETH_GET_LOGS_THRESHOLD_FAST = 2
     _ETH_GET_LOGS_THRESHOLD_SLOW = 5
 
-    def __init__(self, contract: Contract, start_block: BlockNumber):
+    def __init__(self, contract_name: str, contract: Contract, start_block: BlockNumber):
+        self._contract_name = contract_name
         self._contract = contract
         self._next_block_number = start_block
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
@@ -122,7 +123,7 @@ class EventFetcher:
         self._log.debug(
             "Fetching events",
             chain_id=self._chain_id,
-            address=self._contract.address,
+            contract=self._contract_name,
             from_block=from_block,
             to_block=to_block,
         )
