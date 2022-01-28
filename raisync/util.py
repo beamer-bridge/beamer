@@ -5,9 +5,9 @@ import sys
 from typing import TextIO
 
 import structlog
-from eth_utils import to_canonical_address
+from eth_utils import is_checksum_address
 
-from raisync.typing import Address, ChainId
+from raisync.typing import ChainId, ChecksumAddress
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:
@@ -42,7 +42,7 @@ def setup_logging(log_level: str, log_json: bool) -> None:
     )
 
 
-_Token = tuple[ChainId, Address]
+_Token = tuple[ChainId, ChecksumAddress]
 
 
 class TokenMatchChecker:
@@ -53,18 +53,17 @@ class TokenMatchChecker:
 
         data = json.load(f)
         for equiv_class in data:
-            equiv_class = frozenset(
-                (chain_id, to_canonical_address(address)) for (chain_id, address) in equiv_class
-            )
+            equiv_class = frozenset((chain_id, address) for (chain_id, address) in equiv_class)
             for token in equiv_class:
+                assert is_checksum_address(token[1])
                 self._tokens[token] = equiv_class
 
     def is_valid_pair(
         self,
         source_chain_id: ChainId,
-        source_token_address: Address,
+        source_token_address: ChecksumAddress,
         target_chain_id: ChainId,
-        target_token_address: Address,
+        target_token_address: ChecksumAddress,
     ) -> bool:
         if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
             return True
