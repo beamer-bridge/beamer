@@ -198,9 +198,9 @@ class EventProcessor:
                 request_id=event.request_id,
                 source_chain_id=event.chain_id,
                 target_chain_id=event.target_chain_id,
-                source_token_address=to_checksum_address(event.source_token_address),
-                target_token_address=to_checksum_address(event.target_token_address),
-                target_address=to_checksum_address(event.target_address),
+                source_token_address=event.source_token_address,
+                target_token_address=event.target_token_address,
+                target_address=event.target_address,
                 amount=event.amount,
             )
             self._tracker.add(req)
