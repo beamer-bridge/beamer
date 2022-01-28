@@ -3,8 +3,11 @@ import threading
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, List, Optional
 
+import brownie
 import requests
+import web3
 
 
 class Timeout(Exception):
@@ -74,3 +77,38 @@ class HTTPProxy(HTTPServer):
 
     def delay_rpc(self, call_delays):
         self.call_delays = call_delays
+
+
+class EventCollector:
+    def __init__(self, contract: web3.contract.Contract, event: str) -> None:
+        self._address = contract.address
+        contract = brownie.web3.eth.contract(address=contract.address, abi=contract.abi)
+        self._event = getattr(contract.events, event)()
+        self._events: List[Any] = []
+        self._from_block = 0
+
+    def next_event(self, wait_time: float = 5) -> Optional[Any]:
+        """Return the next event. If no event comes within `wait_time` seconds,
+        return None."""
+        with Sleeper(wait_time) as sleeper:
+            while not self._events:
+                self._fetch_events()
+                try:
+                    sleeper.sleep(0.1)
+                except Timeout:
+                    return None
+        return self._events.pop(0).args
+
+    def _fetch_events(self) -> None:
+        to_block = brownie.chain.height
+        if to_block < self._from_block:
+            return
+        params = dict(fromBlock=self._from_block, toBlock=to_block, address=self._address)
+        logs = brownie.web3.eth.get_logs(params)
+
+        for log in logs:
+            try:
+                self._events.append(self._event.processLog(log))
+            except web3.exceptions.MismatchedABI:
+                pass
+        self._from_block = to_block + 1
