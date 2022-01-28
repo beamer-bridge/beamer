@@ -1,3 +1,4 @@
+import contextlib
 import json
 import threading
 import time
@@ -112,3 +113,10 @@ class EventCollector:
             except web3.exceptions.MismatchedABI:
                 pass
         self._from_block = to_block + 1
+
+
+@contextlib.contextmanager
+def balance_diff(w3, account):
+    address = account.address
+    balance_before = w3.eth.get_balance(address)
+    yield lambda: w3.eth.get_balance(address) - balance_before
