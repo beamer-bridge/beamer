@@ -165,7 +165,7 @@ def submit_request(
         target_token_address,
         target_address,
         amount,
-    ).transact({'value': fee})
+    ).transact({"value": fee})
 
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
