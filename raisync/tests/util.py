@@ -120,3 +120,18 @@ def balance_diff(w3, account):
     address = account.address
     balance_before = w3.eth.get_balance(address)
     yield lambda: w3.eth.get_balance(address) - balance_before
+
+
+def make_request(request_manager, token, requester, target_address, amount) -> int:
+    token.approve(request_manager.address, amount, {"from": requester})
+
+    total_fee = request_manager.totalFee()
+    request_tx = request_manager.createRequest(
+        1337,
+        token.address,
+        token.address,
+        target_address,
+        amount,
+        {"from": requester, "value": total_fee},
+    )
+    return request_tx.return_value
