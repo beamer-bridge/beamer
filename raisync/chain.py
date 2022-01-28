@@ -76,8 +76,10 @@ class ContractEventMonitor:
 
     def _thread_func(self) -> None:
         chain_id = ChainId(self._contract.web3.eth.chain_id)
-        self._log.info("ContractEventMonitor started", chain_id=chain_id)
-        fetcher = EventFetcher(self._contract, self._deployment_block)
+        self._log.info(
+            "ContractEventMonitor started", chain_id=chain_id, address=self._contract.address
+        )
+        fetcher = EventFetcher(self._name, self._contract, self._deployment_block)
         events = fetcher.fetch()
         if events:
             self._on_new_events(events)
