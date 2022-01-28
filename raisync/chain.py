@@ -9,12 +9,13 @@ from typing import Any, Callable
 
 import structlog
 import web3
-from eth_utils import to_checksum_address
+from eth_utils import is_checksum_address
 from statemachine.exceptions import TransitionNotAllowed
 from web3.contract import Contract
+from web3.types import Wei
 
 import raisync.events
-from raisync.events import Event, EventFetcher
+from raisync.events import ClaimMade, Event, EventFetcher
 from raisync.request import Request, RequestTracker
 from raisync.typing import BlockNumber, ChainId
 from raisync.util import TokenMatchChecker
@@ -114,6 +115,8 @@ class EventProcessor:
         self._match_checker = match_checker
         self._stop = False
         self._log = structlog.get_logger(type(self).__name__)
+        assert is_checksum_address(request_manager.web3.eth.default_account)
+        self._address = request_manager.web3.eth.default_account
         # The number of times we synced with a chain:
         # 0 = we're still waiting for sync to complete for both chains
         # 1 = one of the chains was synced, waiting for the other one
@@ -213,23 +216,21 @@ class EventProcessor:
                 return False
 
             try:
-                request.fill(our_fill=request.is_filled_unconfirmed)
+                request.fill(filler=event.filler)
             except TransitionNotAllowed:
                 return False
-            self._log.info("Request filled", _event=event)
+            self._log.info("Request filled", request=request)
             return True
         elif isinstance(event, raisync.events.ClaimMade):
             request = self._tracker.get(event.request_id)
             if request is None:
                 return False
 
-            address = self._request_manager.web3.eth.default_account
-            our_claim = to_checksum_address(event.claimer) == address
             try:
-                request.claim(event=event, our_claim=our_claim)
+                request.claim(event=event)
             except TransitionNotAllowed:
                 return False
-            self._log.info("Request claimed", _event=event)
+            self._log.info("Request claimed", request=request, claim_id=event.claim_id)
             return True
         elif isinstance(event, raisync.events.ClaimWithdrawn):
             request = self._tracker.get(event.request_id)
@@ -240,7 +241,7 @@ class EventProcessor:
                 request.withdraw()
             except TransitionNotAllowed:
                 return False
-            self._log.info("Claim withdrawn", _event=event)
+            self._log.info("Claim withdrawn", request=request)
             return True
         else:
             raise RuntimeError("Unrecognized event type")
@@ -257,7 +258,7 @@ class EventProcessor:
             self._log.debug("Processing request", request=request)
             if request.is_pending:
                 self._fill_request(request)
-            elif request.is_filled and request.our_fill:
+            elif request.is_filled and request.filler == self._address:
                 self._claim_request(request)
             elif request.is_claimed and request.our_claim:
                 self._try_withdraw(request)
@@ -318,17 +319,15 @@ class EventProcessor:
 
         w3.eth.wait_for_transaction_receipt(txn_hash)
 
+        request.claim_unconfirmed()
         self._log.debug(
             "Claimed request",
             request=request,
             txn_hash=txn_hash.hex(),
         )
 
-    def _try_withdraw(self, request: Request) -> None:
+    def _try_withdraw(self, claim: ClaimMade) -> None:
         w3 = self._request_manager.web3
-        address = w3.eth.default_account
-        claim = next(c for c in request.iter_claims() if to_checksum_address(c.claimer) == address)
-
         # check whether the claim period expired
         # TODO: avoid making these calls every time
         block = w3.eth.get_block(w3.eth.block_number)

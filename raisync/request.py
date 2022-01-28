@@ -6,7 +6,7 @@ from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
 
 from raisync.events import ClaimMade
-from raisync.typing import ChainId, RequestId, TokenAmount
+from raisync.typing import ChainId, ClaimId, RequestId, TokenAmount
 
 
 class Request(StateMachine):
@@ -28,34 +28,41 @@ class Request(StateMachine):
         self.target_token_address = target_token_address
         self.target_address = target_address
         self.amount = amount
-        self._claims: list[ClaimMade] = []
-        self.our_fill = False
-        self.our_claim = False
+        self._claims: dict[ClaimId, ClaimMade] = {}
+        self.filler: Optional[Address] = None
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
     filled_unconfirmed = State("Filled-unconfirmed")
     claimed = State("Claimed")
+    claimed_unconfirmed = State("Claimed-unconfirmed")
     withdrawn = State("Withdrawn")
 
     fill = pending.to(filled) | filled_unconfirmed.to(filled)
     fill_unconfirmed = pending.to(filled_unconfirmed)
-    claim = filled.to(claimed) | claimed.to(claimed)
+    claim = (
+        pending.to(claimed)
+        | filled.to(claimed)
+        | claimed_unconfirmed.to(claimed)
+        | claimed.to(claimed)
+    )
+    claim_unconfirmed = filled.to(claimed_unconfirmed)
     withdraw = claimed.to(withdrawn)
 
-    def on_fill(self, our_fill: bool) -> None:
-        self.our_fill = our_fill
+    def on_fill(self, filler: Address) -> None:
+        self.filler = filler
 
-    def on_claim(self, event: ClaimMade, our_claim: bool) -> None:
-        self._claims.append(event)
-        self.our_claim |= our_claim
+    def on_claim(self, event: ClaimMade) -> None:
+        assert event.request_id == self.id, "got claim for another request"
+        self._claims[event.claim_id] = event
 
     def iter_claims(self) -> Iterator[ClaimMade]:
-        return iter(self._claims)
+        return iter(self._claims.values())
 
     def __repr__(self) -> str:
         claims = getattr(self, "_claims", [])
-        return f"<Request id={self.id} state={self.current_state.identifier} claims={claims}>"
+        state = self.current_state.identifier
+        return f"<Request id={self.id} state={state} filler={self.filler} claims={claims}>"
 
 
 class RequestTracker:
