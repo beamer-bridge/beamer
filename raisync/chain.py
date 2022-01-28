@@ -260,8 +260,55 @@ class EventProcessor:
                 self._fill_request(request)
             elif request.is_filled and request.filler == self._address:
                 self._claim_request(request)
-            elif request.is_claimed and request.our_claim:
-                self._try_withdraw(request)
+            elif request.is_claimed:
+                self._check_claims(request)
+
+    def _check_claims(self, request: Request) -> None:
+        for claim in request.iter_claims():
+            self._maybe_challenge(request, claim)
+
+            if claim.claimer == self._address:
+                self._try_withdraw(claim)
+
+    def _compute_challenge_stake(self, claim: ClaimMade) -> Wei:  # pylint:disable=no-self-use
+        return Wei(max(claim.claimer_stake, claim.challenger_stake) + 1)
+
+    def _maybe_challenge(self, request: Request, claim: ClaimMade) -> None:
+        # We need to challenge if either of the following is true:
+        #
+        # 1) the claim is dishonest AND nobody challenged it yet
+        #
+        # 2) we participate in the game AND it is our turn
+
+        unchallenged = claim.challenger_stake == 0
+        dishonest_claim = claim.claimer != request.filler
+
+        our_turn = (
+            claim.challenger == self._address and claim.claimer_stake > claim.challenger_stake
+        ) or (claim.claimer == self._address and claim.claimer_stake < claim.challenger_stake)
+
+        should_challenge = (dishonest_claim and unchallenged) or our_turn
+        if not should_challenge:
+            return
+
+        stake = self._compute_challenge_stake(claim)
+
+        try:
+            txn_hash = self._request_manager.functions.challengeClaim(claim.claim_id).transact(
+                dict(value=stake)
+            )
+        except web3.exceptions.ContractLogicError as exc:
+            self._log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
+            return
+
+        w3 = self._request_manager.web3
+        w3.eth.wait_for_transaction_receipt(txn_hash)
+
+        self._log.debug(
+            "Challenged claim",
+            claim=claim,
+            txn_hash=txn_hash.hex(),
+        )
 
     def _fill_request(self, request: Request) -> None:
         w3 = self._fill_manager.web3
