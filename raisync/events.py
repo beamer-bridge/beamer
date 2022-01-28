@@ -8,17 +8,9 @@ import web3
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
 from web3.contract import Contract, get_event_data
-from web3.types import ABIEvent, FilterParams, LogReceipt
+from web3.types import ABIEvent, ChecksumAddress, FilterParams, LogReceipt, Wei
 
-from raisync.typing import (
-    Address,
-    BlockNumber,
-    ChainId,
-    ClaimId,
-    RequestId,
-    Termination,
-    TokenAmount,
-)
+from raisync.typing import BlockNumber, ChainId, ClaimId, RequestId, Termination, TokenAmount
 
 
 @dataclass(frozen=True)
@@ -30,7 +22,8 @@ class Event:
 class RequestFilled(Event):
     request_id: RequestId
     source_chain_id: ChainId
-    target_token_address: Address
+    target_token_address: ChecksumAddress
+    filler: ChecksumAddress
     amount: TokenAmount
 
 
@@ -38,9 +31,9 @@ class RequestFilled(Event):
 class RequestCreated(Event):
     request_id: RequestId
     target_chain_id: ChainId
-    source_token_address: Address
-    target_token_address: Address
-    target_address: Address
+    source_token_address: ChecksumAddress
+    target_token_address: ChecksumAddress
+    target_address: ChecksumAddress
     amount: TokenAmount
 
 
@@ -48,10 +41,10 @@ class RequestCreated(Event):
 class ClaimMade(Event):
     claim_id: ClaimId
     request_id: RequestId
-    claimer: Address
-    claimer_stake: TokenAmount
-    challenger: Address
-    challenger_stake: TokenAmount
+    claimer: ChecksumAddress
+    claimer_stake: Wei
+    challenger: ChecksumAddress
+    challenger_stake: Wei
     termination: Termination
 
 
@@ -59,7 +52,7 @@ class ClaimMade(Event):
 class ClaimWithdrawn(Event):
     claim_id: ClaimId
     request_id: RequestId
-    claim_receiver: Address
+    claim_receiver: ChecksumAddress
 
 
 def _camel_to_snake(s: str) -> str:
