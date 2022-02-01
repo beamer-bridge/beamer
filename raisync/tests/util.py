@@ -127,7 +127,7 @@ def make_request(request_manager, token, requester, target_address, amount) -> i
 
     total_fee = request_manager.totalFee()
     request_tx = request_manager.createRequest(
-        1337,
+        brownie.chain.id,
         token.address,
         token.address,
         target_address,

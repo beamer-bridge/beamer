@@ -16,6 +16,18 @@ _LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d99007
 
 
 @pytest.fixture
+def test_messenger(TestCrossDomainMessenger):
+    return accounts[0].deploy(TestCrossDomainMessenger)
+
+
+@pytest.fixture
+def resolver(Resolver, test_messenger, resolution_registry):
+    resolver = accounts[0].deploy(Resolver, test_messenger.address)
+    resolver.addRegistry(brownie.chain.id, resolution_registry.address, {"from": accounts[0]})
+    return resolver
+
+
+@pytest.fixture
 def resolution_registry(ResolutionRegistry):
     return accounts[0].deploy(ResolutionRegistry)
 
@@ -44,11 +56,6 @@ def request_manager(RequestManager, resolution_registry):
 def _reset_chain():
     yield
     brownie.chain.reset()
-
-
-@pytest.fixture
-def l1_resolver():
-    return "0x5d5640575161450A674a094730365A223B226641"
 
 
 @pytest.fixture
@@ -103,13 +110,13 @@ def node(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
 
 
 @pytest.fixture
-def dummy_proof_submitter(DummyProofSubmitter):
-    return accounts[0].deploy(DummyProofSubmitter)
+def optimism_proof_submitter(OptimismProofSubmitter, test_messenger):
+    return accounts[0].deploy(OptimismProofSubmitter, test_messenger.address)
 
 
 @pytest.fixture
-def fill_manager(FillManager, l1_resolver, dummy_proof_submitter):
-    manager = accounts[0].deploy(FillManager, l1_resolver, dummy_proof_submitter.address)
+def fill_manager(FillManager, resolver, optimism_proof_submitter):
+    manager = accounts[0].deploy(FillManager, resolver.address, optimism_proof_submitter.address)
     manager.addAllowedLP(_LOCAL_ACCOUNT)
     return manager
 
