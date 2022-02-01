@@ -3,7 +3,6 @@ import os
 import brownie
 import pytest
 from brownie import accounts
-from eth_utils import encode_hex
 
 import raisync.node
 from raisync.tests.util import EventCollector, balance_diff, make_request
@@ -27,14 +26,6 @@ def _total_tx_cost(address, num_fills):
         for tx_hash in block.transactions:
             tx = brownie.web3.eth.get_transaction(tx_hash)
             if tx["from"] == address:
-                print(
-                    encode_hex(tx.hash),
-                    block_number,
-                    tx.gasPrice,
-                    tx.gas,
-                    tx.gasPrice * tx.gas,
-                    tx.value,
-                )
                 total += tx.gasPrice * tx.gas
 
     # We are subtracting 300k gwei here because the token.transferFrom inside
