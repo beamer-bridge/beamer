@@ -1,42 +1,46 @@
 import brownie
-from brownie import accounts
+from brownie import accounts, web3
 
 
-def test_fill_request(fill_manager, token):
-    transfer_amount = 100
+def test_fill_request(fill_manager, token, deployer, resolver, resolution_registry):
+    chain_id = web3.eth.chain_id
+    amount = 100
+    receiver = accounts[2]
+
+    resolver.addRegistry(chain_id, resolution_registry.address, {"from": deployer})
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        fill_manager.addAllowedLP(accounts[0], {"from": accounts[1]})
+        fill_manager.addAllowedLP(deployer, {"from": accounts[1]})
 
-    fill_manager.addAllowedLP(accounts[0], {"from": accounts[0]})
+    fill_manager.addAllowedLP(deployer, {"from": deployer})
 
-    token.approve(fill_manager.address, transfer_amount, {"from": accounts[0]})
+    token.approve(fill_manager.address, amount, {"from": deployer})
     fill_manager.fillRequest(
-        1,
+        chain_id,
         1,
         token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
-        transfer_amount,
-        {"from": accounts[0]},
+        receiver,
+        amount,
+        {"from": deployer},
     )
 
     with brownie.reverts("Already filled"):
         fill_manager.fillRequest(
-            1,
+            chain_id,
             1,
             token.address,
-            "0x5d5640575161450A674a094730365A223B226649",
-            transfer_amount,
-            {"from": accounts[0]},
+            receiver,
+            amount,
+            {"from": deployer},
         )
 
-    fill_manager.removeAllowedLP(accounts[0], {"from": accounts[0]})
+    fill_manager.removeAllowedLP(deployer, {"from": deployer})
     with brownie.reverts("Sender not whitelisted"):
         fill_manager.fillRequest(
-            1,
+            chain_id,
             1,
             token.address,
-            "0x5d5640575161450A674a094730365A223B226649",
-            transfer_amount,
-            {"from": accounts[0]},
+            receiver,
+            amount,
+            {"from": deployer},
         )
