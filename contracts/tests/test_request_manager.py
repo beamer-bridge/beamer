@@ -524,7 +524,7 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
 
 
 def test_withdraw_without_challenge_with_resolution(
-    request_manager, resolution_registry, token, claim_stake, claim_period
+    request_manager, resolution_registry, token, claim_stake
 ):
     """Test withdraw when a claim was not challenged, but L1 resolved"""
     deployer, requester, claimer = accounts[:3]
