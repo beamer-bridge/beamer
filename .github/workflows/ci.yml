@@ -87,3 +87,8 @@ jobs:
           killall node
 
           poetry run pytest -v --cov-report=term --cov raisync raisync/tests
+
+      - name: Measure gas prices
+        run: |
+          cd contracts
+          poetry run brownie run --silent -g measure_gas_prices
