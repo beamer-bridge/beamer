@@ -301,15 +301,8 @@ contract RequestManager is Ownable {
             // L1 resolution has been triggered, the filler is known
             claimReceiver = eligibleClaimer;
         } else {
-            bool claimChallenged = claim.challenger != address(0);
-
             require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
-
-            if (!claimChallenged) {
-                claimReceiver = claim.claimer;
-            } else {
-                claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
-            }
+            claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
         }
 
         claim.withdrawn = true;
