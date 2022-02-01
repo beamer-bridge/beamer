@@ -9,6 +9,26 @@ def deployer():
 
 
 @pytest.fixture
+def token(deployer, MintableToken):
+    return deployer.deploy(MintableToken, int(1e18))
+
+
+@pytest.fixture
+def test_cross_domain_messenger(deployer, TestCrossDomainMessenger):
+    return deployer.deploy(TestCrossDomainMessenger)
+
+
+@pytest.fixture
+def resolver(deployer, Resolver, test_cross_domain_messenger):
+    return deployer.deploy(Resolver, test_cross_domain_messenger.address)
+
+
+@pytest.fixture
+def resolution_registry(deployer, ResolutionRegistry):
+    return deployer.deploy(ResolutionRegistry)
+
+
+@pytest.fixture
 def claim_stake():
     return 100
 
@@ -34,14 +54,6 @@ def cancellation_period():
 
 
 @pytest.fixture
-def resolution_registry(
-    deployer,
-    ResolutionRegistry,
-):
-    return deployer.deploy(ResolutionRegistry)
-
-
-@pytest.fixture
 def request_manager(
     deployer,
     RequestManager,
@@ -64,20 +76,10 @@ def request_manager(
 
 
 @pytest.fixture
-def l1_resolver():
-    return "0x5d5640575161450A674a094730365A223B226641"
+def optimism_proof_submitter(deployer, OptimismProofSubmitter, test_cross_domain_messenger):
+    return deployer.deploy(OptimismProofSubmitter, test_cross_domain_messenger.address)
 
 
 @pytest.fixture
-def dummy_proof_submitter(deployer, DummyProofSubmitter):
-    return deployer.deploy(DummyProofSubmitter)
-
-
-@pytest.fixture
-def fill_manager(deployer, FillManager, l1_resolver, dummy_proof_submitter):
-    return deployer.deploy(FillManager, l1_resolver, dummy_proof_submitter.address)
-
-
-@pytest.fixture
-def token(deployer, MintableToken):
-    return deployer.deploy(MintableToken, int(1e18))
+def fill_manager(deployer, FillManager, resolver, optimism_proof_submitter):
+    return deployer.deploy(FillManager, resolver, optimism_proof_submitter.address)

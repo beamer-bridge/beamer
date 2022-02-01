@@ -51,7 +51,10 @@ contract FillManager is Ownable {
         IERC20 token = IERC20(targetTokenAddress);
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
 
-        require(proofSubmitter.submitProof(l1Resolver, requestId, sourceChainId, msg.sender), "Submitting proof data failed");
+        require(
+            proofSubmitter.submitProof(l1Resolver, requestId, sourceChainId, msg.sender),
+            "Submitting proof data failed"
+        );
     }
 
     function addAllowedLP(address newLP) public onlyOwner {
