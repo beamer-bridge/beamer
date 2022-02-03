@@ -1,4 +1,5 @@
 import './main.scss';
+import '@fontsource/sora';
 
 import { createApp } from 'vue';
 
