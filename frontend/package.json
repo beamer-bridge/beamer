@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.5.2",
+    "@fontsource/sora": "^4.5.1",
     "@headlessui/vue": "^1.4.3",
     "@heroicons/vue": "^1.0.5",
     "@metamask/detect-provider": "^1.2.0",
