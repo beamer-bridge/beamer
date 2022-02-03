@@ -1,6 +1,5 @@
 <template>
   <div class="request-dialog">
-    <h1 class="request-dialog__title">Request</h1>
     <div v-if="successfulTransactionUrl">
       Request successful! Click
       <a :href="successfulTransactionUrl" target="_blank" class="request-dialog__link">here</a>
@@ -39,14 +38,8 @@ const {
 @import '@/scss/colors';
 
 .request-dialog {
-  &__title {
-    font-size: 36px;
-    line-height: 48px;
-    margin-bottom: 32px;
-  }
-
   &__form {
-    margin-bottom: 16px;
+    margin: 30px;
   }
 
   &__error {
