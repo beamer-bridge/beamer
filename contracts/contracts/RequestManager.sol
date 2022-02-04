@@ -22,7 +22,7 @@ contract RequestManager is Ownable {
         uint256 amount;
         bool depositWithdrawn;
         uint192 activeClaims;
-        uint256 cancellationTermination;
+        uint256 validUntil;
         uint256 lpFee;
         uint256 raisyncFee;
     }
@@ -45,10 +45,6 @@ contract RequestManager is Ownable {
         address targetTokenAddress,
         address targetAddress,
         uint256 amount
-    );
-
-    event RequestCancelled(
-        uint256 requestId
     );
 
     event DepositWithdrawn(
@@ -77,7 +73,9 @@ contract RequestManager is Ownable {
     uint256 public claimPeriod;
     uint256 public challengePeriod;
     uint256 public challengePeriodExtension;
-    uint256 public cancellationPeriod;
+
+    uint256 public constant minValidityPeriod = 1 minutes;
+    uint256 public constant maxValidityPeriod = 520 weeks;
 
     // Variables
     uint256 public requestCounter;
@@ -131,14 +129,12 @@ contract RequestManager is Ownable {
         uint256 _claimPeriod,
         uint256 _challengePeriod,
         uint256 _challengePeriodExtension,
-        uint256 _cancellationPeriod,
         address _resolutionRegistry
     ) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriod = _challengePeriod;
         challengePeriodExtension = _challengePeriodExtension;
-        cancellationPeriod = _cancellationPeriod;
         resolutionRegistry = ResolutionRegistry(_resolutionRegistry);
     }
 
@@ -147,13 +143,16 @@ contract RequestManager is Ownable {
         address sourceTokenAddress,
         address targetTokenAddress,
         address targetAddress,
-        uint256 amount
+        uint256 amount,
+        uint256 validityPeriod
     )
     external payable returns (uint256)
     {
         uint256 lpFee = gasReimbursementFee() + lpServiceFee();
         uint256 raisyncFee = raisyncServiceFee();
         require(lpFee + raisyncFee == msg.value, "Wrong amount of fees sent");
+        require(validityPeriod >= minValidityPeriod, "Validity period too short");
+        require(validityPeriod <= maxValidityPeriod, "Validity period too long");
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
@@ -164,6 +163,7 @@ contract RequestManager is Ownable {
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
         newRequest.depositWithdrawn = false;
+        newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
         newRequest.raisyncFee = raisyncFee;
 
@@ -182,24 +182,11 @@ contract RequestManager is Ownable {
         return requestCounter;
     }
 
-    function cancelRequest(uint256 requestId) external validRequestId(requestId) {
-        Request storage request = requests[requestId];
-
-        require(request.cancellationTermination == 0, "Request already cancelled");
-        require(!request.depositWithdrawn, "Deposit already withdrawn");
-        require(msg.sender == request.sender, "Sender is not requester");
-
-        request.cancellationTermination = block.timestamp + cancellationPeriod;
-
-        emit RequestCancelled(requestId);
-    }
-
-    function withdrawCancelledRequest(uint256 requestId) external validRequestId(requestId) {
+    function withdrawExpiredRequest(uint256 requestId) external validRequestId(requestId) {
         Request storage request = requests[requestId];
 
         require(!request.depositWithdrawn , "Deposit already withdrawn");
-        require(request.cancellationTermination > 0, "Request not cancelled");
-        require(block.timestamp >= request.cancellationTermination, "Cancellation period not over yet");
+        require(block.timestamp >= request.validUntil, "Request not expired yet");
         require(request.activeClaims == 0, "Active claims running");
 
         request.depositWithdrawn = true;
@@ -216,6 +203,7 @@ contract RequestManager is Ownable {
     function claimRequest(uint256 requestId) external validRequestId(requestId) payable returns (uint256) {
         Request storage request = requests[requestId];
 
+        require(block.timestamp < request.validUntil, "Request expired");
         require(!request.depositWithdrawn, "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
 
