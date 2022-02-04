@@ -25,6 +25,7 @@ def _make_request(
         token.address,
         "0x5d5640575161450A674a094730365A223B226649",
         amount,
+        3600,
         {"from": requester},
     )
     return tx.return_value
@@ -47,13 +48,11 @@ def main() -> None:
     claim_period = 60 * 60  # 1 hour
     challenge_period = 60 * 60 * 5  # 5 hours
     challenge_period_extension = 60 * 60  # 1 hour
-    cancellation_period = 60 * 60  # 1 hour
     request_manager = RequestManager.deploy(
         claim_stake,
         claim_period,
         challenge_period,
         challenge_period_extension,
-        cancellation_period,
         resolution_registry.address,
         {"from": deployer},
     )
