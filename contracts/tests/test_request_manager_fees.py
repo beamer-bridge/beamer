@@ -89,26 +89,31 @@ def test_fee_gas_price_updatable_by_owner(request_manager, token):
     assert request_manager.totalFee() == 2 * old_fee
 
 
-def test_fee_reimbursed_on_cancellation(request_manager, token, cancellation_period):
+def test_fee_reimbursed_on_expiration(request_manager, token):
     _, requester = accounts[:2]
     transfer_amount = 23
+    validity_period = 60
 
     requester_eth = web3.eth.get_balance(requester.address)
 
-    request_id = make_request(request_manager, token, requester, transfer_amount, zero_fees=False)
+    request_id = make_request(
+        request_manager,
+        token,
+        requester,
+        transfer_amount,
+        zero_fees=False,
+        validity_period=validity_period,
+    )
 
     total_fee = request_manager.totalFee()
     assert total_fee > 0
     assert web3.eth.get_balance(requester.address) == requester_eth - total_fee
-
-    request_manager.cancelRequest(request_id, {"from": requester})
-
     assert request_manager.collectedRaisyncFees() == 0
 
-    # Timetravel after cancellation period
-    chain.mine(timedelta=cancellation_period)
+    # Timetravel after validity period
+    chain.mine(timedelta=validity_period)
 
-    request_manager.withdrawCancelledRequest(request_id, {"from": requester})
+    request_manager.withdrawExpiredRequest(request_id, {"from": requester})
     assert request_manager.collectedRaisyncFees() == 0
     assert web3.eth.get_balance(requester.address) == requester_eth
 

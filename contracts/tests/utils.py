@@ -1,4 +1,6 @@
-def make_request(request_manager, token, requester, amount, zero_fees=True) -> int:
+def make_request(
+    request_manager, token, requester, amount, zero_fees=True, validity_period=3600
+) -> int:
     if token.balanceOf(requester) < amount:
         token.mint(requester, amount, {"from": requester})
 
@@ -14,6 +16,7 @@ def make_request(request_manager, token, requester, amount, zero_fees=True) -> i
         token.address,
         "0x5d5640575161450A674a094730365A223B226649",
         amount,
+        validity_period,
         {"from": requester, "value": total_fee},
     )
     return request_tx.return_value
