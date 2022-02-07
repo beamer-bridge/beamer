@@ -15,7 +15,10 @@ def token(deployer, MintableToken):
 
 @pytest.fixture
 def test_cross_domain_messenger(deployer, TestCrossDomainMessenger):
-    return deployer.deploy(TestCrossDomainMessenger)
+    contract = deployer.deploy(TestCrossDomainMessenger)
+    contract.setForwardState(True)
+
+    return contract
 
 
 @pytest.fixture
