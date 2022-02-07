@@ -560,3 +560,34 @@ def test_withdraw_without_challenge_with_resolution(
     # Another withdraw must fail
     with brownie.reverts("Claim already withdrawn"):
         request_manager.withdraw(claim_id, {"from": claimer})
+
+
+def test_withdraw_expired(token, request_manager):
+    """Test that a request can be withdrawn once it is expired"""
+    validity_period = 60
+    requester = accounts[0]
+
+    balance_before = token.balanceOf(requester)
+
+    request_id = make_request(
+        request_manager, token, requester, 1, validity_period=validity_period
+    )
+
+    chain.mine(timedelta=validity_period)
+    tx = request_manager.withdrawExpiredRequest(request_id, {"from": requester})
+    assert "DepositWithdrawn" in tx.events
+    assert token.balanceOf(requester) == balance_before
+
+
+def test_withdraw_before_expiration(token, request_manager):
+    """Test that a request cannot be withdrawn before it is expired"""
+    validity_period = 60
+    requester = accounts[0]
+
+    request_id = make_request(
+        request_manager, token, requester, 1, validity_period=validity_period
+    )
+
+    chain.mine(timedelta=validity_period / 2)
+    with brownie.reverts("Request not expired yet"):
+        request_manager.withdrawExpiredRequest(request_id, {"from": requester})
