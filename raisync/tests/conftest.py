@@ -17,7 +17,10 @@ _LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d99007
 
 @pytest.fixture
 def test_messenger(TestCrossDomainMessenger):
-    return accounts[0].deploy(TestCrossDomainMessenger)
+    contract = accounts[0].deploy(TestCrossDomainMessenger)
+    contract.setForwardState(False)
+
+    return contract
 
 
 @pytest.fixture
