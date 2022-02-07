@@ -1,10 +1,12 @@
 import brownie
 from brownie import (
-    DummyProofSubmitter,
     FillManager,
     MintableToken,
+    OptimismProofSubmitter,
     RequestManager,
     ResolutionRegistry,
+    Resolver,
+    TestCrossDomainMessenger,
     Wei,
     accounts,
 )
@@ -35,6 +37,12 @@ def main() -> None:
     token = MintableToken.deploy(int(1e18), {"from": deployer})
     resolution_registry = ResolutionRegistry.deploy({"from": deployer})
 
+    test_cross_domain_messenger = TestCrossDomainMessenger.deploy({"from": accounts[0]})
+    test_cross_domain_messenger.setForwardState(False, {"from": accounts[0]})
+
+    resolver = Resolver.deploy(test_cross_domain_messenger.address, {"from": accounts[0]})
+    resolver.addRegistry(brownie.chain.id, resolution_registry.address, {"from": accounts[0]})
+
     claim_stake = Wei("0.01 ether")
     claim_period = 60 * 60  # 1 hour
     challenge_period = 60 * 60 * 5  # 5 hours
@@ -52,10 +60,11 @@ def main() -> None:
 
     request_manager.updateFeeData(0, 0, {"from": deployer})
 
-    l1_resolver_address = "0x0000000000000000000000000000000000000001"
-    proof_submitter = DummyProofSubmitter.deploy({"from": deployer})
+    proof_submitter = OptimismProofSubmitter.deploy(
+        test_cross_domain_messenger.address, {"from": deployer}
+    )
     fill_manager = FillManager.deploy(
-        l1_resolver_address, proof_submitter.address, {"from": deployer}
+        resolver.address, proof_submitter.address, {"from": deployer}
     )
 
     amount = 23
