@@ -5,8 +5,9 @@ import "../interfaces/IProofSubmitter.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
 
 import "./Resolver.sol";
+import "./RestrictedCalls.sol";
 
-contract OptimismProofSubmitter is IProofSubmitter {
+contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     ICrossDomainMessenger messenger;
 
     constructor(address _messenger)
@@ -14,8 +15,10 @@ contract OptimismProofSubmitter is IProofSubmitter {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function submitProof(address l1Resolver, uint256 requestId, uint256 sourceChainId, address eligibleClaimer) external returns (bool)
+    function submitProof(address l1Resolver, uint256 requestId, uint256 sourceChainId, address eligibleClaimer)
+        external restricted(block.chainid, msg.sender) returns (bool)
     {
+
         // Questions
         // - what gas limit
         // TODO: use abi.encodeCall once

@@ -2,8 +2,9 @@
 pragma solidity ^0.8.7;
 
 import "../interfaces/ICrossDomainMessenger.sol";
+import "./RestrictedCalls.sol";
 
-contract TestCrossDomainMessenger is ICrossDomainMessenger {
+contract TestCrossDomainMessenger is ICrossDomainMessenger, RestrictedCalls {
     address lastSender;
     bool forwardMessages;
 
@@ -15,7 +16,8 @@ contract TestCrossDomainMessenger is ICrossDomainMessenger {
         address _target,
         bytes calldata _message,
         uint32 _gasLimit
-    ) external {
+    ) external restricted(block.chainid, msg.sender) {
+
         if (forwardMessages) {
             lastSender = msg.sender;
             (bool success, ) = _target.call{gas: _gasLimit}(_message);
