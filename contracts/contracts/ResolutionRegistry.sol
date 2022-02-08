@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "./RestrictedCalls.sol";
 
-contract ResolutionRegistry {
+contract ResolutionRegistry is RestrictedCalls {
 
     event RequestResolved(
         uint256 requestId,
@@ -11,8 +12,8 @@ contract ResolutionRegistry {
 
     mapping(uint256 => address) public eligibleClaimers;
 
-    function resolveRequest(uint256 requestId, address eligibleClaimer) external {
-        // FIXME: we need to check that the tx sender is the L1 resolver contract
+    function resolveRequest(uint256 requestId, address eligibleClaimer)
+        external restricted(block.chainid, msg.sender) {
 
         require(eligibleClaimers[requestId] == address(0), "Resolution already recorded");
         eligibleClaimers[requestId] = eligibleClaimer;

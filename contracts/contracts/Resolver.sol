@@ -4,8 +4,9 @@ pragma solidity ^0.8.7;
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
 import "./ResolutionRegistry.sol";
+import "./RestrictedCalls.sol";
 
-contract Resolver is Ownable {
+contract Resolver is Ownable, RestrictedCalls {
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
@@ -21,8 +22,9 @@ contract Resolver is Ownable {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    // TODO: limit who can call this
-    function resolve(uint256 requestId, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer) external {
+    function resolve(uint256 requestId, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer)
+        external restricted(fillChainId, msg.sender) {
+
         address l2RegistryAddress = resolutionRegistries[sourceChainId];
         require(l2RegistryAddress != address(0), "No registry available for source chain");
 
