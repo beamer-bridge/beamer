@@ -1,3 +1,11 @@
+project_structure:
+    build: contracts/build
+    contracts: contracts/contracts
+    interfaces: contracts/interfaces
+    reports: contracts/reports
+    scripts: contracts/scripts
+    tests: contracts/tests
+
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.4.2
 
