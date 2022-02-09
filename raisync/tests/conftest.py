@@ -1,13 +1,35 @@
 import os
 import pathlib
+from dataclasses import dataclass
+
 import brownie
 import eth_account
-
 import pytest
-from brownie import Wei, accounts
+from brownie import (
+    FillManager,
+    OptimismProofSubmitter,
+    RequestManager,
+    ResolutionRegistry,
+    Resolver,
+    TestCrossDomainMessenger,
+    Wei,
+    accounts,
+)
 
 from raisync.node import Config, ContractInfo, Node
 from raisync.typing import BlockNumber
+
+
+@dataclass(frozen=True)
+class Contracts:
+    resolver: Resolver
+    fill_manager: FillManager
+    request_manager: RequestManager
+    messenger1: TestCrossDomainMessenger
+    messenger2: TestCrossDomainMessenger
+    proof_submitter: OptimismProofSubmitter
+    resolution_registry: ResolutionRegistry
+
 
 # brownie local account, to be used for fulfilling requests.
 # The private key here corresponds to the 10th account ganache creates on
@@ -16,39 +38,8 @@ _LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d99007
 
 
 @pytest.fixture
-def test_messenger(TestCrossDomainMessenger):
-    contract = accounts[0].deploy(TestCrossDomainMessenger)
-    contract.setForwardState(False)
-
-    return contract
-
-
-@pytest.fixture
-def resolver(Resolver, test_messenger, resolution_registry):
-    resolver = accounts[0].deploy(Resolver, test_messenger.address)
-    resolver.addRegistry(brownie.chain.id, resolution_registry.address, {"from": accounts[0]})
-    return resolver
-
-
-@pytest.fixture
-def resolution_registry(ResolutionRegistry):
-    return accounts[0].deploy(ResolutionRegistry)
-
-
-@pytest.fixture
-def request_manager(RequestManager, resolution_registry):
-    claim_stake = Wei("0.01 ether")
-    claim_period = 60 * 60  # 1 hour
-    challenge_period = 60 * 60 * 5  # 5 hours
-    challenge_period_extension = 60 * 60  # 1 hour
-    return accounts[0].deploy(
-        RequestManager,
-        claim_stake,
-        claim_period,
-        challenge_period,
-        challenge_period_extension,
-        resolution_registry.address,
-    )
+def deployer():
+    return accounts[0]
 
 
 # Make sure that the chain is reset after each test since brownie
@@ -57,6 +48,60 @@ def request_manager(RequestManager, resolution_registry):
 def _reset_chain():
     yield
     brownie.chain.reset()
+
+
+@pytest.fixture
+def contracts(deployer):
+    # L2b contracts
+    messenger1 = deployer.deploy(TestCrossDomainMessenger)
+    messenger1.setForwardState(False)
+
+    # L1 contracts
+    messenger2 = deployer.deploy(TestCrossDomainMessenger)
+    messenger2.setForwardState(False)
+    resolver = deployer.deploy(Resolver, messenger2.address)
+
+    # L2b contracts, again
+    proof_submitter = deployer.deploy(OptimismProofSubmitter, messenger1.address)
+    fill_manager = deployer.deploy(FillManager, resolver, proof_submitter.address)
+    fill_manager.addAllowedLP(_LOCAL_ACCOUNT)
+
+    # L2a contracts
+    resolution_registry = deployer.deploy(ResolutionRegistry)
+    claim_stake = Wei("0.01 ether")
+    claim_period = 60 * 60  # 1 hour
+    challenge_period = 60 * 60 * 5  # 5 hours
+    challenge_period_extension = 60 * 60  # 1 hour
+    request_manager = deployer.deploy(
+        RequestManager,
+        claim_stake,
+        claim_period,
+        challenge_period,
+        challenge_period_extension,
+        resolution_registry.address,
+    )
+
+    # Explicitly allow calls between contracts. The chain of trust:
+    #
+    # fill_manager -> proof_submitter -> messenger1 -> L1 resolver ->
+    # messenger2 -> resolution registry
+    l1_chain_id = l2_chain_id = brownie.chain.id
+
+    proof_submitter.addCaller(l2_chain_id, fill_manager.address)
+    messenger1.addCaller(l2_chain_id, proof_submitter.address)
+    resolver.addCaller(l2_chain_id, messenger1.address)
+    messenger2.addCaller(l1_chain_id, resolver.address)
+    resolution_registry.addCaller(l1_chain_id, messenger2.address)
+
+    return Contracts(
+        messenger1=messenger1,
+        messenger2=messenger2,
+        resolver=resolver,
+        proof_submitter=proof_submitter,
+        fill_manager=fill_manager,
+        request_manager=request_manager,
+        resolution_registry=resolution_registry,
+    )
 
 
 @pytest.fixture
@@ -111,17 +156,35 @@ def node(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
 
 
 @pytest.fixture
-def optimism_proof_submitter(OptimismProofSubmitter, test_messenger):
-    return accounts[0].deploy(OptimismProofSubmitter, test_messenger.address)
+def token(deployer, MintableToken):
+    return deployer.deploy(MintableToken, int(1e18))
 
 
 @pytest.fixture
-def fill_manager(FillManager, resolver, optimism_proof_submitter):
-    manager = accounts[0].deploy(FillManager, resolver.address, optimism_proof_submitter.address)
-    manager.addAllowedLP(_LOCAL_ACCOUNT)
-    return manager
+def request_manager(contracts):
+    return contracts.request_manager
 
 
 @pytest.fixture
-def token(MintableToken):
-    return accounts[0].deploy(MintableToken, int(1e18))
+def test_cross_domain_messenger(contracts):
+    return contracts.messenger
+
+
+@pytest.fixture
+def resolver(contracts):
+    return contracts.resolver
+
+
+@pytest.fixture
+def resolution_registry(contracts):
+    return contracts.resolution_registry
+
+
+@pytest.fixture
+def optimism_proof_submitter(contracts):
+    return contracts.proof_submitter
+
+
+@pytest.fixture
+def fill_manager(contracts):
+    return contracts.fill_manager
