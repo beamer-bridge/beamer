@@ -524,10 +524,10 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
 
 
 def test_withdraw_without_challenge_with_resolution(
-    request_manager, resolution_registry, token, claim_stake
+    request_manager, resolution_registry, token, claim_stake, contracts
 ):
     """Test withdraw when a claim was not challenged, but L1 resolved"""
-    deployer, requester, claimer = accounts[:3]
+    requester, claimer = accounts[1:3]
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -546,7 +546,7 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
     # Register a L1 resolution
-    resolution_registry.resolveRequest(request_id, claimer.address, {"from": deployer})
+    resolution_registry.resolveRequest(request_id, claimer.address, {"from": contracts.messenger2})
     # The claim pariod is not over, but the resolution must allow withdrawal now
     withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "ClaimWithdrawn" in withdraw_tx.events
