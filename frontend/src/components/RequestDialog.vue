@@ -9,7 +9,7 @@
       v-else
       class="request-dialog__form"
       :loading="executingRequest"
-      @formAccepted="executeRequestTransaction"
+      @form-accepted="executeRequestTransaction"
     />
     <div v-if="transactionErrorMessage" class="request-dialog__error">
       {{ transactionErrorMessage }}

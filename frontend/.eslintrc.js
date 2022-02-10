@@ -1,7 +1,8 @@
+/* eslint-env node */
 module.exports = {
   root: true,
   env: {
-    node: true,
+    es2021: true,
   },
   settings: {
     'import/resolver': {
@@ -13,15 +14,11 @@ module.exports = {
     'plugin:vue/vue3-recommended',
     'plugin:vue/vue3-strongly-recommended',
     'eslint:recommended',
-    '@vue/typescript/recommended',
-    '@vue/prettier',
-    '@vue/prettier/@typescript-eslint',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:import/typescript',
+    '@vue/eslint-config-typescript/recommended',
+    '@vue/eslint-config-prettier',
   ],
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2021,
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -35,6 +32,7 @@ module.exports = {
     'import/no-duplicates': 'warn',
     'simple-import-sort/imports': 'warn',
     'simple-import-sort/exports': 'warn',
+    'vue/multi-word-component-names': 'off',
   },
   overrides: [
     {

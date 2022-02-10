@@ -63,7 +63,7 @@ interface Props {
   readonly loading: boolean;
 }
 interface Emits {
-  (e: 'formAccepted', formResult: RequestFormResult): void;
+  (e: 'form-accepted', formResult: RequestFormResult): void;
 }
 
 const tokens = [
@@ -104,7 +104,7 @@ const emptyInput = computed(
 );
 
 const emitFormAccepted = () =>
-  emit('formAccepted', {
+  emit('form-accepted', {
     targetChainId: BigNumber.from(targetChainId.value),
     sourceTokenAddress: sourceTokenAddress.value,
     targetTokenAddress: targetTokenAddress.value,
