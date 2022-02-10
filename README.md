@@ -155,7 +155,7 @@ yarn install
 Run the development server:
 
 ```
-yarn serve
+yarn dev
 ```
 
 To configure the used deployment, make your changes to the `frontend/.env.development` file and rerun the development server.
