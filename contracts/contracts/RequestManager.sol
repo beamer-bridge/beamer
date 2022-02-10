@@ -8,6 +8,8 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 
 import "./ResolutionRegistry.sol";
 
+
+
 contract RequestManager is Ownable {
     using Math for uint256;
     using SafeERC20 for IERC20;
@@ -296,13 +298,23 @@ contract RequestManager is Ownable {
                 claim.requestId, block.chainid, request.targetTokenAddress, request.sender, request.amount
             )
         );
-        address eligibleClaimer = resolutionRegistry.eligibleClaimers(requestHash);
-        if (eligibleClaimer != address(0)) {
-            // L1 resolution has been triggered, the filler is known
-            claimReceiver = eligibleClaimer;
-        } else {
+
+        address provedFiller;
+        uint256 provedFillId;
+
+        ProvedFill memory provedFill;
+        (provedFill.filler, provedFill.fillId) = resolutionRegistry.provedFills(requestHash);
+
+        if (provedFill.filler == address(0)) {
+            // no L1 resolution
             require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
+        } else if (provedFill.filler != claim.claimer || provedFill.fillId != claim.fillId) {
+            // L1 resolution has been triggered but claim is incorrect
+            claimReceiver = claim.challenger;
+        } else {
+            // claim is proved via L1
+            claimReceiver = claim.claimer;
         }
 
         claim.withdrawn = true;

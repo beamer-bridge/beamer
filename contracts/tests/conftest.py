@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from dataclasses import dataclass
 
 import brownie

@@ -16,9 +16,8 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     }
 
     function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address eligibleClaimer)
-        external restricted(block.chainid, msg.sender) returns (bool)
+        external restricted(block.chainid, msg.sender)  returns (uint256)
     {
-
         // Questions
         // - what gas limit
         // TODO: use abi.encodeCall once
@@ -28,6 +27,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             abi.encodeWithSelector(
                 Resolver.resolve.selector,
                 requestHash,
+                block.number,
                 block.chainid,
                 sourceChainId,
                 eligibleClaimer
@@ -35,6 +35,6 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             1_000_000
         );
 
-        return true;
+        return block.number;
     }
 }
