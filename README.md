@@ -162,11 +162,10 @@ To configure the used deployment, make your changes to the `frontend/.env.develo
 
 ### Measuring gas costs
 
-To measure gas costs, simply invoke the following command within the
-`contracts` directory:
+To measure gas costs, simply invoke the following command:
 
 ```
-   $ brownie run --silent -g measure_gas_prices
+   $ brownie test -G
 ```
 
 
