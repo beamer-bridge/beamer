@@ -38,6 +38,7 @@ contract FillManager is Ownable {
         uint256 amount
     )
     external
+    returns (uint256)
     {
         require(allowedLPs[msg.sender], "Sender not whitelisted");
         bytes32 requestHash = keccak256(
@@ -53,10 +54,12 @@ contract FillManager is Ownable {
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
+        uint256 fillId = proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender);
         require(
-            proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender),
+            fillId != 0,
             "Submitting proof data failed"
         );
+        return fillId;
     }
 
     function addAllowedLP(address newLP) public onlyOwner {

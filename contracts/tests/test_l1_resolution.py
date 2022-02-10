@@ -26,15 +26,17 @@ def test_l1_resolution_correct_amount(
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})
 
-    assert resolution_registry.eligibleClaimers(correct_request_hash) == ADDRESS_ZERO
+    assert resolution_registry.provedFills(correct_request_hash) == [ADDRESS_ZERO, 0]
 
     fill_manager.fillRequest(
         chain_id, request_id, token.address, receiver, amount, {"from": filler}
     )
+    fillId = web3.eth.block_number
+
     if amount == requested_amount:
-        assert resolution_registry.eligibleClaimers(correct_request_hash) == filler
+        assert resolution_registry.provedFills(correct_request_hash) == [filler, fillId]
     else:
-        assert resolution_registry.eligibleClaimers(correct_request_hash) == ADDRESS_ZERO
+        assert resolution_registry.provedFills(correct_request_hash) == [ADDRESS_ZERO, 0]
 
 
 def test_restricted_calls(contracts, resolver):
@@ -49,7 +51,7 @@ def test_restricted_calls(contracts, resolver):
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolve(0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
+        contracts.resolver.resolve(0, 0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.resolveRequest(0, 0, caller, {"from": caller})
+        contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})

@@ -26,7 +26,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     )
     assert request_manager.requests(request_id)[RM_FIELD_RAISYNC_FEE] == raisync_fee
 
-    claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+    claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
     # Timetravel after claim period
@@ -55,7 +55,7 @@ def test_raisync_service_fee_withdrawable_by_owner(
     with brownie.reverts("Zero fees available"):
         request_manager.withdrawRaisyncFees({"from": owner})
 
-    claim_tx = request_manager.claimRequest(request_id, {"from": claimer, "value": claim_stake})
+    claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
     chain.mine(timedelta=claim_period)

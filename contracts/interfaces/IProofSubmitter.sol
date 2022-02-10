@@ -7,5 +7,5 @@ interface IProofSubmitter {
         bytes32 requestHash,
         uint256 sourceChainId,
         address eligibleClaimer
-    ) external returns (bool);
+    ) external returns (uint256);
 }
