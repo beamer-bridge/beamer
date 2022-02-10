@@ -8,7 +8,7 @@ export default function useRaisyncConfig() {
 
   onMounted(async () => {
     try {
-      const configResponse = await fetch(process.env.VUE_APP_CONFIG_URL);
+      const configResponse = await fetch(import.meta.env.VITE_CONFIG_URL);
       config.value = readonly((await configResponse.json()) as RaisyncConfig);
     } catch (error) {
       console.error(error);
