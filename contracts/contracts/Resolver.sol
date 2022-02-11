@@ -14,12 +14,12 @@ contract Resolver is Ownable, RestrictedCalls {
         address eligibleClaimer
     );
 
-    ICrossDomainMessenger messenger;
+    ICrossDomainMessenger l2Messenger;
     mapping (uint256 => address) public resolutionRegistries;
 
-    constructor(address _messenger)
+    constructor(address _l2Messenger)
     {
-        messenger = ICrossDomainMessenger(_messenger);
+        l2Messenger = ICrossDomainMessenger(_l2Messenger);
     }
 
     function resolve(bytes32 requestHash, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer)
@@ -34,7 +34,7 @@ contract Resolver is Ownable, RestrictedCalls {
             eligibleClaimer
         );
 
-        messenger.sendMessage(l2RegistryAddress, resolveData, 1_000_000);
+        l2Messenger.sendMessage(l2RegistryAddress, resolveData, 1_000_000);
 
         emit Resolution(sourceChainId, fillChainId, requestHash, eligibleClaimer);
     }
