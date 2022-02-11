@@ -87,10 +87,8 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
     l1_chain_id = l2_chain_id = brownie.chain.id
 
     proof_submitter.addCaller(l2_chain_id, fill_manager.address)
-    messenger1.addCaller(l2_chain_id, proof_submitter.address)
-    resolver.addCaller(l2_chain_id, messenger1.address)
-    messenger2.addCaller(l1_chain_id, resolver.address)
-    resolution_registry.addCaller(l1_chain_id, messenger2.address)
+    resolver.addCaller(l2_chain_id, messenger1.address, proof_submitter.address)
+    resolution_registry.addCaller(l1_chain_id, messenger2.address, resolver.address)
 
     return Contracts(
         messenger1=messenger1,

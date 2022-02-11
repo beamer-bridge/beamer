@@ -48,14 +48,8 @@ def test_restricted_calls(contracts, resolver):
             resolver, 0, brownie.chain.id, caller, {"from": caller}
         )
 
-    with brownie.reverts("RestrictedCalls: unknown caller"):
-        contracts.messenger1.sendMessage(resolver, b"\x00", 1_000_000, {"from": caller})
-
-    with brownie.reverts("RestrictedCalls: unknown caller"):
+    with brownie.reverts("XRestrictedCalls: unknown caller"):
         contracts.resolver.resolve(0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
 
-    with brownie.reverts("RestrictedCalls: unknown caller"):
-        contracts.messenger2.sendMessage(resolver, b"\x00", 1_000_000, {"from": caller})
-
-    with brownie.reverts("RestrictedCalls: unknown caller"):
+    with brownie.reverts("XRestrictedCalls: unknown caller"):
         contracts.resolution_registry.resolveRequest(0, caller, {"from": caller})

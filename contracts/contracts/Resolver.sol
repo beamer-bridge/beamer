@@ -4,9 +4,10 @@ pragma solidity ^0.8.7;
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
 import "./ResolutionRegistry.sol";
-import "./RestrictedCalls.sol";
+import "./CrossDomainRestrictedCalls.sol";
 
-contract Resolver is Ownable, RestrictedCalls {
+
+contract Resolver is Ownable, CrossDomainRestrictedCalls {
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
