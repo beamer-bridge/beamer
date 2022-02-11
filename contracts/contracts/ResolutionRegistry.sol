@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "./RestrictedCalls.sol";
+import "./CrossDomainRestrictedCalls.sol";
 
-contract ResolutionRegistry is RestrictedCalls {
+contract ResolutionRegistry is CrossDomainRestrictedCalls {
 
     event RequestResolved(
         bytes32 requestHash,
