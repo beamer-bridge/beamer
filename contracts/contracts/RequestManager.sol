@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 
@@ -9,6 +10,7 @@ import "./ResolutionRegistry.sol";
 
 contract RequestManager is Ownable {
     using Math for uint256;
+    using SafeERC20 for IERC20;
 
     // Structs
     // TODO: check if we can use a smaller type for `targetChainId`, so that the
@@ -177,7 +179,7 @@ contract RequestManager is Ownable {
         );
 
         IERC20 token = IERC20(sourceTokenAddress);
-        require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        token.safeTransferFrom(msg.sender, address(this), amount);
 
         return requestCounter;
     }
@@ -194,7 +196,7 @@ contract RequestManager is Ownable {
         emit DepositWithdrawn(requestId);
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        require(token.transfer(request.sender, request.amount), "Transfer failed");
+        token.safeTransfer(request.sender, request.amount);
 
         (bool sent,) = request.sender.call{value: request.lpFee + request.raisyncFee}("");
         require(sent, "Failed to send Ether");
@@ -329,7 +331,7 @@ contract RequestManager is Ownable {
         );
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        require(token.transfer(claimReceiver, request.amount), "Transfer failed");
+        token.safeTransfer(claimReceiver, request.amount);
 
         (bool sent,) = claimReceiver.call{value: request.lpFee}("");
         require(sent, "Failed to send Ether");
