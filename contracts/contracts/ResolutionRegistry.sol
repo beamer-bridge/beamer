@@ -6,20 +6,20 @@ import "./RestrictedCalls.sol";
 contract ResolutionRegistry is RestrictedCalls {
 
     event RequestResolved(
-        uint256 requestId,
+        bytes32 requestHash,
         address resolvedClaimer
     );
 
-    mapping(uint256 => address) public eligibleClaimers;
+    mapping(bytes32 => address) public eligibleClaimers;
 
-    function resolveRequest(uint256 requestId, address eligibleClaimer)
+    function resolveRequest(bytes32 requestHash, address eligibleClaimer)
         external restricted(block.chainid, msg.sender) {
 
-        require(eligibleClaimers[requestId] == address(0), "Resolution already recorded");
-        eligibleClaimers[requestId] = eligibleClaimer;
+        require(eligibleClaimers[requestHash] == address(0), "Resolution already recorded");
+        eligibleClaimers[requestHash] = eligibleClaimer;
 
         emit RequestResolved(
-            requestId,
+            requestHash,
             eligibleClaimer
         );
     }

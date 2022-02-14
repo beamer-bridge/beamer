@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 interface IProofSubmitter {
     function submitProof(
         address l1Resolver,
-        uint256 requestId,
+        bytes32 requestHash,
         uint256 sourceChainId,
         address eligibleClaimer
     ) external returns (bool);

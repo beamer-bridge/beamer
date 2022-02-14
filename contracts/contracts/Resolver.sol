@@ -10,7 +10,7 @@ contract Resolver is Ownable, RestrictedCalls {
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
-        uint256 requestId,
+        bytes32 requestHash,
         address eligibleClaimer
     );
 
@@ -22,7 +22,7 @@ contract Resolver is Ownable, RestrictedCalls {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function resolve(uint256 requestId, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer)
+    function resolve(bytes32 requestHash, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer)
         external restricted(fillChainId, msg.sender) {
 
         address l2RegistryAddress = resolutionRegistries[sourceChainId];
@@ -30,13 +30,13 @@ contract Resolver is Ownable, RestrictedCalls {
 
         bytes memory resolveData = abi.encodeWithSelector(
             ResolutionRegistry.resolveRequest.selector,
-            requestId,
+            requestHash,
             eligibleClaimer
         );
 
         messenger.sendMessage(l2RegistryAddress, resolveData, 1_000_000);
 
-        emit Resolution(sourceChainId, fillChainId, requestId, eligibleClaimer);
+        emit Resolution(sourceChainId, fillChainId, requestHash, eligibleClaimer);
     }
 
     function addRegistry(uint256 chainId, address resolutionRegistry) external onlyOwner {

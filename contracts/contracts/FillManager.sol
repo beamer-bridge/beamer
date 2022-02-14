@@ -52,7 +52,7 @@ contract FillManager is Ownable {
         require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
 
         require(
-            proofSubmitter.submitProof(l1Resolver, requestId, sourceChainId, msg.sender),
+            proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender),
             "Submitting proof data failed"
         );
     }

@@ -284,7 +284,12 @@ contract RequestManager is Ownable {
         address claimReceiver;
         bool depositWithdrawn = request.depositWithdrawn;
 
-        address eligibleClaimer = resolutionRegistry.eligibleClaimers(claim.requestId);
+        bytes32 requestHash = keccak256(
+            abi.encodePacked(
+                claim.requestId, block.chainid, request.targetTokenAddress, request.sender, request.amount
+            )
+        );
+        address eligibleClaimer = resolutionRegistry.eligibleClaimers(requestHash);
         if (eligibleClaimer != address(0)) {
             // L1 resolution has been triggered, the filler is known
             claimReceiver = eligibleClaimer;
