@@ -15,7 +15,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function submitProof(address l1Resolver, uint256 requestId, uint256 sourceChainId, address eligibleClaimer)
+    function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address eligibleClaimer)
         external restricted(block.chainid, msg.sender) returns (bool)
     {
 
@@ -27,7 +27,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             l1Resolver,
             abi.encodeWithSelector(
                 Resolver.resolve.selector,
-                requestId,
+                requestHash,
                 block.chainid,
                 sourceChainId,
                 eligibleClaimer
