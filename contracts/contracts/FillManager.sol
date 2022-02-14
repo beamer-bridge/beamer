@@ -2,11 +2,13 @@
 pragma solidity ^0.8.7;
 
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
 
 
 contract FillManager is Ownable {
+    using SafeERC20 for IERC20;
 
     event RequestFilled(
         uint256 indexed requestId,
@@ -49,7 +51,7 @@ contract FillManager is Ownable {
         emit RequestFilled(requestId, sourceChainId, targetTokenAddress, msg.sender, amount);
 
         IERC20 token = IERC20(targetTokenAddress);
-        require(token.transferFrom(msg.sender, targetReceiverAddress, amount), "Transfer failed");
+        token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
         require(
             proofSubmitter.submitProof(l1Resolver, requestId, sourceChainId, msg.sender),
