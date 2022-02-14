@@ -5,7 +5,7 @@ import pytest
 from brownie import accounts
 
 import raisync.node
-from raisync.tests.util import EventCollector, balance_diff, make_request
+from raisync.tests.util import EventCollector, earnings, make_request
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -17,22 +17,6 @@ def _allow_unlisted_pairs():
         del os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"]
     else:
         os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = old
-
-
-def _total_tx_cost(address, num_fills):
-    total = 0
-    for block_number in range(brownie.chain.height + 1):
-        block = brownie.web3.eth.get_block(block_number)
-        for tx_hash in block.transactions:
-            tx = brownie.web3.eth.get_transaction(tx_hash)
-            if tx["from"] == address:
-                total += tx.gasPrice * tx.gas
-
-    # We are subtracting 300k gwei here because the token.transferFrom inside
-    # FillManager.fillRequest seems to cost that much, however, ganache does
-    # not reflect that in the account's balance.
-    total -= num_fills * int(300e12)
-    return total
 
 
 # Scenario 1:
@@ -51,7 +35,9 @@ def test_challenge_1(request_manager, token, config):
     node.start()
 
     w3 = brownie.web3
-    with balance_diff(w3, node) as node_diff, balance_diff(w3, charlie) as charlie_diff:
+    with earnings(w3, node, num_fills=1) as node_earnings, earnings(
+        w3, charlie, num_fills=0
+    ) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": node.address})
         make_request(request_manager, token, requester, target_address, 1)
 
@@ -72,11 +58,8 @@ def test_challenge_1(request_manager, token, config):
         brownie.chain.mine(timestamp=claim.termination)
         request_manager.withdraw(claim.claimId, {"from": charlie})
 
-    print(node_diff())
-    print(_total_tx_cost(node.address, 1))
-    print(claim.claimerStake)
-    assert charlie_diff() == claim.claimerStake - _total_tx_cost(charlie.address, 0)
-    assert node_diff() == -_total_tx_cost(node.address, 1) - claim.claimerStake
+    assert charlie_earnings() == claim.claimerStake
+    assert node_earnings() == -claim.claimerStake
 
 
 # Scenario 2:
@@ -96,7 +79,9 @@ def test_challenge_2(request_manager, token, config):
     node.start()
 
     w3 = brownie.web3
-    with balance_diff(w3, node) as node_diff, balance_diff(w3, charlie) as charlie_diff:
+    with earnings(w3, node, num_fills=1) as node_earnings, earnings(
+        w3, charlie, num_fills=0
+    ) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": node.address})
         make_request(request_manager, token, requester, target_address, 1)
 
@@ -126,8 +111,8 @@ def test_challenge_2(request_manager, token, config):
         node.wait()
 
     fees = request_manager.gasReimbursementFee() + request_manager.lpServiceFee()
-    assert node_diff() == claim.challengerStake + fees - _total_tx_cost(node.address, 1)
-    assert charlie_diff() == -claim.challengerStake - _total_tx_cost(charlie.address, 0)
+    assert node_earnings() == claim.challengerStake + fees
+    assert charlie_earnings() == -claim.challengerStake
 
 
 # Scenario 3:
@@ -148,13 +133,15 @@ def test_challenge_3(request_manager, fill_manager, token, config):
     node = raisync.node.Node(config)
 
     w3 = brownie.web3
-    with balance_diff(w3, node) as node_diff, balance_diff(w3, charlie) as charlie_diff:
+    with earnings(w3, node, num_fills=0) as node_earnings, earnings(
+        w3, charlie, num_fills=0
+    ) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(node.address) + 1
         request_id = make_request(request_manager, token, requester, target_address, amount)
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
@@ -175,8 +162,8 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         node.stop()
         node.wait()
 
-    assert node_diff() == claim.claimerStake - _total_tx_cost(node.address, 0)
-    assert charlie_diff() == -claim.claimerStake - _total_tx_cost(charlie.address, 0)
+    assert node_earnings() == claim.claimerStake
+    assert charlie_earnings() == -claim.claimerStake
 
 
 # Scenario 4:
@@ -198,13 +185,15 @@ def test_challenge_4(request_manager, fill_manager, token, config):
     node = raisync.node.Node(config)
 
     w3 = brownie.web3
-    with balance_diff(w3, node) as node_diff, balance_diff(w3, charlie) as charlie_diff:
+    with earnings(w3, node, num_fills=0) as node_earnings, earnings(
+        w3, charlie, num_fills=0
+    ) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(node.address) + 1
         request_id = make_request(request_manager, token, requester, target_address, amount)
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
@@ -234,5 +223,5 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         request_manager.withdraw(claim.claimId, {"from": charlie})
 
     fees = request_manager.gasReimbursementFee() + request_manager.lpServiceFee()
-    assert node_diff() == -claim.challengerStake - _total_tx_cost(node.address, 0)
-    assert charlie_diff() == claim.challengerStake + fees - _total_tx_cost(charlie.address, 0)
+    assert node_earnings() == -claim.challengerStake
+    assert charlie_earnings() == claim.challengerStake + fees
