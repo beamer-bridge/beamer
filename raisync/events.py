@@ -10,7 +10,15 @@ from eth_utils.abi import event_abi_to_log_topic
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, ChecksumAddress, FilterParams, LogReceipt, Wei
 
-from raisync.typing import BlockNumber, ChainId, ClaimId, RequestId, Termination, TokenAmount, FillId
+from raisync.typing import (
+    BlockNumber,
+    ChainId,
+    ClaimId,
+    FillId,
+    RequestId,
+    Termination,
+    TokenAmount,
+)
 
 
 @dataclass(frozen=True)

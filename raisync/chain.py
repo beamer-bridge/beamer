@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import structlog
 import web3
@@ -355,12 +355,16 @@ class EventProcessor:
         stake = self._request_manager.functions.claimStake().call()
 
         try:
-            txn_hash = self._request_manager.functions.claimRequest(request.id, request.fill_id).transact(
-                dict(value=stake)
-            )
+            txn_hash = self._request_manager.functions.claimRequest(
+                request.id, request.fill_id
+            ).transact(dict(value=stake))
         except web3.exceptions.ContractLogicError as exc:
             self._log.error(
-                "claimRequest failed", request_id=request.id, fill_id=request.fill_id, exc_args=exc.args, stake=stake
+                "claimRequest failed",
+                request_id=request.id,
+                fill_id=request.fill_id,
+                exc_args=exc.args,
+                stake=stake,
             )
             return
 

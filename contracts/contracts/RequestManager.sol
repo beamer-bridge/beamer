@@ -299,9 +299,6 @@ contract RequestManager is Ownable {
             )
         );
 
-        address provedFiller;
-        uint256 provedFillId;
-
         ProvedFill memory provedFill;
         (provedFill.filler, provedFill.fillId) = resolutionRegistry.provedFills(requestHash);
 
