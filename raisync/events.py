@@ -10,7 +10,7 @@ from eth_utils.abi import event_abi_to_log_topic
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, ChecksumAddress, FilterParams, LogReceipt, Wei
 
-from raisync.typing import BlockNumber, ChainId, ClaimId, RequestId, Termination, TokenAmount
+from raisync.typing import BlockNumber, ChainId, ClaimId, RequestId, Termination, TokenAmount, FillId
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class Event:
 @dataclass(frozen=True)
 class RequestFilled(Event):
     request_id: RequestId
+    fill_id: FillId
     source_chain_id: ChainId
     target_token_address: ChecksumAddress
     filler: ChecksumAddress
@@ -41,6 +42,7 @@ class RequestCreated(Event):
 class ClaimMade(Event):
     claim_id: ClaimId
     request_id: RequestId
+    fill_id: FillId
     claimer: ChecksumAddress
     claimer_stake: Wei
     challenger: ChecksumAddress

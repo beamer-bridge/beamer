@@ -30,6 +30,7 @@ class Request(StateMachine):
         self.amount = amount
         self._claims: dict[ClaimId, ClaimMade] = {}
         self.filler: Optional[Address] = None
+        self.fill_id: Optional[int] = None
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
@@ -49,8 +50,9 @@ class Request(StateMachine):
     claim_unconfirmed = filled.to(claimed_unconfirmed)
     withdraw = claimed.to(withdrawn)
 
-    def on_fill(self, filler: Address) -> None:
+    def on_fill(self, filler: Address, fill_id: int) -> None:
         self.filler = filler
+        self.fill_id = fill_id
 
     def on_claim(self, event: ClaimMade) -> None:
         assert event.request_id == self.id, "got claim for another request"

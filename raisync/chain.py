@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import structlog
 import web3
@@ -216,7 +216,7 @@ class EventProcessor:
                 return False
 
             try:
-                request.fill(filler=event.filler)
+                request.fill(filler=event.filler, fill_id=event.fill_id)
             except TransitionNotAllowed:
                 return False
             self._log.info("Request filled", request=request)
@@ -281,7 +281,7 @@ class EventProcessor:
         # 2) we participate in the game AND it is our turn
 
         unchallenged = claim.challenger_stake == 0
-        dishonest_claim = claim.claimer != request.filler
+        dishonest_claim = claim.claimer != request.filler or claim.fill_id != request.fill_id
 
         our_turn = (
             claim.challenger == self._address and claim.claimer_stake > claim.challenger_stake
@@ -355,12 +355,12 @@ class EventProcessor:
         stake = self._request_manager.functions.claimStake().call()
 
         try:
-            txn_hash = self._request_manager.functions.claimRequest(request.id).transact(
+            txn_hash = self._request_manager.functions.claimRequest(request.id, request.fill_id).transact(
                 dict(value=stake)
             )
         except web3.exceptions.ContractLogicError as exc:
             self._log.error(
-                "claimRequest failed", request_id=request.id, exc_args=exc.args, stake=stake
+                "claimRequest failed", request_id=request.id, fill_id=request.fill_id, exc_args=exc.args, stake=stake
             )
             return
 
