@@ -72,8 +72,11 @@ def test_challenge_1(request_manager, token, config):
         brownie.chain.mine(timestamp=claim.termination)
         request_manager.withdraw(claim.claimId, {"from": charlie})
 
-    assert node_diff() == -_total_tx_cost(node.address, 1) - claim.claimerStake
+    print(node_diff())
+    print(_total_tx_cost(node.address, 1))
+    print(claim.claimerStake)
     assert charlie_diff() == claim.claimerStake - _total_tx_cost(charlie.address, 0)
+    assert node_diff() == -_total_tx_cost(node.address, 1) - claim.claimerStake
 
 
 # Scenario 2:

@@ -12,6 +12,7 @@ contract FillManager is Ownable {
 
     event RequestFilled(
         uint256 indexed requestId,
+        uint256 fillId,
         uint256 indexed sourceChainId,
         address indexed targetTokenAddress,
         address filler,
@@ -49,8 +50,6 @@ contract FillManager is Ownable {
         require(!fills[requestHash], "Already filled");
         fills[requestHash] = true;
 
-        emit RequestFilled(requestId, sourceChainId, targetTokenAddress, msg.sender, amount);
-
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
@@ -59,6 +58,9 @@ contract FillManager is Ownable {
             fillId != 0,
             "Submitting proof data failed"
         );
+
+        emit RequestFilled(requestId, fillId, sourceChainId, targetTokenAddress, msg.sender, amount);
+
         return fillId;
     }
 

@@ -10,6 +10,7 @@ from eth_typing import (  # NOQA pylint:disable=unused-import
 ChainId = NewType("ChainId", int)
 ClaimId = NewType("ClaimId", int)
 RequestId = NewType("RequestId", int)
+FillId = NewType("FillId", int)
 PrivateKey = NewType("PrivateKey", bytes)
 TokenAmount = NewType("TokenAmount", int)
 URL = NewType("URL", str)
