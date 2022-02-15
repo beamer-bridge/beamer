@@ -27,6 +27,7 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: 3.9
+      - uses: ts-graphviz/setup-graphviz@v1
 
       - name: Cache ~/.local
         uses: actions/cache@v2
@@ -63,6 +64,9 @@ jobs:
         if: steps.cache-brownie-packages.outputs.cache-hit != 'true'
         run: |
           poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
+
+      - name: Build docs
+        run: poetry run make docs
 
       - name: Lint contracts
         run: |
