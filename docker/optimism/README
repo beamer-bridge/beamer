@@ -1,3 +1,0 @@
-docker-compose-nobuild.yml and the required env files were taken from the
-Optimism github repo (https://github.com/ethereum-optimism/optimism), 
-commit 807f62cc6b4df0c03075ba4258cba1832f241f99.
