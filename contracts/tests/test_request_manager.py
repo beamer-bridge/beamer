@@ -154,7 +154,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     assert web3.eth.get_balance(request_manager.address) == claim_stake
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
-    # Withdraw must fail when claim pariod is not over
+    # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim_id, {"from": claimer})
 
@@ -210,7 +210,7 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
     assert web3.eth.get_balance(challenger.address) == challenger_eth_balance - claim_stake - 1
 
-    # Withdraw must fail when claim pariod is not over
+    # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim_id, {"from": claimer})
 
@@ -268,7 +268,7 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
     assert web3.eth.get_balance(claimer1.address) == claimer1_eth_balance - claim_stake
     assert web3.eth.get_balance(claimer2.address) == claimer2_eth_balance - claim_stake
 
-    # Withdraw must fail when claim pariod is not over
+    # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
@@ -346,7 +346,7 @@ def test_withdraw_with_two_claims_and_challenge(
     assert web3.eth.get_balance(claimer2.address) == claimer2_eth_balance - claim_stake
     assert web3.eth.get_balance(challenger.address) == challenger_eth_balance - claim_stake - 1
 
-    # Withdraw must fail when claim pariod is not over
+    # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
@@ -431,7 +431,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
     assert web3.eth.get_balance(claimer2.address) == claimer2_eth_balance - claim_stake
     assert web3.eth.get_balance(challenger.address) == challenger_eth_balance - claim_stake - 1
 
-    # Withdraw must fail when claim pariod is not over
+    # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
@@ -554,7 +554,7 @@ def test_withdraw_without_challenge_with_resolution(
     resolution_registry.resolveRequest(
         request_hash, claimer.address, {"from": contracts.messenger2}
     )
-    # The claim pariod is not over, but the resolution must allow withdrawal now
+    # The claim period is not over, but the resolution must allow withdrawal now
     withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "ClaimWithdrawn" in withdraw_tx.events
 
