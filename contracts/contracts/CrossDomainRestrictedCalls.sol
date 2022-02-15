@@ -13,8 +13,8 @@ contract CrossDomainRestrictedCalls is Ownable {
 
     mapping (uint256 => MessengerSource) public messengers;
 
-    function addCaller(uint256 chainId, address messenger, address proofSubmitter) external onlyOwner {
-        messengers[chainId] = MessengerSource(ICrossDomainMessenger(messenger), proofSubmitter);
+    function addCaller(uint256 chainId, address messenger, address caller) external onlyOwner {
+        messengers[chainId] = MessengerSource(ICrossDomainMessenger(messenger), caller);
     }
 
     modifier restricted(uint256 chainId, address caller) {
