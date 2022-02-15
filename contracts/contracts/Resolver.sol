@@ -24,18 +24,21 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     }
 
     function resolve(bytes32 requestHash, uint256 fillChainId, uint256 sourceChainId, address eligibleClaimer)
-        external restricted(fillChainId, msg.sender) {
-
+        external restricted(fillChainId, msg.sender)
+    {
         address l2RegistryAddress = resolutionRegistries[sourceChainId];
         require(l2RegistryAddress != address(0), "No registry available for source chain");
 
-        bytes memory resolveData = abi.encodeWithSelector(
-            ResolutionRegistry.resolveRequest.selector,
-            requestHash,
-            eligibleClaimer
+        l2Messenger.sendMessage(
+            l2RegistryAddress,
+            abi.encodeWithSelector(
+                ResolutionRegistry.resolveRequest.selector,
+                requestHash,
+                block.chainid,
+                eligibleClaimer
+            ),
+            1_000_000
         );
-
-        l2Messenger.sendMessage(l2RegistryAddress, resolveData, 1_000_000);
 
         emit Resolution(sourceChainId, fillChainId, requestHash, eligibleClaimer);
     }
