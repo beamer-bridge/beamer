@@ -322,7 +322,7 @@ def withdraw_expired(
 @click.option(
     "--amount",
     type=int,
-    default=100 * 10 ** 18,
+    default=100 * 10**18,
     help="Amount of tokens to transfer",
 )
 @cli.command("mint")
