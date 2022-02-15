@@ -9,3 +9,5 @@ venv/
 .coverage
 
 vetur.config.js
+
+addresses.json
