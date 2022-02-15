@@ -1,4 +1,4 @@
-.PHONY: dist-exe container-image
+.PHONY: dist-exe container-image all lint black format docs clean
 
 CODE_DIRS = contracts/ raisync/ scripts/
 
@@ -22,3 +22,9 @@ dist-exe:
 
 container-image:
 	docker image build -f docker/Dockerfile.raisync -t raisync .
+
+docs:
+	make -C docs html
+
+clean:
+	make -C docs clean
