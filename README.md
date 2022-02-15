@@ -175,3 +175,14 @@ following command:
 ```
    $ python scripts/diff_gas_profiles.py <path-to-profile1> <path-to-profile2>
 ```
+
+### Building documentation
+
+To build Raisync documentation, make sure to have [Sphinx](https://www.sphinx-doc.org)
+and [Graphviz](http://graphviz.org) installed. Documentation can be built by running
+
+```
+   $ make docs
+```
+
+and the resulting HTML will be available at `docs/build/index.html`.
