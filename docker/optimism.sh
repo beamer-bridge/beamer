@@ -8,6 +8,15 @@ down() {
     docker-compose "${DOCKER_COMPOSE_FILES}" down
 }
 
+setup_chains() {
+    # It's currently not possible to define networks in a per-project way
+    # Instead, update the config
+    poetry run brownie networks list | grep -q l1 || \
+        poetry run brownie networks add Ethereum l1 host="http://0.0.0.0:9545" chainid=1337
+    poetry run brownie networks list | grep -q l2 || \
+        poetry run brownie networks add Ethereum l2 host="http://0.0.0.0:8545" chainid=420
+}
+
 up() {
     echo -e "\nStarting the end-to-end environment"
     docker-compose "{DOCKER_COMPOSE_FILES}" --scale relayer=1 -d
@@ -15,25 +24,15 @@ up() {
     echo -e "\nWait to make sure all services are up and running"
     sh "${ROOT}/docker/optimism/ops/scripts/wait-for-sequencer.sh"
 
-    # It's currently not possible to define networks in a per-project way
-    # Instead, update the config
-    poetry run brownie networks list | grep -q l1 || \
-        poetry run brownie networks add Ethereum l1 host="http://0.0.0.0:9545" chainid=1337
-    poetry run brownie networks list | grep -q l2 || \
-        poetry run brownie networks add Ethereum l2 host="http://0.0.0.0:8545" chainid=420
+    setup_chains
 
     rm -rf "${ROOT}/contracts/build/deployments/"
 }
 
-check1() {
-    pushd "${ROOT}/contracts"
-    poetry run brownie run check_l1.py --network l1
-    popd
-}
-
-setup() {
-    rm -r contracts/build/deployments &&
-    addresses &&
+e2e() {
+    setup_chains &&
+    rm -rf contracts/build/deployments &&
+    addresses > addresses.json &&
     cat addresses.json &&
     cd "${ROOT}/contracts" &&
     poetry run brownie run deploy_l1.py --network l1 &&
