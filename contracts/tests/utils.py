@@ -18,7 +18,7 @@ def make_request(
         1,
         token.address,
         token.address,
-        "0x5d5640575161450A674a094730365A223B226649",
+        requester,
         amount,
         validity_period,
         {"from": requester, "value": total_fee},
@@ -36,6 +36,18 @@ def create_request_hash(request_id, chain_id, token_address, receiver_address, a
                 to_canonical_address(token_address),
                 to_canonical_address(receiver_address),
                 amount,
+            ],
+        )
+    )
+
+
+def create_fill_hash(request_id, chain_id, token_address, receiver_address, amount, fill_id):
+    return keccak(
+        encode_abi_packed(
+            ["bytes32", "uint256"],
+            [
+                create_request_hash(request_id, chain_id, token_address, receiver_address, amount),
+                fill_id,
             ],
         )
     )

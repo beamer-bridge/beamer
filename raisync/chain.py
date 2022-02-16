@@ -330,8 +330,8 @@ class EventProcessor:
 
         try:
             txn_hash = self._fill_manager.functions.fillRequest(
-                sourceChainId=request.source_chain_id,
                 requestId=request.id,
+                sourceChainId=request.source_chain_id,
                 targetTokenAddress=request.target_token_address,
                 targetReceiverAddress=request.target_address,
                 amount=request.amount,

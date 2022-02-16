@@ -2,13 +2,13 @@ import brownie
 import pytest
 from brownie import accounts, web3
 from web3.constants import ADDRESS_ZERO
-
-from contracts.tests.utils import create_request_hash
+from contracts.tests.utils import create_fill_hash
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
-def test_l1_resolution_correct_amount(
-    fill_manager, deployer, resolution_registry, token, resolver, amount
+@pytest.mark.parametrize("use_correct_fill_id", [True, False])
+def test_l1_resolution_correct_hash(
+    fill_manager, deployer, resolution_registry, token, resolver, amount, use_correct_fill_id
 ):
     requested_amount = 100
     request_id = 23
@@ -16,27 +16,36 @@ def test_l1_resolution_correct_amount(
     receiver = accounts[2]
     chain_id = web3.eth.chain_id
 
-    correct_request_hash = create_request_hash(
-        request_id, chain_id, token.address, receiver.address, requested_amount
-    )
-
     fill_manager.addAllowedLP(filler, {"from": deployer})
     resolver.addRegistry(chain_id, resolution_registry.address, {"from": deployer})
 
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})
 
-    assert resolution_registry.provedFills(correct_request_hash) == [ADDRESS_ZERO, 0]
+    fill_id = fill_manager.fillRequest(
+        request_id, chain_id, token.address, receiver, amount, {"from": filler}
+    ).return_value
 
-    fill_manager.fillRequest(
-        chain_id, request_id, token.address, receiver, amount, {"from": filler}
+    # This might need to be changed as we don't know what future fillIds can be there
+    # For optimism it's block.number, but for others it's gonna be something different.
+    # All we know is that fillId is currently typed as uint256
+    if not use_correct_fill_id:
+        fill_id -= 1
+
+    fill_hash = create_fill_hash(
+        request_id,
+        chain_id,
+        token.address,
+        receiver.address,
+        requested_amount,
+        fill_id,
     )
-    fillId = web3.eth.block_number
 
-    if amount == requested_amount:
-        assert resolution_registry.provedFills(correct_request_hash) == [filler, fillId]
-    else:
-        assert resolution_registry.provedFills(correct_request_hash) == [ADDRESS_ZERO, 0]
+    expected_address = ADDRESS_ZERO
+    if amount == requested_amount and use_correct_fill_id:
+        expected_address = filler
+
+    assert resolution_registry.fillers(fill_hash) == expected_address
 
 
 def test_restricted_calls(contracts, resolver):
@@ -51,9 +60,7 @@ def test_restricted_calls(contracts, resolver):
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolve(
-            0, 0, brownie.chain.id, brownie.chain.id, caller, {"from": caller}
-        )
+        contracts.resolver.resolve(0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})
+        contracts.resolution_registry.resolveRequest(0, 0, caller, {"from": caller})
