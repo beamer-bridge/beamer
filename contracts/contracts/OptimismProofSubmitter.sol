@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import "../interfaces/IProofSubmitter.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
 
+import "./RaisyncUtils.sol";
 import "./Resolver.sol";
 import "./RestrictedCalls.sol";
 
@@ -16,7 +17,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     }
 
     function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address eligibleClaimer)
-        external restricted(block.chainid, msg.sender)  returns (uint256)
+        external restricted(block.chainid, msg.sender) returns (uint256)
     {
         // Questions
         // - what gas limit
@@ -26,8 +27,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             l1Resolver,
             abi.encodeWithSelector(
                 Resolver.resolve.selector,
-                requestHash,
-                block.number,
+                RaisyncUtils.createFillHash(requestHash, block.number),
                 block.chainid,
                 sourceChainId,
                 eligibleClaimer

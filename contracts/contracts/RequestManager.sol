@@ -6,9 +6,8 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/utils/Sa
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 
+import "./RaisyncUtils.sol";
 import "./ResolutionRegistry.sol";
-
-
 
 contract RequestManager is Ownable {
     using Math for uint256;
@@ -72,7 +71,6 @@ contract RequestManager is Ownable {
         uint256 requestId,
         address claimReceiver
     );
-
 
     // Constants
     uint256 public claimStake;
@@ -293,20 +291,22 @@ contract RequestManager is Ownable {
         address claimReceiver;
         bool depositWithdrawn = request.depositWithdrawn;
 
-        bytes32 requestHash = keccak256(
-            abi.encodePacked(
-                claim.requestId, block.chainid, request.targetTokenAddress, request.sender, request.amount
-            )
-        );
+        bytes32 fillHash = RaisyncUtils.createFillHash(
+                claim.requestId,
+                block.chainid,
+                request.targetTokenAddress,
+                request.targetAddress,
+                request.amount,
+                claim.fillId
+            );
 
-        ProvedFill memory provedFill;
-        (provedFill.filler, provedFill.fillId) = resolutionRegistry.provedFills(requestHash);
+        address eligibleClaimer = resolutionRegistry.fillers(fillHash);
 
-        if (provedFill.filler == address(0)) {
+        if (eligibleClaimer == address(0)) {
             // no L1 resolution
             require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
-        } else if (provedFill.filler != claim.claimer || provedFill.fillId != claim.fillId) {
+        } else if (eligibleClaimer != claim.claimer) {
             // L1 resolution has been triggered but claim is incorrect
             claimReceiver = claim.challenger;
         } else {

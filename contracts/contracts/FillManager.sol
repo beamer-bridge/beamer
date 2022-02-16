@@ -5,6 +5,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
+import "./RaisyncUtils.sol";
 
 
 contract FillManager is Ownable {
@@ -32,8 +33,8 @@ contract FillManager is Ownable {
     }
 
     function fillRequest(
-        uint256 sourceChainId,
         uint256 requestId,
+        uint256 sourceChainId,
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount
@@ -42,11 +43,10 @@ contract FillManager is Ownable {
     returns (uint256)
     {
         require(allowedLPs[msg.sender], "Sender not whitelisted");
-        bytes32 requestHash = keccak256(
-            abi.encodePacked(
+        bytes32 requestHash = RaisyncUtils.createRequestHash(
                 requestId, sourceChainId, targetTokenAddress, targetReceiverAddress, amount
-            )
-        );
+            );
+
         require(!fills[requestHash], "Already filled");
         fills[requestHash] = true;
 

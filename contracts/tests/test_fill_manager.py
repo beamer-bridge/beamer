@@ -16,8 +16,8 @@ def test_fill_request(fill_manager, token, deployer, resolver, resolution_regist
 
     token.approve(fill_manager.address, amount, {"from": deployer})
     fill_manager.fillRequest(
-        chain_id,
         1,
+        chain_id,
         token.address,
         receiver,
         amount,
@@ -26,8 +26,8 @@ def test_fill_request(fill_manager, token, deployer, resolver, resolution_regist
 
     with brownie.reverts("Already filled"):
         fill_manager.fillRequest(
-            chain_id,
             1,
+            chain_id,
             token.address,
             receiver,
             amount,
@@ -37,8 +37,8 @@ def test_fill_request(fill_manager, token, deployer, resolver, resolution_regist
     fill_manager.removeAllowedLP(deployer, {"from": deployer})
     with brownie.reverts("Sender not whitelisted"):
         fill_manager.fillRequest(
-            chain_id,
             1,
+            chain_id,
             token.address,
             receiver,
             amount,

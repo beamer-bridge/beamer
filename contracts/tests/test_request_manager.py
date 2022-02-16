@@ -1,7 +1,7 @@
 import brownie
 from brownie import accounts, chain, web3
 
-from contracts.tests.utils import create_request_hash, make_request
+from contracts.tests.utils import make_request, create_fill_hash
 
 
 def test_claim(token, request_manager, claim_stake):
@@ -597,15 +597,16 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(request_manager.address) == claim_stake
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
-    request_hash = create_request_hash(
-        request_id, web3.eth.chain_id, token.address, requester.address, transfer_amount
+    fill_hash = create_fill_hash(
+        request_id, web3.eth.chain_id, token.address, requester.address, transfer_amount, fill_id
     )
 
     # Register a L1 resolution
     contracts.messenger2.setLastSender(contracts.resolver.address)
     resolution_registry.resolveRequest(
-        request_hash, fill_id, web3.eth.chain_id, claimer.address, {"from": contracts.messenger2}
+        fill_hash, web3.eth.chain_id, claimer.address, {"from": contracts.messenger2}
     )
+
     # The claim period is not over, but the resolution must allow withdrawal now
     withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "ClaimWithdrawn" in withdraw_tx.events
