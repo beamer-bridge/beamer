@@ -38,7 +38,7 @@ contract RequestManager is Ownable {
         uint256 challengerStake;
         bool withdrawn;
         uint256 termination;
-        uint256 fillId;
+        bytes32 fillId;
     }
 
     // Events
@@ -63,7 +63,7 @@ contract RequestManager is Ownable {
         address challenger,
         uint256 challengerStake,
         uint256 termination,
-        uint256 fillId
+        bytes32 fillId
     );
 
     event ClaimWithdrawn(
@@ -204,7 +204,7 @@ contract RequestManager is Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    function claimRequest(uint256 requestId, uint256 fillId) external validRequestId(requestId) payable returns (uint256) {
+    function claimRequest(uint256 requestId, bytes32 fillId) external validRequestId(requestId) payable returns (uint256) {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");

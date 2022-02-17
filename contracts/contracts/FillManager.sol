@@ -13,7 +13,7 @@ contract FillManager is Ownable {
 
     event RequestFilled(
         uint256 indexed requestId,
-        uint256 fillId,
+        bytes32 fillId,
         uint256 indexed sourceChainId,
         address indexed targetTokenAddress,
         address filler,
@@ -40,7 +40,7 @@ contract FillManager is Ownable {
         uint256 amount
     )
     external
-    returns (uint256)
+    returns (bytes32)
     {
         require(allowedLPs[msg.sender], "Sender not whitelisted");
         bytes32 requestHash = RaisyncUtils.createRequestHash(
@@ -53,7 +53,7 @@ contract FillManager is Ownable {
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
-        uint256 fillId = proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender);
+        bytes32 fillId = proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender);
         require(
             fillId != 0,
             "Submitting proof data failed"

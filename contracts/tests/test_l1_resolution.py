@@ -1,6 +1,7 @@
 import brownie
 import pytest
 from brownie import accounts, web3
+from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 from contracts.tests.utils import create_fill_hash
 
@@ -22,15 +23,14 @@ def test_l1_resolution_correct_hash(
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})
 
-    fill_id = fill_manager.fillRequest(
+    fill_tx = fill_manager.fillRequest(
         request_id, chain_id, token.address, receiver, amount, {"from": filler}
-    ).return_value
+    )
 
-    # This might need to be changed as we don't know what future fillIds can be there
-    # For optimism it's block.number, but for others it's gonna be something different.
-    # All we know is that fillId is currently typed as uint256
+    fill_id = fill_tx.return_value
+
     if not use_correct_fill_id:
-        fill_id -= 1
+        fill_id = keccak(b"wrong fill id")
 
     fill_hash = create_fill_hash(
         request_id,
