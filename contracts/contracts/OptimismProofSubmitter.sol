@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.12;
 
 import "../interfaces/IProofSubmitter.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
@@ -16,24 +16,21 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address eligibleClaimer)
+    function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address filler)
         external restricted(block.chainid, msg.sender) returns (bytes32)
     {
-
         bytes32 fillId = keccak256(abi.encode(block.number));
 
-        // Questions
-        // - what gas limit
-        // TODO: use abi.encodeCall once
-        // https://github.com/ethereum/solidity/pull/12437 is released
         messenger.sendMessage(
             l1Resolver,
-            abi.encodeWithSelector(
-                Resolver.resolve.selector,
-                RaisyncUtils.createFillHash(requestHash, fillId),
-                block.chainid,
-                sourceChainId,
-                eligibleClaimer
+            abi.encodeCall(
+                Resolver.resolve,
+                (
+                    RaisyncUtils.createFillHash(requestHash, fillId),
+                    block.chainid,
+                    sourceChainId,
+                    filler
+                )
             ),
             1_000_000
         );

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.12;
 
 import "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/access/Ownable.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
@@ -32,11 +32,13 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
         messenger.sendMessage(
             info.resolutionRegistry,
-            abi.encodeWithSelector(
-                ResolutionRegistry.resolveRequest.selector,
-                fillHash,
-                block.chainid,
-                filler
+            abi.encodeCall(
+                ResolutionRegistry.resolveRequest,
+                (
+                    fillHash,
+                    block.chainid,
+                    filler
+                )
             ),
             1_000_000
         );
