@@ -1,6 +1,20 @@
+import brownie
 from brownie import web3
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak, to_canonical_address
+
+
+def _alloc_account():
+    address = web3.geth.personal.new_account("")
+    account = brownie.accounts.at(address)
+    assert web3.geth.personal.unlock_account(address, "", 0)
+    # transfer 1 ETH to the newly created account
+    brownie.accounts[0].transfer(account, brownie.web3.toWei(1, "ether"))
+    return account
+
+
+def alloc_accounts(n):
+    return tuple(_alloc_account() for _ in range(n))
 
 
 def make_request(

@@ -9,8 +9,9 @@ from brownie import (
     ResolutionRegistry,
     Resolver,
     TestCrossDomainMessenger,
-    accounts,
 )
+
+from contracts.tests.utils import alloc_accounts
 
 
 @dataclass(frozen=True)
