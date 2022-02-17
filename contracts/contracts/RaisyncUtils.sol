@@ -18,7 +18,7 @@ library RaisyncUtils {
         );
     }
 
-    function createFillHash(bytes32 requestHash, uint256 fillId) internal pure returns (bytes32){
+    function createFillHash(bytes32 requestHash, bytes32 fillId) internal pure returns (bytes32){
         return keccak256(abi.encodePacked(requestHash, fillId));
     }
 
@@ -28,7 +28,7 @@ library RaisyncUtils {
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount,
-        uint256 fillId
+        bytes32 fillId
     ) internal pure returns (bytes32){
         return createFillHash(
             createRequestHash(

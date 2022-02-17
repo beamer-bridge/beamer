@@ -44,7 +44,7 @@ def create_request_hash(request_id, chain_id, token_address, receiver_address, a
 def create_fill_hash(request_id, chain_id, token_address, receiver_address, amount, fill_id):
     return keccak(
         encode_abi_packed(
-            ["bytes32", "uint256"],
+            ["bytes32", "bytes32"],
             [
                 create_request_hash(request_id, chain_id, token_address, receiver_address, amount),
                 fill_id,

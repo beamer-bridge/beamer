@@ -1,15 +1,16 @@
 import brownie
 from brownie import accounts, chain, web3
+from brownie.convert import to_bytes
+from eth_utils import to_hex
 
-from contracts.tests.utils import make_request, create_fill_hash
+from contracts.tests.utils import create_fill_hash, make_request
 
 
 def test_claim(token, request_manager, claim_stake):
     """Test that making a claim creates correct claim and emits event"""
     request_id = make_request(request_manager, token=token, requester=accounts[0], amount=1)
-
+    fill_id = to_bytes(b"123")
     claimer = accounts[0]
-    fill_id = 123
     claim_tx = request_manager.claimRequest(
         request_id, fill_id, {"from": claimer, "value": claim_stake}
     )
@@ -26,7 +27,7 @@ def test_claim(token, request_manager, claim_stake):
     assert claim_event["claimerStake"] == claim_stake
     assert claim_event["challenger"] == brownie.ZERO_ADDRESS
     assert claim_event["termination"] == expected_termination
-    assert claim_event["fillId"] == fill_id
+    assert claim_event["fillId"] == to_hex(fill_id)
 
 
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
@@ -588,7 +589,7 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(request_manager.address) == 0
 
     request_id = make_request(request_manager, token, requester, transfer_amount)
-    fill_id = 123
+    fill_id = to_bytes(b"123")
     claim_tx = request_manager.claimRequest(
         request_id, fill_id, {"from": claimer, "value": claim_stake}
     )
