@@ -23,7 +23,7 @@ contract RequestManager is Ownable {
         address targetTokenAddress;
         address targetAddress;
         uint256 amount;
-        bool depositWithdrawn;
+        address depositWithdrawn;
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
@@ -52,7 +52,8 @@ contract RequestManager is Ownable {
     );
 
     event DepositWithdrawn(
-        uint256 requestId
+        uint256 requestId,
+        address receiver
     );
 
     event ClaimMade(
@@ -166,7 +167,7 @@ contract RequestManager is Ownable {
         newRequest.targetTokenAddress = targetTokenAddress;
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
-        newRequest.depositWithdrawn = false;
+        newRequest.depositWithdrawn = address(0);
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
         newRequest.raisyncFee = raisyncFee;
@@ -189,13 +190,13 @@ contract RequestManager is Ownable {
     function withdrawExpiredRequest(uint256 requestId) external validRequestId(requestId) {
         Request storage request = requests[requestId];
 
-        require(!request.depositWithdrawn , "Deposit already withdrawn");
+        require(request.depositWithdrawn == address(0), "Deposit already withdrawn");
         require(block.timestamp >= request.validUntil, "Request not expired yet");
         require(request.activeClaims == 0, "Active claims running");
 
-        request.depositWithdrawn = true;
+        request.depositWithdrawn = request.sender;
 
-        emit DepositWithdrawn(requestId);
+        emit DepositWithdrawn(requestId, request.sender);
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         token.safeTransfer(request.sender, request.amount);
@@ -208,7 +209,7 @@ contract RequestManager is Ownable {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");
-        require(!request.depositWithdrawn, "Deposit already withdrawn");
+        require(request.depositWithdrawn == address(0), "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
 
         request.activeClaims += 1;
@@ -289,7 +290,7 @@ contract RequestManager is Ownable {
         require(!claim.withdrawn, "Claim already withdrawn");
 
         address claimReceiver;
-        bool depositWithdrawn = request.depositWithdrawn;
+        address depositWithdrawn = request.depositWithdrawn;
 
         bytes32 fillHash = RaisyncUtils.createFillHash(
                 claim.requestId,
@@ -300,12 +301,12 @@ contract RequestManager is Ownable {
                 request.amount,
                 claim.fillId
             );
-
-        address filler = resolutionRegistry.fillers(fillHash);
+        
+        address filler = (depositWithdrawn != address(0)) ? depositWithdrawn : resolutionRegistry.fillers(fillHash);
 
         if (filler == address(0)) {
             // no L1 resolution
-            require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
+            require(block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
         } else if (filler != claim.claimer) {
             // L1 resolution has been triggered but claim is incorrect
@@ -318,10 +319,16 @@ contract RequestManager is Ownable {
         claim.withdrawn = true;
         request.activeClaims -= 1;
 
-        if (!depositWithdrawn && claimReceiver == claim.claimer) {
-            request.depositWithdrawn = true;
+        if (depositWithdrawn == address(0) && claimReceiver == claim.claimer) {
+            request.depositWithdrawn = claimReceiver;
             withdraw_deposit(claimId, request, claim, claimReceiver);
         }
+
+        emit ClaimWithdrawn(
+            claimId,
+            claim.requestId,
+            claimReceiver
+        );
         // The claim is set the `withdrawn` state above, so the following effects
         // needs to happen afterwards to avoid reentrency problems
         uint256 ethToTransfer = claim.claimerStake + claim.challengerStake;
@@ -339,8 +346,7 @@ contract RequestManager is Ownable {
     ) private {
         collectedRaisyncFees += request.raisyncFee;
 
-        emit ClaimWithdrawn(
-            claimId,
+        emit DepositWithdrawn(
             claim.requestId,
             claimReceiver
         );
