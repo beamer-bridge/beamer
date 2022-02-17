@@ -34,6 +34,7 @@ def test_l1_resolution_correct_hash(
     fill_hash = create_fill_hash(
         request_id,
         chain_id,
+        chain_id,
         token.address,
         receiver.address,
         requested_amount,

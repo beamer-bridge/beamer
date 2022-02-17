@@ -599,7 +599,13 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
     fill_hash = create_fill_hash(
-        request_id, web3.eth.chain_id, token.address, requester.address, transfer_amount, fill_id
+        request_id,
+        web3.eth.chain_id,
+        web3.eth.chain_id,
+        token.address,
+        requester.address,
+        transfer_amount,
+        fill_id,
     )
 
     # Register a L1 resolution

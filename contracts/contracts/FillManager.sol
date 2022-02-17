@@ -44,7 +44,7 @@ contract FillManager is Ownable {
     {
         require(allowedLPs[msg.sender], "Sender not whitelisted");
         bytes32 requestHash = RaisyncUtils.createRequestHash(
-                requestId, sourceChainId, targetTokenAddress, targetReceiverAddress, amount
+                requestId, sourceChainId, block.chainid, targetTokenAddress, targetReceiverAddress, amount
             );
 
         require(!fills[requestHash], "Already filled");
