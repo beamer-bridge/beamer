@@ -1,7 +1,7 @@
 import brownie
 from brownie import accounts, chain, web3
 
-from contracts.tests.utils import make_request, create_fill_hash
+from contracts.tests.utils import create_fill_hash, make_request
 
 
 def test_claim(token, request_manager, claim_stake):

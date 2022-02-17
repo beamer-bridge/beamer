@@ -63,11 +63,11 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
     # L1 contracts
     messenger2 = deployer.deploy(TestCrossDomainMessenger)
     messenger2.setForwardState(True)
-    resolver = deployer.deploy(Resolver, messenger2.address)
+    resolver = deployer.deploy(Resolver)
 
     # L2b contracts, again
     proof_submitter = deployer.deploy(OptimismProofSubmitter, messenger1.address)
-    fill_manager = deployer.deploy(FillManager, resolver, proof_submitter.address)
+    fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
@@ -90,6 +90,7 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
     resolver.addCaller(l2_chain_id, messenger1.address, proof_submitter.address)
     resolution_registry.addCaller(l1_chain_id, messenger2.address, resolver.address)
 
+    resolver.addRegistry(l2_chain_id, resolution_registry.address, messenger2.address)
     return Contracts(
         messenger1=messenger1,
         messenger2=messenger2,

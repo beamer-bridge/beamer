@@ -17,7 +17,7 @@ def main() -> None:
     deployer = accounts.at("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")
 
     messenger = TestCrossDomainMessenger.deploy({"from": deployer})
-    resolver = Resolver.deploy(messenger.address, {"from": deployer})
+    resolver = Resolver.deploy({"from": deployer})
     resolution_registry = ResolutionRegistry.deploy({"from": deployer})
 
     MintableToken.deploy(int(1e18), {"from": deployer})
@@ -39,4 +39,6 @@ def main() -> None:
     f = FillManager.deploy(resolver.address, proof_submitter.address, {"from": deployer})
     f.addAllowedLP(deployer.address, {"from": deployer})
 
-    resolver.addRegistry(web3.eth.chain_id, resolution_registry.address, {"from": deployer})
+    resolver.addRegistry(
+        web3.eth.chain_id, resolution_registry.address, messenger.address, {"from": deployer}
+    )

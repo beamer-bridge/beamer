@@ -8,7 +8,7 @@ from contracts.tests.utils import create_fill_hash
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("use_correct_fill_id", [True, False])
 def test_l1_resolution_correct_hash(
-    fill_manager, deployer, resolution_registry, token, resolver, amount, use_correct_fill_id
+    fill_manager, deployer, resolution_registry, token, amount, use_correct_fill_id
 ):
     requested_amount = 100
     request_id = 23
@@ -17,7 +17,6 @@ def test_l1_resolution_correct_hash(
     chain_id = web3.eth.chain_id
 
     fill_manager.addAllowedLP(filler, {"from": deployer})
-    resolver.addRegistry(chain_id, resolution_registry.address, {"from": deployer})
 
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})
