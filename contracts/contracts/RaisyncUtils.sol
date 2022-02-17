@@ -7,13 +7,14 @@ library RaisyncUtils {
     function createRequestHash(
         uint256 requestId,
         uint256 sourceChainId,
+        uint256 targetChainId,
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount
     ) internal pure returns (bytes32){
         return keccak256(
             abi.encodePacked(
-                requestId, sourceChainId, targetTokenAddress, targetReceiverAddress, amount
+                requestId, sourceChainId, targetChainId, targetTokenAddress, targetReceiverAddress, amount
             )
         );
     }
@@ -25,6 +26,7 @@ library RaisyncUtils {
     function createFillHash(
         uint256 requestId,
         uint256 sourceChainId,
+        uint256 targetChainId,
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount,
@@ -32,7 +34,7 @@ library RaisyncUtils {
     ) internal pure returns (bytes32){
         return createFillHash(
             createRequestHash(
-                requestId, sourceChainId, targetTokenAddress, targetReceiverAddress, amount
+                requestId, sourceChainId, targetChainId, targetTokenAddress, targetReceiverAddress, amount
             ),
                 fillId
         );

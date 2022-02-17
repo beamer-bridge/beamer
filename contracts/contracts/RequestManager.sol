@@ -294,6 +294,7 @@ contract RequestManager is Ownable {
         bytes32 fillHash = RaisyncUtils.createFillHash(
                 claim.requestId,
                 block.chainid,
+                request.targetChainId,
                 request.targetTokenAddress,
                 request.targetAddress,
                 request.amount,
