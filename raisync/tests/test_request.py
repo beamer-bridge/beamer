@@ -47,11 +47,7 @@ def test_read_timeout(config):
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
-def test_fill_and_claim(
-    request_manager, token, node, allow_unlisted_pairs, resolver, resolution_registry
-):
-    resolver.addRegistry(brownie.chain.id, resolution_registry.address, {"from": accounts[0]})
-
+def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
@@ -77,9 +73,7 @@ def test_fill_and_claim(
     assert claims[0].claimer == node.address
 
 
-def test_withdraw(request_manager, token, node, resolver, resolution_registry):
-    resolver.addRegistry(brownie.chain.id, resolution_registry.address, {"from": accounts[0]})
-
+def test_withdraw(request_manager, token, node):
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 

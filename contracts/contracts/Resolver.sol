@@ -8,6 +8,11 @@ import "./CrossDomainRestrictedCalls.sol";
 
 
 contract Resolver is Ownable, CrossDomainRestrictedCalls {
+    struct ResolutionInfos {
+        address resolutionRegistry;
+        address messenger;
+    }
+
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
@@ -15,22 +20,18 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         address filler
     );
 
-    ICrossDomainMessenger l2Messenger;
-    mapping (uint256 => address) public resolutionRegistries;
-
-    constructor(address _l2Messenger)
-    {
-        l2Messenger = ICrossDomainMessenger(_l2Messenger);
-    }
+    mapping (uint256 => ResolutionInfos) public resolutionInfos;
 
     function resolve(bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId, address filler)
         external restricted(fillChainId, msg.sender) {
 
-        address l2RegistryAddress = resolutionRegistries[sourceChainId];
-        require(l2RegistryAddress != address(0), "No registry available for source chain");
+        ResolutionInfos storage info = resolutionInfos[sourceChainId];
+        require(info.resolutionRegistry != address(0), "No registry available for source chain");
+        require(info.messenger != address(0), "No messenger available for source chain");
 
-        l2Messenger.sendMessage(
-            l2RegistryAddress,
+        ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
+        messenger.sendMessage(
+            info.resolutionRegistry,
             abi.encodeWithSelector(
                 ResolutionRegistry.resolveRequest.selector,
                 fillHash,
@@ -43,7 +44,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         emit Resolution(sourceChainId, fillChainId, fillHash, filler);
     }
 
-    function addRegistry(uint256 chainId, address resolutionRegistry) external onlyOwner {
-        resolutionRegistries[chainId] = resolutionRegistry;
+    function addRegistry(uint256 chainId, address resolutionRegistry, address messenger) external onlyOwner {
+        resolutionInfos[chainId] = ResolutionInfos(resolutionRegistry, messenger);
     }
 }

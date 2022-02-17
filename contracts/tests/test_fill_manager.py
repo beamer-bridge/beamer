@@ -2,12 +2,10 @@ import brownie
 from brownie import accounts, web3
 
 
-def test_fill_request(fill_manager, token, deployer, resolver, resolution_registry):
+def test_fill_request(fill_manager, token, deployer):
     chain_id = web3.eth.chain_id
     amount = 100
     receiver = accounts[2]
-
-    resolver.addRegistry(chain_id, resolution_registry.address, {"from": deployer})
 
     with brownie.reverts("Ownable: caller is not the owner"):
         fill_manager.addAllowedLP(deployer, {"from": accounts[1]})
