@@ -300,13 +300,13 @@ contract RequestManager is Ownable {
                 claim.fillId
             );
 
-        address eligibleClaimer = resolutionRegistry.fillers(fillHash);
+        address filler = resolutionRegistry.fillers(fillHash);
 
-        if (eligibleClaimer == address(0)) {
+        if (filler == address(0)) {
             // no L1 resolution
             require(depositWithdrawn || block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
-        } else if (eligibleClaimer != claim.claimer) {
+        } else if (filler != claim.claimer) {
             // L1 resolution has been triggered but claim is incorrect
             claimReceiver = claim.challenger;
         } else {

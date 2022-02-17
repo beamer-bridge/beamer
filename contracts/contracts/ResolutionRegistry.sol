@@ -10,7 +10,7 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
         address filler
     );
 
-    // mapping from fillHash to eligible claimer
+    // mapping from fillHash to filler
     mapping(bytes32 => address) public fillers;
 
     function resolveRequest(bytes32 fillHash, uint256 resolutionChainId, address filler)
