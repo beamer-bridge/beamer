@@ -1,4 +1,4 @@
-import { ShallowRef } from 'vue';
+import { Ref, ShallowRef } from 'vue';
 
 import { EthereumProvider } from '@/services/web3-provider';
 import { RaisyncConfig } from '@/types/config';
@@ -10,9 +10,9 @@ export default function useChainCheck(ethereumProvider: ShallowRef<Readonly<Ethe
     return chainId === expectedChainId;
   };
 
-  const connectedChainSupported = async (raisyncConfig: Readonly<RaisyncConfig>) => {
+  const connectedChainSupported = async (raisyncConfig: Ref<Readonly<RaisyncConfig>>) => {
     const chainId = await ethereumProvider.value.getChainId();
-    return Object.prototype.hasOwnProperty.call(raisyncConfig.chains, String(chainId));
+    return Object.prototype.hasOwnProperty.call(raisyncConfig.value.chains, String(chainId));
   };
 
   return { chainMatchesExpected, connectedChainSupported };
