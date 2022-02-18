@@ -7,10 +7,12 @@
     class="selector"
     :options="props.context.options"
     label="label"
+    :model-value="props.context._value"
     :clearable="false"
     :name="props.context.node.name"
     :disabled="props.context.disabled"
     :="props.context.attrs"
+    @update:modelValue="(value) => props.context.node.input(value)"
     @blur="props.context.handlers.blur()"
   >
     <template
@@ -45,6 +47,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+console.log(props.context.value);
 </script>
 
 <style lang="css">
@@ -62,13 +65,12 @@ const props = defineProps<Props>();
 
 .selector .vs__dropdown-option,
 .selector .vs__selected,
-.selector .vs__search {
+.selector.vs--open .vs__search {
   @apply h-18 w-full m-0 pl-4 py-3 border-0 text-2xl text-teal flex flex-row gap-2 items-center justify-between overflow-hidden;
 }
 
-.selector .vs__selected,
 .selector .vs__search {
-  @apply pr-[2px];
+  @apply m-0 p-0 border-0 text-2xl text-teal;
 }
 
 .selector .vs__dropdown-option {
@@ -80,7 +82,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__selected-options {
-  @apply p-0 m-0;
+  @apply p-0 m-0 flex-nowrap;
 }
 
 .selector .vs__option-image {
@@ -96,7 +98,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__actions {
-  @apply py-0 px-1;
+  @apply py-0 pr-1 pl-[6px];
 }
 
 .selector .vs__open-indicator {
@@ -108,8 +110,8 @@ const props = defineProps<Props>();
   @apply transition-all;
 }
 
-.selector .vs__fade-enter,
+.selector .vs__fade-enter-from,
 .selector .vs__fade-leave-to {
-  @apply rounded-xl;
+  @apply rounded-xl opacity-0;
 }
 </style>
