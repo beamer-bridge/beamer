@@ -1,9 +1,9 @@
 import brownie
 import pytest
-from brownie import accounts, web3
 from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
-from contracts.tests.utils import create_fill_hash
+
+from contracts.tests.utils import alloc_accounts, create_fill_hash
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
@@ -13,9 +13,8 @@ def test_l1_resolution_correct_hash(
 ):
     requested_amount = 100
     request_id = 23
-    filler = accounts[1]
-    receiver = accounts[2]
-    chain_id = web3.eth.chain_id
+    filler, receiver = alloc_accounts(2)
+    chain_id = brownie.web3.eth.chain_id
 
     fill_manager.addAllowedLP(filler, {"from": deployer})
 
@@ -50,7 +49,7 @@ def test_l1_resolution_correct_hash(
 
 def test_restricted_calls(contracts, resolver):
     """Test that important contract calls cannot be invoked by a random caller."""
-    caller = accounts[3]
+    (caller,) = alloc_accounts(1)
 
     # fill_manager -> proof_submitter -> messenger1 -> L1 resolver ->
     # messenger2 -> resolution registry

@@ -1,18 +1,18 @@
 import brownie
-from brownie import accounts, chain, web3
+from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
-from contracts.tests.utils import create_fill_hash, make_request
+from contracts.tests.utils import alloc_accounts, create_fill_hash, make_request
 
 
 def test_claim(token, request_manager, claim_stake):
     """Test that making a claim creates correct claim and emits event"""
-    request_id = make_request(request_manager, token=token, requester=accounts[0], amount=1)
+    (requester,) = alloc_accounts(1)
+    request_id = make_request(request_manager, token=token, requester=requester, amount=1)
     fill_id = to_bytes(b"123")
-    claimer = accounts[0]
     claim_tx = request_manager.claimRequest(
-        request_id, fill_id, {"from": claimer, "value": claim_stake}
+        request_id, fill_id, {"from": requester, "value": claim_stake}
     )
     claim_id = claim_tx.return_value
     expected_termination = (
@@ -23,7 +23,7 @@ def test_claim(token, request_manager, claim_stake):
     claim_event = claim_tx.events["ClaimMade"]
     assert claim_event["requestId"] == request_id
     assert claim_event["claimId"] == claim_id
-    assert claim_event["claimer"] == claimer
+    assert claim_event["claimer"] == requester
     assert claim_event["claimerStake"] == claim_stake
     assert claim_event["challenger"] == brownie.ZERO_ADDRESS
     assert claim_event["termination"] == expected_termination
@@ -32,73 +32,67 @@ def test_claim(token, request_manager, claim_stake):
 
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
     """Test that only claims with the correct stake can be submitted"""
-    request_id = make_request(request_manager, token, accounts[0], 1)
+    (requester,) = alloc_accounts(1)
+    request_id = make_request(request_manager, token, requester, 1)
 
-    claim = request_manager.claimRequest(
-        request_id, 0, {"from": accounts[0], "value": claim_stake}
-    )
+    claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
     assert "ClaimMade" in claim.events
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(
-            request_id, 0, {"from": accounts[0], "value": claim_stake - 1}
-        )
+        request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake - 1})
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(
-            request_id, 0, {"from": accounts[0], "value": claim_stake + 1}
-        )
+        request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake + 1})
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(request_id, 0, {"from": accounts[0]})
+        request_manager.claimRequest(request_id, 0, {"from": requester})
 
 
 def test_claim_challenge(request_manager, token, claim_stake):
     """Test challenging a claim"""
-    request_id = make_request(request_manager, token, accounts[0], 1)
+    (requester,) = alloc_accounts(1)
+    request_id = make_request(request_manager, token, requester, 1)
 
-    claim = request_manager.claimRequest(
-        request_id, 0, {"from": accounts[0], "value": claim_stake}
-    )
+    claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
 
+    (challenger,) = alloc_accounts(1)
     with brownie.reverts("Not enough funds provided"):
         request_manager.challengeClaim(
-            claim.return_value, {"from": accounts[1], "value": claim_stake}
+            claim.return_value, {"from": challenger, "value": claim_stake}
         )
 
     with brownie.reverts("Not enough funds provided"):
-        request_manager.challengeClaim(claim.return_value, {"from": accounts[1]})
+        request_manager.challengeClaim(claim.return_value, {"from": challenger})
 
     # Do a proper challenge
     challenge = request_manager.challengeClaim(
-        claim.return_value, {"from": accounts[1], "value": claim_stake + 1}
+        claim.return_value, {"from": challenger, "value": claim_stake + 1}
     )
     assert "ClaimMade" in challenge.events
 
     with brownie.reverts("Not eligible to outbid"):
         request_manager.challengeClaim(
-            claim.return_value, {"from": accounts[1], "value": claim_stake + 1}
+            claim.return_value, {"from": challenger, "value": claim_stake + 1}
         )
 
 
 def test_claim_counter_challenge(request_manager, token, claim_stake):
     """Test counter-challenging a challenge"""
-    claimer = accounts[0]
-    challenger = accounts[1]
-    request_id = make_request(request_manager, token, accounts[2], 1)
+    claimer, challenger, requester = alloc_accounts(3)
+    request_id = make_request(request_manager, token, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
 
     with brownie.reverts("Not enough funds provided"):
-        request_manager.challengeClaim(claim_id, {"from": accounts[2], "value": claim_stake})
+        request_manager.challengeClaim(claim_id, {"from": requester, "value": claim_stake})
 
     # Do a proper challenge
     request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
 
     # Another party must not be able to join the challenge game
     with brownie.reverts("Not eligible to outbid"):
-        request_manager.challengeClaim(claim_id, {"from": accounts[2]})
+        request_manager.challengeClaim(claim_id, {"from": requester})
 
     # The sender of the last challenge must not be able to challenge again
     with brownie.reverts("Not eligible to outbid"):
@@ -122,9 +116,8 @@ def test_claim_period_extension(
     request_manager, token, claim_stake, claim_period, challenge_period, challenge_period_extension
 ):
     """Test the extension of the claim/challenge period"""
-    claimer = accounts[0]
-    challenger = accounts[1]
-    request_id = make_request(request_manager, token, accounts[2], 1)
+    claimer, challenger, requester = alloc_accounts(3)
+    request_id = make_request(request_manager, token, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
@@ -157,20 +150,18 @@ def test_claim_period_extension(
 def test_withdraw_nonexistent_claim(request_manager):
     """Test withdrawing a non-existent claim"""
     with brownie.reverts("claimId not valid"):
-        request_manager.withdraw(1234, {"from": accounts[0]})
+        request_manager.withdraw(1234, {"from": alloc_accounts(1)[0]})
 
 
 def test_claim_nonexistent_request(request_manager):
     """Test claiming a non-existent request"""
     with brownie.reverts("requestId not valid"):
-        request_manager.claimRequest(1234, 0, {"from": accounts[0]})
+        request_manager.claimRequest(1234, 0, {"from": alloc_accounts(1)[0]})
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
     """Test withdraw when a claim was not challenged"""
-    requester = accounts[1]
-    claimer = accounts[2]
-
+    requester, claimer = alloc_accounts(2)
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -214,10 +205,7 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
     """Test withdraw when a claim was challenged, and the challenger won.
     In that case, the request funds must not be paid out to the challenger."""
 
-    requester = accounts[1]
-    claimer = accounts[2]
-    challenger = accounts[3]
-
+    requester, claimer, challenger = alloc_accounts(3)
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -275,10 +263,7 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
 
 def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_period):
     """Test withdraw when a request was claimed twice"""
-    requester = accounts[1]
-    claimer1 = accounts[2]
-    claimer2 = accounts[3]
-
+    requester, claimer1, claimer2 = alloc_accounts(3)
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -348,11 +333,7 @@ def test_withdraw_with_two_claims_and_challenge(
     request_manager, token, claim_stake, claim_period, challenge_period
 ):
     """Test withdraw when a request was claimed twice and challenged"""
-    requester = accounts[1]
-    claimer1 = accounts[2]
-    claimer2 = accounts[3]
-    challenger = accounts[4]
-
+    requester, claimer1, claimer2, challenger = alloc_accounts(4)
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -436,11 +417,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 ):
     """Test withdraw when a request was claimed twice. The first claim fails, while the second
     is successful and should be paid out the request funds."""
-    requester = accounts[1]
-    claimer1 = accounts[2]
-    claimer2 = accounts[3]
-    challenger = accounts[4]
-
+    requester, claimer1, claimer2, challenger = alloc_accounts(4)
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -523,7 +500,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
 def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
     """Test that the same account can not claim a already withdrawn fill again"""
-    requester, claimer = accounts[:2]
+    requester, claimer = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, 23)
 
     claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
@@ -542,7 +519,7 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
 def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
     """Test that one can withdraw a claim immediately after the request
     deposit has been withdrawn via another claim."""
-    requester, claimer1, claimer2 = accounts[:3]
+    requester, claimer1, claimer2 = alloc_accounts(3)
     request_id = make_request(request_manager, token, requester, 23)
 
     claimer2_eth_balance = web3.eth.get_balance(claimer2.address)
@@ -577,7 +554,7 @@ def test_withdraw_without_challenge_with_resolution(
     request_manager, resolution_registry, token, claim_stake, contracts
 ):
     """Test withdraw when a claim was not challenged, but L1 resolved"""
-    requester, claimer = accounts[1:3]
+    requester, claimer = alloc_accounts(2)
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -632,24 +609,27 @@ def test_withdraw_without_challenge_with_resolution(
 def test_withdraw_expired(token, request_manager):
     """Test that a request can be withdrawn once it is expired"""
     validity_period = 60
-    requester = accounts[0]
+    (requester,) = alloc_accounts(1)
 
-    balance_before = token.balanceOf(requester)
+    amount = 17
+    token.mint(requester, amount)
 
     request_id = make_request(
-        request_manager, token, requester, 1, validity_period=validity_period
+        request_manager, token, requester, amount, validity_period=validity_period
     )
+
+    assert token.balanceOf(requester) == 0
 
     chain.mine(timedelta=validity_period)
     tx = request_manager.withdrawExpiredRequest(request_id, {"from": requester})
     assert "DepositWithdrawn" in tx.events
-    assert token.balanceOf(requester) == balance_before
+    assert token.balanceOf(requester) == amount
 
 
 def test_withdraw_before_expiration(token, request_manager):
     """Test that a request cannot be withdrawn before it is expired"""
     validity_period = 60
-    requester = accounts[0]
+    (requester,) = alloc_accounts(1)
 
     request_id = make_request(
         request_manager, token, requester, 1, validity_period=validity_period

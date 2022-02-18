@@ -1,14 +1,14 @@
 import brownie
-from brownie import accounts, web3
+from contracts.tests.utils import alloc_accounts
 
 
 def test_fill_request(fill_manager, token, deployer):
-    chain_id = web3.eth.chain_id
+    chain_id = brownie.web3.eth.chain_id
     amount = 100
-    receiver = accounts[2]
+    filler, receiver = alloc_accounts(2)
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        fill_manager.addAllowedLP(deployer, {"from": accounts[1]})
+        fill_manager.addAllowedLP(deployer, {"from": filler})
 
     fill_manager.addAllowedLP(deployer, {"from": deployer})
 
