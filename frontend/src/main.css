@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global transitions */
+.expand-enter-active,
+.expand-leave-active {
+    @apply transition-all;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+    @apply h-0 opacity-0;
+}
+
 /* Custom styles for Floating Vue library */
 .v-popper__popper.v-popper--theme-tooltip .v-popper__inner {
     @apply max-w-lg px-10 py-7 rounded-xl bg-teal-light shadow text-teal text-lg;

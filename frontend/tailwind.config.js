@@ -26,7 +26,7 @@ module.exports = {
       'inner-bottom': 'inset 0px -3px 6px 2px rgba(0, 0, 0, 0.15)',
     },
     extend: {
-      spacing: { 18: '4.5rem' },
+      spacing: { 18: '4.5rem', 112: '28rem' },
       maxWidth: { '2xs': '16rem', '3xs': '12rem' },
       borderRadius: {
         lg: '36px',

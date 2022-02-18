@@ -6,6 +6,7 @@ import {
 } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { hexValue } from 'ethers/lib/utils';
+import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
 import { EthereumProvider } from './types';
 
@@ -20,7 +21,8 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
 }
 
 export class MetaMaskProvider implements EthereumProvider {
-  signer: JsonRpcSigner | undefined;
+  signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
+  chainId: Ref<number> = ref(1);
 
   private web3Provider: Web3Provider;
 
@@ -32,21 +34,17 @@ export class MetaMaskProvider implements EthereumProvider {
   }
 
   async init(): Promise<void> {
+    this.chainId.value = await this.getChainId();
     await this.tryAccessingDefaultSigner();
     this.listenToEvents();
-  }
-
-  async getChainId(): Promise<number> {
-    const { chainId } = await this.web3Provider.getNetwork();
-    return chainId;
   }
 
   async requestSigner(): Promise<void> {
     try {
       await this.web3Provider.send('eth_requestAccounts', []);
-      this.signer = this.web3Provider.getSigner();
+      this.signer.value = this.web3Provider.getSigner();
     } catch (error) {
-      this.signer = undefined;
+      this.signer.value = undefined;
     }
   }
 
@@ -69,6 +67,11 @@ export class MetaMaskProvider implements EthereumProvider {
     }
   }
 
+  private async getChainId(): Promise<number> {
+    const { chainId } = await this.web3Provider.getNetwork();
+    return chainId;
+  }
+
   private async tryAccessingDefaultSigner(): Promise<void> {
     const accounts = await this.web3Provider.listAccounts();
     this.newDefaultSigner(accounts);
@@ -76,13 +79,16 @@ export class MetaMaskProvider implements EthereumProvider {
 
   private newDefaultSigner(accounts: string[]): void {
     if (accounts.length === 0) {
-      this.signer = undefined;
+      this.signer.value = undefined;
       return;
     }
-    this.signer = this.web3Provider.getSigner();
+    this.signer.value = this.web3Provider.getSigner();
   }
 
   private listenToEvents(): void {
-    this.web3Provider.on('accountsChanged', (accounts) => this.newDefaultSigner(accounts));
+    this.web3Provider.provider.on('accountsChanged', (accounts) =>
+      this.newDefaultSigner(accounts),
+    );
+    this.web3Provider.provider.on('chainChanged', (chainId) => (this.chainId.value = chainId));
   }
 }

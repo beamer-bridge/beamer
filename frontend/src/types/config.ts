@@ -7,4 +7,10 @@ export type RaisyncConfig = {
 export type ChainConfig = {
   requestManagerAddress: string;
   explorerTransactionUrl: string;
+  tokens: Token[];
+};
+
+export type Token = {
+  address: string;
+  symbol: string;
 };
