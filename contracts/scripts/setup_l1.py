@@ -24,7 +24,7 @@ def main() -> None:
         {"from": deployer},
     )
     resolver.addRegistry(
-        42,
+        L2_CHAIN_ID,
         get_contract_address(RESOLUTION_REGISTRY),
         messenger_address,
         {"from": deployer},

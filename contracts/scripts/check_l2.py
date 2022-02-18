@@ -1,17 +1,14 @@
 from time import sleep
 
-from brownie import Contract, MintableToken, accounts, web3
+from brownie import Contract, MintableToken, accounts
 
 from contracts.tests.utils import create_fill_hash
 
-from .utils import (
-    FILL_MANAGER,
-    L2_CHAIN_ID,
-    REQUEST_ID,
-    RESOLUTION_REGISTRY,
-    decode_event,
-    get_contract_address,
-)
+from .utils import FILL_MANAGER, L2_CHAIN_ID, RESOLUTION_REGISTRY, get_contract_address
+
+
+REQUEST_ID = 42
+REQUEST_AMOUNT = 123
 
 
 def main() -> None:
@@ -24,7 +21,12 @@ def main() -> None:
     token.approve(fill_manager.address, REQUEST_AMOUNT)
     fill_manager.addAllowedLP(deployer, {"from": deployer})
     fill_tx = fill_manager.fillRequest(
-        L2_CHAIN_ID, REQUEST_ID, token.address, deployer, amount, {"from": deployer}
+        REQUEST_ID,
+        L2_CHAIN_ID,
+        token.address,
+        deployer.address,
+        REQUEST_AMOUNT,
+        {"from": deployer},
     )
 
     # A fill has been done, and the proof has been submitted.
@@ -33,25 +35,19 @@ def main() -> None:
     # and wait till the resolution is finished.
     resolution_registry = Contract(get_contract_address(RESOLUTION_REGISTRY))
 
-    # correct_request_hash = create_request_hash(
-    #     REQUEST_ID, L2_CHAIN_ID, token.address, deployer.address, amount
-    # )
     fill_hash = create_fill_hash(
-        REQUEST_ID, 42, 420, token.address, deployer.address, amount, fill_tx.return_value
+        REQUEST_ID,
+        L2_CHAIN_ID,
+        L2_CHAIN_ID,
+        token.address,
+        deployer.address,
+        REQUEST_AMOUNT,
+        fill_tx.return_value,
     )
 
-    fill_hash = ""
     for _ in range(50):
         sleep(1)
-        print("checking for resolution data...")
-        logs = web3.eth.get_logs(
-            {"address": resolution_registry.address, "fromBlock": 0, "toBlock": "latest"}
-        )
-        events = [decode_event(log_entry) for log_entry in logs]
-        if not len(events) > 1:
-            continue
-        fill_hash = events[1].args.fillHash
-        print(resolution_registry.fillers(fill_hash))
+        print("Waiting for resolution data...")
         if resolution_registry.fillers(fill_hash) == deployer.address:
             break
 
