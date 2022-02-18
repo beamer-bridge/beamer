@@ -35,7 +35,8 @@ onMounted(async () => {
       readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
     );
 
-    if (!(await connectedChainSupported(raisyncConfig.value))) {
+    // TODO retrigger when chain id changes
+    if (!(await connectedChainSupported(raisyncConfig))) {
       criticalErrorMessage.value = `Connected chain not supported!`;
     }
   } else {

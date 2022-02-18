@@ -1,42 +1,31 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { ref, ShallowRef } from 'vue';
+import { Ref, ref, ShallowRef } from 'vue';
 
 import { sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
 import { RaisyncConfig } from '@/types/config';
 import { RequestFormResult } from '@/types/form';
-
-async function getSignerStrictly(ethereumProvider: EthereumProvider): Promise<JsonRpcSigner> {
-  if (ethereumProvider.signer) {
-    return ethereumProvider.signer;
-  }
-  await ethereumProvider.requestSigner();
-  if (!ethereumProvider.signer) {
-    throw Error('Accessing wallet failed!');
-  }
-  return ethereumProvider.signer;
-}
+import createAsyncProcess from '@/utils/create-async-process';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useRequestTransaction(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  raisyncConfig: Readonly<RaisyncConfig>,
+  raisyncConfig: Ref<Readonly<RaisyncConfig>>,
 ) {
-  const executingRequest = ref(false);
-  const transactionErrorMessage = ref('');
+  const transactionError = ref('');
   const successfulTransactionUrl = ref('');
 
-  const executeRequestTransaction = async (formResult: RequestFormResult) => {
-    executingRequest.value = true;
-    transactionErrorMessage.value = '';
+  const executeRequestTransaction = async (
+    formResult: RequestFormResult,
+    signer: JsonRpcSigner,
+  ) => {
+    transactionError.value = '';
 
     try {
-      const chainId = await ethereumProvider.value.getChainId();
-      const chainConfig = raisyncConfig.chains[String(chainId)];
+      const chainId = ethereumProvider.value.chainId.value;
+      const chainConfig = raisyncConfig.value.chains[String(chainId)];
       const requestManagerAddress = chainConfig.requestManagerAddress;
-
-      const signer = await getSignerStrictly(ethereumProvider.value);
       await ensureTokenAllowance(
         signer,
         formResult.sourceTokenAddress,
@@ -57,19 +46,19 @@ export default function useRequestTransaction(
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
-        transactionErrorMessage.value = error.message;
+        transactionError.value = error.message;
       } else {
-        transactionErrorMessage.value = 'Unknown failure.';
+        transactionError.value = 'Unknown failure.';
       }
     }
-
-    executingRequest.value = false;
   };
 
+  const { active: requestTransactionActive, run: runExecuteRequestTransaction } =
+    createAsyncProcess(executeRequestTransaction);
   return {
-    executingRequest,
-    transactionErrorMessage,
+    requestTransactionActive,
+    transactionError,
     successfulTransactionUrl,
-    executeRequestTransaction,
+    executeRequestTransaction: runExecuteRequestTransaction,
   };
 }
