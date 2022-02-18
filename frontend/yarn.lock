@@ -551,20 +551,97 @@
     "@ethersproject/properties" "^5.5.0"
     "@ethersproject/strings" "^5.5.0"
 
+"@floating-ui/core@^0.3.0":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@floating-ui/core/-/core-0.3.1.tgz#3dde0ad0724d4b730567c92f49f0950910e18871"
+  integrity sha512-ensKY7Ub59u16qsVIFEo2hwTCqZ/r9oZZFh51ivcLGHfUwTn8l1Xzng8RJUe91H/UP8PeqeBronAGx0qmzwk2g==
+
+"@floating-ui/dom@^0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@floating-ui/dom/-/dom-0.1.10.tgz#ce304136a52c71ef157826d2ebf52d68fa2deed5"
+  integrity sha512-4kAVoogvQm2N0XE0G6APQJuCNuErjOfPW8Ux7DFxh8+AfugWflwVJ5LDlHOwrwut7z/30NUvdtHzQ3zSip4EzQ==
+  dependencies:
+    "@floating-ui/core" "^0.3.0"
+
 "@fontsource/sora@^4.5.1":
   version "4.5.1"
   resolved "https://registry.yarnpkg.com/@fontsource/sora/-/sora-4.5.1.tgz#2bf6a815074fe4db61930050f0db392bc3ccbb8e"
   integrity sha512-NCtO8MWU/t+Q3Gnm8Yjb3i8gLlayIUH/cWr8dz3GiNO82fCUs8RWov6hCFpUg5LMdTnVHNUjgtN1Xn1JsXqt4w==
 
-"@headlessui/vue@^1.4.3":
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/@headlessui/vue/-/vue-1.4.3.tgz#685898891cde4d8a38a01945d4d84855d5fe7224"
-  integrity sha512-cDAd3aP7jH5bO2WO4eSkyQQg0k6Zw8gobl+zL8LGApqix28EtlxultyKH/mVKnbo8Kiq6IDRzwP1HfKOf1QZbQ==
+"@formkit/core@1.0.0-beta.2", "@formkit/core@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/core/-/core-1.0.0-beta.2.tgz#8068459e4eaf63ee96bf98fad6d4bb07b0be8864"
+  integrity sha512-a/rAJP9GcCbK5Yvw4KYxM8BKOJfJL2xPfRH1nLz7sSPxqIuaK5pFSwBtRmUEH4UCKZac61UUBiH46QKHOXQpNA==
+  dependencies:
+    "@formkit/utils" "1.0.0-beta.2"
 
-"@heroicons/vue@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@heroicons/vue/-/vue-1.0.5.tgz#ccef02a9a75e47129a0b8faf5d1d93bd90723264"
-  integrity sha512-idWtp20Fjr7mqnD7EdGDUDi83oWHnx3SwyuQY6GZyF33OApzpBOLxz7xa4t6rPOddGz9tI5RGnndLk+ake7ijQ==
+"@formkit/dev@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/dev/-/dev-1.0.0-beta.2.tgz#112f48c870b70d612de0b26056b9939fd1b12587"
+  integrity sha512-ig6SH5P6xBE/YowNJ3tbCR5gFVVPLb0XphML6MPV1s9Tcf0MtxLOQOugUMSyTRt1DraUuna8FWHgDQ6NmbC7Hg==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/utils" "1.0.0-beta.2"
+
+"@formkit/i18n@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/i18n/-/i18n-1.0.0-beta.2.tgz#b329c0f76d5f4add84afb4e4a609c926e47a4c2b"
+  integrity sha512-CVM5pqaMyP4vd6ODsjk+JZBfQ6cRYnnyzSrldoX4QXkB1pU7TCsQiqTjhUEYmdFKSZKxh+L5OJo+NVQJrhHLwQ==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/utils" "1.0.0-beta.2"
+    "@formkit/validation" "1.0.0-beta.2"
+
+"@formkit/inputs@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/inputs/-/inputs-1.0.0-beta.2.tgz#0781d82c5580aa049d2eaaf6c8ff02795c0fe651"
+  integrity sha512-GWP78Mo/6yu1B7Q+eqMw2la0OU758HF7erUGBc0NuvsQ6fpObjJXxQGLkYMS1mldAUEdoNzEkp33uo6n1Gq9zg==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+
+"@formkit/observer@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/observer/-/observer-1.0.0-beta.2.tgz#7cd964c9565886c94a8a77a412d5a8db10f77d17"
+  integrity sha512-awVv5AEEyf2h+3/Ut26h3Hvfz33evN5KR+reAzl1LUPFZnHejUTXhAt3V7J8YZROQjJ2HPfLl8rTIVJMPhyvUw==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/utils" "1.0.0-beta.2"
+
+"@formkit/rules@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/rules/-/rules-1.0.0-beta.2.tgz#aeea19976a36bcac23bc9a624ba1252601e2c76f"
+  integrity sha512-6K+DeUvjIzDYzsCJMGvK4NykX99WltfGxFRNcRvE8rSI0IegZkpgvE5KB3I1y7v9XQm3Ifkeuwrva95cUnFy9Q==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/utils" "1.0.0-beta.2"
+    "@formkit/validation" "1.0.0-beta.2"
+
+"@formkit/utils@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/utils/-/utils-1.0.0-beta.2.tgz#de9aa9102bee5eb63f26ad184a4cf5500569c1b2"
+  integrity sha512-gdCZQFm6Lwr8rnDpdmmAPFQw8bpjP/U6dP3O3NJVw67ReAQSXcGRuvfCxK3IegB+GbnAVKevJkYX8pbVPoGk0Q==
+
+"@formkit/validation@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/validation/-/validation-1.0.0-beta.2.tgz#3211e9caf38172e47997eab9f0ea4d066e85cb40"
+  integrity sha512-K2CHQcdCwfmSa5arTIOSRwpoZmbxK5Q88KzPUmqr3ln4FHJuJjnxrxGd3tMvqbRmROXy0OGWwQMXtLpmWYU11Q==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/observer" "1.0.0-beta.2"
+
+"@formkit/vue@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@formkit/vue/-/vue-1.0.0-beta.2.tgz#9c2633cd709a0cbbb50d4c1f284dbf9fbd759124"
+  integrity sha512-ETWX0tycnUgPs8hfPL66BoCBLOngv1GNoX2h/Mqoh7LRfOeuuH4fIwguS5HVLv8U3Cr6H/VLxtY0EqXqcU5DKQ==
+  dependencies:
+    "@formkit/core" "1.0.0-beta.2"
+    "@formkit/dev" "1.0.0-beta.2"
+    "@formkit/i18n" "1.0.0-beta.2"
+    "@formkit/inputs" "1.0.0-beta.2"
+    "@formkit/observer" "1.0.0-beta.2"
+    "@formkit/rules" "1.0.0-beta.2"
+    "@formkit/utils" "1.0.0-beta.2"
+    "@formkit/validation" "1.0.0-beta.2"
 
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.3"
@@ -679,6 +756,13 @@
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@types/strip-json-comments/-/strip-json-comments-0.0.30.tgz#9aa30c04db212a9a0649d6ae6fd50accc40748a1"
   integrity sha512-7NQmHra/JILCd1QqpSzl8+mJRc8ZHz3uDm8YV1Ks9IhK0epEiTw8aIErbvH9PI+6XbqhyIQy3462nEsn7UVzjQ==
+
+"@types/vue-select@^3.16.0":
+  version "3.16.0"
+  resolved "https://registry.yarnpkg.com/@types/vue-select/-/vue-select-3.16.0.tgz#377d26d5e768c19a4863e101f36824df7e8c1592"
+  integrity sha512-eUNzHK8tY7fT6fWR3mcN3kq9BznRrFPFvmpBZ66DAz4k9aD27AwT54gvR58O9P+ql7/iC0yVvl5lUTjKZ7K1tA==
+  dependencies:
+    vue "^2.0.0"
 
 "@types/yargs-parser@*":
   version "20.2.1"
@@ -1155,7 +1239,7 @@ chokidar@^3.5.3:
   optionalDependencies:
     fsevents "~2.3.2"
 
-color-convert@^1.9.0:
+color-convert@^1.9.0, color-convert@^1.9.3:
   version "1.9.3"
   resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-1.9.3.tgz#bb71850690e1f136567de629d2d5471deda4c1e8"
   integrity sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==
@@ -1174,10 +1258,26 @@ color-name@1.1.3:
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.3.tgz#a7d0558bd89c42f795dd42328f740831ca53bc25"
   integrity sha1-p9BVi9icQveV3UIyj3QIMcpTvCU=
 
-color-name@^1.1.4, color-name@~1.1.4:
+color-name@^1.0.0, color-name@^1.1.4, color-name@~1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
+
+color-string@^1.6.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/color-string/-/color-string-1.9.0.tgz#63b6ebd1bec11999d1df3a79a7569451ac2be8aa"
+  integrity sha512-9Mrz2AQLefkH1UvASKj6v6hj/7eWgjnT/cVsR8CumieLoT+g900exWeNogqtweI8dxloXN9BDQTYro1oWu/5CQ==
+  dependencies:
+    color-name "^1.0.0"
+    simple-swizzle "^0.2.2"
+
+color@^3.1.3:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/color/-/color-3.2.1.tgz#3544dc198caf4490c3ecc9a790b54fe9ff45e164"
+  integrity sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA==
+  dependencies:
+    color-convert "^1.9.3"
+    color-string "^1.6.0"
 
 concat-map@0.0.1:
   version "0.0.1"
@@ -1839,6 +1939,14 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.4.tgz#28d9969ea90661b5134259f312ab6aa7929ac5e2"
   integrity sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==
 
+floating-vue@^2.0.0-beta.6:
+  version "2.0.0-beta.6"
+  resolved "https://registry.yarnpkg.com/floating-vue/-/floating-vue-2.0.0-beta.6.tgz#fbb0cfa096e54bac11fe846e6ce001c6bd69fd95"
+  integrity sha512-coDzBja+fq3EKFbfljrE67YDIiTszmbdxnaWz3VzJqrs0Xc5ZIzTBya0kIOnndt3BPCeWGB4DIwaSG9r4nHGpg==
+  dependencies:
+    "@floating-ui/dom" "^0.1.10"
+    vue-resize "^2.0.0-alpha.1"
+
 fraction.js@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/fraction.js/-/fraction.js-4.1.2.tgz#13e420a92422b6cf244dff8690ed89401029fbe8"
@@ -2036,6 +2144,11 @@ is-arrayish@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
   integrity sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=
+
+is-arrayish@^0.3.1:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.3.2.tgz#4574a2ae56f7ab206896fb431eaeed066fdf8f03"
+  integrity sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ==
 
 is-bigint@^1.0.1:
   version "1.0.4"
@@ -2681,6 +2794,13 @@ side-channel@^1.0.4:
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
 
+simple-swizzle@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/simple-swizzle/-/simple-swizzle-0.2.2.tgz#a4da6b635ffcccca33f70d17cb92592de95e557a"
+  integrity sha1-pNprY1/8zMoz9w0Xy5JZLeleVXo=
+  dependencies:
+    is-arrayish "^0.3.1"
+
 slash@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-3.0.0.tgz#6539be870c165adbd5240220dbe361f1bc4d4634"
@@ -2788,6 +2908,14 @@ supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
+
+tailwindcss-ripple@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/tailwindcss-ripple/-/tailwindcss-ripple-0.7.1.tgz#19621b61d8e4169fc021d38c718ce4273cadea9f"
+  integrity sha512-IYGgln+rNGV51dhBQUx0JD882fjtw1zEA7e99Wtc7ZIq6mLbXDuQ0RXraDpq0SWW5j0ys/DaMHKYPdwZXZLsug==
+  dependencies:
+    color "^3.1.3"
+    lodash "^4.17.21"
 
 tailwindcss@^3:
   version "3.0.18"
@@ -2960,12 +3088,27 @@ vue-jest@^5.0.0-0:
     source-map "0.5.6"
     tsconfig "^7.0.0"
 
+vue-resize@^2.0.0-alpha.1:
+  version "2.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/vue-resize/-/vue-resize-2.0.0-alpha.1.tgz#43eeb79e74febe932b9b20c5c57e0ebc14e2df3a"
+  integrity sha512-7+iqOueLU7uc9NrMfrzbG8hwMqchfVfSzpVlCMeJQe4pyibqyoifDNbKTZvwxZKDvGkB+PdFeKvnGZMoEb8esg==
+
 vue-router@^4.0.0-0:
   version "4.0.12"
   resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.0.12.tgz#8dc792cddf5bb1abcc3908f9064136de7e13c460"
   integrity sha512-CPXvfqe+mZLB1kBWssssTiWg4EQERyqJZes7USiqfW9B5N2x+nHlnsM1D3b5CaJ6qgCvMmYJnz+G0iWjNCvXrg==
   dependencies:
     "@vue/devtools-api" "^6.0.0-beta.18"
+
+vue-select@^4.0.0-beta.2:
+  version "4.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-4.0.0-beta.2.tgz#767c07a3ef4cf23cdebc4b050f3054bc2a0425da"
+  integrity sha512-uR7Jn6dkfaFbvbXfKKp6s//ArkbP+U4mK432D6rbsQKk6NfG9J7Nwe0jonzQdttfHPuBPCiw0PV8nnWmpY5jtg==
+
+vue@^2.0.0:
+  version "2.6.14"
+  resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.14.tgz#e51aa5250250d569a3fbad3a8a5a687d6036e235"
+  integrity sha512-x2284lgYvjOMj3Za7kqzRcUSxBboHqtgRE2zlos1qWaOye5yUmHn42LB1250NJBLRwEcdrB0JRwyPTEPhfQjiQ==
 
 vue@^3.2.26:
   version "3.2.29"
