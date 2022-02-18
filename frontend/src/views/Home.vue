@@ -1,13 +1,18 @@
 <template>
-  <div class="home">
-    <div v-if="criticalErrorMessage" class="home__error">{{ criticalErrorMessage }}</div>
-    <RequestDialog v-else-if="ethereumProvider" />
+  <div class="home flex justify-center pt-56">
+    <div class="max-w-2xl flex-auto">
+      <Card v-if="criticalErrorMessage" class="text-center text-orange-dark">
+        {{ criticalErrorMessage }}
+      </Card>
+      <RequestDialog v-else-if="ethereumProvider" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef } from 'vue';
 
+import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
@@ -38,9 +43,3 @@ onMounted(async () => {
   }
 });
 </script>
-
-<style lang="scss" scoped>
-.home {
-  width: 600px;
-}
-</style>

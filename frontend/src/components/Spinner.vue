@@ -1,24 +1,12 @@
 <template>
-  <div class="spinner" />
+  <div
+    class="
+      w-full
+      h-full
+      bg-transparent
+      rounded-50
+      border-4 border-solid border-transparent border-t-solid border-t-teal-light
+      animate-spin
+    "
+  />
 </template>
-
-<style scoped lang="scss">
-@import '@/scss/colors';
-@import '@/scss/animations';
-
-.spinner {
-  border: solid transparent;
-  border-top: solid $text-color;
-  border-width: 4px;
-  border-radius: 50%;
-  width: 100%;
-  height: 100%;
-  animation: $spinning-animation;
-  background-color: transparent;
-}
-
-.delay-enter-active {
-  opacity: 0;
-  transition-delay: 1.5s;
-}
-</style>
