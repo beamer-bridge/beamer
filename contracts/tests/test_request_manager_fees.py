@@ -1,15 +1,14 @@
 import brownie
-from brownie import accounts, chain, web3
+from brownie import chain, web3
 
-from contracts.tests.utils import make_request
-
+from contracts.tests.utils import alloc_accounts, make_request
 
 RM_FIELD_LP_FEE = 9
 RM_FIELD_RAISYNC_FEE = 10
 
 
 def test_fee_split_works(request_manager, token, claim_stake, claim_period):
-    requester, claimer = accounts[:2]
+    requester, claimer = alloc_accounts(2)
     transfer_amount = 23
 
     request_id = make_request(request_manager, token, requester, transfer_amount, zero_fees=False)
@@ -42,9 +41,10 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
 
 
 def test_raisync_service_fee_withdrawable_by_owner(
-    request_manager, token, claim_stake, claim_period
+    deployer, request_manager, token, claim_stake, claim_period
 ):
-    owner, requester, claimer = accounts[:3]
+    owner = deployer
+    requester, claimer = alloc_accounts(2)
     raisync_fee = request_manager.raisyncServiceFee()
     request_id = make_request(request_manager, token, requester, 23, zero_fees=False)
 
@@ -72,8 +72,8 @@ def test_raisync_service_fee_withdrawable_by_owner(
     assert web3.eth.get_balance(owner.address) == owner_eth + raisync_fee
 
 
-def test_fee_gas_price_updatable_by_owner(request_manager, token):
-    owner, requester = accounts[:2]
+def test_fee_gas_price_updatable_by_owner(deployer, request_manager, token):
+    (requester,) = alloc_accounts(1)
     make_request(request_manager, token, requester, 23, zero_fees=False)
 
     old_gas_price = request_manager.gasPrice()
@@ -84,13 +84,13 @@ def test_fee_gas_price_updatable_by_owner(request_manager, token):
     with brownie.reverts("Ownable: caller is not the owner"):
         request_manager.updateFeeData(new_gas_price, 45_000, {"from": requester})
 
-    request_manager.updateFeeData(new_gas_price, 45_000, {"from": owner})
+    request_manager.updateFeeData(new_gas_price, 45_000, {"from": deployer})
     assert request_manager.gasPrice() == new_gas_price
     assert request_manager.totalFee() == 2 * old_fee
 
 
 def test_fee_reimbursed_on_expiration(request_manager, token):
-    _, requester = accounts[:2]
+    (requester,) = alloc_accounts(1)
     transfer_amount = 23
     validity_period = 60
 

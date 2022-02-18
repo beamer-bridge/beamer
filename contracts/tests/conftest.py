@@ -27,7 +27,7 @@ class Contracts:
 
 @pytest.fixture
 def deployer():
-    return accounts[0]
+    return alloc_accounts(1)[0]
 
 
 @pytest.fixture
