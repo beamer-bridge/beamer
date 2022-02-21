@@ -271,7 +271,11 @@ class EventProcessor:
                 self._try_withdraw(claim)
 
     def _compute_challenge_stake(self, claim: ClaimMade) -> Wei:  # pylint:disable=no-self-use
-        return Wei(max(claim.claimer_stake, claim.challenger_stake) + 1)
+        stake_increase = 1
+        if claim.challenger_stake == 0:
+            # we challenge with enough stake for L1 resolution
+            stake_increase = 10 ** 15
+        return Wei(max(claim.claimer_stake, claim.challenger_stake) + stake_increase)
 
     def _maybe_challenge(self, request: Request, claim: ClaimMade) -> None:
         # We need to challenge if either of the following is true:
