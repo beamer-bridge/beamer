@@ -23,7 +23,7 @@ contract RequestManager is Ownable {
         address targetTokenAddress;
         address targetAddress;
         uint256 amount;
-        address depositWithdrawn;
+        address depositReceiver;
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
@@ -167,7 +167,7 @@ contract RequestManager is Ownable {
         newRequest.targetTokenAddress = targetTokenAddress;
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
-        newRequest.depositWithdrawn = address(0);
+        newRequest.depositReceiver = address(0);
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
         newRequest.raisyncFee = raisyncFee;
@@ -190,11 +190,11 @@ contract RequestManager is Ownable {
     function withdrawExpiredRequest(uint256 requestId) external validRequestId(requestId) {
         Request storage request = requests[requestId];
 
-        require(request.depositWithdrawn == address(0), "Deposit already withdrawn");
+        require(request.depositReceiver == address(0), "Deposit already withdrawn");
         require(block.timestamp >= request.validUntil, "Request not expired yet");
         require(request.activeClaims == 0, "Active claims running");
 
-        request.depositWithdrawn = request.sender;
+        request.depositReceiver = request.sender;
 
         emit DepositWithdrawn(requestId, request.sender);
 
@@ -209,7 +209,7 @@ contract RequestManager is Ownable {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");
-        require(request.depositWithdrawn == address(0), "Deposit already withdrawn");
+        require(request.depositReceiver == address(0), "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
 
         request.activeClaims += 1;
@@ -262,7 +262,7 @@ contract RequestManager is Ownable {
         }
 
         require(msg.sender == nextActor, "Not eligible to outbid");
-        require(msg.value > minValue, "Not enough funds provided");
+        require(msg.value > minValue, "Not enough stake provided");
 
         if (nextActor == claim.claimer) {
             claim.claimerStake += msg.value;
@@ -289,9 +289,6 @@ contract RequestManager is Ownable {
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Claim already withdrawn");
 
-        address claimReceiver;
-        address depositWithdrawn = request.depositWithdrawn;
-
         bytes32 fillHash = RaisyncUtils.createFillHash(
                 claim.requestId,
                 block.chainid,
@@ -301,27 +298,51 @@ contract RequestManager is Ownable {
                 request.amount,
                 claim.fillId
             );
-        
-        address filler = (depositWithdrawn != address(0)) ? depositWithdrawn : resolutionRegistry.fillers(fillHash);
+
+        address claimReceiver;
+        address depositReceiver = request.depositReceiver;
+
+        // Priority list for claim settlement, settlement according to
+        // 1) resolutionRegistry entry, the filler
+        // 2) depositReceiver, the address that withdrew the deposit with a valid claim
+        // 3) claim properties
+        address filler = resolutionRegistry.fillers(fillHash);
+        if(filler == address(0)) {
+            filler = depositReceiver;
+        }
 
         if (filler == address(0)) {
-            // no L1 resolution
+            // Claim resolution via claim properties
             require(block.timestamp >= claim.termination, "Claim period not finished");
             claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
         } else if (filler != claim.claimer) {
-            // L1 resolution has been triggered but claim is incorrect
+            // Claim resolution via 1) or 2) but claim is invalid (challenger wins challenge)
             claimReceiver = claim.challenger;
         } else {
-            // claim is proved via L1
+            // Claim resolution via 1) or 2) and claim is valid (claimer wins challenge)
             claimReceiver = claim.claimer;
         }
 
         claim.withdrawn = true;
         request.activeClaims -= 1;
 
-        if (depositWithdrawn == address(0) && claimReceiver == claim.claimer) {
-            request.depositWithdrawn = claimReceiver;
+        if (depositReceiver == address(0) && claimReceiver == claim.claimer) {
             withdraw_deposit(claimId, request, claim, claimReceiver);
+        }
+
+        // The claim is set the `withdrawn` state above, so the following effects
+        // needs to happen afterwards to avoid reentrency problems
+        uint256 ethToTransfer = claim.claimerStake + claim.challengerStake;
+
+        // The unlikely event is possible that a false claim has no challenger
+        // If it is known that the claim is false then the claim stake goes to the platform
+        if(claimReceiver != address(0)) {
+            (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
+            require(sent, "Failed to send Ether");
+        }
+        else {
+            collectedRaisyncFees += ethToTransfer;
+            claimReceiver = address(this);
         }
 
         emit ClaimWithdrawn(
@@ -329,11 +350,6 @@ contract RequestManager is Ownable {
             claim.requestId,
             claimReceiver
         );
-        // The claim is set the `withdrawn` state above, so the following effects
-        // needs to happen afterwards to avoid reentrency problems
-        uint256 ethToTransfer = claim.claimerStake + claim.challengerStake;
-        (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
-        require(sent, "Failed to send Ether");
 
         return claimReceiver;
     }
@@ -342,19 +358,20 @@ contract RequestManager is Ownable {
         uint256 claimId,
         Request storage request,
         Claim storage claim,
-        address claimReceiver
+        address depositReceiver
     ) private {
         collectedRaisyncFees += request.raisyncFee;
 
         emit DepositWithdrawn(
             claim.requestId,
-            claimReceiver
+            depositReceiver
         );
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        token.safeTransfer(claimReceiver, request.amount);
+        token.safeTransfer(depositReceiver, request.amount);
+        request.depositReceiver = depositReceiver;
 
-        (bool sent,) = claimReceiver.call{value: request.lpFee}("");
+        (bool sent,) = depositReceiver.call{value: request.lpFee}("");
         require(sent, "Failed to send Ether");
     }
 
