@@ -79,8 +79,8 @@ contract RequestManager is Ownable {
     uint256 public challengePeriod;
     uint256 public challengePeriodExtension;
 
-    uint256 public constant minValidityPeriod = 1 minutes;
-    uint256 public constant maxValidityPeriod = 520 weeks;
+    uint256 public constant minValidityPeriod = 5 minutes;
+    uint256 public constant maxValidityPeriod = 52 weeks;
 
     // Variables
     uint256 public requestCounter;
