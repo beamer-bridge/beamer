@@ -37,9 +37,9 @@ def main() -> None:
     )
     save_contract_address(OPTIMISM_PROOF_SUBMITTER, proof_submitter.address)
 
-    claim_stake = Wei("0.01 ether")
+    claim_stake = Wei("0.00047 ether")
     claim_period = 60 * 60  # 1 hour
-    challenge_period = 60 * 60 * 5  # 5 hours
+    challenge_period = (7 * 24 + 1) * 60 * 60  # 7 days + 1 hour
     challenge_period_extension = 60 * 60  # 1 hour
     request_manager = RequestManager.deploy(
         claim_stake,
