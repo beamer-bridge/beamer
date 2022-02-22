@@ -92,7 +92,7 @@ def test_fee_gas_price_updatable_by_owner(deployer, request_manager, token):
 def test_fee_reimbursed_on_expiration(request_manager, token):
     (requester,) = alloc_accounts(1)
     transfer_amount = 23
-    validity_period = 60
+    validity_period = 60 * 5
 
     requester_eth = web3.eth.get_balance(requester.address)
 
