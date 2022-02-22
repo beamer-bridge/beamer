@@ -634,7 +634,7 @@ def test_withdraw_without_challenge_with_resolution(
 
 def test_withdraw_expired(token, request_manager):
     """Test that a request can be withdrawn once it is expired"""
-    validity_period = 60
+    validity_period = 60 * 5
     (requester,) = alloc_accounts(1)
 
     amount = 17
@@ -654,7 +654,7 @@ def test_withdraw_expired(token, request_manager):
 
 def test_withdraw_before_expiration(token, request_manager):
     """Test that a request cannot be withdrawn before it is expired"""
-    validity_period = 60
+    validity_period = 60 * 5
     (requester,) = alloc_accounts(1)
 
     request_id = make_request(
