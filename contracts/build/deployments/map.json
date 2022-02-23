@@ -3,6 +3,9 @@
     "FillManager": [
       "0x0d75FCa9Cc2C91FEae8584B2509794c2d97Db221"
     ],
+    "MintableToken": [
+      "0x2De6a0f9dDFCb338AF1a126Dc77af9a245bBc83d"
+    ],
     "OptimismProofSubmitter": [
       "0xa58D5248Eb27E058075B6869993eCb859B32bf42"
     ],
@@ -21,6 +24,9 @@
   "588": {
     "FillManager": [
       "0x4902373EA60Ed81332d6C597A60CB019c32F8d81"
+    ],
+    "MintableToken": [
+      "0xD184D3515e1817DDE870a2F30DEC29a8f1192414"
     ],
     "OptimismProofSubmitter": [
       "0xd813419D4a40bCfD4824447e3Fe479E06D0f071A"
