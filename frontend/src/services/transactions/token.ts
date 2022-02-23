@@ -18,3 +18,14 @@ export async function ensureTokenAllowance(
     await transaction.wait();
   }
 }
+
+export async function mint(
+  signer: DeepReadonly<JsonRpcSigner>,
+  tokenAddress: string,
+  amount: BigNumber,
+): Promise<void> {
+  const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
+  const signerAddress = await signer.getAddress();
+  const transaction = await tokenContract.mint(signerAddress, amount);
+  await transaction.wait();
+}
