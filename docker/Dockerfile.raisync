@@ -1,0 +1,10 @@
+FROM python:3.9
+
+COPY . /src
+RUN pip install shiv
+WORKDIR /src
+RUN mkdir -p dist && shiv -c raisync -o dist/raisync .
+
+FROM python:3.9-slim
+COPY --from=0 /src/dist/raisync /usr/bin/raisync
+ENTRYPOINT ["/usr/bin/raisync"]
