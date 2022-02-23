@@ -1,3 +1,5 @@
+.PHONY: dist-exe container-image
+
 CODE_DIRS = contracts/ raisync/ scripts/
 
 all: lint
@@ -14,3 +16,9 @@ black:
 
 format: black
 	isort $(CODE_DIRS)
+
+dist-exe:
+	shiv -c raisync -o dist/raisync .
+
+container-image:
+	docker image build -f docker/Dockerfile.raisync -t raisync .
