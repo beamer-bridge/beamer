@@ -24,7 +24,7 @@ from raisync.util import TokenMatchChecker
 
 def _load_ERC20_abi() -> list[Any]:
     path = pathlib.Path(__file__)
-    path = path.parent.parent.joinpath("contracts/abi/StandardToken.json")
+    path = path.parent.joinpath("data/abi/StandardToken.json")
     with path.open("rt") as fp:
         return json.load(fp)["abi"]
 
