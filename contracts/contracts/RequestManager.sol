@@ -15,7 +15,7 @@ contract RequestManager is Ownable {
 
     // Structs
     // TODO: check if we can use a smaller type for `targetChainId`, so that the
-    // fileds can be packed into one storage slot
+    // fields can be packed into one storage slot
     struct Request {
         address sender;
         address sourceTokenAddress;
