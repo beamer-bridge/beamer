@@ -1,15 +1,14 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { BigNumber } from 'ethers'
+import { BigNumber } from 'ethers';
 import { Ref, ref, ShallowRef } from 'vue';
 
-import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { registerFillListener } from '@/services/transactions/fill-manager';
+import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
 import { RaisyncConfig } from '@/types/config';
 import { Request, RequestState } from '@/types/data';
 import createAsyncProcess from '@/utils/create-async-process';
-
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function useGetFee(
@@ -19,23 +18,16 @@ export function useGetFee(
   const getFeeError = ref('');
   const fee = ref<number>();
 
-  const getFee = async (
-    request: Request,
-    signer: JsonRpcSigner,
-  ) => {
+  const getFee = async (request: Request, signer: JsonRpcSigner) => {
     getFeeError.value = '';
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
-      request.requestManagerAddress = chainConfig.requestManagerAddress
+      request.requestManagerAddress = chainConfig.requestManagerAddress;
 
-      const res = await getRequestFee(
-        signer,
-        request
-      );
+      const res = await getRequestFee(signer, request);
       fee.value = res;
-
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
@@ -46,8 +38,7 @@ export function useGetFee(
     }
   };
 
-  const { active: getFeeActive, run: runExecuteGetFee } =
-    createAsyncProcess(getFee);
+  const { active: getFeeActive, run: runExecuteGetFee } = createAsyncProcess(getFee);
   return {
     fee,
     getFeeActive,
@@ -62,17 +53,15 @@ export function useRequestTransaction(
   raisyncConfig: Ref<Readonly<RaisyncConfig>>,
 ) {
   const transactionError = ref('');
-  const requestState = ref<RequestState>(RequestState.WaitConfirm);
+  const requestState = ref<RequestState>(RequestState.Init);
 
-  const executeRequestTransaction = async (
-    request: Request,
-    signer: JsonRpcSigner,
-  ) => {
+  const executeRequestTransaction = async (request: Request, signer: JsonRpcSigner) => {
     transactionError.value = '';
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
+      request.sourceChainId = BigNumber.from(chainId);
       request.requestManagerAddress = chainConfig.requestManagerAddress;
       await ensureTokenAllowance(
         signer,
@@ -84,11 +73,7 @@ export function useRequestTransaction(
       // Modified Request with additional information based
       // on tx-receipt values and fee calculation
       // TODO make sure this really mutates the state of the request obj
-      await sendRequestTransaction(
-        signer,
-        request,
-	requestState,
-      );
+      await sendRequestTransaction(signer, request, requestState);
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
@@ -114,7 +99,6 @@ export function useWaitRequestFilled(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
   raisyncConfig: Ref<Readonly<RaisyncConfig>>,
 ) {
-
   const waitError = ref('');
 
   const executeWaitFulfilled = async (
@@ -125,22 +109,19 @@ export function useWaitRequestFilled(
     waitError.value = '';
 
     try {
+      requestState.value = RequestState.WaitSwitchChain;
       await ethereumProvider.value.switchChain(BigNumber.from(request.targetChainId));
-      // TODO make sure the chain is switched 
+      // TODO make sure the chain is switched and set:
+      // requestState.value = RequestState.FailedSwitchChain;
+	    //
       const chainId = ethereumProvider.value.chainId.value;
 
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
       request.fillManagerAddress = chainConfig.fillManagerAddress;
-      registerFillListener(
-	      signer,
-	      request,
-	      requestState,
-      )
+      registerFillListener(signer, request, requestState);
 
-      requestState.value = RequestState.WaitFulfill
+      requestState.value = RequestState.WaitFulfill;
       // TODO query for the RequestFilled event
-
-
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
@@ -159,4 +140,3 @@ export function useWaitRequestFilled(
     executeWaitFulfilled: runExecuteWaitFulfilled,
   };
 }
-

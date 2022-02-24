@@ -3,42 +3,78 @@
     <div class="flex flex-col justify-center items-center gap-4 text-black text-lg">
       <div class="flex flex-col justify-center items-center">
         <div>
-          Sending <span>{{ amount }}</span> <span>DAI</span>
+          Sending <span>{{ requestMetadata.amount }}</span>
+          <span>{{ requestMetadata.tokenSymbol }}</span>
         </div>
-        <div>from <span>Goerli</span></div>
-        <div>to <span>Goerli</span></div>
+        <div>
+          from <span>{{ requestMetadata.sourceChainName }}</span>
+        </div>
+        <div>
+          to <span>{{ requestMetadata.targetChainName }}</span>
+        </div>
       </div>
       <div class="flex flex-col justify-center items-center">
         <div>Recipient address</div>
-        <div>{{ targetAddress }}</div>
+        <div>{{ requestMetadata.targetAddress }}</div>
       </div>
     </div>
   </Card>
   <div class="flex flex-col justify-center items-center">
     <div>
       <ul class="steps steps-vertical">
-        <li data-content="" class="step step-success">Please confirm on Metamask</li>
-        <li data-content="" class="step step-warning">Request is being fulfilled</li>
-        <li data-content="" class="step">
+        <ProgressStep
+          :current-state="requestMetadata.state"
+          :trigger-state="RequestState.WaitConfirm"
+        >
+          Please confirm on Metamask
+        </ProgressStep>
+        <ProgressStep
+          :current-state="requestMetadata.state"
+          :trigger-state="RequestState.WaitSwitchChain"
+        >
+          Request is being fulfilled
+        </ProgressStep>
+        <ProgressStep
+          :current-state="requestMetadata.state"
+          :trigger-state="RequestState.WaitSwitchChain"
+        >
           <div class="flex flex-col justify-start items-start">
             <div>Please switch chain connection to verify funds reception</div>
-            <div class="text-orange-light">Chain switch failed. Try again.</div>
+            <div
+              v-if="requestMetadata.state === RequestState.FailedSwitchChain"
+              class="text-orange-light"
+            >
+              Chain switch failed. Try again.
+            </div>
           </div>
-        </li>
-        <li data-content="" class="step">Verifying...</li>
-        <li data-content="" class="step">Transfer completed</li>
+        </ProgressStep>
+        <ProgressStep
+          :current-state="requestMetadata.state"
+          :trigger-state="RequestState.WaitFulfill"
+        >
+          Verifying...
+        </ProgressStep>
+        <ProgressStep
+          :current-state="requestMetadata.state"
+          :trigger-state="RequestState.RequestSuccessful"
+        >
+          Transfer completed
+        </ProgressStep>
       </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { defineProps, Ref } from 'vue';
+
+import { RequestMetadata, RequestState } from '@/types/data';
+
 import Card from './layout/Card.vue';
+import ProgressStep from './layout/ProgressStep.vue';
 
 interface Props {
-  readonly targetAddress: string;
-  readonly amount: string;
+  readonly requestMetadata: RequestMetadata;
 }
-
 defineProps<Props>();
 </script>
