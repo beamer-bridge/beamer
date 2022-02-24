@@ -28,11 +28,11 @@ contract FillManager is Ownable {
         address lp
     );
 
-    address l1Resolver;
-    IProofSubmitter proofSubmitter;
+    address public l1Resolver;
+    IProofSubmitter public proofSubmitter;
 
-    mapping(bytes32 => bool) fills;
-    mapping(address => bool) allowedLPs;
+    mapping(bytes32 => bool) public fills;
+    mapping(address => bool) public allowedLPs;
 
     constructor(address _l1Resolver, address _proofSubmitter)
     {
