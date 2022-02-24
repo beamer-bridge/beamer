@@ -1,25 +1,38 @@
-import { TransactionReceipt} from '@ethersproject/providers';
-import { BigNumber} from 'ethers';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { BigNumber } from 'ethers';
+import { Ref } from 'vue';
 
 export enum RequestState {
+  Init,
   WaitConfirm,
-  WaitTransaction,
+  WaitSwitchChain,
+  FailedSwitchChain,
   WaitFulfill,
-  Successful,
-  Failed,
+  RequestSuccessful,
+  RequestFailed,
 }
 
 export interface Request {
-	state: RequestState,
-	amount: BigNumber,
-	sourceTokenAddress: string,
-	targetAddress: string,
-	targetChainId: BigNumber,
-	targetTokenAddress: string,
-	// Optional
-	requestManagerAddress?: string,
-	fillManagerAddress?: string,
-	requestId?: BigNumber,
-	receipt?: TransactionReceipt,
-	fee?: number,
+  amount: BigNumber;
+  sourceTokenAddress: string;
+  sourceChainId: BigNumber;
+  targetAddress: string;
+  targetChainId: BigNumber;
+  targetTokenAddress: string;
+  // Optional
+  requestManagerAddress?: string;
+  fillManagerAddress?: string;
+  requestId?: BigNumber;
+  receipt?: TransactionReceipt;
+  fee?: number;
+}
+
+export interface RequestMetadata {
+  state: Ref<RequestState>;
+  amount: string;
+  sourceChainName: string;
+  targetAddress: string;
+  targetChainName: string;
+  tokenSymbol: string;
+  fee: string;
 }
