@@ -3,9 +3,11 @@ import pathlib
 import signal
 
 import eth_account
-
+import pytest
 from click.testing import CliRunner
 from raisync.cli import main
+
+from raisync.util import TokenMatchChecker
 
 
 def test_cli(config, tmp_path):
@@ -41,3 +43,27 @@ def test_cli(config, tmp_path):
         ],
     )
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    "token_chain_ids_validity",
+    [(["28", "588"], True), (["10", "42161", "288"], True), (["10", "28", "588"], False)],
+)
+def test_token_lists_validity(token_chain_ids_validity):
+    token_address = "0x0000000000000000000000000000000000000001"
+    token_chain_ids, valid = token_chain_ids_validity
+    tokens = [
+        # Parametrized token map
+        [[chain_id, token_address] for chain_id in token_chain_ids],
+        # Valid token map
+        [
+            ["28", "0x2De6a0f9dDFCb338AF1a126Dc77af9a245bBc83d"],
+            ["588", "0xD184D3515e1817DDE870a2F30DEC29a8f1192414"],
+        ],
+    ]
+
+    if not valid:
+        with pytest.raises(AssertionError):
+            TokenMatchChecker(tokens)
+    else:
+        TokenMatchChecker(tokens)
