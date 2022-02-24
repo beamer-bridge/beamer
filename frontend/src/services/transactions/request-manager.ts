@@ -1,27 +1,62 @@
 import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
-import { DeepReadonly } from 'vue';
+import { BigNumber, Contract} from 'ethers';
+import { DeepReadonly, ref, Ref } from 'vue';
 
+import {Request, RequestState} from '@/types/data'
 import RequestManager from '@/assets/RequestManager.json';
+
+
+function findFirstEvent(receipt: TransactionReceipt, eventName: string){
+  const isRequestCreated = (e) => {
+	  if ("undefined" === typeof(e["event"])) {
+		  return false
+	  }
+	  console.log(e.event)
+	  return e.event === eventName 
+  }
+  return receipt.events.find(isRequestCreated);
+}
+
+
+export async function getRequestFee(
+  signer: DeepReadonly<JsonRpcSigner>,
+  request: Request,
+): Promise<number> {
+  const requestManagerContract = new Contract(request.requestManagerAddress, RequestManager.abi, signer);
+  return await requestManagerContract.totalFee();
+}
 
 export async function sendRequestTransaction(
   signer: DeepReadonly<JsonRpcSigner>,
-  requestManagerAddress: string,
-  targetChainId: BigNumber,
-  sourceTokenAddress: string,
-  targetTokenAddress: string,
-  targetAddress: string,
-  amount: BigNumber,
-): Promise<TransactionReceipt> {
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
-  const fee = await requestManagerContract.totalFee();
+  request: Request,
+  requestState: Ref<RequestState>
+): Promise<Request> {
+  // TODO handle requestManagerAddress undefined
+  if (!request.fee){
+  	request.fee = await getRequestFee(signer, request);
+  }
+  const requestManagerContract = new Contract(request.requestManagerAddress, RequestManager.abi, signer);
+  requestState.value = RequestState.WaitConfirm
   const transaction: TransactionResponse = await requestManagerContract.createRequest(
-    targetChainId,
-    sourceTokenAddress,
-    targetTokenAddress,
-    targetAddress,
-    amount,
-    { value: fee },
+    request.targetChainId,
+    request.sourceTokenAddress,
+    request.targetTokenAddress,
+    request.targetAddress,
+    request.amount,
+    { value: request.fee },
   );
-  return await transaction.wait();
+
+  requestState.value = RequestState.WaitTransaction;
+  const transactionReceipt = await transaction.wait();
+  request.receipt = transactionReceipt;
+
+  //events is addded dynamically when wait method called!
+  // TODO verification of other args?
+const event = findFirstEvent(request.receipt, "RequestCreated")
+if (!event) {
+	//TODO error
+
+}
+  request.requestId = event.args.requestId
+  return request;
 }

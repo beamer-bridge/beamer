@@ -6,6 +6,7 @@ export type RaisyncConfig = {
 
 export type ChainConfig = {
   requestManagerAddress: string;
+  fillManagerAddress: string;
   explorerTransactionUrl: string;
   tokens: Token[];
 };
