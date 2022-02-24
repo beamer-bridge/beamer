@@ -16,9 +16,9 @@
       :actions="false"
       @submit="submitRequestTransaction"
     >
-      <Card class="self-stretch mb-11">
-        <RequestFormInputs />
-
+      <Card class="bg-teal px-20 pt-18 pb-14 self-stretch mb-11">
+        <RequestFormInputs v-if="!isProcessing" />
+        <RequestProcessing  v-else />
         <Transition name="expand">
           <div v-if="shownError()" class="mt-7 text-right text-lg text-orange-dark">
             {{ shownError() }}
@@ -27,7 +27,7 @@
       </Card>
       <FormKit
         v-if="!ethereumProvider.signer.value"
-        input-class="w-112 ripple-bg-orange flex flex-row justify-center"
+        input-class="w-112 bg-orange flex flex-row justify-center"
         type="button"
         @click="requestSigner"
       >
@@ -36,7 +36,7 @@
         </div>
         <template v-else>Connect MetaMask Wallet</template>
       </FormKit>
-      <FormKit v-else class="w-72 flex flex-row justify-center" type="submit" :disabled="!valid">
+      <FormKit v-else class="w-72 flex flex-row justify-center bg-green" type="submit" :disabled="!valid">
         <div v-if="requestTransactionActive" class="h-8 w-8">
           <spinner></spinner>
         </div>
@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { BigNumber } from 'ethers';
+import { ref } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
@@ -58,6 +59,8 @@ import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
 import type { RequestFormResult, SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
 
+import RequestProcessing from './RequestProcessing.vue';
+
 const ethereumProvider = injectStrict(EthereumProviderKey);
 const raisyncConfig = injectStrict(RaisyncConfigKey);
 
@@ -65,6 +68,8 @@ const { requestTransactionActive, executeRequestTransaction, transactionError } 
   useRequestTransaction(ethereumProvider, raisyncConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
+
+const isProcessing = ref(false);
 
 // TODO improve types
 const submitRequestTransaction = (formResult: {
@@ -81,9 +86,17 @@ const submitRequestTransaction = (formResult: {
     targetAddress: formResult.toAddress,
     amount: BigNumber.from(formResult.amount),
   };
+
   executeRequestTransaction(result, ethereumProvider.value.signer.value!);
+  isProcessing.value = true;
 };
-const shownError = () => requestSignerError.value || transactionError.value;
+const shownError = () => {
+  const error = requestSignerError.value || transactionError.value;
+  if(error) {
+    isProcessing.value = false;
+  }
+  return error;
+}
 
 // TODO show block explorer URL on successful tx screen
 // TODO prefill address with account address
