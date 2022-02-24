@@ -10,6 +10,7 @@ from typing import Any, Callable
 import structlog
 import web3
 from eth_utils import is_checksum_address
+from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3.contract import Contract
 from web3.types import Wei
@@ -316,8 +317,18 @@ class EventProcessor:
 
     def _fill_request(self, request: Request) -> None:
         w3 = self._fill_manager.web3
-        token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
 
+        # Check if the address points to a valid token
+        if w3.eth.get_code(request.target_token_address) == HexBytes("0x"):
+            self._log.info(
+                "Request unfillable, invalid token contract",
+                request=request,
+                token_address=request.target_token_address,
+            )
+            request.ignore()
+            return
+
+        token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
         address = w3.eth.default_account
         balance = token.functions.balanceOf(address).call()
         if balance < request.amount:
