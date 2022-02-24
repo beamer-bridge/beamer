@@ -1,11 +1,10 @@
-import json
 import logging
 import os
 import sys
-from typing import TextIO
+from typing import List
 
 import structlog
-from eth_utils import is_checksum_address
+from eth_utils import is_checksum_address, to_checksum_address
 
 from raisync.typing import ChainId, ChecksumAddress
 
@@ -44,16 +43,39 @@ def setup_logging(log_level: str, log_json: bool) -> None:
 
 _Token = tuple[ChainId, ChecksumAddress]
 
+# dictionary from base chain ID to deployed roll up IDs
+SUPPORTED_CONNECTED_L2S = {
+    # Mainnet
+    1: frozenset({10, 42161, 288, 1088}),  # Optimism, Arbitrum, Boba, Metis
+    # Rinkeby
+    4: frozenset({421611, 28, 588}),  # Arbitrum, Boba, Metis
+    # Goerli
+    5: frozenset({420}),  # Optimism
+    # Kovan
+    42: frozenset({69}),  # Optimism
+}
+
 
 class TokenMatchChecker:
-    def __init__(self, f: TextIO) -> None:
+    def __init__(self, tokens: List[List[List[str]]]) -> None:
         # A mapping of tokens to equivalence classes. Each frozenset contains
         # tokens that are considered mutually equivalent.
         self._tokens: dict[_Token, frozenset[_Token]] = {}
 
-        data = json.load(f)
-        for equiv_class in data:
-            equiv_class = frozenset((chain_id, address) for (chain_id, address) in equiv_class)
+        for token_mapping in tokens:
+            equiv_class = frozenset(
+                (ChainId(int(token[0])), to_checksum_address(token[1])) for token in token_mapping
+            )
+            l2_chain_ids = frozenset(chain_id for chain_id, _ in equiv_class)
+
+            # check if equiv class contains chain ids from different base layers
+            for connected_l2s in SUPPORTED_CONNECTED_L2S.values():
+                intersection = connected_l2s.intersection(l2_chain_ids)
+                if len(intersection) > 0:
+                    msg = f"""All tokens' L2 chains must share the same base chain.
+                     Please check {l2_chain_ids}"""
+                    assert intersection == l2_chain_ids, msg
+
             for token in equiv_class:
                 assert is_checksum_address(token[1])
                 self._tokens[token] = equiv_class
