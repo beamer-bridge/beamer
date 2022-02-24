@@ -48,9 +48,9 @@
         messages-class="hidden"
       />
     </div>
-    <div class="self-end flex flex-row gap-5 items-center text-2xl text-light">
+    <div v-if="fees" class="self-end flex flex-row gap-5 items-center text-2xl text-light">
       <span>fees</span>
-      <span>TODO ETH</span>
+      <span> {{fees}} ETH</span>
       <img
         v-tooltip.right="
           'This window appears when hovering the info (?) button. Here we confirm to the user that they are charged a certain fee, not an estimate. We briefly detail how this is done. We confirm that the funds they send are the funds the get on the other end.'
@@ -71,6 +71,12 @@ import { injectStrict } from '@/utils/vue-utils';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
 const raisyncConfig = injectStrict(RaisyncConfigKey);
+
+interface Props {
+  readonly fees: string;
+}
+
+defineProps<Props>();
 
 const CHAINS: SelectorOption[] = [];
 Object.keys(raisyncConfig.value.chains).forEach((chain) => {
