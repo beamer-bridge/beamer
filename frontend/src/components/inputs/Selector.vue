@@ -47,7 +47,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-console.log(props.context.value);
 </script>
 
 <style lang="css">
@@ -74,7 +73,7 @@ console.log(props.context.value);
 }
 
 .selector .vs__dropdown-option {
-  @apply pr-8;
+  @apply px-8;
 }
 
 .selector .vs__dropdown-option--highlight {
@@ -82,7 +81,7 @@ console.log(props.context.value);
 }
 
 .selector .vs__selected-options {
-  @apply p-0 m-0 flex-nowrap;
+  @apply p-0 m-0 pl-4 flex-nowrap;
 }
 
 .selector .vs__option-image {
@@ -98,7 +97,7 @@ console.log(props.context.value);
 }
 
 .selector .vs__actions {
-  @apply py-0 pr-1 pl-[6px];
+  @apply py-0 pr-5 pl-[6px];
 }
 
 .selector .vs__open-indicator {
