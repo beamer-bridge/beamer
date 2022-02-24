@@ -20,6 +20,14 @@ contract FillManager is Ownable {
         uint256 amount
     );
 
+    event LPAdded(
+        address lp
+    );
+
+    event LPRemoved(
+        address lp
+    );
+
     address l1Resolver;
     IProofSubmitter proofSubmitter;
 
@@ -66,9 +74,13 @@ contract FillManager is Ownable {
 
     function addAllowedLP(address newLP) public onlyOwner {
         allowedLPs[newLP] = true;
+
+        emit LPAdded(newLP);
     }
 
     function removeAllowedLP(address oldLP) public onlyOwner {
         delete allowedLPs[oldLP];
+
+        emit LPRemoved(oldLP);
     }
 }

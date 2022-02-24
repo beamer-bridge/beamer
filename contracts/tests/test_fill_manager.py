@@ -10,7 +10,8 @@ def test_fill_request(fill_manager, token, deployer):
     with brownie.reverts("Ownable: caller is not the owner"):
         fill_manager.addAllowedLP(deployer, {"from": filler})
 
-    fill_manager.addAllowedLP(deployer, {"from": deployer})
+    whitelist_tx = fill_manager.addAllowedLP(deployer, {"from": deployer})
+    assert "LPAdded" in whitelist_tx.events
 
     token.approve(fill_manager.address, amount, {"from": deployer})
     fill_manager.fillRequest(
@@ -42,3 +43,6 @@ def test_fill_request(fill_manager, token, deployer):
             amount,
             {"from": deployer},
         )
+
+    blacklist_tx = fill_manager.removeAllowedLP(deployer, {"from": deployer})
+    assert "LPRemoved" in blacklist_tx.events
