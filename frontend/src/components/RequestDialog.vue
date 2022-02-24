@@ -18,7 +18,11 @@
     >
       <Card class="bg-teal px-20 pt-18 pb-14 self-stretch mb-11">
         <RequestFormInputs v-if="!isProcessing" />
-        <RequestProcessing  v-else />
+        <RequestProcessing
+          v-else
+          :amount="formValues.amount"
+          :target-address="formValues.targetAddress"
+        />
         <Transition name="expand">
           <div v-if="shownError()" class="mt-7 text-right text-lg text-orange-dark">
             {{ shownError() }}
@@ -36,7 +40,12 @@
         </div>
         <template v-else>Connect MetaMask Wallet</template>
       </FormKit>
-      <FormKit v-else class="w-72 flex flex-row justify-center bg-green" type="submit" :disabled="!valid">
+      <FormKit
+        v-else
+        class="w-72 flex flex-row justify-center bg-green"
+        type="submit"
+        :disabled="!valid"
+      >
         <div v-if="requestTransactionActive" class="h-8 w-8">
           <spinner></spinner>
         </div>
@@ -70,6 +79,7 @@ const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
 
 const isProcessing = ref(false);
+const formValues = ref({ amount: '', targetAddress: '' });
 
 // TODO improve types
 const submitRequestTransaction = (formResult: {
@@ -88,15 +98,16 @@ const submitRequestTransaction = (formResult: {
   };
 
   executeRequestTransaction(result, ethereumProvider.value.signer.value!);
+  formValues.value = { amount: formResult.amount.toString(), targetAddress: formResult.toAddress };
   isProcessing.value = true;
 };
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;
-  if(error) {
+  if (error) {
     isProcessing.value = false;
   }
   return error;
-}
+};
 
 // TODO show block explorer URL on successful tx screen
 // TODO prefill address with account address
