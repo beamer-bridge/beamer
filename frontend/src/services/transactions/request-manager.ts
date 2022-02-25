@@ -18,13 +18,9 @@ function findFirstEvent(receipt: TransactionReceipt, eventName: string) {
 
 export async function getRequestFee(
   signer: DeepReadonly<JsonRpcSigner>,
-  request: Request,
+  requestManagerAddress: string,
 ): Promise<number> {
-  const requestManagerContract = new Contract(
-    request.requestManagerAddress,
-    RequestManager.abi,
-    signer,
-  );
+  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
   return await requestManagerContract.totalFee();
 }
 
