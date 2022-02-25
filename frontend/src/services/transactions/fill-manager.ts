@@ -1,49 +1,29 @@
-import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
-import { DeepReadonly, Ref, ref } from 'vue';
+import { DeepReadonly } from 'vue';
 
 import FillManager from '@/assets/FillManager.json';
-import { Request, RequestState } from '@/types/data';
+import { Request } from '@/types/data';
 
-function findFirstEvent(receipt: TransactionReceipt, eventName: string) {
-  const isRequestCreated = (e) => {
-    if ('undefined' === typeof e['event']) {
-      return false;
-    }
-    console.log(e.event);
-    return e.event === eventName;
-  };
-  return receipt.events.find(isRequestCreated);
-}
-
-export function registerFillListener(
+export async function listenOnFulfillment(
   signer: DeepReadonly<JsonRpcSigner>,
   request: Request,
-  requestState: Ref<RequestState>,
-): void {
+  currentBlockNumber: number,
+): Promise<void> {
   const fillManagerContract = new Contract(request.fillManagerAddress, FillManager.abi, signer);
 
-  requestState.value = RequestState.WaitFulfill;
-  const onRequestFilled = (...args) => {
-    console.log('Got events', args);
-    // Contract: emit RequestFilled(requestId, sourceChainId, targetTokenAddress, msg.sender, amount);
-    //uint256 will be BigNumber
-    //"eventSignature": "RequestFilled(uint256,uint256,address,address,uint256)",
-    // TODO match request id etc
-    requestState.value = RequestState.RequestSuccessful;
-  };
-
-  //
-  // TODO construct a specific filter:
-  //const filter = fillManagerContract.filters.RequestFilled(BigNumber.from(request.requestId), null,null,null,null);
-  //
-  //fillManagerContract.on(
-  //filter,
-  //onRequestFilled,
-  //);
-  fillManagerContract.on(
-    'RequestFilled', // matching on the request id
-    onRequestFilled,
+  const eventFilter = fillManagerContract.filters.RequestFilled(
+    BigNumber.from(request.requestId),
+    BigNumber.from(request.sourceChainId),
+    request.targetTokenAddress,
   );
-  console.log('Listening for events.');
+  // TODO find a better way to catch a previous event than block - 1000
+  const events = await fillManagerContract.queryFilter(eventFilter, currentBlockNumber - 1000);
+  if (events.length > 0) {
+    return;
+  }
+
+  return new Promise((resolve) => {
+    fillManagerContract.on(eventFilter, () => resolve());
+  });
 }

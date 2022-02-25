@@ -66,9 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import { FormKitNode, getNode } from '@formkit/core';
 import { BigNumber, utils } from 'ethers';
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
@@ -116,7 +115,6 @@ const newTransfer = async (formResult: {
 }) => {
    requestState.value = RequestState.Init;
 	location.reload();
-
 }
 // TODO improve types
 const submitRequestTransaction = async (formResult: {
@@ -134,9 +132,9 @@ const submitRequestTransaction = async (formResult: {
   // TODO -> if source chain is different than current active chain, call the provider.switchChain before
   // 	continueing
   const request: Request = {
-    targetChainId: BigNumber.from(formResult.toChainId.value),
-    sourceChainId: BigNumber.from(formResult.fromChainId.value),
+    targetChainId: Number(formResult.toChainId.value),
     sourceTokenAddress: formResult.tokenAddress.value,
+    sourceChainId: Number(formResult.fromChainId.value),
     targetTokenAddress: formResult.tokenAddress.value,
     targetAddress: formResult.toAddress,
     amount: BigNumber.from(formResult.amount),
@@ -154,7 +152,6 @@ const submitRequestTransaction = async (formResult: {
   };
   request.fee = fee.value;
 
-  requestState.value = RequestState.WaitConfirm
   await executeRequestTransaction(request, ethereumProvider.value.signer.value!);
 
   await executeWaitFulfilled(request, requestState, ethereumProvider.value.signer.value!);

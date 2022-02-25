@@ -1,4 +1,5 @@
 import {
+  Block,
   ExternalProvider,
   getNetwork,
   JsonRpcSigner,
@@ -65,6 +66,10 @@ export class MetaMaskProvider implements EthereumProvider {
         } catch {}
       }
     }
+  }
+
+  async getLatestBlock(): Promise<Block> {
+    return this.web3Provider.getBlock('latest');
   }
 
   private async getChainId(): Promise<number> {

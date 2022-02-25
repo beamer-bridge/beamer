@@ -2,9 +2,11 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { Ref } from 'vue';
 
+// TODO enum values should be in upper case by convention
 export enum RequestState {
   Init,
   WaitConfirm,
+  WaitTransaction,
   WaitSwitchChain,
   FailedSwitchChain,
   WaitFulfill,
@@ -14,10 +16,10 @@ export enum RequestState {
 
 export interface Request {
   amount: BigNumber;
+  sourceChainId: number;
   sourceTokenAddress: string;
-  sourceChainId: BigNumber;
   targetAddress: string;
-  targetChainId: BigNumber;
+  targetChainId: number;
   targetTokenAddress: string;
   // Optional
   requestManagerAddress?: string;

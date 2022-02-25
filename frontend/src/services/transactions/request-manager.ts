@@ -42,7 +42,6 @@ export async function sendRequestTransaction(
     RequestManager.abi,
     signer,
   );
-  requestState.value = RequestState.WaitConfirm;
   const transaction: TransactionResponse = await requestManagerContract.createRequest(
     request.targetChainId,
     request.sourceTokenAddress,
