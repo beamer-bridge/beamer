@@ -30,9 +30,9 @@
         </ProgressStep>
         <ProgressStep
           :current-state="requestMetadata.state"
-          :trigger-state="RequestState.WaitSwitchChain"
+          :trigger-state="RequestState.WaitTransaction"
         >
-          Request is being fulfilled
+          Waiting for transaction receipt
         </ProgressStep>
         <ProgressStep
           :current-state="requestMetadata.state"
@@ -52,7 +52,7 @@
           :current-state="requestMetadata.state"
           :trigger-state="RequestState.WaitFulfill"
         >
-          Verifying...
+          Request is being fulfilled
         </ProgressStep>
         <ProgressStep
           :current-state="requestMetadata.state"
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, Ref } from 'vue';
+import { defineProps } from 'vue';
 
 import { RequestMetadata, RequestState } from '@/types/data';
 
