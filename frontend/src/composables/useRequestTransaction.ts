@@ -18,15 +18,15 @@ export function useGetFee(
   const getFeeError = ref('');
   const fee = ref<number>();
 
-  const getFee = async (request: Request, signer: JsonRpcSigner) => {
+  const getFee = async (signer: JsonRpcSigner) => {
     getFeeError.value = '';
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
-      request.requestManagerAddress = chainConfig.requestManagerAddress;
+      const requestManagerAddress = chainConfig.requestManagerAddress;
 
-      const res = await getRequestFee(signer, request);
+      const res = await getRequestFee(signer, requestManagerAddress);
       fee.value = res;
     } catch (error) {
       console.error(error);

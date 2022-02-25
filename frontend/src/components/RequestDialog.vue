@@ -10,7 +10,7 @@
       </div>
     </div>
     <FormKit
-      ref="formInput"
+      ref="requestForm"
       v-slot="{ state: { valid } }"
       form-class="flex flex-col items-center"
       type="form"
@@ -65,8 +65,9 @@
 </template>
 
 <script setup lang="ts">
+import { FormKitFrameworkContext } from '@formkit/core';
 import { BigNumber, utils } from 'ethers';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
@@ -88,6 +89,7 @@ const ethereumProvider = injectStrict(EthereumProviderKey);
 const raisyncConfig = injectStrict(RaisyncConfigKey);
 
 const requestMetadata = ref<RequestMetadata>();
+const requestForm = ref<FormKitFrameworkContext>();
 
 const { fee, getFeeActive, getFeeError, executeGetFee } = useGetFee(
   ethereumProvider,
@@ -137,7 +139,7 @@ const submitRequestTransaction = async (formResult: {
     targetAddress: formResult.toAddress,
     amount: BigNumber.from(formResult.amount),
   };
-  await executeGetFee(request, ethereumProvider.value.signer.value!);
+  // await executeGetFee(request, ethereumProvider.value.signer.value!);
 
   requestMetadata.value = {
     state: requestState,
@@ -154,6 +156,11 @@ const submitRequestTransaction = async (formResult: {
 
   await executeWaitFulfilled(request, requestState, ethereumProvider.value.signer.value!);
 };
+
+watch(ethereumProvider.value.chainId, async () => {
+  await executeGetFee(ethereumProvider.value.signer.value!);
+});
+executeGetFee(ethereumProvider.value.signer.value!);
 
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;
