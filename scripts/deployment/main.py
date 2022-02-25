@@ -1,4 +1,6 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Dict, Tuple, Union, cast
 
@@ -39,7 +41,13 @@ def load_contracts_info(contracts_path: Path) -> dict[str, Tuple]:
     return contracts
 
 
-CONTRACTS: Dict[str, Tuple] = load_contracts_info(Path("contracts/build/contracts"))
+def get_commit_id() -> str:
+    output = subprocess.check_output(["git", "rev-parse", "HEAD"])
+    return output.decode("utf-8").strip()
+
+
+CONTRACTS_PATH = Path("contracts/build/contracts")
+CONTRACTS: Dict[str, Tuple] = load_contracts_info(CONTRACTS_PATH)
 
 
 def deploy_contract(web3: Web3, name: str, *args) -> Contract:
@@ -51,19 +59,16 @@ def deploy_contract(web3: Web3, name: str, *args) -> Contract:
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
 
     deployed = web3.eth.contract(address=tx_receipt.contractAddress, abi=data[0])
+    deployed.deployment_block = tx_receipt.blockNumber
 
-    print(
-        f"Deployed contract {name} at {encode_hex(tx_receipt.contractAddress)} in {encode_hex(tx_hash)}"
-    )
+    print(f"Deployed contract {name} at {tx_receipt.contractAddress} in {encode_hex(tx_hash)}")
     return deployed
 
 
 def deploy_l1(web3) -> Union[Contract, Dict[str, str]]:
     resolver = deploy_contract(web3, "Resolver")
 
-    return resolver, {
-        "Resolver": resolver.address,
-    }
+    return resolver, {"Resolver": (resolver.address, resolver.deployment_block)}
 
 
 def deploy_l2(web3: Web3, resolver: Contract) -> Dict[str, str]:
@@ -97,21 +102,21 @@ def deploy_l2(web3: Web3, resolver: Contract) -> Dict[str, str]:
     proof_submitter.functions.addCaller(web3.eth.chain_id, fill_manager.address).transact()
 
     return {
-        "MintableToken": token.address,
-        "ResolutionRegistry": resolution_registry.address,
-        "OptimismProofSubmitter": proof_submitter.address,
-        "RequestManager": request_manager.address,
-        "FillManager": fill_manager.address,
+        "MintableToken": (token.address, token.deployment_block),
+        "ResolutionRegistry": (resolution_registry.address, resolution_registry.deployment_block),
+        "OptimismProofSubmitter": (proof_submitter.address, proof_submitter.deployment_block),
+        "RequestManager": (request_manager.address, request_manager.deployment_block),
+        "FillManager": (fill_manager.address, fill_manager.deployment_block),
     }
 
 
 def update_l1(resolver: Contract, l2_chain_id: int, messenger_address, deployment_data: Dict):
     resolver.functions.addCaller(
-        l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"]
+        l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"][0]
     ).transact()
     resolver.functions.addRegistry(
         l2_chain_id,
-        deployment_data["ResolutionRegistry"],
+        deployment_data["ResolutionRegistry"][0],
         messenger_address,
     ).transact()
 
@@ -128,13 +133,21 @@ def update_l1(resolver: Contract, l2_chain_id: int, messenger_address, deploymen
     "--password", type=str, required=True, help="The password needed to unlock the account."
 )
 @click.option(
+    "--output-dir",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    metavar="DIR",
+    help="The output directory.",
+)
+@click.option(
     "--config-file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
     metavar="FILE",
     help="The file containing deployment information.",
 )
-def main(keystore_file: Path, password: str, config_file: Path) -> None:
+def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path) -> None:
+    commit_id = get_commit_id()
     account = account_from_keyfile(keystore_file, password)
     with open(config_file) as f:
         config = json.load(f)
@@ -143,9 +156,11 @@ def main(keystore_file: Path, password: str, config_file: Path) -> None:
 
     web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
     resolver, l1_data = deploy_l1(web3_l1)
+    deployment_data["raisync_commit"] = commit_id
     deployment_data["L1"] = l1_data
     deployment_data["L2"] = {}
 
+    output_dir.mkdir(parents=True, exist_ok=True)
     for l2_config in config["L2"]:
         name = l2_config["name"]
         print(f"Deployment for {name}")
@@ -159,7 +174,10 @@ def main(keystore_file: Path, password: str, config_file: Path) -> None:
 
         deployment_data["L2"][chain_id] = l2_data
 
-    with open("deployment.json", "w") as f:
+        for contract_name in l2_data:
+            shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
+
+    with output_dir.joinpath("deployment.json").open("w") as f:
         json.dump(deployment_data, f, indent=2)
 
 
