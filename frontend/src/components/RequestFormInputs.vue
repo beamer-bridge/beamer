@@ -28,6 +28,7 @@
       :options="CHAINS"
       validation="required"
       messages-class="hidden"
+      @input="switchChain"
     />
     <div class="mb-7">
       <FormKit
@@ -91,6 +92,12 @@ raisyncConfig.value.chains[String(ethereumProvider.value.chainId.value)].tokens.
     TOKENS.push({ value: token.address, label: token.symbol });
   },
 ); // TODO it would be better to fetch Token Meta data from somewhere
+
+const switchChain = (chainId) => {
+  if (chainId !== ethereumProvider.value.chainId.value && ethereumProvider.value.switchChain) {
+    ethereumProvider.value.switchChain(chainId.value);
+  }
+};
 
 // TEST DATA
 // const TOKENS: SelectorOption[] = [
