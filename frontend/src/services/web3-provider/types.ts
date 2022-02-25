@@ -1,4 +1,4 @@
-import { JsonRpcSigner } from '@ethersproject/providers';
+import { Block, JsonRpcSigner } from '@ethersproject/providers';
 import { Ref, ShallowRef } from 'vue';
 
 export interface EthereumProvider {
@@ -6,5 +6,6 @@ export interface EthereumProvider {
   chainId: Ref<number>;
   init(): Promise<void>;
   requestSigner(): Promise<void>;
+  getLatestBlock(): Promise<Block>;
   switchChain?(newChainId: number, rpcUrl?: string): Promise<void>;
 }

@@ -1,8 +1,8 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
-import { Ref, ref, ShallowRef } from 'vue';
+import { Ref, ref, ShallowRef, watch } from 'vue';
 
-import { registerFillListener } from '@/services/transactions/fill-manager';
+import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
@@ -57,11 +57,12 @@ export function useRequestTransaction(
 
   const executeRequestTransaction = async (request: Request, signer: JsonRpcSigner) => {
     transactionError.value = '';
+    requestState.value = RequestState.WaitConfirm;
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
-      request.sourceChainId = BigNumber.from(chainId);
+      request.sourceChainId = chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
       await ensureTokenAllowance(
         signer,
@@ -109,19 +110,39 @@ export function useWaitRequestFilled(
     waitError.value = '';
 
     try {
-      requestState.value = RequestState.WaitSwitchChain;
-      await ethereumProvider.value.switchChain(BigNumber.from(request.targetChainId));
-      // TODO make sure the chain is switched and set:
-      // requestState.value = RequestState.FailedSwitchChain;
-	    //
       const chainId = ethereumProvider.value.chainId.value;
-
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
       request.fillManagerAddress = chainConfig.fillManagerAddress;
-      registerFillListener(signer, request, requestState);
+      requestState.value = RequestState.WaitSwitchChain;
 
-      requestState.value = RequestState.WaitFulfill;
-      // TODO query for the RequestFilled event
+      const waitOnFulfillment = async () => {
+        requestState.value = RequestState.WaitFulfill;
+        const { number: currentBlockNumber } = await ethereumProvider.value.getLatestBlock();
+        await listenOnFulfillment(signer, request, currentBlockNumber);
+        requestState.value = RequestState.RequestSuccessful;
+      };
+
+      if (ethereumProvider.value.chainId.value !== request.targetChainId) {
+        const chainSwitched = new Promise((resolve) => {
+          const stopWatch = watch(ethereumProvider.value.chainId, async (chainId) => {
+            if (chainId === request.targetChainId) {
+              stopWatch();
+              resolve(undefined);
+            }
+          });
+        });
+
+        if (ethereumProvider.value.switchChain) {
+          await ethereumProvider.value.switchChain(request.targetChainId);
+        }
+        if (ethereumProvider.value.chainId.value !== request.targetChainId) {
+          requestState.value = RequestState.FailedSwitchChain;
+        }
+
+        await chainSwitched;
+      }
+
+      await waitOnFulfillment();
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {
