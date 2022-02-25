@@ -1,9 +1,6 @@
 /* eslint-env node */
 module.exports = {
-  content: [
-    './public/**/*.html',
-    './src/**/*.{vue,js,ts,jsx,tsx}',
-  ],
+  content: ['./public/**/*.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     colors: {
       light: '#FFFEFE',
@@ -20,7 +17,7 @@ module.exports = {
       'green-lime': '#ADFF00',
       orange: '#F5AC37',
       'orange-dark': '#E55A39',
-      'orange-light': '#EEAC96', 
+      'orange-light': '#EEAC96',
       transparent: 'transparent',
       black: '#000000',
     },

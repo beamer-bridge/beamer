@@ -18,13 +18,12 @@
       @submit="submitRequestTransaction"
     >
       <Card class="bg-teal px-20 pt-18 pb-14 self-stretch mb-11">
-        <RequestFormInputs v-if="(requestState === RequestState.Init)" :fees="feesEther" />
-        <RequestProcessing v-else :requestMetadata="requestMetadata" />
+        <RequestFormInputs v-if="requestState === RequestState.Init" :fees="feesEther" />
+        <RequestProcessing v-else :request-metadata="requestMetadata" />
         <Transition name="expand">
-          <div
-            v-if="shownError()"
-            class="mt-7 text-right text-lg text-orange-dark"
-          >{{ shownError() }}</div>
+          <div v-if="shownError()" class="mt-7 text-right text-lg text-orange-dark">
+            {{ shownError() }}
+          </div>
         </Transition>
       </Card>
 
@@ -58,7 +57,7 @@
           type="button"
           @click="newTransfer"
         >
-         New Transfer 
+          New Transfer
         </FormKit>
       </div>
     </FormKit>
@@ -79,7 +78,7 @@ import {
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
 import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
-import { Request, RequestState, RequestMetadata } from '@/types/data';
+import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
 
@@ -111,11 +110,10 @@ const feesEther = computed(() => {
   return '';
 });
 
-const newTransfer = async (formResult: {
-}) => {
-   requestState.value = RequestState.Init;
-	location.reload();
-}
+const newTransfer = async (formResult: {}) => {
+  requestState.value = RequestState.Init;
+  location.reload();
+};
 // TODO improve types
 const submitRequestTransaction = async (formResult: {
   amount: string;
@@ -160,7 +158,7 @@ const submitRequestTransaction = async (formResult: {
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;
   if (error) {
-    requestState.value = RequestState.Init
+    requestState.value = RequestState.Init;
   }
   return error;
 };
