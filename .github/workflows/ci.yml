@@ -62,7 +62,7 @@ jobs:
       - name: Install brownie contract libraries
         if: steps.cache-brownie-packages.outputs.cache-hit != 'true'
         run: |
-          poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.4.2
+          poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
 
       - name: Lint contracts
         run: |
