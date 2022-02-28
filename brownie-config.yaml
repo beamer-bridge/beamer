@@ -7,7 +7,7 @@ project_structure:
     tests: contracts/tests
 
 dependencies:
-  - OpenZeppelin/openzeppelin-contracts@4.4.2
+  - OpenZeppelin/openzeppelin-contracts@4.5.0
 
 compiler:
   evm_version: london
