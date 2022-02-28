@@ -51,14 +51,16 @@
           </div>
           <template v-else>Transfer funds</template>
         </FormKit>
-        <FormKit
-          v-if="requestState === RequestState.RequestSuccessful"
-          input-class="w-112 bg-green flex flex-row justify-center"
-          type="button"
-          @click="newTransfer"
-        >
-          New Transfer
-        </FormKit>
+
+          <FormKit
+            v-if="requestState === RequestState.RequestSuccessful"
+            input-class="w-112 bg-green flex flex-row justify-center"
+            type="button"
+            :disabled="false"
+            @click="newTransfer"
+          >
+            New Transfer
+          </FormKit>
       </div>
     </FormKit>
   </div>
@@ -112,8 +114,7 @@ const feesEther = computed(() => {
   return '';
 });
 
-const newTransfer = async (formResult: {}) => {
-  requestState.value = RequestState.Init;
+const newTransfer = async () => {
   location.reload();
 };
 // TODO improve types
@@ -144,8 +145,8 @@ const submitRequestTransaction = async (formResult: {
   requestMetadata.value = {
     state: requestState,
     tokenSymbol: formResult.tokenAddress.label,
-    sourceChainName: formResult.toChainId.label,
-    targetChainName: formResult.fromChainId.label,
+    sourceChainName: formResult.fromChainId.label,
+    targetChainName: formResult.toChainId.label,
     targetAddress: request.targetAddress,
     amount: formResult.amount,
     fee: feesEther.value,
