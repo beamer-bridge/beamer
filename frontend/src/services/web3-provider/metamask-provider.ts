@@ -6,6 +6,7 @@ import {
   Web3Provider,
 } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
@@ -94,6 +95,8 @@ export class MetaMaskProvider implements EthereumProvider {
     this.web3Provider.provider.on('accountsChanged', (accounts) =>
       this.newDefaultSigner(accounts),
     );
-    this.web3Provider.provider.on('chainChanged', (chainId) => (this.chainId.value = chainId));
+    this.web3Provider.provider.on('chainChanged', (chainId) => {
+      this.chainId.value = BigNumber.from(chainId).toNumber();
+    });
   }
 }
