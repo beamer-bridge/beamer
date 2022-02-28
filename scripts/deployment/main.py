@@ -2,7 +2,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Tuple, Union, cast
+from typing import Any, cast
 
 import click
 from brownie import Wei
@@ -14,6 +14,10 @@ from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 OPTIMISM_L2_MESSENGER_ADDRESS = "0x4200000000000000000000000000000000000007"
+
+
+class DeployedContract(Contract):
+    deployment_block: int
 
 
 def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
@@ -32,8 +36,8 @@ def web3_for_rpc(rpc: str, account: LocalAccount) -> Web3:
     return web3
 
 
-def load_contracts_info(contracts_path: Path) -> dict[str, Tuple]:
-    contracts = {}
+def load_contracts_info(contracts_path: Path) -> dict[str, tuple]:
+    contracts: dict[str, tuple] = {}
     for path in contracts_path.glob("*.json"):
         with path.open() as fp:
             info = json.load(fp)
@@ -47,10 +51,10 @@ def get_commit_id() -> str:
 
 
 CONTRACTS_PATH = Path("contracts/build/contracts")
-CONTRACTS: Dict[str, Tuple] = load_contracts_info(CONTRACTS_PATH)
+CONTRACTS: dict[str, tuple] = load_contracts_info(CONTRACTS_PATH)
 
 
-def deploy_contract(web3: Web3, name: str, *args) -> Contract:
+def deploy_contract(web3: Web3, name: str, *args: Any) -> DeployedContract:
     data = CONTRACTS[name]
     print(f"Deploying {name}")
     ContractFactory = web3.eth.contract(abi=data[0], bytecode=data[1])
@@ -58,20 +62,21 @@ def deploy_contract(web3: Web3, name: str, *args) -> Contract:
     tx_hash = ContractFactory.constructor(*args).transact()
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
 
-    deployed = web3.eth.contract(address=tx_receipt.contractAddress, abi=data[0])
-    deployed.deployment_block = tx_receipt.blockNumber
+    address = tx_receipt.contractAddress  # type: ignore
+    deployed = web3.eth.contract(address=address, abi=data[0])
+    deployed.deployment_block = tx_receipt.blockNumber  # type: ignore
 
-    print(f"Deployed contract {name} at {tx_receipt.contractAddress} in {encode_hex(tx_hash)}")
+    print(f"Deployed contract {name} at {address} in {encode_hex(tx_hash)}")
     return deployed
 
 
-def deploy_l1(web3) -> Union[Contract, Dict[str, str]]:
+def deploy_l1(web3: Web3) -> tuple[DeployedContract, dict[str, tuple[str, int]]]:
     resolver = deploy_contract(web3, "Resolver")
 
     return resolver, {"Resolver": (resolver.address, resolver.deployment_block)}
 
 
-def deploy_l2(web3: Web3, resolver: Contract) -> Dict[str, str]:
+def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, tuple[str, int]]:
     token = deploy_contract(web3, "MintableToken", int(1e18))
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     resolution_registry.functions.addCaller(
@@ -110,7 +115,9 @@ def deploy_l2(web3: Web3, resolver: Contract) -> Dict[str, str]:
     }
 
 
-def update_l1(resolver: Contract, l2_chain_id: int, messenger_address, deployment_data: Dict):
+def update_l1(
+    resolver: DeployedContract, l2_chain_id: int, messenger_address: str, deployment_data: dict
+) -> None:
     resolver.functions.addCaller(
         l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"][0]
     ).transact()
@@ -152,7 +159,7 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
     with open(config_file) as f:
         config = json.load(f)
 
-    deployment_data = {}
+    deployment_data: dict = {}
 
     web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
     resolver, l1_data = deploy_l1(web3_l1)
