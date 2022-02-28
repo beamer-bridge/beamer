@@ -1,4 +1,3 @@
-import json
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -53,8 +52,7 @@ class Node:
 
         self.request_tracker = RequestTracker()
         with open(config.token_match_file, "r") as f:
-            tokens = json.load(f)
-            match_checker = TokenMatchChecker(tokens)
+            match_checker = TokenMatchChecker.from_file(f)
 
         self._event_processor = EventProcessor(
             self.request_tracker, request_manager, fill_manager, match_checker

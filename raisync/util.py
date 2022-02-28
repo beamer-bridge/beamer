@@ -1,7 +1,8 @@
+import json
 import logging
 import os
 import sys
-from typing import List
+from typing import List, TextIO
 
 import structlog
 from eth_utils import is_checksum_address, to_checksum_address
@@ -93,3 +94,8 @@ class TokenMatchChecker:
         source_token = source_chain_id, source_token_address
         target_token = target_chain_id, target_token_address
         return target_token in self._tokens.get(source_token, frozenset())
+
+    @staticmethod
+    def from_file(f: TextIO) -> "TokenMatchChecker":
+        tokens = json.load(f)
+        return TokenMatchChecker(tokens)
