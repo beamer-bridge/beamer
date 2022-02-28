@@ -1,31 +1,18 @@
 import json
 import signal
 from pathlib import Path
-from typing import Any
 
 import click
 import structlog
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
+import raisync.contracts
 import raisync.util
-from raisync.node import Config, ContractInfo, Node
-from raisync.typing import URL
+from raisync.node import Config, Node
+from raisync.typing import URL, ChainId
 
 log = structlog.get_logger(__name__)
-
-
-def _load_contracts_info(contracts_path: Path) -> dict[str, Any]:
-    contracts = {}
-    for path in contracts_path.glob("*.json"):
-        with path.open() as fp:
-            info = json.load(fp)
-        contracts[info["contractName"]] = ContractInfo(
-            address=info["deployment"]["address"],
-            deployment_block=info["deployment"]["blockHeight"],
-            abi=info["abi"],
-        )
-    return contracts
 
 
 def _account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
@@ -64,18 +51,25 @@ def _sigint_handler(node: Node) -> None:
     help="The URL of the second L2 chain RPC server (e.g. http://10.0.0.3:8545).",
 )
 @click.option(
-    "--l2a-contracts-deployment-dir",
+    "--deployment-dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     required=True,
     metavar="DIR",
-    help="The directory containing contract deployment files of the first L2 chain.",
+    help="The directory containing contract deployment files.",
 )
 @click.option(
-    "--l2b-contracts-deployment-dir",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    "--l2a-chain-id",
+    type=int,
     required=True,
-    metavar="DIR",
-    help="The directory containing contract deployment files of the second L2 chain.",
+    metavar="CHAIN_ID",
+    help="ID of the first L2 chain.",
+)
+@click.option(
+    "--l2b-chain-id",
+    type=int,
+    required=True,
+    metavar="CHAIN_ID",
+    help="ID of the second L2 chain.",
 )
 @click.option(
     "--token-match-file",
@@ -97,8 +91,9 @@ def main(
     password: str,
     l2a_rpc_url: URL,
     l2b_rpc_url: URL,
-    l2a_contracts_deployment_dir: Path,
-    l2b_contracts_deployment_dir: Path,
+    deployment_dir: Path,
+    l2a_chain_id: ChainId,
+    l2b_chain_id: ChainId,
     token_match_file: Path,
     log_level: str,
 ) -> None:
@@ -106,12 +101,11 @@ def main(
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
-    l2a_contracts_info = _load_contracts_info(l2a_contracts_deployment_dir)
-    l2b_contracts_info = _load_contracts_info(l2b_contracts_deployment_dir)
+    deployment_info = raisync.contracts.load_deployment_info(deployment_dir)
     config = Config(
         account=account,
-        l2a_contracts_info=l2a_contracts_info,
-        l2b_contracts_info=l2b_contracts_info,
+        l2a_contracts_info=deployment_info[l2a_chain_id],
+        l2b_contracts_info=deployment_info[l2b_chain_id],
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
         token_match_file=token_match_file,
