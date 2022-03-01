@@ -1,0 +1,55 @@
+{
+  "raisync_commit": "64fe4bb7847c5bc774031562d4afc14fa854f1af",
+  "L1": {
+    "Resolver": [
+      "0x2445092f3d481e4c132182AB71030902aca215B2",
+      10253259
+    ]
+  },
+  "L2": {
+    "28": {
+      "MintableToken": [
+        "0x7F994318a1757aA20D0376683E51BFD8523E0A58",
+        158438
+      ],
+      "ResolutionRegistry": [
+        "0xA200A8d1034b3A6d8E2F01DaE160d6635bFC1699",
+        158439
+      ],
+      "OptimismProofSubmitter": [
+        "0xE4e5f406e927D0793362aa1a2a5843EEcB54b7f1",
+        158441
+      ],
+      "RequestManager": [
+        "0x5E0494Ab942cCE4ee11bb95afDc1CaDcE7A7b876",
+        158442
+      ],
+      "FillManager": [
+        "0xd98F0aFaC17480971492a40db0fd72227936bbF8",
+        158443
+      ]
+    },
+    "588": {
+      "MintableToken": [
+        "0xF4BeDD719224107eF1103efDA039D392FdAdA32b",
+        5191459
+      ],
+      "ResolutionRegistry": [
+        "0x242bEa0554E73D52e8964253f00cA1f958E8f9B6",
+        5191460
+      ],
+      "OptimismProofSubmitter": [
+        "0x95F2d03B723C1DCe28fD857BF0bf339c04f081cc",
+        5191462
+      ],
+      "RequestManager": [
+        "0x7851506925D3b276614759eE1BB1a742118620F3",
+        5191463
+      ],
+      "FillManager": [
+        "0xed3Ac93E8f0cE59d499B2d931F3901A4B9D59556",
+        5191464
+      ]
+    }
+  }
+}
