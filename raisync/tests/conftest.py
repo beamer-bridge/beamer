@@ -16,7 +16,8 @@ from brownie import (
     accounts,
 )
 
-from raisync.node import Config, ContractInfo, Node
+from raisync.contracts import ContractInfo
+from raisync.node import Config, Node
 from raisync.typing import BlockNumber
 
 
@@ -119,14 +120,14 @@ def config(request_manager, fill_manager, token):
             deployment_block=BlockNumber(0), address=fill_manager.address, abi=fill_manager.abi
         ),
     )
+    deployment_info = {brownie.chain.id: contracts_info}
     account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
     token.mint(account.address, 300)
     url = brownie.web3.provider.endpoint_uri
     config = Config(
         l2a_rpc_url=url,
         l2b_rpc_url=url,
-        l2a_contracts_info=contracts_info,
-        l2b_contracts_info=contracts_info,
+        deployment_info=deployment_info,
         token_match_file=token_match_file,
         account=account,
     )

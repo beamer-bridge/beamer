@@ -10,7 +10,7 @@ from eth_account.signers.local import LocalAccount
 import raisync.contracts
 import raisync.util
 from raisync.node import Config, Node
-from raisync.typing import URL, ChainId
+from raisync.typing import URL
 
 log = structlog.get_logger(__name__)
 
@@ -58,20 +58,6 @@ def _sigint_handler(node: Node) -> None:
     help="The directory containing contract deployment files.",
 )
 @click.option(
-    "--l2a-chain-id",
-    type=int,
-    required=True,
-    metavar="CHAIN_ID",
-    help="ID of the first L2 chain.",
-)
-@click.option(
-    "--l2b-chain-id",
-    type=int,
-    required=True,
-    metavar="CHAIN_ID",
-    help="ID of the second L2 chain.",
-)
-@click.option(
     "--token-match-file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
@@ -92,8 +78,6 @@ def main(
     l2a_rpc_url: URL,
     l2b_rpc_url: URL,
     deployment_dir: Path,
-    l2a_chain_id: ChainId,
-    l2b_chain_id: ChainId,
     token_match_file: Path,
     log_level: str,
 ) -> None:
@@ -104,8 +88,7 @@ def main(
     deployment_info = raisync.contracts.load_deployment_info(deployment_dir)
     config = Config(
         account=account,
-        l2a_contracts_info=deployment_info[l2a_chain_id],
-        l2b_contracts_info=deployment_info[l2b_chain_id],
+        deployment_info=deployment_info,
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
         token_match_file=token_match_file,
