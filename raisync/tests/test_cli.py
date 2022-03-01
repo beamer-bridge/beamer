@@ -1,23 +1,45 @@
 import json
 import pathlib
+import shutil
 import signal
 
+import brownie
 import eth_account
 import pytest
 from click.testing import CliRunner
-from raisync.cli import main
 
+from raisync.cli import main
 from raisync.util import TokenMatchChecker
 
 
-def test_cli(config, tmp_path):
+def _generate_deployment_dir(output_dir, root, contracts):
+    data = {
+        "raisync_commit": "0" * 40,
+        "L2": {
+            str(brownie.chain.id): {
+                "RequestManager": [contracts.request_manager.address, 1],
+                "FillManager": [contracts.fill_manager.address, 1],
+            }
+        },
+    }
+    with output_dir.joinpath("deployment.json").open("wt") as f:
+        json.dump(data, f)
+
+    src = root / "contracts/build/contracts"
+    shutil.copy(src / "RequestManager.json", output_dir)
+    shutil.copy(src / "FillManager.json", output_dir)
+
+
+def test_cli(config, tmp_path, contracts):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
     obj = eth_account.account.create_keyfile_json(acc.key, b"")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
     root = pathlib.Path(__file__).parents[2]
-    contracts_deployment_dir = str(root / "contracts/build/deployments/dev")
+    deployment_dir = tmp_path / "deployment"
+    deployment_dir.mkdir()
+    _generate_deployment_dir(deployment_dir, root, contracts)
 
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
@@ -34,10 +56,12 @@ def test_cli(config, tmp_path):
             config.l2a_rpc_url,
             "--l2b-rpc-url",
             config.l2b_rpc_url,
-            "--l2a-contracts-deployment-dir",
-            contracts_deployment_dir,
-            "--l2b-contracts-deployment-dir",
-            contracts_deployment_dir,
+            "--l2a-chain-id",
+            brownie.chain.id,
+            "--l2b-chain-id",
+            brownie.chain.id,
+            "--deployment-dir",
+            str(deployment_dir),
             "--token-match-file",
             str(root / "raisync/data/tokens.example.json"),
         ],
