@@ -14,24 +14,21 @@ from eth_account import Account
 from eth_typing import URI
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
-from web3.exceptions import ContractLogicError
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
+import raisync.contracts
 from raisync.typing import Address, ChainId, PrivateKey, TokenAmount
 from raisync.util import setup_logging
 
 log = structlog.get_logger(__name__)
 
 
-def connect_to_blockchain(
-    contracts_deployment: str,
-    eth_rpc: URI,
-) -> tuple[Web3, dict[str, dict[str, Any]], dict[str, Contract]]:
+def connect_to_blockchain(deployment_dir: Path, eth_rpc: URI) -> tuple[Web3, dict[str, Contract]]:
     try:
         provider = HTTPProvider(eth_rpc)
         web3 = Web3(provider)
         # Do a request, will throw ConnectionError on bad Ethereum client
-        _chain_id = web3.eth.chain_id  # noqa
+        chain_id = ChainId(web3.eth.chain_id)
     except requests.exceptions.ConnectionError:
         log.error(
             "Can not connect to the Ethereum client. Please check that it is running and that "
@@ -43,13 +40,14 @@ def connect_to_blockchain(
     # Add POA middleware for geth POA chains, no/op for other chains
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    contract_infos = get_contract_infos(Path(contracts_deployment))
+    deployment_info = raisync.contracts.load_deployment_info(deployment_dir)
+    contract_infos = deployment_info[chain_id]
     contracts = {
-        name: web3.eth.contract(abi=infos["abi"], address=infos["address"])
-        for name, infos in contract_infos.items()
+        name: web3.eth.contract(abi=info.abi, address=info.address)
+        for name, info in contract_infos.items()
     }
 
-    return web3, contract_infos, contracts
+    return web3, contracts
 
 
 def open_keystore(keystore_file: str, password: str) -> PrivateKey:
@@ -67,24 +65,6 @@ def open_keystore(keystore_file: str, password: str) -> PrivateKey:
             sys.exit(1)
 
 
-def get_contract_infos(base_path: Path) -> dict[str, dict[str, Any]]:
-    contracts = {}
-    for path in base_path.glob("*.json"):
-        with open(path) as f:
-            contracts_infos = json.load(f)
-
-            contract_name = contracts_infos["contractName"]
-            contract_abi = contracts_infos["abi"]
-            contract_deployment = contracts_infos["deployment"]
-
-            contracts[contract_name] = {
-                "abi": contract_abi,
-                **contract_deployment,
-            }
-
-    return contracts
-
-
 def pass_args(f: Callable) -> Callable:
     @click.pass_context
     def new_func(ctx: Any, *args: Any, **kwargs: Any) -> Callable:
@@ -95,9 +75,9 @@ def pass_args(f: Callable) -> Callable:
 
 @click.group("cli")
 @click.option(
-    "--contracts-deployment",
-    type=str,
-    default=Path(__file__).parent.parent.joinpath("contracts/build/deployments/dev"),
+    "--deployment-dir",
+    type=Path,
+    required=True,
     metavar="DIR",
     help="The directory that stores contract deployment files.",
 )
@@ -114,12 +94,10 @@ def pass_args(f: Callable) -> Callable:
 )
 @click.option("--eth-rpc", default="http://localhost:8545", type=str, help="Ethereum node RPC URI")
 @click.pass_context
-def cli(
-    ctx: Any, contracts_deployment: str, keystore_file: str, password: str, eth_rpc: URI
-) -> None:
+def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_rpc: URI) -> None:
     ctx.ensure_object(dict)
 
-    ctx.obj["contracts_deployment"] = contracts_deployment
+    ctx.obj["deployment_dir"] = deployment_dir
     ctx.obj["keystore_file"] = keystore_file
     ctx.obj["password"] = password
     ctx.obj["eth_rpc"] = eth_rpc
@@ -156,7 +134,7 @@ def cli(
 @cli.command("request")
 @pass_args
 def submit_request(
-    contracts_deployment: str,
+    deployment_dir: Path,
     keystore_file: str,
     password: str,
     eth_rpc: URI,
@@ -168,7 +146,7 @@ def submit_request(
 ) -> None:
     """Register a RaiSync request"""
     setup_logging(log_level="DEBUG", log_json=False)
-    web3, _, contracts = connect_to_blockchain(contracts_deployment, eth_rpc=eth_rpc)
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
     privkey = open_keystore(keystore_file, password)
 
     account = Account.from_key(privkey)
@@ -223,7 +201,7 @@ def submit_request(
 @cli.command("fill")
 @pass_args
 def fill_request(
-    contracts_deployment: str,
+    deployment_dir: Path,
     keystore_file: str,
     password: str,
     eth_rpc: URI,
@@ -235,7 +213,7 @@ def fill_request(
     """fill a RaiSync request"""
     setup_logging(log_level="DEBUG", log_json=False)
 
-    web3, _, contracts = connect_to_blockchain(contracts_deployment, eth_rpc=eth_rpc)
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
     privkey = open_keystore(keystore_file, password)
 
     account = Account.from_key(privkey)
