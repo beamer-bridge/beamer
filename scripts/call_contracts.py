@@ -4,7 +4,7 @@ from functools import update_wrapper
 from pathlib import Path
 from pprint import pprint
 from random import randint
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import click
 import requests
@@ -169,11 +169,9 @@ def submit_request(
         amount,
         validity_period,
     ).transact({"value": fee})
-    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
-    print(f"TX sent! tx_hash: {tx_hash.hex()}")
-    print("Receipt:")
-    pprint(tx_receipt)
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
 
 
 @click.option(
@@ -234,12 +232,52 @@ def fill_request(
         target_address,
         amount,
     ).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
-    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
 
-    print(f"TX sent! tx_hash: {tx_hash.hex()}")
-    print("Receipt:")
-    pprint(tx_receipt)
+
+@click.option(
+    "--recipient",
+    type=str,
+    metavar="ADDRESS",
+    callback=validate_address,
+    help="Address that should receive the minted tokens.",
+)
+@click.option(
+    "--amount",
+    type=int,
+    default=100 * 10 ** 18,
+    help="Amount of tokens to transfer",
+)
+@cli.command("mint")
+@pass_args
+def mint(
+    deployment_dir: Path,
+    keystore_file: str,
+    password: str,
+    eth_rpc: URI,
+    recipient: Optional[Address],
+    amount: TokenAmount,
+) -> None:
+    """mint tokens"""
+    setup_logging(log_level="DEBUG", log_json=False)
+
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
+    privkey = open_keystore(keystore_file, password)
+
+    account = Account.from_key(privkey)
+    web3.eth.default_account = account.address
+
+    # Add middleware to sign transactions by default
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+
+    token = contracts["MintableToken"]
+    recipient = recipient or account.address
+    tx_hash = token.functions.mint(recipient, amount).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
 
 
 if __name__ == "__main__":
