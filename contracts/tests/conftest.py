@@ -9,6 +9,7 @@ from brownie import (
     ResolutionRegistry,
     Resolver,
     TestCrossDomainMessenger,
+    ProofSubmitterProxy,
 )
 
 from contracts.tests.utils import alloc_accounts
@@ -22,6 +23,8 @@ class Contracts:
     messenger1: TestCrossDomainMessenger
     messenger2: TestCrossDomainMessenger
     proof_submitter: OptimismProofSubmitter
+    proof_submitter_proxy: ProofSubmitterProxy
+    proxied_proof_submitter: brownie.Contract
     resolution_registry: ResolutionRegistry
 
 
@@ -69,6 +72,10 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
     # L2b contracts, again
     proof_submitter = deployer.deploy(OptimismProofSubmitter, messenger1.address)
     fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
+    proof_submitter_proxy = deployer.deploy(ProofSubmitterProxy, proof_submitter.address, b"")
+    proxied_proof_submitter = brownie.Contract.from_abi(
+        "OptimismProofSubmitter", proof_submitter_proxy.address, proof_submitter.abi
+    )
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
@@ -100,6 +107,8 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
         fill_manager=fill_manager,
         request_manager=request_manager,
         resolution_registry=resolution_registry,
+        proof_submitter_proxy=proof_submitter_proxy,
+        proxied_proof_submitter=proxied_proof_submitter,
     )
 
 
