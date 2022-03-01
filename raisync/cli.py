@@ -41,14 +41,14 @@ def _sigint_handler(node: Node) -> None:
     type=str,
     required=True,
     metavar="URL",
-    help="The URL of the first L2 chain RPC server (e.g. http://10.0.0.2:8545).",
+    help="The URL of the source L2 chain RPC server (e.g. http://10.0.0.2:8545).",
 )
 @click.option(
     "--l2b-rpc-url",
     type=str,
     required=True,
     metavar="URL",
-    help="The URL of the second L2 chain RPC server (e.g. http://10.0.0.3:8545).",
+    help="The URL of the target L2 chain RPC server (e.g. http://10.0.0.3:8545).",
 )
 @click.option(
     "--deployment-dir",
