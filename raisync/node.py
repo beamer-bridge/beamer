@@ -9,8 +9,8 @@ from eth_typing import Address
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 from raisync.chain import ContractEventMonitor, EventProcessor, RequestTracker
-from raisync.contracts import ContractInfo, make_contracts
-from raisync.typing import URL
+from raisync.contracts import DeploymentInfo, make_contracts
+from raisync.typing import URL, ChainId
 from raisync.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -19,8 +19,7 @@ log = structlog.get_logger(__name__)
 @dataclass
 class Config:
     account: LocalAccount
-    l2a_contracts_info: dict[str, ContractInfo]
-    l2b_contracts_info: dict[str, ContractInfo]
+    deployment_info: DeploymentInfo
     l2a_rpc_url: URL
     l2b_rpc_url: URL
     token_match_file: Path
@@ -44,8 +43,11 @@ class Node:
         w3_l2a = _make_web3(config.l2a_rpc_url, config.account)
         w3_l2b = _make_web3(config.l2b_rpc_url, config.account)
 
-        l2a_contracts = make_contracts(w3_l2a, config.l2a_contracts_info)
-        l2b_contracts = make_contracts(w3_l2b, config.l2b_contracts_info)
+        l2a_contracts_info = config.deployment_info[ChainId(w3_l2a.eth.chain_id)]
+        l2b_contracts_info = config.deployment_info[ChainId(w3_l2b.eth.chain_id)]
+
+        l2a_contracts = make_contracts(w3_l2a, l2a_contracts_info)
+        l2b_contracts = make_contracts(w3_l2b, l2b_contracts_info)
 
         request_manager = l2a_contracts["RequestManager"]
         fill_manager = l2b_contracts["FillManager"]
@@ -61,7 +63,7 @@ class Node:
         self._contract_monitor_l2a = ContractEventMonitor(
             "RequestManager",
             request_manager,
-            config.l2a_contracts_info["RequestManager"].deployment_block,
+            l2a_contracts_info["RequestManager"].deployment_block,
             self._event_processor.add_events,
             self._event_processor.mark_sync_done,
         )
@@ -69,7 +71,7 @@ class Node:
         self._contract_monitor_l2b = ContractEventMonitor(
             "FillManager",
             fill_manager,
-            config.l2b_contracts_info["FillManager"].deployment_block,
+            l2b_contracts_info["FillManager"].deployment_block,
             self._event_processor.add_events,
             self._event_processor.mark_sync_done,
         )
