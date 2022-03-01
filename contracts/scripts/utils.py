@@ -13,6 +13,7 @@ PROXY_OVM_L1_CROSS_DOMAIN_MESSENGER = "Proxy__OVM_L1CrossDomainMessenger"
 RESOLVER = "Resolver"
 RESOLUTION_REGISTRY = "ResolutionRegistry"
 OPTIMISM_PROOF_SUBMITTER = "OptimismProofSubmitter"
+OPTIMISM_PROOF_SUBMITTER_PROXY = "ProofSubmitterProxy"
 REQUEST_MANAGER = "RequestManager"
 FILL_MANAGER = "FillManager"
 

@@ -6,6 +6,7 @@ from brownie import (
     ResolutionRegistry,
     Resolver,
     TestCrossDomainMessenger,
+    ProofSubmitterProxy,
     Wei,
     accounts,
     web3,
@@ -36,7 +37,10 @@ def main() -> None:
     )
 
     proof_submitter = OptimismProofSubmitter.deploy(messenger.address, {"from": deployer})
-    f = FillManager.deploy(resolver.address, proof_submitter.address, {"from": deployer})
+    proof_submitter_proxy = ProofSubmitterProxy.deploy(
+        proof_submitter.address, b"", {"from": deployer}
+    )
+    f = FillManager.deploy(resolver.address, proof_submitter_proxy.address, {"from": deployer})
     f.addAllowedLP(deployer.address, {"from": deployer})
 
     resolver.addRegistry(

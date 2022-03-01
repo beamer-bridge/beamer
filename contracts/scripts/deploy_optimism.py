@@ -4,6 +4,7 @@ from brownie import (
     RequestManager,
     ResolutionRegistry,
     Wei,
+    ProofSubmitterProxy,
     accounts,
 )
 from .utils import (
@@ -17,6 +18,7 @@ from .utils import (
     RESOLVER,
     get_contract_address,
     save_contract_address,
+    OPTIMISM_PROOF_SUBMITTER_PROXY,
 )
 
 
@@ -35,7 +37,11 @@ def main() -> None:
     proof_submitter = OptimismProofSubmitter.deploy(
         OPTIMISM_L2_MESSENGER_ADDRESS, {"from": deployer}
     )
+    proof_submitter_proxy = ProofSubmitterProxy.deploy(
+        proof_submitter.address, b"", {"from": deployer}
+    )
     save_contract_address(OPTIMISM_PROOF_SUBMITTER, proof_submitter.address)
+    save_contract_address(OPTIMISM_PROOF_SUBMITTER_PROXY, proof_submitter_proxy.address)
 
     claim_stake = Wei("0.00047 ether")
     claim_period = 60 * 60  # 1 hour
@@ -52,7 +58,7 @@ def main() -> None:
     save_contract_address(REQUEST_MANAGER, request_manager.address)
 
     fill_manager = FillManager.deploy(
-        l1_resolver_address, proof_submitter.address, {"from": deployer}
+        l1_resolver_address, proof_submitter_proxy.address, {"from": deployer}
     )
     save_contract_address(FILL_MANAGER, fill_manager.address)
 
