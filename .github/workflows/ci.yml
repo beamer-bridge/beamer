@@ -91,6 +91,11 @@ jobs:
 
           poetry run brownie test raisync/tests -v -G --cov raisync --cov-report=term
 
+      - name: Load images from cache
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
       - name: Bring the stack up
         working-directory: docker/optimism/ops
         run: |
