@@ -2,23 +2,24 @@ import json
 import sys
 from functools import update_wrapper
 from pathlib import Path
-from pprint import pprint
 from random import randint
 from typing import Any, Callable, Optional
 
 import click
 import requests
 import structlog
-from _util import validate_address
+
 from eth_account import Account
 from eth_typing import URI
 from web3 import HTTPProvider, Web3
+from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 import raisync.contracts
 from raisync.typing import Address, ChainId, PrivateKey, TokenAmount
 from raisync.util import setup_logging
+from scripts._util import validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
 
@@ -232,6 +233,111 @@ def fill_request(
         target_address,
         amount,
     ).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+
+
+@click.option(
+    "--request-id",
+    type=int,
+    help="Request id to claim",
+)
+@click.option(
+    "--fill-id",
+    type=str,
+    callback=validate_bytes,
+    default="0x00",
+    help="fill id of a corresponding claim",
+)
+@cli.command("claim")
+@pass_args
+def claim_request(
+    deployment_dir: Path,
+    keystore_file: str,
+    password: str,
+    eth_rpc: URI,
+    request_id: int,
+    fill_id: bytes,
+) -> None:
+    """claim a RaiSync request"""
+    setup_logging(log_level="DEBUG", log_json=False)
+
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
+    privkey = open_keystore(keystore_file, password)
+
+    account = Account.from_key(privkey)
+    web3.eth.default_account = account.address
+
+    # Add middleware to sign transactions by default
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+
+    request_manager = contracts["RequestManager"]
+    claim_stake = request_manager.functions.claimStake().call()
+    request = request_manager.functions.requests(request_id).call()
+    deposit_receiver = request[6]
+    valid_until = request[8]
+    current_time = web3.eth.get_block("latest").get("timestamp")
+
+    if current_time > valid_until:
+        print("Request already expired")
+        return
+    if deposit_receiver != ADDRESS_ZERO:
+        print("Request already withdrawn")
+        return
+
+    tx_hash = request_manager.functions.claimRequest(request_id, fill_id).transact(
+        {"value": claim_stake}
+    )
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+
+
+@click.option(
+    "--request-id",
+    type=int,
+    help="Request Id of expired request",
+)
+@cli.command("withdraw-expired")
+@pass_args
+def withdraw_expired(
+    deployment_dir: Path,
+    keystore_file: str,
+    password: str,
+    eth_rpc: URI,
+    request_id: int,
+) -> None:
+    """Withdraw an expired RaiSync request"""
+    setup_logging(log_level="DEBUG", log_json=False)
+
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
+    privkey = open_keystore(keystore_file, password)
+
+    account = Account.from_key(privkey)
+    web3.eth.default_account = account.address
+
+    # Add middleware to sign transactions by default
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+
+    request_manager = contracts["RequestManager"]
+    request = request_manager.functions.requests(request_id).call()
+    deposit_receiver = request[6]
+    active_claims = request[7]
+    valid_until = request[8]
+    current_time = web3.eth.get_block("latest").get("timestamp")
+
+    if current_time <= valid_until:
+        print("Request not expired yet. Cannot withdraw.")
+        return
+    if deposit_receiver != ADDRESS_ZERO:
+        print("Request already withdrawn. Cannot withdraw.")
+        return
+    if active_claims > 0:
+        print("Request has active claims. Cannot withdraw.")
+        return
+
+    tx_hash = request_manager.functions.withdrawExpiredRequest(request_id).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
     print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
