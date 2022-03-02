@@ -168,6 +168,9 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
     deployment_data["L2"] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    for contract_name in l1_data:
+        shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
+
     for l2_config in config["L2"]:
         name = l2_config["name"]
         print(f"Deployment for {name}")
