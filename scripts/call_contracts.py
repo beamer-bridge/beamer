@@ -3,14 +3,14 @@ import sys
 from functools import update_wrapper
 from pathlib import Path
 from random import randint
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 import click
 import requests
 import structlog
-
 from eth_account import Account
 from eth_typing import URI
+from eth_utils import to_canonical_address
 from web3 import HTTPProvider, Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
@@ -66,6 +66,21 @@ def open_keystore(keystore_file: str, password: str) -> PrivateKey:
             sys.exit(1)
 
 
+def setup_web3(
+    deployment_dir: Path, eth_rpc: URI, keystore_file: str, password: str
+) -> tuple[Web3, dict[str, Contract]]:
+    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
+    privkey = open_keystore(keystore_file, password)
+
+    account = Account.from_key(privkey)
+    web3.eth.default_account = account.address
+
+    # Add middleware to sign transactions by default
+    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+
+    return web3, contracts
+
+
 def pass_args(f: Callable) -> Callable:
     @click.pass_context
     def new_func(ctx: Any, *args: Any, **kwargs: Any) -> Callable:
@@ -96,12 +111,13 @@ def pass_args(f: Callable) -> Callable:
 @click.option("--eth-rpc", default="http://localhost:8545", type=str, help="Ethereum node RPC URI")
 @click.pass_context
 def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_rpc: URI) -> None:
-    ctx.ensure_object(dict)
+    setup_logging(log_level="DEBUG", log_json=False)
 
-    ctx.obj["deployment_dir"] = deployment_dir
-    ctx.obj["keystore_file"] = keystore_file
-    ctx.obj["password"] = password
-    ctx.obj["eth_rpc"] = eth_rpc
+    web3, contracts = setup_web3(deployment_dir, eth_rpc, keystore_file, password)
+
+    ctx.ensure_object(dict)
+    ctx.obj["web3"] = web3
+    ctx.obj["contracts"] = contracts
 
 
 @click.option(
@@ -135,10 +151,8 @@ def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_r
 @cli.command("request")
 @pass_args
 def submit_request(
-    deployment_dir: Path,
-    keystore_file: str,
-    password: str,
-    eth_rpc: URI,
+    web3: Web3,
+    contracts: Dict[str, Contract],
     target_chain_id: ChainId,
     target_token_address: Address,
     target_address: Address,
@@ -146,15 +160,6 @@ def submit_request(
     validity_period: int,
 ) -> None:
     """Register a RaiSync request"""
-    setup_logging(log_level="DEBUG", log_json=False)
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
     request_manager = contracts["RequestManager"]
     token = contracts["MintableToken"]
@@ -200,26 +205,14 @@ def submit_request(
 @cli.command("fill")
 @pass_args
 def fill_request(
-    deployment_dir: Path,
-    keystore_file: str,
-    password: str,
-    eth_rpc: URI,
+    web3: Web3,
+    contracts: Dict[str, Contract],
     request_id: int,
     source_chain_id: ChainId,
     target_address: Address,
     amount: TokenAmount,
 ) -> None:
-    """fill a RaiSync request"""
-    setup_logging(log_level="DEBUG", log_json=False)
-
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+    """Fill a RaiSync request"""
 
     fill_manager = contracts["FillManager"]
     token = contracts["MintableToken"]
@@ -253,24 +246,12 @@ def fill_request(
 @cli.command("claim")
 @pass_args
 def claim_request(
-    deployment_dir: Path,
-    keystore_file: str,
-    password: str,
-    eth_rpc: URI,
+    web3: Web3,
+    contracts: Dict[str, Contract],
     request_id: int,
     fill_id: bytes,
 ) -> None:
-    """claim a RaiSync request"""
-    setup_logging(log_level="DEBUG", log_json=False)
-
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+    """Claim a RaiSync request"""
 
     request_manager = contracts["RequestManager"]
     claim_stake = request_manager.functions.claimStake().call()
@@ -302,23 +283,11 @@ def claim_request(
 @cli.command("withdraw-expired")
 @pass_args
 def withdraw_expired(
-    deployment_dir: Path,
-    keystore_file: str,
-    password: str,
-    eth_rpc: URI,
+    web3: Web3,
+    contracts: Dict[str, Contract],
     request_id: int,
 ) -> None:
     """Withdraw an expired RaiSync request"""
-    setup_logging(log_level="DEBUG", log_json=False)
-
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
     request_manager = contracts["RequestManager"]
     request = request_manager.functions.requests(request_id).call()
@@ -359,27 +328,15 @@ def withdraw_expired(
 @cli.command("mint")
 @pass_args
 def mint(
-    deployment_dir: Path,
-    keystore_file: str,
-    password: str,
-    eth_rpc: URI,
+    web3: Web3,
+    contracts: Dict[str, Contract],
     recipient: Optional[Address],
     amount: TokenAmount,
 ) -> None:
-    """mint tokens"""
-    setup_logging(log_level="DEBUG", log_json=False)
-
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+    """Mint tokens"""
 
     token = contracts["MintableToken"]
-    recipient = recipient or account.address
+    recipient = recipient or to_canonical_address(web3.eth.default_account)
     tx_hash = token.functions.mint(recipient, amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
