@@ -1,12 +1,24 @@
 {
   "chains": {
-    "5": {
-      "requestManagerAddress": "0x6d18F474C0a16a96E3D24c9eC85BC82311B111c6",
-      "explorerTransactionUrl": "https://goerli.etherscan.io/tx/",
+    "28": {
+      "requestManagerAddress": "0x5E0494Ab942cCE4ee11bb95afDc1CaDcE7A7b876",
+      "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
+      "fillManagerAddress": "0xd98F0aFaC17480971492a40db0fd72227936bbF8",
       "tokens": [
         {
-          "address": "0x31aa9d3e2bd38d22ca3ae9be7aae1d518fe46043",
-          "symbol": "TTT"
+          "address": "0x7F994318a1757aA20D0376683E51BFD8523E0A58",
+          "symbol": "TST"
+        }
+      ]
+    },
+    "588": {
+      "requestManagerAddress": "0x7851506925D3b276614759eE1BB1a742118620F3",
+      "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
+      "fillManagerAddress": "0xed3Ac93E8f0cE59d499B2d931F3901A4B9D59556",
+      "tokens": [
+        {
+          "address": "0xF4BeDD719224107eF1103efDA039D392FdAdA32b",
+          "symbol": "TST"
         }
       ]
     }
