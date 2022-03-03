@@ -1,0 +1,13 @@
+digraph request_state_machine {
+    node [] pending, filled_unconfirmed, filled, claimed, withdrawn;
+
+    pending -> filled_unconfirmed [label = fill_unconfirmed];
+    pending -> filled [label = fill];
+    pending -> claimed [label = claim];
+    filled -> claimed [label = claim];
+    filled -> claimed_unconfirmed [label = claim_unconfirmed];
+    filled_unconfirmed -> filled [label = fill];
+    claimed -> claimed [label = claim];
+    claimed -> withdrawn [label = withdraw];
+    claimed_unconfirmed -> claimed [label = claim];
+}
