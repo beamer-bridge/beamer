@@ -5,3 +5,4 @@ Welcome to Raisync's documentation!
    :maxdepth: 2
 
    node.rst
+   protocol.rst
