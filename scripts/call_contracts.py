@@ -10,7 +10,7 @@ import requests
 import structlog
 from eth_account import Account
 from eth_typing import URI
-from eth_utils import to_canonical_address
+from eth_utils import to_canonical_address, to_checksum_address
 from web3 import HTTPProvider, Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
@@ -338,6 +338,34 @@ def mint(
     token = contracts["MintableToken"]
     recipient = recipient or to_canonical_address(web3.eth.default_account)
     tx_hash = token.functions.mint(recipient, amount).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+
+
+@click.argument(
+    "address",
+    type=str,
+    required=True,
+    metavar="ADDRESS",
+    callback=validate_address,
+)
+@cli.command("whitelist")
+@pass_args
+def whitelist(
+    web3: Web3,
+    contracts: dict[str, Contract],
+    address: Address,
+) -> None:
+    """Whitelist a LP"""
+
+    fill_manager = contracts["FillManager"]
+
+    if fill_manager.functions.allowedLPs(address).call():
+        print(f"Address '{to_checksum_address(address)}' is already whitelisted.")
+        return
+
+    tx_hash = fill_manager.functions.addAllowedLP(address).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
     print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
