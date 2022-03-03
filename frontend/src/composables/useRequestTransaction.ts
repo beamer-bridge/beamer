@@ -1,5 +1,4 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { BigNumber } from 'ethers';
 import { Ref, ref, ShallowRef, watch } from 'vue';
 
 import { listenOnFulfillment } from '@/services/transactions/fill-manager';
@@ -18,7 +17,7 @@ export function useGetFee(
   const getFeeError = ref('');
   const fee = ref<number>();
 
-  const getFee = async (signer: JsonRpcSigner) => {
+  const getFee = async () => {
     getFeeError.value = '';
 
     try {
@@ -26,7 +25,7 @@ export function useGetFee(
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
       const requestManagerAddress = chainConfig.requestManagerAddress;
 
-      const res = await getRequestFee(signer, requestManagerAddress);
+      const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
       fee.value = res;
     } catch (error) {
       console.error(error);
