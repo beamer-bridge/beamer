@@ -12,7 +12,7 @@
     :name="props.context.node.name"
     :disabled="props.context.disabled"
     :="props.context.attrs"
-    @update:modelValue="(value) => props.context.node.input(value)"
+    @update:model-value="(value) => props.context.node.input(value)"
     @blur="props.context.handlers.blur()"
   >
     <template

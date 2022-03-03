@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, Ref, ref, toRef } from 'vue';
+import { computed, defineProps } from 'vue';
 
 import { RequestState } from '@/types/data';
 

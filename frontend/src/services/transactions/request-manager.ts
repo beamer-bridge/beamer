@@ -1,8 +1,9 @@
 import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
-import { DeepReadonly, Ref, ref } from 'vue';
+import { Contract } from 'ethers';
+import { DeepReadonly, Ref } from 'vue';
 
 import RequestManager from '@/assets/RequestManager.json';
+import { EthereumProvider } from '@/services/web3-provider';
 import { Request, RequestState } from '@/types/data';
 
 function findFirstEvent(receipt: TransactionReceipt, eventName: string) {
@@ -17,11 +18,12 @@ function findFirstEvent(receipt: TransactionReceipt, eventName: string) {
 }
 
 export async function getRequestFee(
-  signer: DeepReadonly<JsonRpcSigner>,
+  ethereumProvider: Readonly<EthereumProvider>,
   requestManagerAddress: string,
 ): Promise<number> {
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
-  return await requestManagerContract.totalFee();
+  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi);
+  const connectedContract = ethereumProvider.connectContract(requestManagerContract);
+  return await connectedContract.totalFee();
 }
 
 export async function sendRequestTransaction(
