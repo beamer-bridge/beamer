@@ -17,7 +17,6 @@ export async function listenOnFulfillment(
     BigNumber.from(request.sourceChainId),
     request.targetTokenAddress,
   );
-  // TODO find a better way to catch a previous event than block - 1000
   const events = await fillManagerContract.queryFilter(eventFilter, currentBlockNumber - 1000);
   if (events.length > 0) {
     return;

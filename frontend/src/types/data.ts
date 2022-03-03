@@ -2,7 +2,6 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { Ref } from 'vue';
 
-// TODO enum values should be in upper case by convention
 export enum RequestState {
   Init,
   WaitConfirm,
