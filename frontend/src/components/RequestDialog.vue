@@ -52,15 +52,15 @@
           <template v-else>Transfer funds</template>
         </FormKit>
 
-          <FormKit
-            v-if="requestState === RequestState.RequestSuccessful"
-            input-class="w-112 bg-green flex flex-row justify-center"
-            type="button"
-            :disabled="false"
-            @click="newTransfer"
-          >
-            New Transfer
-          </FormKit>
+        <FormKit
+          v-if="requestState === RequestState.RequestSuccessful"
+          input-class="w-112 bg-green flex flex-row justify-center"
+          type="button"
+          :disabled="false"
+          @click="newTransfer"
+        >
+          New Transfer
+        </FormKit>
       </div>
     </FormKit>
   </div>
@@ -93,20 +93,13 @@ const raisyncConfig = injectStrict(RaisyncConfigKey);
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
-const { fee, getFeeActive, getFeeError, executeGetFee } = useGetFee(
-  ethereumProvider,
-  raisyncConfig,
-);
+const { fee, executeGetFee } = useGetFee(ethereumProvider, raisyncConfig);
 const { requestTransactionActive, requestState, transactionError, executeRequestTransaction } =
   useRequestTransaction(ethereumProvider, raisyncConfig);
-const { waitFulfilledActive, waitError, executeWaitFulfilled } = useWaitRequestFilled(
-  ethereumProvider,
-  raisyncConfig,
-);
+const { executeWaitFulfilled } = useWaitRequestFilled(ethereumProvider, raisyncConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
 
-const isProcessing = ref(false);
 const feesEther = computed(() => {
   if (fee.value) {
     return utils.formatEther(fee.value);
@@ -125,6 +118,9 @@ const submitRequestTransaction = async (formResult: {
   toAddress: string;
   tokenAddress: SelectorOption;
 }) => {
+  if (!ethereumProvider.value.signer.value) {
+    throw new Error('No signer available!');
+  }
   // TODO pre-fetch the fees as soon as the form-result is complete
   // set the fees on the request object and don't fetch again
   // FIXME if the user selects a different sourceChainId from the dropdown
@@ -153,15 +149,15 @@ const submitRequestTransaction = async (formResult: {
   };
   request.fee = fee.value;
 
-  await executeRequestTransaction(request, ethereumProvider.value.signer.value!);
+  await executeRequestTransaction(request, ethereumProvider.value.signer.value);
 
-  await executeWaitFulfilled(request, requestState, ethereumProvider.value.signer.value!);
+  await executeWaitFulfilled(request, requestState, ethereumProvider.value.signer.value);
 };
 
 watch(ethereumProvider.value.chainId, async () => {
-  await executeGetFee(ethereumProvider.value.signer.value!);
+  await executeGetFee();
 });
-executeGetFee(ethereumProvider.value.signer.value!);
+executeGetFee();
 
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;

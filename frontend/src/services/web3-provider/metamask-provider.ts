@@ -6,7 +6,7 @@ import {
   Web3Provider,
 } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
-import { BigNumber } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
@@ -71,6 +71,10 @@ export class MetaMaskProvider implements EthereumProvider {
 
   async getLatestBlock(): Promise<Block> {
     return this.web3Provider.getBlock('latest');
+  }
+
+  connectContract(contract: Contract): Contract {
+    return contract.connect(this.web3Provider);
   }
 
   private async getChainId(): Promise<number> {
