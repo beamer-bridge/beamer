@@ -189,7 +189,6 @@ class EventProcessor:
 
     def _process_event(self, event: Event) -> bool:
         if isinstance(event, raisync.events.RequestCreated):
-
             is_valid_request = self._match_checker.is_valid_pair(
                 event.chain_id,
                 event.source_token_address,
@@ -211,6 +210,7 @@ class EventProcessor:
             )
             self._tracker.add(req)
             return True
+
         elif isinstance(event, raisync.events.RequestFilled):
             request = self._tracker.get(event.request_id)
             if request is None:
@@ -222,6 +222,7 @@ class EventProcessor:
                 return False
             self._log.info("Request filled", request=request)
             return True
+
         elif isinstance(event, raisync.events.ClaimMade):
             request = self._tracker.get(event.request_id)
             if request is None:
@@ -233,6 +234,7 @@ class EventProcessor:
                 return False
             self._log.info("Request claimed", request=request, claim_id=event.claim_id)
             return True
+
         elif isinstance(event, raisync.events.ClaimWithdrawn):
             request = self._tracker.get(event.request_id)
             if request is None:
@@ -263,6 +265,12 @@ class EventProcessor:
                 self._claim_request(request)
             elif request.is_claimed:
                 self._check_claims(request)
+            elif request.is_unfillable:
+                self._log.debug("Deleting unfillable request", request=request)
+                self._tracker.remove(request.id)
+            elif request.is_withdrawn:
+                self._log.debug("Deleting withdrawn request", request=request)
+                self._tracker.remove(request.id)
 
     def _check_claims(self, request: Request) -> None:
         for claim in request.iter_claims():
