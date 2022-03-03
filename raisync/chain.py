@@ -124,6 +124,9 @@ class EventProcessor:
         # 2 = both chains synced
         self._num_syncs_done = 0
 
+        if not self._fill_manager.functions.allowedLPs(self._address).call():
+            raise RuntimeError("Agent address is not whitelisted")
+
     def mark_sync_done(self) -> None:
         with self._lock:
             assert self._num_syncs_done < 2
