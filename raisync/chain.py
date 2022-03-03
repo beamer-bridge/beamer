@@ -257,6 +257,7 @@ class EventProcessor:
                 # We need to wait until we are synced with both chains.
                 return
 
+        to_remove = []
         for request in self._tracker:
             self._log.debug("Processing request", request=request)
             if request.is_pending:
@@ -266,11 +267,14 @@ class EventProcessor:
             elif request.is_claimed:
                 self._check_claims(request)
             elif request.is_unfillable:
-                self._log.debug("Deleting unfillable request", request=request)
-                self._tracker.remove(request.id)
+                self._log.debug("Removing unfillable request", request=request)
+                to_remove.append(request.id)
             elif request.is_withdrawn:
-                self._log.debug("Deleting withdrawn request", request=request)
-                self._tracker.remove(request.id)
+                self._log.debug("Removing withdrawn request", request=request)
+                to_remove.append(request.id)
+
+        for id in to_remove:
+            self._tracker.remove(id)
 
     def _check_claims(self, request: Request) -> None:
         for claim in request.iter_claims():
