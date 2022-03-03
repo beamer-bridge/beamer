@@ -121,13 +121,6 @@ const submitRequestTransaction = async (formResult: {
   if (!ethereumProvider.value.signer.value) {
     throw new Error('No signer available!');
   }
-  // TODO pre-fetch the fees as soon as the form-result is complete
-  // set the fees on the request object and don't fetch again
-  // FIXME if the user selects a different sourceChainId from the dropdown
-  // 	than activated in MetaMask, the chosen chain will not take effect but rather
-  // 	the active MetaMask chain is used anyways
-  // TODO -> if source chain is different than current active chain, call the provider.switchChain before
-  // 	continueing
   const request: Request = {
     targetChainId: Number(formResult.toChainId.value),
     sourceTokenAddress: formResult.tokenAddress.value,
@@ -136,7 +129,6 @@ const submitRequestTransaction = async (formResult: {
     targetAddress: formResult.toAddress,
     amount: BigNumber.from(formResult.amount),
   };
-  // await executeGetFee(request, ethereumProvider.value.signer.value!);
 
   requestMetadata.value = {
     state: requestState,
@@ -166,7 +158,4 @@ const shownError = () => {
   }
   return error;
 };
-
-// TODO show block explorer URL on successful tx screen
-// TODO prefill address with account address
 </script>

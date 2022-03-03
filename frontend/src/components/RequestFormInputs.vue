@@ -91,50 +91,11 @@ raisyncConfig.value.chains[String(ethereumProvider.value.chainId.value)].tokens.
   (token) => {
     TOKENS.push({ value: token.address, label: token.symbol });
   },
-); // TODO it would be better to fetch Token Meta data from somewhere
+);
 
 const switchChain = (chainId) => {
   if (chainId !== ethereumProvider.value.chainId.value && ethereumProvider.value.switchChain) {
     ethereumProvider.value.switchChain(chainId.value);
   }
 };
-
-// TEST DATA
-// const TOKENS: SelectorOption[] = [
-//   // TODO value should be address of token or custom token object
-//   {
-//     value: 'usdc',
-//     label: 'USDC',
-//     imageUrl: 'src/assets/images/usdc.svg',
-//   },
-//   {
-//     value: 'dai',
-//     label: 'DAI',
-//     imageUrl: 'src/assets/images/dai.svg',
-//   },
-// ];
-
-// const CHAINS: SelectorOption[] = [
-//   // TODO value should be chain id
-//   {
-//     value: 'optimism',
-//     label: 'Optimism Mainnet',
-//     imageUrl: 'src/assets/images/optimism.svg',
-//   },
-//   {
-//     value: 'arbitrum',
-//     label: 'Arbitrum Mainnet',
-//     imageUrl: 'src/assets/images/arbitrum.svg',
-//   },
-// ];
-
-// TODO validation errors should be shown, atm they are hidden (messages-class="hidden")
-// TODO switch chain when from is changed by the user
-// TODO prefill from with current chain
-
-// TODO Prefill from / to rollup fields
-// TODO Help tooltip text needed
-
-// TODO Token amount input should show token balance as help
-// TODO Token amount input should get a MAX button
 </script>
