@@ -3,7 +3,7 @@ import sys
 from functools import update_wrapper
 from pathlib import Path
 from random import randint
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import click
 import requests
@@ -152,7 +152,7 @@ def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_r
 @pass_args
 def submit_request(
     web3: Web3,
-    contracts: Dict[str, Contract],
+    contracts: dict[str, Contract],
     target_chain_id: ChainId,
     target_token_address: Address,
     target_address: Address,
@@ -206,7 +206,7 @@ def submit_request(
 @pass_args
 def fill_request(
     web3: Web3,
-    contracts: Dict[str, Contract],
+    contracts: dict[str, Contract],
     request_id: int,
     source_chain_id: ChainId,
     target_address: Address,
@@ -247,7 +247,7 @@ def fill_request(
 @pass_args
 def claim_request(
     web3: Web3,
-    contracts: Dict[str, Contract],
+    contracts: dict[str, Contract],
     request_id: int,
     fill_id: bytes,
 ) -> None:
@@ -260,7 +260,7 @@ def claim_request(
     valid_until = request[8]
     current_time = web3.eth.get_block("latest").get("timestamp")
 
-    if current_time > valid_until:
+    if current_time >= valid_until:
         print("Request already expired")
         return
     if deposit_receiver != ADDRESS_ZERO:
@@ -278,13 +278,13 @@ def claim_request(
 @click.option(
     "--request-id",
     type=int,
-    help="Request Id of expired request",
+    help="Request id of expired request",
 )
 @cli.command("withdraw-expired")
 @pass_args
 def withdraw_expired(
     web3: Web3,
-    contracts: Dict[str, Contract],
+    contracts: dict[str, Contract],
     request_id: int,
 ) -> None:
     """Withdraw an expired RaiSync request"""
@@ -296,7 +296,7 @@ def withdraw_expired(
     valid_until = request[8]
     current_time = web3.eth.get_block("latest").get("timestamp")
 
-    if current_time <= valid_until:
+    if current_time < valid_until:
         print("Request not expired yet. Cannot withdraw.")
         return
     if deposit_receiver != ADDRESS_ZERO:
@@ -329,7 +329,7 @@ def withdraw_expired(
 @pass_args
 def mint(
     web3: Web3,
-    contracts: Dict[str, Contract],
+    contracts: dict[str, Contract],
     recipient: Optional[Address],
     amount: TokenAmount,
 ) -> None:
