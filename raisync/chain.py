@@ -345,6 +345,12 @@ class EventProcessor:
             request.ignore()
             return
 
+        block = self._request_manager.web3.eth.get_block("latest")
+        if block["timestamp"] >= request.valid_until:
+            self._log.info("Request expired, ignoring", request=request)
+            request.ignore()
+            return
+
         token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
         address = w3.eth.default_account
         balance = token.functions.balanceOf(address).call()
