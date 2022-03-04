@@ -68,10 +68,14 @@ jobs:
       - name: Build docs
         run: poetry run make docs
 
+      - name: Install solhint
+        run: npm install solhint --global
+
       - name: Lint contracts
         run: |
           poetry run black --check contracts
           poetry run flake8 contracts
+          solhint 'contracts/**/*.sol'
 
       - name: Lint raisync
         run: |
