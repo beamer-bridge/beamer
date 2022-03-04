@@ -90,3 +90,30 @@ def test_withdraw(request_manager, token, node):
     with Sleeper(5) as sleeper:
         while not request.is_withdrawn:
             sleeper.sleep(0.1)
+
+
+def test_expired_request_is_ignored(request_manager, token, node):
+    target_address = accounts[1]
+    validity_period = request_manager.MIN_VALIDITY_PERIOD()
+    # make the request amount high enough that the node cannot fill it
+    amount = token.balanceOf(node.address) + 1
+    request_id = make_request(
+        request_manager,
+        token,
+        accounts[0],
+        target_address,
+        amount,
+        validity_period=validity_period,
+    )
+
+    brownie.chain.mine(timedelta=validity_period / 2)
+    with Sleeper(1) as sleeper:
+        while (request := node.request_tracker.get(request_id)) is None:
+            sleeper.sleep(0.1)
+
+    assert request.is_pending
+
+    brownie.chain.mine(timedelta=validity_period / 2 + 1)
+    with Sleeper(1) as sleeper:
+        while not request.is_unfillable:
+            sleeper.sleep(0.1)
