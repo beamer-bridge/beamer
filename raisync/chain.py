@@ -252,8 +252,6 @@ class EventProcessor:
         else:
             raise RuntimeError("Unrecognized event type")
 
-        return False
-
     def _process_requests(self) -> None:
         with self._lock:
             if self._num_syncs_done < 2:
