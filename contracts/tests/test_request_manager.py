@@ -61,6 +61,11 @@ def test_claim_challenge(request_manager, token, claim_stake):
             claim.return_value, {"from": challenger, "value": claim_stake}
         )
 
+    with brownie.reverts("Cannot challenge own claim"):
+        request_manager.challengeClaim(
+            claim.return_value, {"from": requester, "value": claim_stake + 1}
+        )
+
     with brownie.reverts("Not enough stake provided"):
         request_manager.challengeClaim(claim.return_value, {"from": challenger})
 
