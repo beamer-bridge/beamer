@@ -4,8 +4,8 @@ pragma solidity ^0.8.12;
 import "../interfaces/ICrossDomainMessenger.sol";
 
 contract TestCrossDomainMessenger is ICrossDomainMessenger {
-    address lastSender;
-    bool forwardMessages;
+    address public lastSender;
+    bool public forwardMessages;
 
     function xDomainMessageSender() external view returns (address) {
         return lastSender;

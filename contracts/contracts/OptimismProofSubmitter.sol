@@ -9,7 +9,7 @@ import "./Resolver.sol";
 import "./RestrictedCalls.sol";
 
 contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
-    ICrossDomainMessenger messenger;
+    ICrossDomainMessenger public messenger;
 
     constructor(address _messenger)
     {
