@@ -79,8 +79,8 @@ contract RequestManager is Ownable {
     uint256 public challengePeriod;
     uint256 public challengePeriodExtension;
 
-    uint256 public constant minValidityPeriod = 5 minutes;
-    uint256 public constant maxValidityPeriod = 52 weeks;
+    uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
+    uint256 public constant MAX_VALIDITY_PERIOD = 52 weeks;
 
     // Variables
     uint256 public requestCounter;
@@ -91,7 +91,7 @@ contract RequestManager is Ownable {
     mapping (uint256 => Claim) public claims;
 
     uint256 public gasPrice = 5e9;
-    uint256 serviceFeePPM = 45_000;  //4.5%
+    uint256 private serviceFeePPM = 45_000;  //4.5%
 
     // raisync fee tracking
     uint256 public collectedRaisyncFees = 0;
@@ -156,8 +156,8 @@ contract RequestManager is Ownable {
         uint256 lpFee = gasReimbursementFee() + lpServiceFee();
         uint256 raisyncFee = raisyncServiceFee();
         require(lpFee + raisyncFee == msg.value, "Wrong amount of fees sent");
-        require(validityPeriod >= minValidityPeriod, "Validity period too short");
-        require(validityPeriod <= maxValidityPeriod, "Validity period too long");
+        require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
+        require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
