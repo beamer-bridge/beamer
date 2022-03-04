@@ -574,7 +574,7 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
     assert claim_stake == request_manager.collectedRaisyncFees()
 
     # Withdrawing the third claim must also succeed immediately.
-    # Since the claimer is also the depositReiceiver stakes go back to the claimer
+    # Since the claimer is also the depositReceiver stakes go back to the claimer
     withdraw_tx = request_manager.withdraw(claim3_id, {"from": claimer1})
     assert "ClaimWithdrawn" in withdraw_tx.events
     assert claimer1_eth_balance == web3.eth.get_balance(claimer1.address)
