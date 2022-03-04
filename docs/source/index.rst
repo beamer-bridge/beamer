@@ -6,3 +6,4 @@ Welcome to Raisync's documentation!
 
    node.rst
    protocol.rst
+   l1_resolution.rst
