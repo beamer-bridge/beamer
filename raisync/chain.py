@@ -17,7 +17,7 @@ from web3.types import Wei
 
 import raisync.events
 from raisync.events import ClaimMade, Event, EventFetcher
-from raisync.request import Request, RequestTracker
+from raisync.request import Request, RequestData, RequestTracker
 from raisync.typing import BlockNumber, ChainId
 from raisync.util import TokenMatchChecker
 
@@ -202,14 +202,18 @@ class EventProcessor:
                 self._log.debug("Invaid token pair in request", _event=event)
                 return False
 
+            data = self._request_manager.functions.requests(event.request_id).call()
+            request_data = RequestData.from_chain_data(data)
+
             req = Request(
                 request_id=event.request_id,
                 source_chain_id=event.chain_id,
-                target_chain_id=event.target_chain_id,
-                source_token_address=event.source_token_address,
-                target_token_address=event.target_token_address,
-                target_address=event.target_address,
-                amount=event.amount,
+                target_chain_id=request_data.targetChainId,
+                source_token_address=request_data.sourceTokenAddress,
+                target_token_address=request_data.targetTokenAddress,
+                target_address=request_data.targetAddress,
+                amount=request_data.amount,
+                valid_until=request_data.validUntil,
             )
             self._tracker.add(req)
             return True

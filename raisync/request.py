@@ -20,6 +20,7 @@ class Request(StateMachine):
         target_token_address: Address,
         target_address: Address,
         amount: TokenAmount,
+        valid_until: int,
     ) -> None:
         super().__init__()
         self.id = request_id
@@ -29,6 +30,7 @@ class Request(StateMachine):
         self.target_token_address = target_token_address
         self.target_address = target_address
         self.amount = amount
+        self.valid_until = valid_until
         self._claims: dict[ClaimId, ClaimMade] = {}
         self.filler: Optional[Address] = None
         self.fill_id: Optional[int] = None
