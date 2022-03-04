@@ -327,7 +327,7 @@ contract RequestManager is Ownable {
         request.activeClaims -= 1;
 
         if (depositReceiver == address(0) && claimReceiver == claim.claimer) {
-            withdraw_deposit(claimId, request, claim, claimReceiver);
+            withdrawDeposit(request, claim, claimReceiver);
         }
 
         // The claim is set the `withdrawn` state above, so the following effects
@@ -354,8 +354,7 @@ contract RequestManager is Ownable {
         return claimReceiver;
     }
 
-    function withdraw_deposit(
-        uint256 claimId,
+    function withdrawDeposit(
         Request storage request,
         Claim storage claim,
         address depositReceiver
