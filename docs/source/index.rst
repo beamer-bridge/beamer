@@ -5,6 +5,7 @@ Welcome to Beamer's documentation!
    :maxdepth: 2
 
    running.rst
+   whitepaper.rst
    agent.rst
    protocol.rst
    l1_resolution.rst
