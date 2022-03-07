@@ -278,8 +278,8 @@ class EventProcessor:
                 self._log.debug("Removing withdrawn request", request=request)
                 to_remove.append(request.id)
 
-        for id in to_remove:
-            self._tracker.remove(id)
+        for request_id in to_remove:
+            self._tracker.remove(request_id)
 
     def _check_claims(self, request: Request) -> None:
         for claim in request.iter_claims():
@@ -295,7 +295,7 @@ class EventProcessor:
             stake_increase = 10 ** 15
         return Wei(max(claim.claimer_stake, claim.challenger_stake) + stake_increase)
 
-    def _maybe_challenge(self, request: Request, claim: ClaimMade) -> None:
+    def _maybe_challenge(self, request: Request, claim: ClaimMade) -> bool:
         # We need to challenge if either of the following is true:
         #
         # 1) the claim is dishonest AND nobody challenged it yet
@@ -312,7 +312,7 @@ class EventProcessor:
 
         should_challenge = dishonest_claim and unchallenged and not own_claim or our_turn
         if not should_challenge:
-            return
+            return False
 
         stake = self._compute_challenge_stake(claim)
 
@@ -322,7 +322,7 @@ class EventProcessor:
             )
         except web3.exceptions.ContractLogicError as exc:
             self._log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
-            return
+            return False
 
         w3 = self._request_manager.web3
         w3.eth.wait_for_transaction_receipt(txn_hash)
@@ -332,6 +332,8 @@ class EventProcessor:
             claim=claim,
             txn_hash=txn_hash.hex(),
         )
+
+        return True
 
     def _fill_request(self, request: Request) -> None:
         w3 = self._fill_manager.web3
