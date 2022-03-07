@@ -1,5 +1,5 @@
-Welcome to Raisync's documentation!
-===================================
+Welcome to Beamer's documentation!
+==================================
 
 .. toctree::
    :maxdepth: 2
