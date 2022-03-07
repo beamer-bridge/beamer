@@ -8,10 +8,10 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-from raisync.chain import ContractEventMonitor, EventProcessor, RequestTracker
-from raisync.contracts import DeploymentInfo, make_contracts
-from raisync.typing import URL, ChainId
-from raisync.util import TokenMatchChecker
+from beamer.chain import ContractEventMonitor, EventProcessor, RequestTracker
+from beamer.contracts import DeploymentInfo, make_contracts
+from beamer.typing import URL, ChainId
+from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
 

@@ -7,10 +7,10 @@ import structlog
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
-import raisync.contracts
-import raisync.util
-from raisync.node import Config, Node
-from raisync.typing import URL
+import beamer.contracts
+import beamer.util
+from beamer.agent import Config, Node
+from beamer.typing import URL
 
 log = structlog.get_logger(__name__)
 
@@ -81,11 +81,11 @@ def main(
     token_match_file: Path,
     log_level: str,
 ) -> None:
-    raisync.util.setup_logging(log_level=log_level.upper(), log_json=False)
+    beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
-    deployment_info = raisync.contracts.load_deployment_info(deployment_dir)
+    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
     config = Config(
         account=account,
         deployment_info=deployment_info,

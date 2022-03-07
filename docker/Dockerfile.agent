@@ -1,0 +1,10 @@
+FROM python:3.9
+
+COPY . /src
+RUN pip install shiv
+WORKDIR /src
+RUN mkdir -p dist && shiv -c beamer-agent -o dist/beamer-agent .
+
+FROM python:3.9-slim
+COPY --from=0 /src/dist/beamer-agent /usr/bin/beamer-agent
+ENTRYPOINT ["/usr/bin/beamer-agent"]

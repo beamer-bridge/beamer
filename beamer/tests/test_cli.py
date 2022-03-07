@@ -8,13 +8,13 @@ import eth_account
 import pytest
 from click.testing import CliRunner
 
-from raisync.cli import main
-from raisync.util import TokenMatchChecker
+from beamer.cli import main
+from beamer.util import TokenMatchChecker
 
 
 def _generate_deployment_dir(output_dir, root, contracts):
     data = {
-        "raisync_commit": "0" * 40,
+        "beamer_commit": "0" * 40,
         "L2": {
             str(brownie.chain.id): {
                 "RequestManager": [contracts.request_manager.address, 1],
@@ -59,7 +59,7 @@ def test_cli(config, tmp_path, contracts):
             "--deployment-dir",
             str(deployment_dir),
             "--token-match-file",
-            str(root / "raisync/data/tokens.example.json"),
+            str(root / "beamer/data/tokens.example.json"),
         ],
     )
     assert result.exit_code == 0

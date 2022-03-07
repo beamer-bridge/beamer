@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "raisync"
+name = "beamer"
 version = "0.0.1"
 description = "Bridging rollups with L1 guaranteed security"
 authors = ["brainbot technologies"]
@@ -32,7 +32,7 @@ Sphinx = "^4.4.0"
 furo = "^2022.3.4"
 
 [tool.poetry.scripts]
-raisync = 'raisync.cli:main'
+beamer-agent = 'beamer.cli:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -70,12 +70,12 @@ strict_equality = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["tests.*", "raisync.tests.*"]
+module = ["tests.*", "beamer.tests.*"]
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore:Development network has a block height of"
 
 [tool.coverage.run]
-source = ["raisync"]
-omit = ["raisync/tests/*"]
+source = ["beamer"]
+omit = ["beamer/tests/*"]

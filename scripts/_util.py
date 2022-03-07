@@ -3,7 +3,7 @@ from typing import Optional
 import click
 from eth_utils import decode_hex, is_checksum_address, is_hexstr, to_canonical_address
 
-from raisync.typing import Address
+from beamer.typing import Address
 
 
 def validate_address(

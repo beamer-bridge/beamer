@@ -16,9 +16,9 @@ from brownie import (
     accounts,
 )
 
-from raisync.contracts import ContractInfo
-from raisync.node import Config, Node
-from raisync.typing import BlockNumber
+from beamer.agent import Config, Node
+from beamer.contracts import ContractInfo
+from beamer.typing import BlockNumber
 
 
 @dataclass(frozen=True)
@@ -108,7 +108,7 @@ def contracts(deployer):
 @pytest.fixture
 def config(request_manager, fill_manager, token):
     root = pathlib.Path(__file__).parents[2]
-    token_match_file = root / "raisync/data/tokens.example.json"
+    token_match_file = root / "beamer/data/tokens.example.json"
 
     contracts_info = dict(
         RequestManager=ContractInfo(

@@ -16,9 +16,9 @@ from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-import raisync.contracts
-from raisync.typing import Address, ChainId, PrivateKey, TokenAmount
-from raisync.util import setup_logging
+import beamer.contracts
+from beamer.typing import Address, ChainId, PrivateKey, TokenAmount
+from beamer.util import setup_logging
 from scripts._util import validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
@@ -41,7 +41,7 @@ def connect_to_blockchain(deployment_dir: Path, eth_rpc: URI) -> tuple[Web3, dic
     # Add POA middleware for geth POA chains, no/op for other chains
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    deployment_info = raisync.contracts.load_deployment_info(deployment_dir)
+    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
     contract_infos = deployment_info[chain_id]
     contracts = {
         name: web3.eth.contract(abi=info.abi, address=info.address)
@@ -159,7 +159,7 @@ def submit_request(
     amount: TokenAmount,
     validity_period: int,
 ) -> None:
-    """Register a RaiSync request"""
+    """Register a Beamer request"""
 
     request_manager = contracts["RequestManager"]
     token = contracts["MintableToken"]
@@ -212,7 +212,7 @@ def fill_request(
     target_address: Address,
     amount: TokenAmount,
 ) -> None:
-    """Fill a RaiSync request"""
+    """Fill a Beamer request"""
 
     fill_manager = contracts["FillManager"]
     token = contracts["MintableToken"]
@@ -251,7 +251,7 @@ def claim_request(
     request_id: int,
     fill_id: bytes,
 ) -> None:
-    """Claim a RaiSync request"""
+    """Claim a Beamer request"""
 
     request_manager = contracts["RequestManager"]
     claim_stake = request_manager.functions.claimStake().call()
@@ -287,7 +287,7 @@ def withdraw_expired(
     contracts: dict[str, Contract],
     request_id: int,
 ) -> None:
-    """Withdraw an expired RaiSync request"""
+    """Withdraw an expired Beamer request"""
 
     request_manager = contracts["RequestManager"]
     request = request_manager.functions.requests(request_id).call()

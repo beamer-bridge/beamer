@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ROOT=$(dirname $(dirname "$(realpath "$0")"))
-DOCKER_COMPOSE_FILES="-f ${ROOT}/raisync/docker/optimism/ops/docker-compose.yml -f ${ROOT}/raisync/docker/optimism/ops/docker-compose-nobuild.yml"
+DOCKER_COMPOSE_FILES="-f ${ROOT}/beamer/docker/optimism/ops/docker-compose.yml -f ${ROOT}/beamer/docker/optimism/ops/docker-compose-nobuild.yml"
 
 down() {
     echo -e "\nShutting down the end-to-end environment"
@@ -46,7 +46,7 @@ usage() {
 $0  [up | down | addresses]
 
 Commands:
-  up           Bring up a private Optimism instance. Deploy Raisync contracts on it.
+  up           Bring up a private Optimism instance. Deploy Beamer contracts on it.
   down         Stop the Optimism instance.
   addresses    List deployed contracts' addresses.
   e2e          Run a simple end-to-end test.

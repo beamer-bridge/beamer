@@ -1,4 +1,4 @@
-name: Raisync CI
+name: Beamer CI
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
           path: |
             ~/.cache/pypoetry/virtualenvs
             ~/.solcx
-          key: poetry-1-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
+          key: poetry-2-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
 
       - name: Install ganache
         run: npm install ganache-cli --global
@@ -77,11 +77,11 @@ jobs:
           poetry run flake8 contracts
           solhint 'contracts/**/*.sol'
 
-      - name: Lint raisync
+      - name: Lint beamer
         run: |
-          poetry run black --check raisync scripts
-          poetry run flake8 raisync
-          poetry run mypy raisync
+          poetry run black --check beamer scripts
+          poetry run flake8 beamer
+          poetry run mypy beamer
 
       - name: Run contract tests
         run: |
@@ -97,7 +97,7 @@ jobs:
           pushd contracts && poetry run brownie run deploy && popd
           killall node
 
-          poetry run brownie test raisync/tests -v -G --cov raisync --cov-report=term
+          poetry run brownie test beamer/tests -v -G --cov beamer --cov-report=term
 
       - name: Load images from cache
         uses: satackey/action-docker-layer-caching@v0.0.11
