@@ -27,7 +27,7 @@ contract RequestManager is Ownable {
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
-        uint256 raisyncFee;
+        uint256 beamerFee;
     }
 
     struct Claim {
@@ -93,8 +93,8 @@ contract RequestManager is Ownable {
     uint256 public gasPrice = 5e9;
     uint256 private serviceFeePPM = 45_000;  //4.5%
 
-    // raisync fee tracking
-    uint256 public collectedRaisyncFees = 0;
+    // beamer fee tracking
+    uint256 public collectedBeamerFees = 0;
 
     // The optimizer should take care of eval'ing this
     function gasReimbursementFee() public view returns (uint256) {
@@ -109,12 +109,12 @@ contract RequestManager is Ownable {
         return gasReimbursementFee() * serviceFeePPM / 1_000_000;
     }
 
-    function raisyncServiceFee() public view returns (uint256) {
+    function beamerServiceFee() public view returns (uint256) {
         return gasReimbursementFee() * serviceFeePPM / 1_000_000;
     }
 
     function totalFee() public view returns (uint256) {
-        return gasReimbursementFee() + lpServiceFee() + raisyncServiceFee();
+        return gasReimbursementFee() + lpServiceFee() + beamerServiceFee();
     }
 
 
@@ -154,8 +154,8 @@ contract RequestManager is Ownable {
     external payable returns (uint256)
     {
         uint256 lpFee = gasReimbursementFee() + lpServiceFee();
-        uint256 raisyncFee = raisyncServiceFee();
-        require(lpFee + raisyncFee == msg.value, "Wrong amount of fees sent");
+        uint256 beamerFee = beamerServiceFee();
+        require(lpFee + beamerFee == msg.value, "Wrong amount of fees sent");
         require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
         require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
 
@@ -170,7 +170,7 @@ contract RequestManager is Ownable {
         newRequest.depositReceiver = address(0);
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
-        newRequest.raisyncFee = raisyncFee;
+        newRequest.beamerFee = beamerFee;
 
         emit RequestCreated(
             requestCounter,
@@ -201,7 +201,7 @@ contract RequestManager is Ownable {
         IERC20 token = IERC20(request.sourceTokenAddress);
         token.safeTransfer(request.sender, request.amount);
 
-        (bool sent,) = request.sender.call{value: request.lpFee + request.raisyncFee}("");
+        (bool sent,) = request.sender.call{value: request.lpFee + request.beamerFee}("");
         require(sent, "Failed to send Ether");
     }
 
@@ -344,7 +344,7 @@ contract RequestManager is Ownable {
             require(sent, "Failed to send Ether");
         }
         else {
-            collectedRaisyncFees += ethToTransfer;
+            collectedBeamerFees += ethToTransfer;
             claimReceiver = address(this);
         }
 
@@ -362,7 +362,7 @@ contract RequestManager is Ownable {
         Claim storage claim,
         address depositReceiver
     ) private {
-        collectedRaisyncFees += request.raisyncFee;
+        collectedBeamerFees += request.beamerFee;
 
         emit DepositWithdrawn(
             claim.requestId,
@@ -377,11 +377,11 @@ contract RequestManager is Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    function withdrawRaisyncFees() external onlyOwner {
-        require(collectedRaisyncFees > 0, "Zero fees available");
+    function withdrawbeamerFees() external onlyOwner {
+        require(collectedBeamerFees > 0, "Zero fees available");
 
-        uint256 feeAmount = collectedRaisyncFees;
-        collectedRaisyncFees = 0;
+        uint256 feeAmount = collectedBeamerFees;
+        collectedBeamerFees = 0;
 
         (bool sent,) = msg.sender.call{value: feeAmount}("");
         require(sent, "Failed to send Ether");

@@ -10,13 +10,13 @@ from beamer.tests.util import EventCollector, earnings, make_request
 
 @pytest.fixture(scope="module", autouse=True)
 def _allow_unlisted_pairs():
-    old = os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS")
-    os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = "1"
+    old = os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS")
+    os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"] = "1"
     yield
     if old is None:
-        del os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"]
+        del os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"]
     else:
-        os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = old
+        os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"] = old
 
 
 # Scenario 1:
