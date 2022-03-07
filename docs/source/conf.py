@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Raisync'
+project = 'Beamer Bridge'
 copyright = '2022, brainbot technologies AG'
 author = 'brainbot technologies AG'
 

@@ -1,4 +1,4 @@
-Raisync node
+Beamer agent
 ============
 
 
@@ -17,9 +17,9 @@ Basic requirements
 Node architecture
 -----------------
 
-.. figure:: images/raisync-node-architecture.png
+.. figure:: images/beamer-agent-architecture.png
 
-   Raisync node architecture
+   Beamer agent architecture
 
 In order to satisfy above requirements, we opted for a simple thread-based approach where we moved
 all software components that could potentially block into their own threads. In particular, these
@@ -30,7 +30,7 @@ ContractEventMonitor
 --------------------
 
 ``ContractEventMonitor`` listens for blockchain events emitted by a given contract, decodes the events
-into an internal event representation (event types in ``raisync.events``) and forwards decoded events
+into an internal event representation (event types in ``beamer.events``) and forwards decoded events
 to the ``EventProcessor``. The event monitor does not query the JSON-RPC server for events directly.
 Rather, it does that via an instance of ``EventFetcher``. Event fetcher handles communication with the
 JSON-RPC server and can block. However, even if the event fetcher for, say, L2a chain, blocks, since
@@ -48,14 +48,14 @@ independently of the other, allowing for very different speeds between the L2 ch
 EventProcessor
 --------------
 
-``EventProcessor`` implements the Raisync protocol logic. It receives events from event monitors and
+``EventProcessor`` implements the Beamer protocol logic. It receives events from event monitors and
 stores them into a list. It is important to note that events are not separated based on the chain
 they came from -- all events are stored in a single list, in the order they arrived, regardless of
 the originating chain.
 
 .. note::
 
-  Each event object, an instance of an event type from ``raisync.events``, has a
+  Each event object, an instance of an event type from ``beamer.events``, has a
   ``chain_id`` attribute that can be used to identify the chain that event came from.
 
 The thread of ``EventProcessor`` will typically sleep until something interesting happens. Delivery of
