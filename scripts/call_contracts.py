@@ -336,7 +336,7 @@ def mint(
     """Mint tokens"""
 
     token = contracts["MintableToken"]
-    recipient = recipient or to_canonical_address(web3.eth.default_account)
+    recipient = recipient or to_canonical_address(web3.eth.default_account)  # type: ignore
     tx_hash = token.functions.mint(recipient, amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 

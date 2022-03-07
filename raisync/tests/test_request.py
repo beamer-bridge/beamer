@@ -2,10 +2,15 @@ import time
 
 import brownie
 import pytest
-from brownie import accounts
+from brownie import ZERO_ADDRESS, accounts
+from eth_utils import to_checksum_address
+from web3.types import Wei
 
 import raisync.node
+from raisync.events import ClaimMade
+from raisync.request import Request
 from raisync.tests.util import HTTPProxy, Sleeper, Timeout, make_request
+from raisync.typing import ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
 def _get_delay(request_data):
@@ -44,6 +49,37 @@ def test_read_timeout(config):
     node.stop()
     proxy_l2a.stop()
     proxy_l2b.stop()
+
+
+def test_challenge_own_claim(config, request_manager, token):
+    node = raisync.node.Node(config)
+    node_address = to_checksum_address(node.address)
+    claim_stake = request_manager.claimStake()
+    request = Request(
+        RequestId(100),
+        brownie.chain.id,
+        brownie.chain.id,
+        token.address,
+        token.address,
+        node_address,
+        TokenAmount(1),
+        Termination(1700000000),
+    )
+
+    claim_event = ClaimMade(
+        brownie.chain.id,
+        ClaimId(1),
+        request.id,
+        FillId(0),
+        node_address,
+        claim_stake,
+        ZERO_ADDRESS,
+        Wei(0),
+        Termination(1700000000),
+    )
+
+    msg = "Tried to challenge own claim"
+    assert not node._event_processor._maybe_challenge(request, claim_event), msg
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
