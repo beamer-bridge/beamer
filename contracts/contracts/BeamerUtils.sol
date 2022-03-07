@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 
-library RaisyncUtils {
+library BeamerUtils {
 
     function createRequestHash(
         uint256 requestId,
