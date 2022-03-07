@@ -338,7 +338,7 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
     # Since there was no challenger, but claim2 was a false claim, stakes go to the platform
     assert (
         web3.eth.get_balance(request_manager.address)
-        == request_manager.collectedRaisyncFees()
+        == request_manager.collectedBeamerFees()
         == claim_stake
     )
     assert web3.eth.get_balance(claimer1.address) == claimer1_eth_balance
@@ -571,7 +571,7 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
     withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
     assert "ClaimWithdrawn" in withdraw_tx.events
     assert claimer2_eth_balance - claim_stake == web3.eth.get_balance(claimer2.address)
-    assert claim_stake == request_manager.collectedRaisyncFees()
+    assert claim_stake == request_manager.collectedBeamerFees()
 
     # Withdrawing the third claim must also succeed immediately.
     # Since the claimer is also the depositReceiver stakes go back to the claimer

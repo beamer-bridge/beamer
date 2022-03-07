@@ -142,10 +142,10 @@ def allow_unlisted_pairs() -> bool:
 @pytest.fixture
 def set_allow_unlisted_pairs(allow_unlisted_pairs: bool) -> None:
     if allow_unlisted_pairs:
-        os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"] = "1"
+        os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"] = "1"
     else:
-        if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
-            del os.environ["RAISYNC_ALLOW_UNLISTED_PAIRS"]
+        if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
+            del os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"]
 
 
 @pytest.fixture

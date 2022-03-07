@@ -86,7 +86,7 @@ class RequestData:
     activeClaims: int
     validUntil: int
     lpFee: TokenAmount
-    raisyncFee: TokenAmount
+    beamerFee: TokenAmount
 
     @staticmethod
     def from_chain_data(data: Sequence) -> "RequestData":

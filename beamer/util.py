@@ -88,7 +88,7 @@ class TokenMatchChecker:
         target_chain_id: ChainId,
         target_token_address: ChecksumAddress,
     ) -> bool:
-        if os.environ.get("RAISYNC_ALLOW_UNLISTED_PAIRS") is not None:
+        if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
             return True
 
         source_token = source_chain_id, source_token_address
