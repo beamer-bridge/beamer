@@ -30,6 +30,7 @@ pytest-cov = "^3.0.0"
 shiv = "^1.0.1"
 Sphinx = "^4.4.0"
 furo = "^2022.3.4"
+sphinxcontrib-mermaid = "^0.7.1"
 
 [tool.poetry.scripts]
 beamer-agent = 'beamer.cli:main'
