@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 import "../interfaces/IProofSubmitter.sol";
 import "../interfaces/ICrossDomainMessenger.sol";
 
-import "./RaisyncUtils.sol";
+import "./BeamerUtils.sol";
 import "./Resolver.sol";
 import "./RestrictedCalls.sol";
 
@@ -26,7 +26,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             abi.encodeCall(
                 Resolver.resolve,
                 (
-                    RaisyncUtils.createFillHash(requestHash, fillId),
+                    BeamerUtils.createFillHash(requestHash, fillId),
                     block.chainid,
                     sourceChainId,
                     filler

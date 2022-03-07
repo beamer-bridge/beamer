@@ -6,7 +6,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/utils/Sa
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
 
-import "./RaisyncUtils.sol";
+import "./BeamerUtils.sol";
 import "./ResolutionRegistry.sol";
 
 contract RequestManager is Ownable {
@@ -292,7 +292,7 @@ contract RequestManager is Ownable {
         Request storage request = requests[claim.requestId];
         require(!claim.withdrawn, "Claim already withdrawn");
 
-        bytes32 fillHash = RaisyncUtils.createFillHash(
+        bytes32 fillHash = BeamerUtils.createFillHash(
                 claim.requestId,
                 block.chainid,
                 request.targetChainId,
