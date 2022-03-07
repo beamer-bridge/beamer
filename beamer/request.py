@@ -6,8 +6,8 @@ from typing import Any, Generator, Optional
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
 
-from raisync.events import ClaimMade
-from raisync.typing import ChainId, ClaimId, RequestId, TokenAmount
+from beamer.events import ClaimMade
+from beamer.typing import ChainId, ClaimId, RequestId, TokenAmount
 
 
 class Request(StateMachine):

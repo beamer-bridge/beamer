@@ -6,11 +6,11 @@ from brownie import ZERO_ADDRESS, accounts
 from eth_utils import to_checksum_address
 from web3.types import Wei
 
-import raisync.node
-from raisync.events import ClaimMade
-from raisync.request import Request
-from raisync.tests.util import HTTPProxy, Sleeper, Timeout, make_request
-from raisync.typing import ClaimId, FillId, RequestId, Termination, TokenAmount
+from beamer.agent import Node
+from beamer.events import ClaimMade
+from beamer.request import Request
+from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
+from beamer.typing import ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
 def _get_delay(request_data):
@@ -43,7 +43,7 @@ def test_read_timeout(config):
         proxy_l2b.server_address[1],
     )
 
-    node = raisync.node.Node(config)
+    node = Node(config)
     node.start()
     time.sleep(60)
     node.stop()
@@ -52,7 +52,7 @@ def test_read_timeout(config):
 
 
 def test_challenge_own_claim(config, request_manager, token):
-    node = raisync.node.Node(config)
+    node = Node(config)
     node_address = to_checksum_address(node.address)
     claim_stake = request_manager.claimStake()
     request = Request(

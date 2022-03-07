@@ -1,9 +1,9 @@
-# raisync
-Raisync - Bridging Roll ups with the L1 inherited security
+# Beamer Bridge
+*Bridging Roll ups with the L1 inherited security*
 
 ### Working with a local Optimism instance
 
-To setup a local Optimism instance and deploy Raisync contracts on it,
+To setup a local Optimism instance and deploy Beamer contracts on it,
 run
 
 ```
@@ -26,7 +26,7 @@ sh ./docker/optimism/optimism.sh addresses
 
 ### Testing
 
-First make sure raisync is installed:
+First make sure beamer is installed:
 
 ```
    $ poetry install
@@ -68,10 +68,10 @@ Then enter the virtual environment:
                             --password ''
 ```
 
-- Start raisync:
+- Start `beamer-agent`:
 
 ```
-   $ raisync --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+   $ beamer-agent --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
              --password '' \
              --l2a-rpc-url http://127.0.0.1:8545 \
              --l2b-rpc-url http://127.0.0.1:8545 \
@@ -130,7 +130,7 @@ following command:
 
 ### Building documentation
 
-To build Raisync documentation, make sure to have [Sphinx](https://www.sphinx-doc.org)
+To build Beamer documentation, make sure to have [Sphinx](https://www.sphinx-doc.org)
 and [Graphviz](http://graphviz.org) installed. Documentation can be built by running
 
 ```

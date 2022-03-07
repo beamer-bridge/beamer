@@ -15,11 +15,11 @@ from statemachine.exceptions import TransitionNotAllowed
 from web3.contract import Contract
 from web3.types import Wei
 
-import raisync.events
-from raisync.events import ClaimMade, Event, EventFetcher
-from raisync.request import Request, RequestData, RequestTracker
-from raisync.typing import BlockNumber, ChainId
-from raisync.util import TokenMatchChecker
+import beamer.events
+from beamer.events import ClaimMade, Event, EventFetcher
+from beamer.request import Request, RequestData, RequestTracker
+from beamer.typing import BlockNumber, ChainId
+from beamer.util import TokenMatchChecker
 
 
 def _load_ERC20_abi() -> list[Any]:
@@ -191,7 +191,7 @@ class EventProcessor:
                 break
 
     def _process_event(self, event: Event) -> bool:
-        if isinstance(event, raisync.events.RequestCreated):
+        if isinstance(event, beamer.events.RequestCreated):
             is_valid_request = self._match_checker.is_valid_pair(
                 event.chain_id,
                 event.source_token_address,
@@ -218,7 +218,7 @@ class EventProcessor:
             self._tracker.add(req)
             return True
 
-        elif isinstance(event, raisync.events.RequestFilled):
+        elif isinstance(event, beamer.events.RequestFilled):
             request = self._tracker.get(event.request_id)
             if request is None:
                 return False
@@ -230,7 +230,7 @@ class EventProcessor:
             self._log.info("Request filled", request=request)
             return True
 
-        elif isinstance(event, raisync.events.ClaimMade):
+        elif isinstance(event, beamer.events.ClaimMade):
             request = self._tracker.get(event.request_id)
             if request is None:
                 return False
@@ -242,7 +242,7 @@ class EventProcessor:
             self._log.info("Request claimed", request=request, claim_id=event.claim_id)
             return True
 
-        elif isinstance(event, raisync.events.ClaimWithdrawn):
+        elif isinstance(event, beamer.events.ClaimWithdrawn):
             request = self._tracker.get(event.request_id)
             if request is None:
                 return False

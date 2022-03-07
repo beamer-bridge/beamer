@@ -4,8 +4,8 @@ import brownie
 import pytest
 from brownie import accounts
 
-import raisync.node
-from raisync.tests.util import EventCollector, earnings, make_request
+import beamer.agent
+from beamer.tests.util import EventCollector, earnings, make_request
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -31,7 +31,7 @@ def test_challenge_1(request_manager, token, config):
     target_address = accounts[8]
     requester, charlie = accounts[:2]
 
-    node = raisync.node.Node(config)
+    node = beamer.agent.Node(config)
     node.start()
 
     w3 = brownie.web3
@@ -75,7 +75,7 @@ def test_challenge_2(request_manager, token, config):
     target_address = accounts[8]
     requester, charlie = accounts[:2]
 
-    node = raisync.node.Node(config)
+    node = beamer.agent.Node(config)
     node.start()
 
     w3 = brownie.web3
@@ -130,7 +130,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
     target_address = accounts[8]
     requester, charlie = accounts[:2]
 
-    node = raisync.node.Node(config)
+    node = beamer.agent.Node(config)
 
     w3 = brownie.web3
     with earnings(w3, node, num_fills=0) as node_earnings, earnings(
@@ -182,7 +182,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
     target_address = accounts[8]
     requester, charlie = accounts[:2]
 
-    node = raisync.node.Node(config)
+    node = beamer.agent.Node(config)
 
     w3 = brownie.web3
     with earnings(w3, node, num_fills=0) as node_earnings, earnings(

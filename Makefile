@@ -1,6 +1,6 @@
 .PHONY: dist-exe container-image all lint black format docs clean
 
-CODE_DIRS = contracts/ raisync/ scripts/
+CODE_DIRS = contracts/ beamer/ scripts/
 
 all: lint
 
@@ -18,10 +18,10 @@ format: black
 	isort $(CODE_DIRS)
 
 dist-exe:
-	shiv -c raisync -o dist/raisync .
+	shiv -c beamer-agent -o dist/beamer-agent .
 
 container-image:
-	docker image build -f docker/Dockerfile.raisync -t raisync .
+	docker image build -f docker/Dockerfile.agent -t beamer-agent .
 
 docs:
 	make -C docs html

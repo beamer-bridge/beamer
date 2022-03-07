@@ -163,7 +163,7 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
 
     web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
     resolver, l1_data = deploy_l1(web3_l1)
-    deployment_data["raisync_commit"] = commit_id
+    deployment_data["beamer_commit"] = commit_id
     deployment_data["L1"] = l1_data
     deployment_data["L2"] = {}
 

@@ -7,7 +7,7 @@ from typing import List, TextIO
 import structlog
 from eth_utils import is_checksum_address, to_checksum_address
 
-from raisync.typing import ChainId, ChecksumAddress
+from beamer.typing import ChainId, ChecksumAddress
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:
