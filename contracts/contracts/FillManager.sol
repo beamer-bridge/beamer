@@ -5,7 +5,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
 import "../interfaces/IProofSubmitter.sol";
-import "./RaisyncUtils.sol";
+import "./BeamerUtils.sol";
 
 
 contract FillManager is Ownable {
@@ -51,7 +51,7 @@ contract FillManager is Ownable {
     returns (bytes32)
     {
         require(allowedLPs[msg.sender], "Sender not whitelisted");
-        bytes32 requestHash = RaisyncUtils.createRequestHash(
+        bytes32 requestHash = BeamerUtils.createRequestHash(
                 requestId, sourceChainId, block.chainid, targetTokenAddress, targetReceiverAddress, amount
             );
 
