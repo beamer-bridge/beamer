@@ -303,13 +303,14 @@ class EventProcessor:
         # 2) we participate in the game AND it is our turn
 
         unchallenged = claim.challenger_stake == 0
+        own_claim = claim.claimer == self._address
         dishonest_claim = claim.claimer != request.filler or claim.fill_id != request.fill_id
 
         our_turn = (
             claim.challenger == self._address and claim.claimer_stake > claim.challenger_stake
-        ) or (claim.claimer == self._address and claim.claimer_stake < claim.challenger_stake)
+        ) or (own_claim and claim.claimer_stake < claim.challenger_stake)
 
-        should_challenge = (dishonest_claim and unchallenged) or our_turn
+        should_challenge = dishonest_claim and unchallenged and not own_claim or our_turn
         if not should_challenge:
             return
 
