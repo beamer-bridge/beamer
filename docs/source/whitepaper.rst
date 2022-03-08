@@ -1,15 +1,22 @@
-============
-Raisync node
-============
+=========================
+Beamer Protocol Explainer
+=========================
 
 Introduction
 ------------
 
-Raisync is a protocol to allow users to move funds from one roll up to another. This is achieved by matching the requester and the service provider who provides the funds on the target chain. The protocol chose to be roll up agnostic only for now as Ethereum announced a roll up centric road map.
+Beamer is a protocol to enable users to move tokens from one roll-up to another. The user requests a transfer by
+providing tokens on the source roll-up. Liquidity providers then fill the request and directly send tokens to the user
+on the target roll-up.
 
-The main advantage is achieved through separation of providing the service to the end user and reclaiming the funds into two separated games. The service is provided as soon as the request arrives optimistically. Being refunded on the source roll up is secured in a new game and decoupled from the actual service.
+The core focus of the protocol is to be as easy to use as possible for the end user. This is achieved through
+separating two different concerns: the service provision to the end user, and the reclaiming of funds by the
+liquidity provider. The service is provided as soon as the request arrives optimistically. Being refunded on the
+source roll up is secured in a second game and decoupled from the actual service.
 
-Ultimately and if necessary, any dispute will be resolved eventually with the help of L1 providing the state from the target roll up to the resolver. As all roll ups live on the same base chain, eventually state will be able to transmitted to each other. 
+Ultimately and only if necessary, any dispute can be resolved with the help of L1 providing the state from the target
+roll up to the source roll-up. As all roll ups live on the same base chain, eventually state will be able to be
+transmitted to each other.
 
 
 Principles
@@ -17,280 +24,260 @@ Principles
 UX
 ~~
 
-Other competitors seem to have easy implementations but lack in UX for the end user like making it necessary for the end user to do two transactions on two different rollups. This costs time and requires on boarding in advance.
-**We want to focus on the best possible UX**. This accounts for all users in the system.
-* Fast execution for the end user
-* One transaction (send and receive directly)
+Other competitors seem to have prioritized easy implementations over user experience. For example, most bridges make
+it necessary for the end user to do two transactions on two different roll-ups. This costs time and requires
+on-boarding in advance. **We want to focus on the best possible UX**. This accounts for all users in the system.
 
-The service provider aka market maker needs to have predictability over the costs and gains as well as the security to be refunded for the service he provided.
+- Fast execution for the end user
+- One transaction (send and receive directly)
+
+The service provider (market maker, liquidity provider) needs to have predictability over the costs and gains.
+Additionally, it has to be guaranteed to be refunded for the service he provided.
 
 Optimistic protocol
--------------------
+~~~~~~~~~~~~~~~~~~~
 
-In order to guarantee the above, the protocol is designed in an optimistic manner. Derived from optimistic protocols, each participant can validate the state himself whereas the base chain needs to wait for finality.
-At first, contracts will have to "trust" the users which submit transactions. By challenge periods, false behavior can be challenged. This will pause the transaction flow and enter into a new game.
-Challenged interactions will be ultimately resolved on the base chain, as the base chain has the knowledge of all roll ups' states.
-This makes the protocol fast and easy to use in the normal case. The downside is, that security guarantees depend on the availability of the watchers which will challenge false behavior.
+In order to guarantee the above, the protocol is designed in an optimistic manner. The protocol is streamlined for
+the optimal case where no evildoers attempt to attack it. We then make sure that anyone attacking the system can be
+punished financially. We also economically incentivize honest participant to enforce the security of the
+protocol.
 
 The Protocol
 ------------
 
-The protocol is separated into games with different levels of economic incentives. Those economic incentives interfere only slightly with each other. This model is chosen to cover the problem of economic viability of fraud proofs when it comes to very low amounts of earnings.
+The protocol is separated into games with different levels of economic incentives. Those economic incentives 
+interfere only slightly with each other. This model is chosen to cover the problem of economic viability of fraud 
+proofs when it comes to very low amounts of earnings.
 
 
-Game 1: Service Provision
-~~~~~~~~~~~~~~~~~~~~~~~~~
+First concern: service provision
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The process starts with the actual service provision of its use case. 
-The end user, also called Alice, will send a request on the source Roll Up (A) by locking up the tokens in the RequestManager contract with specified data how the request can be filled.
-A market maker, later called Bob is willing to fulfill the service by directly filling the request on target roll up (B). He now pays Alice upfront and fills the request. He can only do this if he knows for sure that he will be refunded with the tokens on roll up (A).
-After filling the request Bob will claim the refund. It initiates the claim period. Since the RequestManager contract on roll up A does not know who filled the request, there needs to be a period in which other honest participants could step in and challenge the honesty of Bob. Anybody can call the claim. Bob will have to put a safety deposit which he will risk to lose if he did not actually do what he claimed for. This will be described later on in Game 2.
-Once the claim period ends and nobody challenged his claim, his refund is final and he is allowed to withdraw. This can be accumulated for multiple claims.
+The process starts with the actual service provision to the user. The end user, further called Alice, will send a
+request on the source roll-up (A) by locking up the tokens in the `RequestManager` contract specifying how the
+request can be filled.
 
-Constraints
-+++++++++++
+The parameters that need to be specified by the users are:
 
-Fees: Fee model is roughly calculated as such: `txfee_fill_rollup_B + tx_fee_claim_rollup_A + tx_fee_withdraw_rollup_A / accumulated_withdraws + opportunity_cost(requested_tokens, claim period) + opportunity_cost(safety_deposit, claim_period) + margin`
+- target chain ID
+- source token address
+- target token address
+- recipient address on target roll-up
+- amount
+- validity period of request
 
-claim period: Must be long enough for other participants to verify roll up Bs state and challenge the claim. Claim must be included in roll up A.
+A liquidity provider, later called Bob fulfills the service by directly filling the request on target roll-up (B).
+He now pays Alice upfront and Alice receives the tokens without having to send any subsequent transactions.
 
+Alice will pay a fee for bridging her tokens. This fee needs to cover the expense of the liquidity provider and reward
+them. The fee also include a protocol fee, rewarding builders of the protocol.
 
-Game 2: Claim and Challenge
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Security for Alice
+++++++++++++++++++
 
-The claim and Challenge game (C&C) is a game between the claimer and a challenger to keep the network healthy. This means that false claims, which are possible in the protocol, will be declined before the funds are being paid out and are lost. The original service provider will be refunded eventually. The incentives must be chosen in a way that the following statements are true:
+Alice's main concern is having her locked tokens taken away, while not receiving bridged tokens on roll-up B. This is not
+possible as long as there is one honest, or game theoretic, participant in the challenge protocol explained in the next section.
 
-- Not saying the truth, for either claimer or challenger will lead to a loss of funds if both participants follow the protocol.
-- Griefing attacks are economically viable for the victim. This means griefing attacks are desired and do not harm the victim.
+In any case, once she received tokens on roll-up B, Alice can ignore the rest of the protocol and enjoy her bridged tokens!
 
-The claim and challenge mechanism is a hybrid version based on an escalation mechanism described in https://forum.gnosis.io/t/the-ultimate-oracle/61 and state validation of roll ups on L1. The reason why the escalation mechanism is in place is to collect funds for an expensive on chain dispute resolution where the final states of the roll ups will be compared to discover the truth.
-As described above, Bob claims the refund tokens on the source rollup (A). He does this by calling the `claim(...)` function on the `RequestManager` contract.
+If her request cannot be fulfilled by liquidity providers (e.g. amount too high, roll-ups sequencers offline for some time, ...),
+the `validity period` argument she specified will determine for how long the request will remain open. After this period,
+the request can no longer be filled and she can withdraw her locked token on roll-up A.
 
-Claiming starts the claim period, during which watchers can challenge the claim. For the prototype this process is only involving the claimer and the challenger. But we should think about allowing third-parties to join the process.
+Second concern: Claim and Challenge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The claim has to include a safety deposit which can either be provided with the request, or by reusing a non-withdrawn former claim. The safety deposit is payed in ETH. The reason for the safety deposit is to have some incentivization for the watcher to challenge. Since all participants know the state of roll up B, the watcher can claim safely and has the safety deposit to win. *The amount of the safety deposit has to be high enough to incentivize the watcher to challenge*.
+Bob will only fill a request if he is guaranteed by the protocol to receive the tokens locked by Alice on roll-up A,
+this is our second concern. When filling the request, Bob submits the following parameters:
 
-The goal of the challenge process is to collect enough balance to pay for a possible resolution on L1. This is is done by an alternating process of bidding. A bid is placed by calling the `challenge(...)` function on the `RequestManager` contract. This challenge included a bid that must be equal or higher than the safety deposit in the claim. This prevents a griefing attack locking up the safety deposit from Bob.
+- request ID
+- source chain ID
+- target token address
+- recipient address
+- amount
 
-Now, alternating, the claimer and the challenger can increase their challenge amounts, until one of two things happens:
-1. One stops bidding and loses all of its bid funds once the challenge deadline is passed.
-2. The collected amount is big enough that one of both decides to go onto L1 and ask the `DisputeResolver` contract to resolve the dispute.
+These parameters are useful to let other liquidity providers (or any observer) know that a request they saw on roll-up A
+is properly filled. The hash of these parameters, as well as the roll-up B's chain ID, constitutes the `request hash`
+that can later serve to prove that the request was properly filled.
 
-In case 1, the sender of the last challenge wins, and can withdraw the challenge deposits of the bidding game. In this case the C&C ends without the resolution of the actual claim. This is not bad as the amount won in the bidding game is enough to have joined the game.
+::
 
-In case 2, the `DisputeResolver` contract posts a message to the rollups message box. This is then used in `withdraw` call (on L2) to verify that the caller is entitled to the funds. The DisputeResolver will check the state of roll up B and can verify if and who filled Alice's request. The sent message not only resolves the C&C it also resolves who is eligible to withdraw the funds. It resolves game 1 as well as game 2.
+    request hash = Hash(request ID, source chain ID, target chain ID, target token address, recipient address, amount)
 
-During the challenge process the exit period gets extended to allow the other side time to react. It has however, to at least cover the exit period of the other rollups, so it can be calculated with `max(exit L2 B, last point of challenge + 1 day)`. 
+When filling the request, a `fill ID` is also computed, that serves to identify a request for every observers.
 
-Constraints
-~~~~~~~~~~~
+::
 
-Contraints are a bit higher here to stay incentive aligned
+    fill ID = Hash(fill block number)
 
-- Safety deposit: The safety deposit must be high enough that it makes sense for the challenger to challenge a claim. Limited by tx_fee + operational costs. Safety deposit should be chosen by the protocol.
-- Exit Period: Exit period is the exit period of roll up B starting from receiving the claim transaction
-- Challenge Period: Challenge period must be at least Exit Period  + X where X must be large enough to either counter challenge or resolve the dispute on L1.
-    - Each bid will increase the Challenge period by `max(current_challenge_period, now + X)`. This ensures to give the opponent the time to counter challenge or resolve.
-- Each bid must increase the own safety deposit to be equal or higher than the amount of the opponents total stake 
+Bob is also required to send a deposit `claim stake` of roll-up A's coin, that will be lost if his claim is proven
+to be incorrect.
 
-Sequence diagrams
------------------
+After filling the request, Bob will immediately claim the refund on roll-up A. In doing so, he submits the `request ID`,
+and `fill ID` computed before to roll-up A. This initiates a `claim period` during which the validity of the fill by Bob
+can be contested or proven.
 
-Happy case (Game 1)
--------------------
+Since roll-up A does not have direct access to the state of roll-up B, we use a participative claim / challenge protocol
+to optimistically determine the validity of the claim. If the optimistic approach does not conclude, a proof can
+be passed from roll-up to B to roll-up A via L1 of the correct fill for the corresponding request.
 
-.. mermaid::
+We use a cheap optimistic approach that does not require L1 to drastically reduce the costs of bridging the token for
+Bob, and only use the more costly `L1 resolution` in case of an `attack` to ensure the security of the protocol.
+Additionally, as we will see later, the cost of the L1 resolution will be paid by the attacker.
 
-  sequenceDiagram
-    participant User
-    Market Maker -> Roll-up A: Watches for requests
-    User -> Roll-up A: Sends transfer request
-    Market Maker -> Roll-up B: Fills request
-    Market Maker -> Roll-up A: Claims tokens
-    Note over Market Maker: Wait until end of claim period
-    Market Maker -> Roll-up A: Withdraws tokens
+Rightful claims resolutions
++++++++++++++++++++++++++++
 
-Non-L1 Challenge (Game 2)
--------------------------
+In the game theoretic case, rightful claims will not be contested. After `claim period`, Bob can withdraw its stake, the
+tokens locked by Alice, and the fees paid by Alice for the service.
 
-.. mermaid::
+The rightful claim of Bob can however be challenged by anyone during its `claim period`. This will start a challenge in between
+him and the challenger, Charles. Charles needs to stake a deposit higher than `claim stake` to challenge Bob's claim.
+The challenge will be on-going until the end of the `challenge period`.
 
-  sequenceDiagram
-    participant User
-    participant Market Maker
-    User -> Roll-up A: Sends transfer request
-    Market Maker -> Roll-up A: Claims tokens
-    
-    Note over Roll-up A: Challenge period starts
-    
-    Challenger -> Roll-up A: Challenges
-    Market Maker -> Roll-up A: Challenges
-    Challenger -> Roll-up A: Challenges
+During the challenge, the contested participant (in turn Bob, then Charles), can submit a transaction to confirm its
+position and contest the other party. It is required that the new stake of the participant is bigger than the current stake of the opponent.
+Everytime a participant responds to the challenge, the termination time of the challenge and underlying claim is extended to be at least
+`challenge period extension` to give time for the other party to respond.
 
-    Note over Roll-up A: Challenge period ends
-    Challenger -> Roll-up A: Withdraws challenge price
+At the end of the challenge period, the last non-contested participant, and thus the highest staker, wins.
 
-L1-based Challenge (Game 2)
----------------------------
+To avoid this challenge to go on forever, or reach a point where Bob no longer have the funds to out-stake Charles,
+Bob can trigger the `L1 resolution`.
 
-.. mermaid::
-
-  sequenceDiagram
-    participant User
-    participant Market Maker
-
-    Market Maker -> Roll-up A: Watches for requests
-    User -> Roll-up A: Sends transfer request
-    Market Maker -> Roll-up B: Fills request
-    Market Maker -> Roll-up A: Claims tokens
-    
-    Note over Roll-up B: Challenge period starts
-    
-    Challenger -> Roll-up A: Challenges (adversarial)
-    Market Maker -> Roll-up A: Challenges
-    Challenger -> Roll-up A: Challenges
-
-    Note over Roll-up B: Market Maker now has enough funds to go to L1
-    Note over Roll-up B: Calldata for claim filling pushed to L1
-    
-    Market Maker -> L1: Calls resolution contract
-    L1 -> Roll-up A: Sends message with resolution to inbox
-    Challenger -> Roll-up A: Withdraws challenge price
-
-Contracts
----------
-
-`RequestManager` (L2)
-~~~~~~~~~~~~~~~~~~~~~
-
-- `request(chain_id, token_address, amount, target_address) -> request_id`
-    - Can we make it possible to trigger arbitrary contract calls here?
-    - Execution of contract functions can be done in later milestones
-- `claim(request_id) -> claim_id`
-    - multiple claims can exist for any request. Internally they are identified by the `(claim_id, claimer_address)` tuple.
-- `challenge(claim_id, challenge_amount)`
-- `withdraw(claim_id, target_address)`
-    - Transfers the claimed funds to the target address
-    - If there was a dispute, also transfers the bid amounts
-    - ???: withdraw in different tokens by calling uniswap?
-
-Constants:
-- challenge period
-- exit period of other rollup (+ margin)
-- period extension time
-
-`DisputeResolver` (L1)
-~~~~~~~~~~~~~~~~~~~~~~
-
-- `resolve()` TBD
-    - See https://developer.offchainlabs.com/docs/l1_l2_messages#arbitrum-to-ethereum
-    - Send message from L2 to L1 (`ArbSys.sendTxToL1`), returns unique id
-    - Get calldata from L2 (`NodeInterface.lookupMessageBatchProof`)
-
-Open questions
+L1 resolutions
 ++++++++++++++
 
-- Transfer request details
-- L1 resolution request details
-- Challenge period length
-- re-challenge period equal or different to initial challenge period
-- gas price on optimism?
-- bulk claim?
-- Assuming Bob submitted a claim and Charlie sent a challenge,
-  can a third-party, e.g. Dave, join the challenge game and vote for
-  either side? If so, what are the requirements that Dave needs to fulfill
-  to join the game (fees, ...)?
-- Sender of latest challenge doesn't need to go on-chain
+When Bob filled Alice's request, a proof was sent by the `fill manager` contract on roll-up B to the outbox of
+roll-up B on L1. This proof is a call to a `resolver` contract on L1 and contains the following fields:
 
-Testing setup
-===============
+- fill hash = Hash(request hash, fill ID)
+- roll-up A's chain ID
+- roll-up B's chain ID
+- Bob's address
 
-- one private chain, C
-- Arbitrum and Optimism running on top of C
-- two Raisync nodes, acting as Bob1 and Bob2
-- a way to define and run a "scenario"
+To trigger the L1 resolution, is to apply this call on L1 using the data from the roll-up's outbox. This will forward the
+information from the resolver to the inbox of roll-up A in the form of a call to the `resolution registry` on roll-up A.
+This registry will store in its state a mapping from `fill hash` to `Bob`, allowing the `request manager`
+to verify that a claim to fill a certain request with a certain fill ID is honest. Roll-up A's chain ID is necessray for the
+`resolver` contract to know to which `resolution registry` to forward the proof to. Roll-up B's chain ID is used to
+restrict the call to authenticated `fill manager` and `cross domain messenger` contracts.
 
-Test cases
-----------
+After L1 resolution has transferred the fill information from roll-up B to roll-up A, Bob can directly call `withdraw` on
+the `request manager` on roll-up A. That will compute a `fill hash` and query the `resolution registry` for the filler
+address corresponding to `fill hash`, which will return Bob's address. Bob will be immediately considered the winner of
+the challenge and receive its stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
 
-1. happy-case (no challenges)
-   - Alice sends a transfer request
-   - Bob1 fulfills the request
-   - Bob1 submits a claim
-   - Bob1 gets the tokens after the challenge period expires
+The reason we need to use `fill ID = Hash(fill block number)` in the proof is to allow Charles to make sure whether the
+claim by Bob is rightful. Upon submitting the claim with a certain `fill ID`, Charles can look for the block with the associated number
+and see whether a fill was correctly made by Bob. Without this ID, an evildoer could claim an unfilled request and only
+fill it once its claim is challenged, to gain the stake of the challenger.
 
-2. challenge-countered
-   - Alice sends a transfer request
-   - Bob1 fulfills the request
-   - Bob1 submits a claim
-   - Bob2 submits a challenge
-   - Bob1 submits a counter-challenge
-   - Bob2 does not respond further
-   - Bob1 gets the tokens after the challenge period expires
-   
-3. false-claim
-   - Alice sends a transfer request
-   - Bob1 submits a false claim (he did not fulfill the request)
-   - Bob2 submits a challenge
-   - Bob1 does not respond further
-   - Bob2 gets the  Bob1's deposit after the challenge period expires
-      
-Tech Stack
-----------
+False claims challenges
++++++++++++++++++++++++
 
-General
--------
+We saw that if Bob filled Alice's a claim, he will always be able to prove correctness of the fill in order to withdraw
+its due from the `request manager` manager contract. However, if Charles falsely claims and withdraw rewards from the contract,
+there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claim.
 
-- Monorepo
+As we saw in the previous part, Bob can use the `fill ID` provided by Charles during his claim to find out if the claim is
+rightful or not. Upon seeing that it is not, Bob can challenge Charles' claim. The process will be the same as described
+in the previous part about rightful claims resolutions, except that Charles will not be able to prove via L1 resolution
+that his claim is rightful.
 
-Contracts
----------
+The first possible outcome is that the `challenge period` ends while Bob is ahead. In that case Bob will gain Charles'
+stake and Charles will not be able to withdraw anything. In the event that Charles keep on contesting Bob's challenges
+and reach a point where Bob no longer has enough funds to stake, Bob (or anyone else) will need to fill Alice's request
+on roll-up A and trigger L1 resolution for that correct fill. This will prove that the request was filled by someone else
+than Charles and declare Bob as a winner of the challenge. Bob will then be rewarded for its participation by gaining
+Charles' stake.
 
-- eth-brownie
-- Use building blocks from openzeppelin etc.
+Self challenges
++++++++++++++++
 
-"RaiSync Node" / Backend / THE BOB
-----------------------------------
+To make the protocol easier to reason about and implement, only two actors can participate in a challenge: the original
+claimer, and the initial challenger. This raises the concern that, after doing its false claim, Charles could challenge
+himself to prevent Bob from challenging him. This will let Bob control the state of his challenge and he will be able to
+let it expire with his claim successful as an outcome.
 
-- Language: Python 
-    - Poetry
-    - AsyncIO, preferrably Trio
-    - [Sqlmodel](https://github.com/tiangolo/sqlmodel) (Model library based on [pydantic](https://github.com/samuelcolvin/pydantic) that is directly compatible with both SQLAlchemy and [FastAPI](https://fastapi.tiangolo.com))
-        - Probably needs [trio-asyncio](https://github.com/python-trio/trio-asyncio) to bridge to sqlalchemy asyncio
-    - Web3 interface?
-        - No ready made async (and esp. trio) compatible library seems to be available.
-        - Possible solution: Use lower level libraries (eth-abi etc.) to encode calls and do network requests "manually" via trio
-- Database: SQLite
+To prevent this successful `self-challenged claim` to allow Charles to withdraw Alice's deposit, Bob can fill Alice's request
+and do his own claim in parallel. If Bob's claim is not challenged and `claim period` is lower than the `challenge period`,
+Bob will be able to withdraw Alice's deposit before Charles, leaving nothing for Charles to gain.
 
-Open questions
+Charles can attempt to delay Bob's withdrawal by challenging its rightful claim. If Charles' stake on the rightful claim
+is sufficient to cover Bob's fee for L1 resolution, Bob will proceed with L1 resolution. If not, Bob can continue opening
+parallel claims until Charles no longer contest one of them, or there is enough cumulated stake form Charles on the
+multiple challenges for Bob to do an L1 resolution. In any case, Bob will be able to prove its rightful claim before
+Charles' claim reach the end of its period.
+
+Claims that cannot be filled
+++++++++++++++++++++++++++++
+
+In either the regular `false claim` and `self-challenge claim` cases, we assumed that Bob could fill Alice's request in
+order to prove that the false claimer Charles was not the correct filler. However, If Alice's request cannot be filled
+for any reason (e.g. transfer value too high), instead of proving that someone other than Charles filled a request,
+Bob will need to prove that no one filled the request before a certain block height. For that, Bob needs to create and
+submit an `L1 non-fill proof` from roll-up A to roll-up B.
+
+Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
+
+Fees
+~~~~
+
+Users will pay a fee for bridging their tokens. This fee needs to cover the expense of the liquidity provider and reward
+them. The fees also include a protocol fee, rewarding builders of the protocol.
+
+In theory, the fee should follow the formula:
+
+::
+
+    fee = tx fee fill + tx fee claim + tx fee withdraw funds / number of cumulative withdraws +
+          opportunity cost(requested tokens, claim period) + opportunity cost(claim deposit, claim period) + margin
+
+In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
+Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the service provider, the
+user would have to register what fee they are willing to pay for their transfer upon requesting them. This would create
+a fee market where different service provider would compete and accept different fees. Users would then need to query the
+market for which fee they should use.
+
+However, as the protocol intends to be as easy to use as possible for the user, and transactions fees are mostly stable
+on roll-ups, the protocol implements a fixed fee for every transfer. This fixed fee uses a fixed estimation of the gas
+price of the roll-up as well as a fixed margin for liquidity provider.
+
+
+Agent strategy
 --------------
 
-- Sending ETH to contracts can be costly
-    - Contracts can override the function to receive ETH
-    - could be arbitrary cost of gas
-    - Quick Solution: Only allow ERC20 transfers
+We call `agent` the software run by liquidity providers to observe the roll-ups, fill users request, and participate in
+challenges. The protocol defines some rules and demonstrate how honest participation is incentivized. However, the agent
+could still implement different strategies to follow the protocol. For example, the agent is free to chose the value
+with which it will bid in challenges. It is also allowed to decide when to stop out-bidding opponents in challenges and
+going through L1 resolution or opening parallel claims.
 
-- Future improvements
-    - zk SNARKs
-    - https://ethresear.ch/t/cross-rollup-nft-wrapper-and-migration-ideas/10507
+The current implementation of the agent follows the strategy:
 
+- Challenge a claim from wrong filler with `claim stake + 1`
+- Challenge a claim with no filler with `cost of L1 non-fill proof`
+- Subsequent counter challenge should cover the cost of L1 resolution
+- Proceed with L1 resolution only when the stake of the opponent covers the cost and you are losing a challenge
+- Open a parallel claim to one of your rightful claim if there is a challenged wrongful claim that expires before
+  your challenged rightful claim and there is not enough stakes for L1 resolution.
 
-Small competitor comparison
----------------------------
+Protocol parameters
+-------------------
 
+The choice of different protocol parameters such as `claim period` or `claim stake` is explained in the `Contract Parameters`
+page.
 
-HTLCs (Connext, celer)
-~~~~~~~~~~~~~~~~~~~~~~
+One important decision is not to wait for the inclusion period of roll-ups to consider an event as successful. When
+liquidity providers fill a user request, the event regarding the successful fill is sent by the target roll-up sequencer.
+The liquidity provider directly sends a claim for this filled request on the source roll-up and does not wait for the block
+produced by the sequencer to be committed to L1.
 
-Better UX than HTLCs - Only 1 transaction from end users perspective, no onboarding to target roll up needed in advance, faster
+As far as we know, it is allowed for different roll-up sequencers to take as long as one week to commit their block to L1.
+It could theoretically occur that after one week, the roll-up commits to a block that does not result in a successful fill
+of the request by the liquidity provider. To take that into account, we would need to lengthen the `claim period` parameter by
+one additional week, which would result in higher opportunity costs for the liquidity provider.
 
-
-Hop
-~~~
-
-More capital efficient than hop - Hop has AMM with 2* ETH on each roll up + Bonder needs to stake ETH to move funds from L2 to L2
-Raisync has 1* ETH for each roll up , staking only during claim period
-Raisync has a clear predictable fee calculation model
-Raisync is completely trustless as opposed to Hop network trusted set of Bonders (Currently 1 Bonder)
-
-Raisync relies on having multiple participants, at least one honest participant
+In practice the longest observed delay of block inclusion from a roll-up sequencer has been 18 hours, and was exceptional.
+Hence the decision not to take into account this delay.
