@@ -146,7 +146,7 @@ def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_r
     "--validity-period",
     type=int,
     default=15 * 60,
-    help="Amount of tokens to transfer",
+    help="Period until the request is expired",
 )
 @cli.command("request")
 @pass_args
@@ -184,7 +184,7 @@ def submit_request(
     "--request-id",
     type=int,
     default=randint(0, 1000000),
-    help="Id of the source chain",
+    help="Request id to fill",
 )
 @click.option(
     "--source-chain-id",
