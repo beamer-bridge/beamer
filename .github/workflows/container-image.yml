@@ -1,4 +1,4 @@
-name: Build Beamer container image
+name: Build beamer-agent container image
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: beamer-bridge/beamer-agent
 
 jobs:
   build-and-push-image:
