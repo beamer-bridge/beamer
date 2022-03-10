@@ -8,7 +8,8 @@ export type ChainConfig = {
   requestManagerAddress: string;
   fillManagerAddress: string;
   explorerTransactionUrl: string;
-  tokens: Token[];
+  name: string;
+  tokens: readonly Token[];
 };
 
 export type Token = {
