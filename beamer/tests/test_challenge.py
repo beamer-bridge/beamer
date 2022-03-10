@@ -4,6 +4,7 @@ import time
 import brownie
 import pytest
 from brownie import accounts
+from eth_utils import to_checksum_address
 
 import beamer.agent
 from beamer.tests.util import EventCollector, HTTPProxy, earnings, make_request
