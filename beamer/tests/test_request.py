@@ -6,7 +6,7 @@ from brownie import ZERO_ADDRESS, accounts
 from eth_utils import to_checksum_address
 from web3.types import Wei
 
-from beamer.agent import Node
+from beamer.agent import Agent
 from beamer.events import ClaimMade
 from beamer.request import Request
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
@@ -43,17 +43,17 @@ def test_read_timeout(config):
         proxy_l2b.server_address[1],
     )
 
-    node = Node(config)
-    node.start()
+    agent = Agent(config)
+    agent.start()
     time.sleep(60)
-    node.stop()
+    agent.stop()
     proxy_l2a.stop()
     proxy_l2b.stop()
 
 
 def test_challenge_own_claim(config, request_manager, token):
-    node = Node(config)
-    node_address = to_checksum_address(node.address)
+    agent = Agent(config)
+    agent_address = to_checksum_address(agent.address)
     claim_stake = request_manager.claimStake()
     request = Request(
         RequestId(100),
@@ -61,7 +61,7 @@ def test_challenge_own_claim(config, request_manager, token):
         brownie.chain.id,
         token.address,
         token.address,
-        node_address,
+        agent_address,
         TokenAmount(1),
         Termination(1700000000),
     )
@@ -71,7 +71,7 @@ def test_challenge_own_claim(config, request_manager, token):
         ClaimId(1),
         request.id,
         FillId(0),
-        node_address,
+        agent_address,
         claim_stake,
         ZERO_ADDRESS,
         Wei(0),
@@ -79,17 +79,19 @@ def test_challenge_own_claim(config, request_manager, token):
     )
 
     msg = "Tried to challenge own claim"
-    assert not node._event_processor._maybe_challenge(request, claim_event), msg
+    assert not agent._event_processor._maybe_challenge(
+        request, claim_event, int(time.time() - 1)
+    ), msg
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
-def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
+def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
     try:
         with Sleeper(5) as sleeper:
-            while (request := node.request_tracker.get(request_id)) is None:
+            while (request := agent.request_tracker.get(request_id)) is None:
                 sleeper.sleep(0.1)
     except Timeout:
         pass
@@ -106,15 +108,16 @@ def test_fill_and_claim(request_manager, token, node, allow_unlisted_pairs):
 
     claims = tuple(request.iter_claims())
     assert len(claims) == 1
-    assert claims[0].claimer == node.address
+    claim_event = claims[0]
+    assert claim_event.claimer == agent.address
 
 
-def test_withdraw(request_manager, token, node):
+def test_withdraw(request_manager, token, agent):
     target_address = accounts[1]
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
     with Sleeper(10) as sleeper:
-        while (request := node.request_tracker.get(request_id)) is None:
+        while (request := agent.request_tracker.get(request_id)) is None:
             sleeper.sleep(0.1)
 
         while not request.is_claimed:
@@ -128,11 +131,11 @@ def test_withdraw(request_manager, token, node):
             sleeper.sleep(0.1)
 
 
-def test_expired_request_is_ignored(request_manager, token, node):
+def test_expired_request_is_ignored(request_manager, token, agent):
     target_address = accounts[1]
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
-    # make the request amount high enough that the node cannot fill it
-    amount = token.balanceOf(node.address) + 1
+    # make the request amount high enough that the agent cannot fill it
+    amount = token.balanceOf(agent.address) + 1
     request_id = make_request(
         request_manager,
         token,
@@ -144,7 +147,7 @@ def test_expired_request_is_ignored(request_manager, token, node):
 
     brownie.chain.mine(timedelta=validity_period / 2)
     with Sleeper(1) as sleeper:
-        while (request := node.request_tracker.get(request_id)) is None:
+        while (request := agent.request_tracker.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     assert request.is_pending

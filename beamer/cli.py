@@ -9,7 +9,7 @@ from eth_account.signers.local import LocalAccount
 
 import beamer.contracts
 import beamer.util
-from beamer.agent import Config, Node
+from beamer.agent import Agent, Config
 from beamer.typing import URL
 
 log = structlog.get_logger(__name__)
@@ -21,10 +21,10 @@ def _account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
     return Account.from_key(privkey)
 
 
-def _sigint_handler(node: Node) -> None:
+def _sigint_handler(agent: Agent) -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     log.info("Received SIGINT, shutting down")
-    node.stop()
+    agent.stop()
 
 
 @click.command()
@@ -65,6 +65,12 @@ def _sigint_handler(node: Node) -> None:
     help="The file containing token matching information.",
 )
 @click.option(
+    "--fill-wait-time",
+    type=int,
+    default=120,
+    help="Time in seconds to wait for a fill event before challenging a false claim.",
+)
+@click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
     default="info",
@@ -79,6 +85,7 @@ def main(
     l2b_rpc_url: URL,
     deployment_dir: Path,
     token_match_file: Path,
+    fill_wait_time: int,
     log_level: str,
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
@@ -92,9 +99,10 @@ def main(
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
         token_match_file=token_match_file,
+        fill_wait_time=fill_wait_time,
     )
 
-    signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(node))
-    node = Node(config)
-    node.start()
-    node.wait()
+    signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(agent))
+    agent = Agent(config)
+    agent.start()
+    agent.wait()

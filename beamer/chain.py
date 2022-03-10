@@ -103,6 +103,7 @@ class EventProcessor:
         request_manager: Contract,
         fill_manager: Contract,
         match_checker: TokenMatchChecker,
+        fill_wait_time: int,
     ):
         # This lock protects the following objects:
         #   - self._events
@@ -123,6 +124,8 @@ class EventProcessor:
         # 1 = one of the chains was synced, waiting for the other one
         # 2 = both chains synced
         self._num_syncs_done = 0
+
+        self._fill_wait_time = fill_wait_time
 
         if not self._fill_manager.functions.allowedLPs(self._address).call():
             raise RuntimeError("Agent address is not whitelisted")
@@ -199,7 +202,7 @@ class EventProcessor:
                 event.target_token_address,
             )
             if not is_valid_request:
-                self._log.debug("Invaid token pair in request", _event=event)
+                self._log.debug("Invalid token pair in request", _event=event)
                 return False
 
             data = self._request_manager.functions.requests(event.request_id).call()
@@ -236,7 +239,7 @@ class EventProcessor:
                 return False
 
             try:
-                request.claim(event=event)
+                request.claim(event=event, fill_wait_time=self._fill_wait_time)
             except TransitionNotAllowed:
                 return False
             self._log.info("Request claimed", request=request, claim_id=event.claim_id)
@@ -283,7 +286,9 @@ class EventProcessor:
 
     def _check_claims(self, request: Request) -> None:
         for claim in request.iter_claims():
-            self._maybe_challenge(request, claim)
+            self._maybe_challenge(
+                request, claim, request.get_challenge_back_off_timestamp(claim.claim_id)
+            )
 
             if claim.claimer == self._address:
                 self._try_withdraw(claim)
@@ -295,12 +300,15 @@ class EventProcessor:
             stake_increase = 10 ** 15
         return Wei(max(claim.claimer_stake, claim.challenger_stake) + stake_increase)
 
-    def _maybe_challenge(self, request: Request, claim: ClaimMade) -> bool:
+    def _maybe_challenge(self, request: Request, claim: ClaimMade, back_off_until: int) -> bool:
         # We need to challenge if either of the following is true:
         #
         # 1) the claim is dishonest AND nobody challenged it yet
         #
         # 2) we participate in the game AND it is our turn
+
+        if int(time.time()) < back_off_until:
+            return False
 
         unchallenged = claim.challenger_stake == 0
         own_claim = claim.claimer == self._address
