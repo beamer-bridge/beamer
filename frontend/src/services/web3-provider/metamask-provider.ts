@@ -77,7 +77,7 @@ export class MetaMaskProvider implements EthereumProvider {
     return contract.connect(this.web3Provider);
   }
 
-  private async getChainId(): Promise<number> {
+  async getChainId(): Promise<number> {
     const { chainId } = await this.web3Provider.getNetwork();
     return chainId;
   }
@@ -96,10 +96,10 @@ export class MetaMaskProvider implements EthereumProvider {
   }
 
   private listenToEvents(): void {
-    this.web3Provider.provider.on('accountsChanged', (accounts) =>
+    this.web3Provider.provider.on('accountsChanged', (accounts: string[]) =>
       this.newDefaultSigner(accounts),
     );
-    this.web3Provider.provider.on('chainChanged', (chainId) => {
+    this.web3Provider.provider.on('chainChanged', (chainId: string) => {
       this.chainId.value = BigNumber.from(chainId).toNumber();
     });
   }

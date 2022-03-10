@@ -10,4 +10,5 @@ export interface EthereumProvider {
   getLatestBlock(): Promise<Block>;
   connectContract(contract: Contract): Contract;
   switchChain?(newChainId: number, rpcUrl?: string): Promise<void>;
+  getChainId(): Promise<number>;
 }
