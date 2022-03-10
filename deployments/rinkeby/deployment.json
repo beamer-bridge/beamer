@@ -1,54 +1,54 @@
 {
-  "raisync_commit": "64fe4bb7847c5bc774031562d4afc14fa854f1af",
+  "beamer_commit": "67da756b516712dec8ec3bc60c854cb4583b13a8",
   "L1": {
     "Resolver": [
-      "0x2445092f3d481e4c132182AB71030902aca215B2",
-      10253259
+      "0xfE7B1466A7A7F2C1DaE2c557207A8FF524e160AE",
+      10304489
     ]
   },
   "L2": {
     "28": {
       "MintableToken": [
-        "0x7F994318a1757aA20D0376683E51BFD8523E0A58",
-        158438
+        "0xfE7B1466A7A7F2C1DaE2c557207A8FF524e160AE",
+        7003
       ],
       "ResolutionRegistry": [
-        "0xA200A8d1034b3A6d8E2F01DaE160d6635bFC1699",
-        158439
+        "0x3E57299932fB6E933A63C3493B79890e84296864",
+        7004
       ],
       "OptimismProofSubmitter": [
-        "0xE4e5f406e927D0793362aa1a2a5843EEcB54b7f1",
-        158441
+        "0xc4cf5704b4F1E78a3b22aB556F1Af8C8159283Fe",
+        7006
       ],
       "RequestManager": [
-        "0x5E0494Ab942cCE4ee11bb95afDc1CaDcE7A7b876",
-        158442
+        "0xB1D64b5d92d0d5Ca0a23a0987Fe10A96c15868bB",
+        7007
       ],
       "FillManager": [
-        "0xd98F0aFaC17480971492a40db0fd72227936bbF8",
-        158443
+        "0xA2e8228A4De5976f584471056B04Da0B9f0261c8",
+        7008
       ]
     },
     "588": {
       "MintableToken": [
-        "0xF4BeDD719224107eF1103efDA039D392FdAdA32b",
-        5191459
+        "0xfE7B1466A7A7F2C1DaE2c557207A8FF524e160AE",
+        5200452
       ],
       "ResolutionRegistry": [
-        "0x242bEa0554E73D52e8964253f00cA1f958E8f9B6",
-        5191460
+        "0x3E57299932fB6E933A63C3493B79890e84296864",
+        5200453
       ],
       "OptimismProofSubmitter": [
-        "0x95F2d03B723C1DCe28fD857BF0bf339c04f081cc",
-        5191462
+        "0xc4cf5704b4F1E78a3b22aB556F1Af8C8159283Fe",
+        5200455
       ],
       "RequestManager": [
-        "0x7851506925D3b276614759eE1BB1a742118620F3",
-        5191463
+        "0xB1D64b5d92d0d5Ca0a23a0987Fe10A96c15868bB",
+        5200456
       ],
       "FillManager": [
-        "0xed3Ac93E8f0cE59d499B2d931F3901A4B9D59556",
-        5191464
+        "0xA2e8228A4De5976f584471056B04Da0B9f0261c8",
+        5200457
       ]
     }
   }
