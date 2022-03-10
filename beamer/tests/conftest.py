@@ -16,7 +16,7 @@ from brownie import (
     accounts,
 )
 
-from beamer.agent import Config, Node
+from beamer.agent import Agent, Config
 from beamer.contracts import ContractInfo
 from beamer.typing import BlockNumber
 
@@ -130,6 +130,7 @@ def config(request_manager, fill_manager, token):
         deployment_info=deployment_info,
         token_match_file=token_match_file,
         account=account,
+        fill_wait_time=0,
     )
     return config
 
@@ -149,11 +150,11 @@ def set_allow_unlisted_pairs(allow_unlisted_pairs: bool) -> None:
 
 
 @pytest.fixture
-def node(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
-    node = Node(config)
-    node.start()
-    yield node
-    node.stop()
+def agent(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
+    agent = Agent(config)
+    agent.start()
+    yield agent
+    agent.stop()
 
 
 @pytest.fixture

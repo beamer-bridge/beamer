@@ -24,6 +24,7 @@ class Config:
     l2a_rpc_url: URL
     l2b_rpc_url: URL
     token_match_file: Path
+    fill_wait_time: int
 
 
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
@@ -36,7 +37,7 @@ def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
     return w3
 
 
-class Node:
+class Agent:
     def __init__(self, config: Config):
         self._config = config
         self._stopped = threading.Event()
@@ -59,7 +60,11 @@ class Node:
             match_checker = TokenMatchChecker.from_file(f)
 
         self._event_processor = EventProcessor(
-            self.request_tracker, request_manager, fill_manager, match_checker
+            self.request_tracker,
+            request_manager,
+            fill_manager,
+            match_checker,
+            config.fill_wait_time,
         )
 
         self._contract_monitor_l2a = ContractEventMonitor(

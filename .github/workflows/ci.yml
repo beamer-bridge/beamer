@@ -87,7 +87,7 @@ jobs:
         run: |
           poetry run brownie test -v -G
 
-      - name: Run node tests
+      - name: Run agent tests
         run: |
           # Generate deployment artifacts under contracts/build/deployments/dev.
           # Start ganache separately so that brownie does not need to start

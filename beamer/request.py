@@ -1,8 +1,9 @@
 import threading
+import time
+
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any, Generator, Optional
-
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
 
@@ -32,6 +33,7 @@ class Request(StateMachine):
         self.amount = amount
         self.valid_until = valid_until
         self._claims: dict[ClaimId, ClaimMade] = {}
+        self._challenge_back_off_timestamps: dict[ClaimId, int] = {}
         self.filler: Optional[Address] = None
         self.fill_id: Optional[int] = None
 
@@ -59,12 +61,24 @@ class Request(StateMachine):
         self.filler = filler
         self.fill_id = fill_id
 
-    def on_claim(self, event: ClaimMade) -> None:
+    def on_claim(self, event: ClaimMade, fill_wait_time: int) -> None:
         assert event.request_id == self.id, "got claim for another request"
+        challenge_back_off_timestamp = int(time.time())
+        # if fill event is not fetched yet, wait back_off_time
+        # to give the target chain time to sync before challenging
+        # additionally, if we are already in the challenge game, no need to back off
+        if self.filler is None and event.challenger_stake == 0:
+            challenge_back_off_timestamp += fill_wait_time
+        self._challenge_back_off_timestamps[event.claim_id] = challenge_back_off_timestamp
         self._claims[event.claim_id] = event
 
     def iter_claims(self) -> Iterator[ClaimMade]:
         return iter(self._claims.values())
+
+    def get_challenge_back_off_timestamp(self, claim_id: ClaimId) -> int:
+        msg = "tried to get a challenge back off timestamp from unknown claim id"
+        assert claim_id in self._challenge_back_off_timestamps, msg
+        return self._challenge_back_off_timestamps[claim_id]
 
     def __repr__(self) -> str:
         claims = getattr(self, "_claims", [])
