@@ -79,9 +79,7 @@ def test_challenge_own_claim(config, request_manager, token):
     )
 
     msg = "Tried to challenge own claim"
-    assert not agent._event_processor._maybe_challenge(
-        request, claim_event, int(time.time() - 1)
-    ), msg
+    assert not agent._event_processor._maybe_challenge(request, claim_event, int(time.time())), msg
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
