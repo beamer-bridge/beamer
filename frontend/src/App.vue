@@ -1,12 +1,16 @@
 <template>
-  <img class="absolute top-[112px] left-[112px] w-[458px]" src="@/assets/images/logo.svg" />
+  <img
+    class="absolute top-[112px] left-[112px] w-[458px]"
+    src="@/assets/images/logo.svg"
+    alt="logo"
+  />
   <router-view v-if="config" class="flex-auto m-3.5 z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
     <div class="w-48 h-48">
       <spinner></spinner>
     </div>
   </div>
-  <footer class="my-8 text-2xl text-center text-teal-light">Powered by Raisync</footer>
+  <footer class="my-8 text-2xl text-center text-teal-light">Powered by Beamer</footer>
 </template>
 
 <script setup lang="ts">
