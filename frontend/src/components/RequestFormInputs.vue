@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { getNetwork } from '@ethersproject/providers';
+import { FormKit } from '@formkit/vue';
 
 import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
 import type { SelectorOption } from '@/types/form';
@@ -79,21 +79,19 @@ interface Props {
 
 defineProps<Props>();
 
+const chainsConfiguration = raisyncConfig.value.chains;
 const CHAINS: SelectorOption[] = [];
-Object.keys(raisyncConfig.value.chains).forEach((chain) => {
-  const chainId = Number(chain);
-  const { name } = getNetwork(chainId);
-  CHAINS.push({ value: chainId, label: name });
+
+Object.keys(chainsConfiguration).forEach((chainId) => {
+  CHAINS.push({ value: Number(chainId), label: chainsConfiguration[chainId].name });
 });
 
 const TOKENS: SelectorOption[] = [];
-raisyncConfig.value.chains[String(ethereumProvider.value.chainId.value)].tokens.forEach(
-  (token) => {
-    TOKENS.push({ value: token.address, label: token.symbol });
-  },
-);
+chainsConfiguration[String(ethereumProvider.value.chainId.value)].tokens.forEach((token) => {
+  TOKENS.push({ value: token.address, label: token.symbol });
+});
 
-const switchChain = (chainId) => {
+const switchChain = (chainId: any) => {
   if (chainId !== ethereumProvider.value.chainId.value && ethereumProvider.value.switchChain) {
     ethereumProvider.value.switchChain(chainId.value);
   }
