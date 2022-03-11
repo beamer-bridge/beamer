@@ -5,17 +5,17 @@ Beamer agent
 Basic requirements
 ------------------
 
-* The node must not block in any way. That is, it must not happen that the node is stuck endlessly
+* The agent must not block in any way. That is, it must not happen that the agent is stuck endlessly
   waiting on any operation, regardless of reasons. Typical common issues here are a slow RPC server
   and a slow/unstable network.
-* It must be possible to shut down the node cleanly and reasonably quickly (at most few seconds).
-* Restarting the node must not lose any information about previously executed actions e.g. filed
+* It must be possible to shut down the agent cleanly and reasonably quickly (at most few seconds).
+* Restarting the agent must not lose any information about previously executed actions e.g. filed
   requests, claims, challenges etc.
-* The node should avoid serializing anything to non-volatile storage.
+* The agent should avoid serializing anything to non-volatile storage.
 
 
-Node architecture
------------------
+Agent architecture
+------------------
 
 .. figure:: images/beamer-agent-architecture.png
 
@@ -35,8 +35,8 @@ to the ``EventProcessor``. The event monitor does not query the JSON-RPC server 
 Rather, it does that via an instance of ``EventFetcher``. Event fetcher handles communication with the
 JSON-RPC server and can block. However, even if the event fetcher for, say, L2a chain, blocks, since
 it is only being invoked by the contract event monitor, which runs inside a thread, it won't block
-the entire node. Therefore, even if a JSON-RPC server is very slow or the connection is otherwise
-unreliable, the node as a whole will remain responsive.
+the entire agent. Therefore, even if a JSON-RPC server is very slow or the connection is otherwise
+unreliable, the agent as a whole will remain responsive.
 
 With the current contract implementation, we have one contract, ``RequestManager``, deployed on the
 source chain (L2a), and one contract, ``FillManager``, deployed on the target chain (L2b). Therefore
@@ -80,7 +80,7 @@ to keep track of, and access all requests. The request state is, unsurprisingly,
 The second part, processing requests, consists of going through all requests and checking whether
 there is an action that needs to be performed. For example, if a pending request is encountered, the
 event processor may issue a ``fillRequest`` transaction. Similarly, if a filled request is encountered
-and it was our node that filled it, the event processor may issue a ``withdraw`` transaction. Here
+and it was our agent that filled it, the event processor may issue a ``withdraw`` transaction. Here
 again the request tracker is used to access the requests.
 
 
@@ -106,7 +106,7 @@ states.  A request is in the initial state ``pending`` immediately after it is c
 similarly for the ``claimed`` and ``withdrawn`` states, i.e. those states are entered when the
 corresponding blockchain events are processed.
 
-The ``filled-unconfirmed`` state is an intermediate state that is used to mark requests that our node
+The ``filled-unconfirmed`` state is an intermediate state that is used to mark requests that our agent
 has filled, but the corresponding ``RequestFilled`` events have not been received yet. This is to
 avoid filling the same requests more than once. Once the corresponding ``RequestFilled`` events
 arrive, the requests will proceed to state ``filled``.
