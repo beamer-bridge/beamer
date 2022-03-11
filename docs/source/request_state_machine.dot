@@ -8,6 +8,7 @@ digraph request_state_machine {
     filled -> claimed_unconfirmed [label = claim_unconfirmed];
     filled_unconfirmed -> filled [label = fill];
     claimed -> claimed [label = claim];
+    claimed -> claimed [label = fill];
     claimed -> withdrawn [label = withdraw];
     claimed_unconfirmed -> claimed [label = claim];
 }
