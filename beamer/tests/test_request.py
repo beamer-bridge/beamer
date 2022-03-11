@@ -7,6 +7,7 @@ from eth_utils import to_checksum_address
 from web3.types import Wei
 
 from beamer.agent import Agent
+from beamer.chain import maybe_challenge
 from beamer.events import ClaimMade
 from beamer.request import Request
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
@@ -78,8 +79,9 @@ def test_challenge_own_claim(config, request_manager, token):
         Termination(1700000000),
     )
 
-    msg = "Tried to challenge own claim"
-    assert not agent._event_processor._maybe_challenge(request, claim_event, int(time.time())), msg
+    assert not maybe_challenge(
+        request, claim_event, int(time.time()), request_manager, to_checksum_address(agent.address)
+    ), "Tried to challenge own claim"
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))

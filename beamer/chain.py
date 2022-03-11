@@ -18,8 +18,10 @@ from web3.types import Wei
 import beamer.events
 from beamer.events import ClaimMade, Event, EventFetcher
 from beamer.request import Request, RequestData, RequestTracker
-from beamer.typing import BlockNumber, ChainId
+from beamer.typing import BlockNumber, ChainId, ChecksumAddress
 from beamer.util import TokenMatchChecker
+
+log = structlog.get_logger(__name__)
 
 
 def _load_ERC20_abi() -> list[Any]:
@@ -269,11 +271,12 @@ class EventProcessor:
         for request in self._tracker:
             self._log.debug("Processing request", request=request)
             if request.is_pending:
-                self._fill_request(request)
+                fill_request(request, self._request_manager, self._fill_manager)
             elif request.is_filled and request.filler == self._address:
-                self._claim_request(request)
+                claim_request(request, self._request_manager)
             elif request.is_claimed:
-                self._check_claims(request)
+                assert isinstance(self._address, str)
+                check_claims(request, self._request_manager, self._address)
             elif request.is_unfillable:
                 self._log.debug("Removing unfillable request", request=request)
                 to_remove.append(request.id)
@@ -284,161 +287,177 @@ class EventProcessor:
         for request_id in to_remove:
             self._tracker.remove(request_id)
 
-    def _check_claims(self, request: Request) -> None:
-        for claim in request.iter_claims():
-            self._maybe_challenge(
-                request, claim, request.get_challenge_back_off_timestamp(claim.claim_id)
-            )
 
-            if claim.claimer == self._address:
-                self._try_withdraw(claim)
+def fill_request(request: Request, request_manager: Contract, fill_manager: Contract) -> None:
+    w3 = fill_manager.web3
 
-    def _compute_challenge_stake(self, claim: ClaimMade) -> Wei:  # pylint:disable=no-self-use
-        stake_increase = 1
-        if claim.challenger_stake == 0:
-            # we challenge with enough stake for L1 resolution
-            stake_increase = 10 ** 15
-        return Wei(max(claim.claimer_stake, claim.challenger_stake) + stake_increase)
-
-    def _maybe_challenge(self, request: Request, claim: ClaimMade, back_off_until: int) -> bool:
-        # We need to challenge if either of the following is true:
-        #
-        # 1) the claim is dishonest AND nobody challenged it yet
-        #
-        # 2) we participate in the game AND it is our turn
-
-        if int(time.time()) < back_off_until:
-            return False
-
-        unchallenged = claim.challenger_stake == 0
-        own_claim = claim.claimer == self._address
-        dishonest_claim = claim.claimer != request.filler or claim.fill_id != request.fill_id
-
-        our_turn = (
-            claim.challenger == self._address and claim.claimer_stake > claim.challenger_stake
-        ) or (own_claim and claim.claimer_stake < claim.challenger_stake)
-
-        should_challenge = dishonest_claim and unchallenged and not own_claim or our_turn
-        if not should_challenge:
-            return False
-
-        stake = self._compute_challenge_stake(claim)
-
-        try:
-            txn_hash = self._request_manager.functions.challengeClaim(claim.claim_id).transact(
-                dict(value=stake)
-            )
-        except web3.exceptions.ContractLogicError as exc:
-            self._log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
-            return False
-
-        w3 = self._request_manager.web3
-        w3.eth.wait_for_transaction_receipt(txn_hash)
-
-        self._log.debug(
-            "Challenged claim",
-            claim=claim,
-            txn_hash=txn_hash.hex(),
-        )
-
-        return True
-
-    def _fill_request(self, request: Request) -> None:
-        w3 = self._fill_manager.web3
-
-        # Check if the address points to a valid token
-        if w3.eth.get_code(request.target_token_address) == HexBytes("0x"):
-            self._log.info(
-                "Request unfillable, invalid token contract",
-                request=request,
-                token_address=request.target_token_address,
-            )
-            request.ignore()
-            return
-
-        block = self._request_manager.web3.eth.get_block("latest")
-        if block["timestamp"] >= request.valid_until:
-            self._log.info("Request expired, ignoring", request=request)
-            request.ignore()
-            return
-
-        token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
-        address = w3.eth.default_account
-        balance = token.functions.balanceOf(address).call()
-        if balance < request.amount:
-            self._log.debug(
-                "Unable to fill request", balance=balance, request_amount=request.amount
-            )
-            return
-
-        try:
-            token.functions.approve(self._fill_manager.address, request.amount).transact()
-        except web3.exceptions.ContractLogicError as exc:
-            self._log.error("approve failed", request_id=request.id, exc_args=exc.args)
-            return
-
-        try:
-            txn_hash = self._fill_manager.functions.fillRequest(
-                requestId=request.id,
-                sourceChainId=request.source_chain_id,
-                targetTokenAddress=request.target_token_address,
-                targetReceiverAddress=request.target_address,
-                amount=request.amount,
-            ).transact()
-        except web3.exceptions.ContractLogicError as exc:
-            self._log.error("fillRequest failed", request_id=request.id, exc_args=exc.args)
-            return
-
-        w3.eth.wait_for_transaction_receipt(txn_hash)
-
-        request.fill_unconfirmed()
-        self._log.debug(
-            "Filled request",
+    # Check if the address points to a valid token
+    if w3.eth.get_code(request.target_token_address) == HexBytes("0x"):
+        log.info(
+            "Request unfillable, invalid token contract",
             request=request,
-            txn_hash=txn_hash.hex(),
-            token=token.functions.symbol().call(),
+            token_address=request.target_token_address,
+        )
+        request.ignore()
+        return
+
+    block = request_manager.web3.eth.get_block("latest")
+    if block["timestamp"] >= request.valid_until:
+        log.info("Request expired, ignoring", request=request)
+        request.ignore()
+        return
+
+    token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
+    address = w3.eth.default_account
+    balance = token.functions.balanceOf(address).call()
+    if balance < request.amount:
+        log.debug("Unable to fill request", balance=balance, request_amount=request.amount)
+        return
+
+    try:
+        token.functions.approve(fill_manager.address, request.amount).transact()
+    except web3.exceptions.ContractLogicError as exc:
+        log.error("approve failed", request_id=request.id, exc_args=exc.args)
+        return
+
+    try:
+        txn_hash = fill_manager.functions.fillRequest(
+            requestId=request.id,
+            sourceChainId=request.source_chain_id,
+            targetTokenAddress=request.target_token_address,
+            targetReceiverAddress=request.target_address,
+            amount=request.amount,
+        ).transact()
+    except web3.exceptions.ContractLogicError as exc:
+        log.error("fillRequest failed", request_id=request.id, exc_args=exc.args)
+        return
+
+    w3.eth.wait_for_transaction_receipt(txn_hash)
+
+    request.fill_unconfirmed()
+    log.debug(
+        "Filled request",
+        request=request,
+        txn_hash=txn_hash.hex(),
+        token=token.functions.symbol().call(),
+    )
+
+
+def claim_request(request: Request, request_manager: Contract) -> None:
+    w3 = request_manager.web3
+    stake = request_manager.functions.claimStake().call()
+
+    try:
+        txn_hash = request_manager.functions.claimRequest(request.id, request.fill_id).transact(
+            dict(value=stake)
+        )
+    except web3.exceptions.ContractLogicError as exc:
+        log.error(
+            "claimRequest failed",
+            request_id=request.id,
+            fill_id=request.fill_id,
+            exc_args=exc.args,
+            stake=stake,
+        )
+        return
+
+    w3.eth.wait_for_transaction_receipt(txn_hash)
+
+    request.claim_unconfirmed()
+    log.debug(
+        "Claimed request",
+        request=request,
+        txn_hash=txn_hash.hex(),
+    )
+
+
+def check_claims(
+    request: Request, request_manager: Contract, own_address: ChecksumAddress
+) -> None:
+    for claim in request.iter_claims():
+        maybe_challenge(
+            request,
+            claim,
+            request.get_challenge_back_off_timestamp(claim.claim_id),
+            request_manager,
+            own_address,
         )
 
-    def _claim_request(self, request: Request) -> None:
-        w3 = self._request_manager.web3
-        stake = self._request_manager.functions.claimStake().call()
+        if claim.claimer == own_address:
+            try_withdraw(claim, request_manager)
 
-        try:
-            txn_hash = self._request_manager.functions.claimRequest(
-                request.id, request.fill_id
-            ).transact(dict(value=stake))
-        except web3.exceptions.ContractLogicError as exc:
-            self._log.error(
-                "claimRequest failed",
-                request_id=request.id,
-                fill_id=request.fill_id,
-                exc_args=exc.args,
-                stake=stake,
-            )
-            return
 
-        w3.eth.wait_for_transaction_receipt(txn_hash)
+def compute_challenge_stake(claim: ClaimMade) -> Wei:  # pylint:disable=no-self-use
+    stake_increase = 1
+    if claim.challenger_stake == 0:
+        # we challenge with enough stake for L1 resolution
+        stake_increase = 10 ** 15
+    return Wei(max(claim.claimer_stake, claim.challenger_stake) + stake_increase)
 
-        request.claim_unconfirmed()
-        self._log.debug(
-            "Claimed request",
-            request=request,
-            txn_hash=txn_hash.hex(),
+
+def maybe_challenge(
+    request: Request,
+    claim: ClaimMade,
+    back_off_until: int,
+    request_manager: Contract,
+    own_address: ChecksumAddress,
+) -> bool:
+    # We need to challenge if either of the following is true:
+    #
+    # 1) the claim is dishonest AND nobody challenged it yet
+    #
+    # 2) we participate in the game AND it is our turn
+
+    if int(time.time()) < back_off_until:
+        return False
+
+    unchallenged = claim.challenger_stake == 0
+    own_claim = claim.claimer == own_address
+    dishonest_claim = claim.claimer != request.filler or claim.fill_id != request.fill_id
+
+    our_turn = (
+        claim.challenger == own_address and claim.claimer_stake > claim.challenger_stake
+    ) or (own_claim and claim.claimer_stake < claim.challenger_stake)
+
+    should_challenge = dishonest_claim and unchallenged and not own_claim or our_turn
+    if not should_challenge:
+        return False
+
+    stake = compute_challenge_stake(claim)
+
+    try:
+        txn_hash = request_manager.functions.challengeClaim(claim.claim_id).transact(
+            dict(value=stake)
         )
+    except web3.exceptions.ContractLogicError as exc:
+        log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
+        return False
 
-    def _try_withdraw(self, claim: ClaimMade) -> None:
-        w3 = self._request_manager.web3
-        # check whether the claim period expired
-        # TODO: avoid making these calls every time
-        block = w3.eth.get_block(w3.eth.block_number)
-        if block["timestamp"] < claim.termination:
-            return
+    w3 = request_manager.web3
+    w3.eth.wait_for_transaction_receipt(txn_hash)
 
-        try:
-            txn_hash = self._request_manager.functions.withdraw(claim.claim_id).transact()
-        except web3.exceptions.ContractLogicError as exc:
-            self._log.error("withdraw failed", claim, exc_args=exc.args)
-            return
+    log.debug(
+        "Challenged claim",
+        claim=claim,
+        txn_hash=txn_hash.hex(),
+    )
 
-        w3.eth.wait_for_transaction_receipt(txn_hash)
-        self._log.debug("Withdrew", claim=claim, txn_hash=txn_hash.hex())
+    return True
+
+
+def try_withdraw(claim: ClaimMade, request_manager: Contract) -> None:
+    w3 = request_manager.web3
+    # check whether the claim period expired
+    # TODO: avoid making these calls every time
+    block = w3.eth.get_block(w3.eth.block_number)
+    if block["timestamp"] < claim.termination:
+        return
+
+    try:
+        txn_hash = request_manager.functions.withdraw(claim.claim_id).transact()
+    except web3.exceptions.ContractLogicError as exc:
+        log.error("withdraw failed", claim, exc_args=exc.args)
+        return
+
+    w3.eth.wait_for_transaction_receipt(txn_hash)
+    log.debug("Withdrew", claim=claim, txn_hash=txn_hash.hex())
