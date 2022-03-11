@@ -45,7 +45,7 @@ class Request(StateMachine):
     withdrawn = State("Withdrawn")
     unfillable = State("Unfillable")
 
-    fill = pending.to(filled) | filled_unconfirmed.to(filled)
+    fill = pending.to(filled) | filled_unconfirmed.to(filled) | claimed.to(claimed)
     fill_unconfirmed = pending.to(filled_unconfirmed)
     claim = (
         pending.to(claimed)
