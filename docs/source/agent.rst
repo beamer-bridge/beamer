@@ -80,7 +80,7 @@ to keep track of, and access all requests. The request state is, unsurprisingly,
 The second part, processing requests, consists of going through all requests and checking whether
 there is an action that needs to be performed. For example, if a pending request is encountered, the
 event processor may issue a ``fillRequest`` transaction. Similarly, if a filled request is encountered
-and it was our agent that filled it, the event processor may issue a ``withdraw`` transaction. Here
+and it was our agent that filled it, the event processor may issue a ``claimRequest`` transaction. Here
 again the request tracker is used to access the requests.
 
 
