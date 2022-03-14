@@ -1,4 +1,5 @@
 import time
+from unittest.mock import patch
 
 import brownie
 import pytest
@@ -8,10 +9,10 @@ from web3.types import Wei
 
 from beamer.agent import Agent
 from beamer.chain import maybe_challenge
-from beamer.events import ClaimMade
+from beamer.events import ClaimMade, RequestFilled
 from beamer.request import Request
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
-from beamer.typing import ClaimId, FillId, RequestId, Termination, TokenAmount
+from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
 def _get_delay(request_data):
@@ -155,4 +156,98 @@ def test_expired_request_is_ignored(request_manager, token, agent):
     brownie.chain.mine(timedelta=validity_period / 2 + 1)
     with Sleeper(1) as sleeper:
         while not request.is_unfillable:
+            sleeper.sleep(0.1)
+
+
+# Disable filling of requests in the agent
+# TODO: Find a better way to do this
+@patch("beamer.chain.fill_request")
+def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
+    target, filler = accounts[1:3]
+    validity_period = request_manager.MIN_VALIDITY_PERIOD()
+    chain_id = ChainId(brownie.chain.id)
+    amount = token.balanceOf(agent.address)
+
+    request_id = make_request(
+        request_manager,
+        token,
+        accounts[0],
+        target,
+        amount,
+        validity_period=validity_period,
+    )
+
+    with Sleeper(1) as sleeper:
+        while (request := agent.request_tracker.get(request_id)) is None:
+            sleeper.sleep(0.1)
+
+    event_processor = agent._event_processor
+
+    # Test wrong amount
+    event_processor.add_events(
+        [
+            RequestFilled(
+                chain_id=chain_id,
+                request_id=RequestId(request_id),
+                fill_id=FillId(1),
+                source_chain_id=chain_id,
+                target_token_address=token,
+                filler=filler,
+                amount=amount - 1,
+            ),
+        ]
+    )
+    time.sleep(1)
+    assert not request.is_filled
+
+    # Test wrong `source_chain_id`
+    event_processor.add_events(
+        [
+            RequestFilled(
+                chain_id=chain_id,
+                request_id=RequestId(request_id),
+                fill_id=FillId(1),
+                source_chain_id=ChainId(chain_id + 1),
+                target_token_address=token,
+                filler=filler,
+                amount=amount,
+            ),
+        ]
+    )
+    time.sleep(1)
+    assert not request.is_filled
+
+    # Test wrong `target_token_address`
+    event_processor.add_events(
+        [
+            RequestFilled(
+                chain_id=chain_id,
+                request_id=RequestId(request_id),
+                fill_id=FillId(1),
+                source_chain_id=chain_id,
+                target_token_address=filler,
+                filler=filler,
+                amount=amount,
+            ),
+        ]
+    )
+    time.sleep(1)
+    assert not request.is_filled
+
+    # Test correct event
+    event_processor.add_events(
+        [
+            RequestFilled(
+                chain_id=chain_id,
+                request_id=RequestId(request_id),
+                fill_id=FillId(1),
+                source_chain_id=chain_id,
+                target_token_address=token,
+                filler=filler,
+                amount=amount,
+            ),
+        ]
+    )
+    with Sleeper(1) as sleeper:
+        while not request.is_filled:
             sleeper.sleep(0.1)

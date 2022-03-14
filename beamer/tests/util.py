@@ -10,6 +10,8 @@ import brownie
 import requests
 import web3
 
+from beamer.typing import RequestId
+
 
 class Timeout(Exception):
     pass
@@ -142,7 +144,7 @@ def earnings(w3, account, num_fills=0):
 
 def make_request(
     request_manager, token, requester, target_address, amount, validity_period=3600
-) -> int:
+) -> RequestId:
     token.approve(request_manager.address, amount, {"from": requester})
 
     total_fee = request_manager.totalFee()
