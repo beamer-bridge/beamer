@@ -228,6 +228,16 @@ class EventProcessor:
             if request is None:
                 return False
 
+            fill_matches_request = (
+                request.id == event.request_id
+                and request.amount == event.amount
+                and request.source_chain_id == event.source_chain_id
+                and request.target_token_address == event.target_token_address
+            )
+            if not fill_matches_request:
+                self._log.warn("Fill not matching request. Ignoring.", request=request, fill=event)
+                return True
+
             try:
                 request.fill(filler=event.filler, fill_id=event.fill_id)
             except TransitionNotAllowed:
