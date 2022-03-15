@@ -132,6 +132,11 @@ class EventProcessor:
         if not self._fill_manager.functions.allowedLPs(self._address).call():
             raise RuntimeError("Agent address is not whitelisted")
 
+    @property
+    def _synced(self) -> bool:
+        with self._lock:
+            return self._num_syncs_done == 2
+
     def mark_sync_done(self) -> None:
         with self._lock:
             assert self._num_syncs_done < 2
@@ -159,7 +164,9 @@ class EventProcessor:
             if self._have_new_events.wait(1):
                 self._have_new_events.clear()
                 self._process_events()
-            self._process_requests()
+
+            if self._synced:
+                self._process_requests()
         self._log.info("EventProcessor stopped")
 
     def _process_events(self) -> None:
@@ -272,10 +279,7 @@ class EventProcessor:
             raise RuntimeError("Unrecognized event type")
 
     def _process_requests(self) -> None:
-        with self._lock:
-            if self._num_syncs_done < 2:
-                # We need to wait until we are synced with both chains.
-                return
+        assert self._synced, "Not synced yet"
 
         to_remove = []
         for request in self._tracker:
