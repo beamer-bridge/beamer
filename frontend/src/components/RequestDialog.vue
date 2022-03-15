@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
-import { BigNumber, utils } from 'ethers';
+import { utils } from 'ethers';
 import { computed, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
@@ -128,7 +128,7 @@ const submitRequestTransaction = async (formResult: {
     sourceChainId: Number(formResult.fromChainId.value),
     targetTokenAddress: formResult.tokenAddress.value,
     targetAddress: formResult.toAddress,
-    amount: BigNumber.from(formResult.amount),
+    amount: formResult.amount,
   };
 
   requestMetadata.value = {
