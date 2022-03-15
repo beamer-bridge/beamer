@@ -110,6 +110,12 @@ class RequestData:
         return RequestData(**kwargs)
 
 
+@dataclass
+class Claim:
+    claim_id: ClaimId
+    request_id: RequestId
+
+
 K = TypeVar("K")
 V = TypeVar("V")
 

@@ -9,7 +9,6 @@ from typing import Any, Callable
 
 import structlog
 import web3
-from eth_utils import is_checksum_address
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3.contract import Contract
@@ -17,8 +16,8 @@ from web3.types import Wei
 
 import beamer.events
 from beamer.events import ClaimMade, Event, EventFetcher
-from beamer.request import Request, RequestData, Tracker
-from beamer.typing import BlockNumber, ChainId, ChecksumAddress, RequestId
+from beamer.request import Claim, Request, RequestData, Tracker
+from beamer.typing import BlockNumber, ChainId, ChecksumAddress, ClaimId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -101,11 +100,13 @@ class ContractEventMonitor:
 class EventProcessor:
     def __init__(
         self,
-        tracker: Tracker[RequestId, Request],
+        request_tracker: Tracker[RequestId, Request],
+        claim_tracker: Tracker[ClaimId, Claim],
         request_manager: Contract,
         fill_manager: Contract,
         match_checker: TokenMatchChecker,
         fill_wait_time: int,
+        address: ChecksumAddress,
     ):
         # This lock protects the following objects:
         #   - self._events
@@ -113,14 +114,14 @@ class EventProcessor:
         self._lock = threading.Lock()
         self._have_new_events = threading.Event()
         self._events: list[Event] = []
-        self._tracker = tracker
+        self._request_tracker = request_tracker
+        self._claim_tracker = claim_tracker
         self._request_manager = request_manager
         self._fill_manager = fill_manager
         self._match_checker = match_checker
         self._stop = False
         self._log = structlog.get_logger(type(self).__name__)
-        assert is_checksum_address(request_manager.web3.eth.default_account)
-        self._address = request_manager.web3.eth.default_account
+        self._address = address
         # The number of times we synced with a chain:
         # 0 = we're still waiting for sync to complete for both chains
         # 1 = one of the chains was synced, waiting for the other one
@@ -160,6 +161,7 @@ class EventProcessor:
                 self._have_new_events.clear()
                 self._process_events()
             self._process_requests()
+            self._process_claims()
         self._log.info("EventProcessor stopped")
 
     def _process_events(self) -> None:
@@ -229,11 +231,11 @@ class EventProcessor:
                 amount=request_data.amount,
                 valid_until=request_data.validUntil,
             )
-            self._tracker.add(req.id, req)
+            self._request_tracker.add(req.id, req)
             return True
 
         elif isinstance(event, beamer.events.RequestFilled):
-            request = self._tracker.get(event.request_id)
+            request = self._request_tracker.get(event.request_id)
             if request is None:
                 return False
 
@@ -255,24 +257,28 @@ class EventProcessor:
             return True
 
         elif isinstance(event, beamer.events.ClaimMade):
-            request = self._tracker.get(event.request_id)
+            request = self._request_tracker.get(event.request_id)
             if request is None:
                 return False
 
             try:
                 request.claim(event=event, fill_wait_time=self._fill_wait_time)
+
+                claim = Claim(event.claim_id, request.id)
+                self._claim_tracker.add(claim.claim_id, claim)
             except TransitionNotAllowed:
                 return False
             self._log.info("Request claimed", request=request, claim_id=event.claim_id)
             return True
 
         elif isinstance(event, beamer.events.ClaimWithdrawn):
-            request = self._tracker.get(event.request_id)
+            request = self._request_tracker.get(event.request_id)
             if request is None:
                 return False
 
             try:
                 request.withdraw()
+                # TODO: handle claim
             except TransitionNotAllowed:
                 return False
             self._log.info("Claim withdrawn", request=request)
@@ -287,14 +293,13 @@ class EventProcessor:
                 return
 
         to_remove = []
-        for request in self._tracker:
+        for request in self._request_tracker:
             self._log.debug("Processing request", request=request)
             if request.is_pending:
                 fill_request(request, self._request_manager, self._fill_manager)
             elif request.is_filled and request.filler == self._address:
                 claim_request(request, self._request_manager)
             elif request.is_claimed:
-                assert isinstance(self._address, str)
                 check_claims(request, self._request_manager, self._address)
             elif request.is_unfillable:
                 self._log.debug("Removing unfillable request", request=request)
@@ -304,7 +309,31 @@ class EventProcessor:
                 to_remove.append(request.id)
 
         for request_id in to_remove:
-            self._tracker.remove(request_id)
+            self._request_tracker.remove(request_id)
+
+    def _process_claims(self) -> None:
+        with self._lock:
+            if self._num_syncs_done < 2:
+                # We need to wait until we are synced with both chains.
+                return
+
+        for claim in self._claim_tracker:
+            self._log.debug("Processing claim", claim=claim)
+
+            request = self._request_tracker.get(claim.request_id)
+            if request is None:
+                continue
+
+            maybe_challenge(
+                request,
+                claim,
+                request.get_challenge_back_off_timestamp(claim.claim_id),
+                self._request_manager,
+                self._address,
+            )
+
+            if claim.claimer == self._address:
+                try_withdraw(claim, self._request_manager)
 
 
 def fill_request(request: Request, request_manager: Contract, fill_manager: Contract) -> None:

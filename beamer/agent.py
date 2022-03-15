@@ -11,8 +11,8 @@ from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_mid
 
 from beamer.chain import ContractEventMonitor, EventProcessor, Tracker
 from beamer.contracts import DeploymentInfo, make_contracts
-from beamer.request import Request
-from beamer.typing import URL, ChainId, RequestId
+from beamer.request import Claim, Request
+from beamer.typing import URL, ChainId, ClaimId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -57,15 +57,18 @@ class Agent:
         fill_manager = l2b_contracts["FillManager"]
 
         self.request_tracker: Tracker[RequestId, Request] = Tracker()
+        self.claim_tracker: Tracker[ClaimId, Claim] = Tracker()
         with open(config.token_match_file, "r") as f:
             match_checker = TokenMatchChecker.from_file(f)
 
         self._event_processor = EventProcessor(
             self.request_tracker,
+            self.claim_tracker,
             request_manager,
             fill_manager,
             match_checker,
             config.fill_wait_time,
+            config.account.address,
         )
 
         self._contract_monitor_l2a = ContractEventMonitor(

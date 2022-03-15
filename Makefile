@@ -5,10 +5,10 @@ CODE_DIRS = contracts/ beamer/ scripts/
 all: lint
 
 lint:
+	mypy $(CODE_DIRS)
 	black --check --diff $(CODE_DIRS)
 	flake8 $(CODE_DIRS)
 	isort $(CODE_DIRS) --diff --check-only
-	mypy $(CODE_DIRS)
 	pylint $(CODE_DIRS)
 
 black:
