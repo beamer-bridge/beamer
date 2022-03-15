@@ -17,12 +17,12 @@
 import { provide } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
-import useRaisyncConfig from '@/composables/useRaisyncConfig';
-import { RaisyncConfigKey } from '@/symbols';
+import useBeamerConfig from '@/composables/useBeamerConfig';
+import { BeamerConfigKey } from '@/symbols';
 
-const { config } = useRaisyncConfig();
+const { config } = useBeamerConfig();
 
-provide(RaisyncConfigKey, config);
+provide(BeamerConfigKey, config);
 </script>
 
 <style lang="css">

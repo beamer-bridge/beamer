@@ -1,4 +1,4 @@
-export type RaisyncConfig = {
+export type BeamerConfig = {
   chains: {
     [chainId: string]: ChainConfig;
   };
