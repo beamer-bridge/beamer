@@ -3,7 +3,7 @@ import time
 
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any, Generator, Optional
+from typing import Any, Generator, Generic, Optional, TypeVar
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
 
@@ -110,25 +110,29 @@ class RequestData:
         return RequestData(**kwargs)
 
 
-class RequestTracker:
+K = TypeVar("K")
+V = TypeVar("V")
+
+
+class Tracker(Generic[K, V]):
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._map: dict[RequestId, Request] = {}
+        self._map: dict[K, V] = {}
 
-    def add(self, request: Request) -> None:
+    def add(self, key: K, value: V) -> None:
         with self._lock:
-            self._map[request.id] = request
+            self._map[key] = value
 
-    def remove(self, request_id: RequestId) -> None:
+    def remove(self, key: K) -> None:
         with self._lock:
-            del self._map[request_id]
+            del self._map[key]
 
-    def __contains__(self, request_id: RequestId) -> bool:
+    def __contains__(self, key: K) -> bool:
         with self._lock:
-            return request_id in self._map
+            return key in self._map
 
-    def get(self, request_id: RequestId) -> Optional[Request]:
-        return self._map.get(request_id)
+    def get(self, key: K) -> Optional[V]:
+        return self._map.get(key)
 
     def __iter__(self) -> Any:
         def locked_iter() -> Generator:
