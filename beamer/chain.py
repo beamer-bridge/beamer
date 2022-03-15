@@ -18,8 +18,8 @@ from web3.types import TxParams, Wei
 
 import beamer.events
 from beamer.events import ClaimMade, Event, EventFetcher
-from beamer.request import Request, RequestData, RequestTracker
-from beamer.typing import BlockNumber, ChainId, ChecksumAddress
+from beamer.request import Request, RequestData, Tracker
+from beamer.typing import BlockNumber, ChainId, ChecksumAddress, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -102,7 +102,7 @@ class ContractEventMonitor:
 class EventProcessor:
     def __init__(
         self,
-        tracker: RequestTracker,
+        tracker: Tracker[RequestId, Request],
         request_manager: Contract,
         fill_manager: Contract,
         match_checker: TokenMatchChecker,
@@ -234,7 +234,7 @@ class EventProcessor:
                 amount=request_data.amount,
                 valid_until=request_data.validUntil,
             )
-            self._tracker.add(req)
+            self._tracker.add(req.id, req)
             return True
 
         elif isinstance(event, beamer.events.RequestFilled):

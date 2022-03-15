@@ -9,9 +9,10 @@ from eth_typing import Address
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-from beamer.chain import ContractEventMonitor, EventProcessor, RequestTracker
+from beamer.chain import ContractEventMonitor, EventProcessor, Tracker
 from beamer.contracts import DeploymentInfo, make_contracts
-from beamer.typing import URL, ChainId
+from beamer.request import Request
+from beamer.typing import URL, ChainId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -58,7 +59,7 @@ class Agent:
         if not fill_manager.functions.allowedLPs(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted")
 
-        self.request_tracker = RequestTracker()
+        self.request_tracker: Tracker[RequestId, Request] = Tracker()
         with open(config.token_match_file, "r") as f:
             match_checker = TokenMatchChecker.from_file(f)
 
