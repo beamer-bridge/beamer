@@ -27,18 +27,12 @@ class Event:
 
 
 @dataclass(frozen=True)
-class RequestFilled(Event):
+class RequestEvent(Event):
     request_id: RequestId
-    fill_id: FillId
-    source_chain_id: ChainId
-    target_token_address: ChecksumAddress
-    filler: ChecksumAddress
-    amount: TokenAmount
 
 
 @dataclass(frozen=True)
-class RequestCreated(Event):
-    request_id: RequestId
+class RequestCreated(RequestEvent):
     target_chain_id: ChainId
     source_token_address: ChecksumAddress
     target_token_address: ChecksumAddress
@@ -47,8 +41,26 @@ class RequestCreated(Event):
 
 
 @dataclass(frozen=True)
-class ClaimMade(Event):
+class RequestFilled(RequestEvent):
+    fill_id: FillId
+    source_chain_id: ChainId
+    target_token_address: ChecksumAddress
+    filler: ChecksumAddress
+    amount: TokenAmount
+
+
+@dataclass(frozen=True)
+class DepositWithdrawn(RequestEvent):
+    receiver: ChecksumAddress
+
+
+@dataclass(frozen=True)
+class ClaimEvent(Event):
     claim_id: ClaimId
+
+
+@dataclass(frozen=True)
+class ClaimMade(ClaimEvent):
     request_id: RequestId
     fill_id: FillId
     claimer: ChecksumAddress
@@ -59,8 +71,7 @@ class ClaimMade(Event):
 
 
 @dataclass(frozen=True)
-class ClaimWithdrawn(Event):
-    claim_id: ClaimId
+class ClaimWithdrawn(ClaimEvent):
     request_id: RequestId
     claim_receiver: ChecksumAddress
 
@@ -70,8 +81,9 @@ def _camel_to_snake(s: str) -> str:
 
 
 _EVENT_TYPES = dict(
-    RequestFilled=RequestFilled,
     RequestCreated=RequestCreated,
+    RequestFilled=RequestFilled,
+    DepositWithdrawn=DepositWithdrawn,
     ClaimMade=ClaimMade,
     ClaimWithdrawn=ClaimWithdrawn,
 )
