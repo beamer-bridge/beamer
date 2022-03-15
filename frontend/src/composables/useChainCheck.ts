@@ -1,7 +1,7 @@
 import { Ref, ShallowRef } from 'vue';
 
 import { EthereumProvider } from '@/services/web3-provider';
-import { RaisyncConfig } from '@/types/config';
+import { BeamerConfig } from '@/types/config';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useChainCheck(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
@@ -10,9 +10,9 @@ export default function useChainCheck(ethereumProvider: ShallowRef<Readonly<Ethe
     return chainId === expectedChainId;
   };
 
-  const connectedChainSupported = async (raisyncConfig: Ref<Readonly<RaisyncConfig>>) => {
+  const connectedChainSupported = async (beamerConfig: Ref<Readonly<BeamerConfig>>) => {
     const chainId = await ethereumProvider.value.chainId.value;
-    return Object.prototype.hasOwnProperty.call(raisyncConfig.value.chains, String(chainId));
+    return Object.prototype.hasOwnProperty.call(beamerConfig.value.chains, String(chainId));
   };
 
   return { chainMatchesExpected, connectedChainSupported };

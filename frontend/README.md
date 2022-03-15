@@ -1,4 +1,4 @@
-# raisync-request-interface
+# beamer-request-interface
 
 ## Project setup
 ```

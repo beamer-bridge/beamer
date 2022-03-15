@@ -5,14 +5,14 @@ import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
-import { RaisyncConfig } from '@/types/config';
+import { BeamerConfig } from '@/types/config';
 import { Request, RequestState } from '@/types/data';
 import createAsyncProcess from '@/utils/create-async-process';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function useGetFee(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  raisyncConfig: Ref<Readonly<RaisyncConfig>>,
+  beamerConfig: Ref<Readonly<BeamerConfig>>,
 ) {
   const getFeeError = ref('');
   const fee = ref<number>();
@@ -22,7 +22,7 @@ export function useGetFee(
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = raisyncConfig.value.chains[String(chainId)];
+      const chainConfig = beamerConfig.value.chains[String(chainId)];
       const requestManagerAddress = chainConfig?.requestManagerAddress;
       if (requestManagerAddress) {
         const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
@@ -50,7 +50,7 @@ export function useGetFee(
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function useRequestTransaction(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  raisyncConfig: Ref<Readonly<RaisyncConfig>>,
+  beamerConfig: Ref<Readonly<BeamerConfig>>,
 ) {
   const transactionError = ref('');
   const requestState = ref<RequestState>(RequestState.Init);
@@ -61,7 +61,7 @@ export function useRequestTransaction(
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = raisyncConfig.value.chains[String(chainId)];
+      const chainConfig = beamerConfig.value.chains[String(chainId)];
       request.sourceChainId = chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
       await ensureTokenAllowance(
@@ -98,7 +98,7 @@ export function useRequestTransaction(
 
 export function useWaitRequestFilled(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  raisyncConfig: Ref<Readonly<RaisyncConfig>>,
+  beamerConfig: Ref<Readonly<BeamerConfig>>,
 ) {
   const waitError = ref('');
 
@@ -111,7 +111,7 @@ export function useWaitRequestFilled(
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = raisyncConfig.value.chains[String(chainId)];
+      const chainConfig = beamerConfig.value.chains[String(chainId)];
       request.fillManagerAddress = chainConfig.fillManagerAddress;
       requestState.value = RequestState.WaitSwitchChain;
 

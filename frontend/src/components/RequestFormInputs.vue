@@ -66,12 +66,12 @@
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
 
-import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
+import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
-const raisyncConfig = injectStrict(RaisyncConfigKey);
+const beamerConfig = injectStrict(BeamerConfigKey);
 
 interface Props {
   readonly fees: string;
@@ -79,7 +79,7 @@ interface Props {
 
 defineProps<Props>();
 
-const chainsConfiguration = raisyncConfig.value.chains;
+const chainsConfiguration = beamerConfig.value.chains;
 const CHAINS: SelectorOption[] = [];
 
 Object.keys(chainsConfiguration).forEach((chainId) => {
