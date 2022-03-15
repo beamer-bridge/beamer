@@ -1,9 +1,10 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { ethers } from 'ethers';
 import { Ref, ref, ShallowRef, watch } from 'vue';
 
 import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
-import { ensureTokenAllowance } from '@/services/transactions/token';
+import { ensureTokenAllowance, getTokenDecimals } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
 import { RaisyncConfig } from '@/types/config';
 import { Request, RequestState } from '@/types/data';
@@ -64,6 +65,8 @@ export function useRequestTransaction(
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
       request.sourceChainId = chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
+      const decimals = await getTokenDecimals(signer, request.sourceTokenAddress);
+      request.amount = ethers.utils.parseUnits(request.amount.toString(), decimals);
       await ensureTokenAllowance(
         signer,
         request.sourceTokenAddress,

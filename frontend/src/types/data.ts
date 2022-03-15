@@ -14,7 +14,7 @@ export enum RequestState {
 }
 
 export interface Request {
-  amount: BigNumber;
+  amount: string | BigNumber;
   sourceChainId: number;
   sourceTokenAddress: string;
   targetAddress: string;
