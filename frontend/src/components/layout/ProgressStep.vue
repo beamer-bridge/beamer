@@ -15,7 +15,6 @@ interface Props {
   readonly warnState?: RequestState;
 }
 const props = defineProps<Props>();
-/*const currentState = toRef(props, 'currentState')*/
 
 const classObject = computed(() => {
   var showWarning = false;

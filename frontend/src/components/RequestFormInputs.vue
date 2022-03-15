@@ -87,7 +87,7 @@ Object.keys(chainsConfiguration).forEach((chainId) => {
 });
 
 const TOKENS: SelectorOption[] = [];
-chainsConfiguration[String(ethereumProvider.value.chainId.value)].tokens.forEach((token) => {
+chainsConfiguration[String(ethereumProvider.value.chainId.value)]?.tokens.forEach((token) => {
   TOKENS.push({ value: token.address, label: token.symbol });
 });
 
