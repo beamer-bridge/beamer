@@ -197,6 +197,15 @@ class EventProcessor:
 
     def _process_event(self, event: Event) -> bool:
         if isinstance(event, beamer.events.RequestCreated):
+            # Check if the address points to a valid token
+            if self._fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
+                self._log.info(
+                    "Request unfillable, invalid token contract",
+                    request_event=event,
+                    token_address=event.target_token_address,
+                )
+                return False
+
             is_valid_request = self._match_checker.is_valid_pair(
                 event.chain_id,
                 event.source_token_address,
@@ -299,24 +308,13 @@ class EventProcessor:
 
 
 def fill_request(request: Request, request_manager: Contract, fill_manager: Contract) -> None:
-    w3 = fill_manager.web3
-
-    # Check if the address points to a valid token
-    if w3.eth.get_code(request.target_token_address) == HexBytes("0x"):
-        log.info(
-            "Request unfillable, invalid token contract",
-            request=request,
-            token_address=request.target_token_address,
-        )
-        request.ignore()
-        return
-
     block = request_manager.web3.eth.get_block("latest")
     if block["timestamp"] >= request.valid_until:
         log.info("Request expired, ignoring", request=request)
         request.ignore()
         return
 
+    w3 = fill_manager.web3
     token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
     address = w3.eth.default_account
     balance = token.functions.balanceOf(address).call()
