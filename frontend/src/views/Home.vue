@@ -16,20 +16,20 @@ import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
-import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
+import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
 import { injectStrict } from '@/utils/vue-utils';
 
 const criticalErrorMessage = ref('');
 const ethereumProvider = shallowRef<EthereumProvider | undefined>(undefined);
 const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
 
-const raisyncConfig = injectStrict(RaisyncConfigKey);
+const beamerConfig = injectStrict(BeamerConfigKey);
 
 const chainChangeHandler = async () => {
   const { connectedChainSupported } = useChainCheck(
     readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
   );
-  const isSupportedChain = await connectedChainSupported(raisyncConfig);
+  const isSupportedChain = await connectedChainSupported(beamerConfig);
   if (!isSupportedChain) {
     criticalErrorMessage.value = `Connected chain not supported!`;
   } else {

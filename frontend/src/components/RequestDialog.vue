@@ -81,7 +81,7 @@ import {
   useRequestTransaction,
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
-import { EthereumProviderKey, RaisyncConfigKey } from '@/symbols';
+import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
@@ -89,15 +89,15 @@ import { injectStrict } from '@/utils/vue-utils';
 import RequestProcessing from './RequestProcessing.vue';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
-const raisyncConfig = injectStrict(RaisyncConfigKey);
+const beamerConfig = injectStrict(BeamerConfigKey);
 
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
-const { fee, executeGetFee } = useGetFee(ethereumProvider, raisyncConfig);
+const { fee, executeGetFee } = useGetFee(ethereumProvider, beamerConfig);
 const { requestTransactionActive, requestState, transactionError, executeRequestTransaction } =
-  useRequestTransaction(ethereumProvider, raisyncConfig);
-const { executeWaitFulfilled } = useWaitRequestFilled(ethereumProvider, raisyncConfig);
+  useRequestTransaction(ethereumProvider, beamerConfig);
+const { executeWaitFulfilled } = useWaitRequestFilled(ethereumProvider, beamerConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
 
