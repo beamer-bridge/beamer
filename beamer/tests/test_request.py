@@ -10,7 +10,7 @@ from web3.types import Wei
 from beamer.agent import Agent
 from beamer.chain import maybe_challenge
 from beamer.events import ClaimMade, RequestFilled
-from beamer.request import Request
+from beamer.request import Claim, Request
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
@@ -93,20 +93,23 @@ def test_challenge_own_claim(config, request_manager, token):
         Termination(1700000000),
     )
 
-    claim_event = ClaimMade(
-        brownie.chain.id,
-        ClaimId(1),
-        request.id,
-        FillId(0),
-        agent_address,
-        claim_stake,
-        ZERO_ADDRESS,
-        Wei(0),
-        Termination(1700000000),
+    claim = Claim(
+        ClaimMade(
+            brownie.chain.id,
+            ClaimId(1),
+            request.id,
+            FillId(0),
+            agent_address,
+            claim_stake,
+            ZERO_ADDRESS,
+            Wei(0),
+            Termination(1700000000),
+        ),
+        int(time.time()),
     )
 
     assert not maybe_challenge(
-        request, claim_event, int(time.time()), request_manager, to_checksum_address(agent.address)
+        claim, request_manager, to_checksum_address(agent.address)
     ), "Tried to challenge own claim"
 
 
@@ -132,10 +135,17 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
         while not request.is_claimed:
             sleeper.sleep(0.1)
 
-    claims = tuple(request.iter_claims())
-    assert len(claims) == 1
-    claim_event = claims[0]
-    assert claim_event.claimer == agent.address
+    found_claims: list[Claim] = []
+    with Sleeper(5) as sleeper:
+        while not found_claims:
+            for claim in agent.claim_tracker:
+                if claim.request_id == request_id:
+                    found_claims.append(claim)
+            sleeper.sleep(0.1)
+
+    assert len(found_claims) == 1
+    claim = found_claims[0]
+    assert claim.claimer == agent.address
 
 
 def test_withdraw(request_manager, token, agent):
