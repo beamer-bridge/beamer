@@ -23,10 +23,11 @@ export function useGetFee(
     try {
       const chainId = ethereumProvider.value.chainId.value;
       const chainConfig = raisyncConfig.value.chains[String(chainId)];
-      const requestManagerAddress = chainConfig.requestManagerAddress;
-
-      const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
-      fee.value = res;
+      const requestManagerAddress = chainConfig?.requestManagerAddress;
+      if (requestManagerAddress) {
+        const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
+        fee.value = res;
+      }
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {

@@ -68,6 +68,7 @@
 
 <script setup lang="ts">
 import { FormKitFrameworkContext } from '@formkit/core';
+import { FormKit } from '@formkit/vue';
 import { BigNumber, utils } from 'ethers';
 import { computed, ref, watch } from 'vue';
 
