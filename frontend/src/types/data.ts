@@ -26,6 +26,7 @@ export interface Request {
   requestId?: BigNumber;
   receipt?: TransactionReceipt;
   fee?: number;
+  validityPeriod?: number;
 }
 
 export interface RequestMetadata {

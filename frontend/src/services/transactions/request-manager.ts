@@ -35,21 +35,37 @@ export async function sendRequestTransaction(
   if (!request.fee) {
     request.fee = await getRequestFee(signer, request);
   }
+  if (!request.validityPeriod) {
+    request.validityPeriod = 600;
+  }
+
   const requestManagerContract = new Contract(
     request.requestManagerAddress,
     RequestManager.abi,
     signer,
   );
-  const transaction: TransactionResponse = await requestManagerContract.createRequest(
+
+  const requestParams = [
     request.targetChainId,
     request.sourceTokenAddress,
     request.targetTokenAddress,
     request.targetAddress,
     request.amount,
+    request.validityPeriod,
+  ];
+
+  const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
+    ...requestParams,
     { value: request.fee },
   );
 
+  const transaction: TransactionResponse = await requestManagerContract.createRequest(
+    ...requestParams,
+    { value: request.fee, gasLimit: estimatedGasLimit },
+  );
+
   requestState.value = RequestState.WaitTransaction;
+
   const transactionReceipt = await transaction.wait();
   request.receipt = transactionReceipt;
 

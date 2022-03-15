@@ -1,6 +1,6 @@
 <template>
   <div class="home flex justify-center pt-56">
-    <div class="max-w-2xl flex-auto">
+    <div class="max-w-2xl flex justify-center items-center">
       <Card v-if="criticalErrorMessage" class="text-center text-orange-dark">
         {{ criticalErrorMessage }}
       </Card>
@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef } from 'vue';
+import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
@@ -25,20 +25,27 @@ const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
 
 const raisyncConfig = injectStrict(RaisyncConfigKey);
 
+const chainChangeHandler = async () => {
+  const { connectedChainSupported } = useChainCheck(
+    readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
+  );
+  const isSupportedChain = await connectedChainSupported(raisyncConfig);
+  if (!isSupportedChain) {
+    criticalErrorMessage.value = `Connected chain not supported!`;
+  } else {
+    criticalErrorMessage.value = '';
+  }
+};
+
 provide(EthereumProviderKey, readonlyEthereumProvider);
 
 onMounted(async () => {
   ethereumProvider.value = await createMetaMaskProvider();
-
   if (ethereumProvider.value) {
-    const { connectedChainSupported } = useChainCheck(
-      readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
-    );
-
-    // TODO retrigger when chain id changes
-    if (!(await connectedChainSupported(raisyncConfig))) {
-      criticalErrorMessage.value = `Connected chain not supported!`;
-    }
+    watch(ethereumProvider.value.chainId, () => {
+      chainChangeHandler();
+    });
+    chainChangeHandler();
   } else {
     criticalErrorMessage.value = 'Could not detect MetaMask!';
   }
