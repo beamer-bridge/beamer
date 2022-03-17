@@ -211,7 +211,7 @@ class EventProcessor:
                     request_event=event,
                     token_address=event.target_token_address,
                 )
-                return False
+                return True
 
             is_valid_request = self._match_checker.is_valid_pair(
                 event.chain_id,
@@ -221,7 +221,7 @@ class EventProcessor:
             )
             if not is_valid_request:
                 self._log.debug("Invalid token pair in request", _event=event)
-                return False
+                return True
 
             data = self._request_manager.functions.requests(event.request_id).call()
             request_data = RequestData.from_chain_data(data)
