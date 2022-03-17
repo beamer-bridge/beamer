@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
-import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 
 import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import type { SelectorOption } from '@/types/form';
@@ -117,18 +117,11 @@ const switchChain = async (chainId: any) => {
   }
 };
 
-onMounted(async () => {
-  watch(ethereumProvider.value.chainId, () => {
-    localStorage.setItem('fromChainId', ethereumProvider.value.chainId.value.toString());
-    location.reload();
-  });
+watch(ethereumProvider.value.chainId, () => {
+  location.reload();
 });
 
 onBeforeMount(() => {
-  const storedFromChainId = localStorage.getItem('fromChainId');
-  if (storedFromChainId) {
-    fromChainId.value = getChainSelectorOption(storedFromChainId);
-    localStorage.removeItem('fromChainId');
-  }
+  fromChainId.value = getChainSelectorOption(String(ethereumProvider.value.chainId.value));
 });
 </script>

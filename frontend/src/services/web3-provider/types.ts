@@ -2,8 +2,6 @@ import { Block, JsonRpcSigner } from '@ethersproject/providers';
 import { Contract } from 'ethers';
 import { Ref, ShallowRef } from 'vue';
 
-import { ChainData } from '@/types/config';
-
 export interface EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
   chainId: Ref<number>;
@@ -15,3 +13,9 @@ export interface EthereumProvider {
   addChain(chainData: ChainData): Promise<boolean>;
   getChainId(): Promise<number>;
 }
+
+export type ChainData = {
+  chainId: number | string;
+  rpcUrl: string;
+  name: string;
+};
