@@ -55,6 +55,9 @@ class Agent:
         request_manager = l2a_contracts["RequestManager"]
         fill_manager = l2b_contracts["FillManager"]
 
+        if not fill_manager.functions.allowedLPs(config.account.address).call():
+            raise RuntimeError("Agent address is not whitelisted")
+
         self.request_tracker = RequestTracker()
         with open(config.token_match_file, "r") as f:
             match_checker = TokenMatchChecker.from_file(f)
