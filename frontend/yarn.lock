@@ -671,10 +671,10 @@
   resolved "https://registry.yarnpkg.com/@metamask/detect-provider/-/detect-provider-1.2.0.tgz#3667a7531f2a682e3c3a43eaf3a1958bdb42a696"
   integrity sha512-ocA76vt+8D0thgXZ7LxFPyqw3H7988qblgzddTDA6B8a/yU0uKV42QR/DhA+Jh11rJjxW0jKvwb5htA6krNZDQ==
 
-"@namics/stylelint-bem@^6.3.4":
-  version "6.3.4"
-  resolved "https://registry.yarnpkg.com/@namics/stylelint-bem/-/stylelint-bem-6.3.4.tgz#47fc97e9a27eee005721f05c30d6bc70385ac6d6"
-  integrity sha512-PPsS1VDfYcNEROBGTFdWf3qbG/C57IJkAEXU3WNjhWdwflRRnYrAY0DpsFwGVX4HHOV0GDeCq4QqDySoQagltg==
+"@namics/stylelint-bem@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@namics/stylelint-bem/-/stylelint-bem-7.0.0.tgz#58dafcb1be601c3f77267493faf6e17f3bf0d1fb"
+  integrity sha512-XimlWZbCotBQbwB5YwcB5d7HNhoY4YBWyfoMbDcEuUWOCEmXDbfwsSDJR+cytm+/Z+lDVRnHd+iM01AaF0+R4A==
   dependencies:
     css-selector-classes "0.1.2"
     postcss-resolve-nested-selector "0.1.1"
