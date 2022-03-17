@@ -87,26 +87,28 @@ again the request tracker is used to access the requests.
 Request
 -------
 
-The ``Request`` object holds the information about a submitted request and the associated state,
-including any claims that were made.  The state machine is depicted by the following figure.
+The ``Request`` object holds the information about a submitted request and the associated state.
+The state machine is depicted by the following figure.
 
 .. graphviz:: request_state_machine.dot
    :align: center
    :caption: Request state machine
 
 The state machine uses the `python-statemachine`_ Python package to declare states and transitions.
-Auto-generated transition methods like ``fill`` or ``claim`` are then used by the event process to
+Auto-generated transition methods like ``fill`` or ``withdraw`` are then used by the event process to
 update request state. This approach also ensures that only valid transitions are possible.
 
 .. _python-statemachine: https://python-statemachine.readthedocs.io/en/latest/readme.html
 
-Request states mostly correspond to contract events, except for ``pending`` and ``filled-unconfirmed``
-states.  A request is in the initial state ``pending`` immediately after it is created. If a
-``RequestFilled`` event is received, the request will move to the state ``filled``. The process goes
-similarly for the ``claimed`` and ``withdrawn`` states, i.e. those states are entered when the
-corresponding blockchain events are processed.
+Request states mostly correspond to contract events, except for ``pending`` and `
+states.  A request is in the initial state ``pending`` immediately after it is created. The ``filled``state is
+transitioned to either if the agent sent a fill transaction or a ``RequestFilled`` event is received. If in
+``filled`` state the ``RequestFilled`` event will update internal attributes of the request.
+The process goes similarly for ``withdrawn`` state, i.e. it is entered when the corresponding blockchain
+events are processed.
 
-The ``filled-unconfirmed`` state is an intermediate state that is used to mark requests that our agent
-has filled, but the corresponding ``RequestFilled`` events have not been received yet. This is to
-avoid filling the same requests more than once. Once the corresponding ``RequestFilled`` events
-arrive, the requests will proceed to state ``filled``.
+Claims are held in the ``ClaimTracker`` object. They will be handled separately.
+
+The only states which will not produce an output in form of a transaction are ``ignored``, ``claimed``
+and ``withdrawn``.
+
