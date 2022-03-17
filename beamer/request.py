@@ -1,14 +1,14 @@
 import threading
-import time
-
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Generator, Generic, Optional, TypeVar
+
+from eth_typing import ChecksumAddress
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
+from web3.types import Wei
 
-from beamer.events import ClaimMade
-from beamer.typing import ChainId, ClaimId, RequestId, TokenAmount
+from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
 class Request(StateMachine):
@@ -32,58 +32,28 @@ class Request(StateMachine):
         self.target_address = target_address
         self.amount = amount
         self.valid_until = valid_until
-        self._claims: dict[ClaimId, ClaimMade] = {}
-        self._challenge_back_off_timestamps: dict[ClaimId, int] = {}
         self.filler: Optional[Address] = None
         self.fill_id: Optional[int] = None
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
-    filled_unconfirmed = State("Filled-unconfirmed")
     claimed = State("Claimed")
-    claimed_unconfirmed = State("Claimed-unconfirmed")
     withdrawn = State("Withdrawn")
-    unfillable = State("Unfillable")
+    ignored = State("Ignored")
 
-    fill = pending.to(filled) | filled_unconfirmed.to(filled) | claimed.to(claimed)
-    fill_unconfirmed = pending.to(filled_unconfirmed)
-    claim = (
-        pending.to(claimed)
-        | filled.to(claimed)
-        | claimed_unconfirmed.to(claimed)
-        | claimed.to(claimed)
-    )
-    claim_unconfirmed = filled.to(claimed_unconfirmed)
-    withdraw = claimed.to(withdrawn)
-    ignore = pending.to(unfillable)
+    fill = pending.to(filled) | filled.to(filled) | ignored.to(filled)
+    try_to_fill = pending.to(filled)
+    try_to_claim = filled.to(claimed)
+    withdraw = claimed.to(withdrawn) | filled.to(withdrawn) | ignored.to(withdrawn)
+    ignore = pending.to(ignored)
 
     def on_fill(self, filler: Address, fill_id: int) -> None:
         self.filler = filler
         self.fill_id = fill_id
 
-    def on_claim(self, event: ClaimMade, fill_wait_time: int) -> None:
-        assert event.request_id == self.id, "got claim for another request"
-        challenge_back_off_timestamp = int(time.time())
-        # if fill event is not fetched yet, wait back_off_time
-        # to give the target chain time to sync before challenging
-        # additionally, if we are already in the challenge game, no need to back off
-        if self.filler is None and event.challenger_stake == 0:
-            challenge_back_off_timestamp += fill_wait_time
-        self._challenge_back_off_timestamps[event.claim_id] = challenge_back_off_timestamp
-        self._claims[event.claim_id] = event
-
-    def iter_claims(self) -> Iterator[ClaimMade]:
-        return iter(self._claims.values())
-
-    def get_challenge_back_off_timestamp(self, claim_id: ClaimId) -> int:
-        msg = "tried to get a challenge back off timestamp from unknown claim id"
-        assert claim_id in self._challenge_back_off_timestamps, msg
-        return self._challenge_back_off_timestamps[claim_id]
-
     def __repr__(self) -> str:
-        claims = getattr(self, "_claims", [])
         state = self.current_state.identifier
-        return f"<Request id={self.id} state={state} filler={self.filler} claims={claims}>"
+        return f"<Request id={self.id} state={state} filler={self.filler}>"
 
 
 @dataclass
@@ -112,8 +82,16 @@ class RequestData:
 
 @dataclass
 class Claim:
-    claim_id: ClaimId
+    id: ClaimId
     request_id: RequestId
+    fill_id: FillId
+    claimer: ChecksumAddress
+    claimer_stake: Wei
+    challenger: ChecksumAddress
+    challenger_stake: Wei
+    termination: Termination
+    challenge_back_off_timestamp: int
+    withdrawn: bool = False
 
 
 K = TypeVar("K")

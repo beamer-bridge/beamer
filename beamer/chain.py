@@ -15,7 +15,7 @@ from web3.contract import Contract
 from web3.types import Wei
 
 import beamer.events
-from beamer.events import ClaimMade, Event, EventFetcher
+from beamer.events import ClaimEvent, ClaimMade, Event, EventFetcher, RequestEvent
 from beamer.request import Claim, Request, RequestData, Tracker
 from beamer.typing import BlockNumber, ChainId, ChecksumAddress, ClaimId, RequestId
 from beamer.util import TokenMatchChecker
@@ -198,6 +198,14 @@ class EventProcessor:
                 break
 
     def _process_event(self, event: Event) -> bool:
+        if isinstance(event, beamer.events.RequestEvent):
+            return self._process_request_event(event)
+        elif isinstance(event, beamer.events.ClaimEvent):
+            return self._process_claim_event(event)
+        else:
+            raise RuntimeError("Unrecognized event type")
+
+    def _process_request_event(self, event: RequestEvent) -> bool:
         if isinstance(event, beamer.events.RequestCreated):
             # Check if the address points to a valid token
             if self._fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
@@ -206,6 +214,7 @@ class EventProcessor:
                     request_event=event,
                     token_address=event.target_token_address,
                 )
+                # TODO should be true in order for the event to be dropped
                 return False
 
             is_valid_request = self._match_checker.is_valid_pair(
@@ -256,35 +265,63 @@ class EventProcessor:
             self._log.info("Request filled", request=request)
             return True
 
-        elif isinstance(event, beamer.events.ClaimMade):
-            request = self._request_tracker.get(event.request_id)
-            if request is None:
-                return False
-
-            try:
-                request.claim(event=event, fill_wait_time=self._fill_wait_time)
-
-                claim = Claim(event.claim_id, request.id)
-                self._claim_tracker.add(claim.claim_id, claim)
-            except TransitionNotAllowed:
-                return False
-            self._log.info("Request claimed", request=request, claim_id=event.claim_id)
-            return True
-
-        elif isinstance(event, beamer.events.ClaimWithdrawn):
+        elif isinstance(event, beamer.events.DepositWithdrawn):
             request = self._request_tracker.get(event.request_id)
             if request is None:
                 return False
 
             try:
                 request.withdraw()
-                # TODO: handle claim
             except TransitionNotAllowed:
                 return False
             self._log.info("Claim withdrawn", request=request)
             return True
         else:
             raise RuntimeError("Unrecognized event type")
+
+    def _process_claim_event(self, event: ClaimEvent) -> bool:
+        claim = self._claim_tracker.get(event.claim_id)
+        if isinstance(event, beamer.events.ClaimMade):
+
+            request = self._request_tracker.get(event.request_id)
+            if request is None:
+                return False
+
+            try:
+
+                challenge_back_off_timestamp = int(time.time())
+                # if fill event is not fetched yet, wait back_off_time
+                # to give the target chain time to sync before challenging
+                # additionally, if we are already in the challenge game, no need to back off
+                if request.filler is None and event.challenger_stake == 0:
+                    challenge_back_off_timestamp += self._fill_wait_time
+
+                claim = Claim(
+                    event.claim_id,
+                    request.id,
+                    event.fill_id,
+                    event.claimer,
+                    event.claimer_stake,
+                    event.challenger,
+                    event.challenger_stake,
+                    event.termination,
+                    challenge_back_off_timestamp,
+                )
+
+                self._claim_tracker.add(claim.id, claim)
+            except TransitionNotAllowed:
+                return False
+            self._log.info("Request claimed", request=request, claim_id=event.claim_id)
+            return True
+        elif isinstance(event, beamer.events.ClaimWithdrawn):
+            if claim is not None:
+                claim.withdrawn = True
+            else:
+                return False
+        else:
+            raise RuntimeError("Unrecognized event type")
+
+        return True
 
     def _process_requests(self) -> None:
         with self._lock:
@@ -299,11 +336,6 @@ class EventProcessor:
                 fill_request(request, self._request_manager, self._fill_manager)
             elif request.is_filled and request.filler == self._address:
                 claim_request(request, self._request_manager)
-            elif request.is_claimed:
-                check_claims(request, self._request_manager, self._address)
-            elif request.is_unfillable:
-                self._log.debug("Removing unfillable request", request=request)
-                to_remove.append(request.id)
             elif request.is_withdrawn:
                 self._log.debug("Removing withdrawn request", request=request)
                 to_remove.append(request.id)
@@ -317,6 +349,8 @@ class EventProcessor:
                 # We need to wait until we are synced with both chains.
                 return
 
+        to_remove = []
+
         for claim in self._claim_tracker:
             self._log.debug("Processing claim", claim=claim)
 
@@ -324,16 +358,22 @@ class EventProcessor:
             if request is None:
                 continue
 
+            # TODO have an unconfirmed state so that we don't challenge multiple times
             maybe_challenge(
                 request,
                 claim,
-                request.get_challenge_back_off_timestamp(claim.claim_id),
                 self._request_manager,
                 self._address,
             )
 
             if claim.claimer == self._address:
                 try_withdraw(claim, self._request_manager)
+
+            if claim.withdrawn:
+                to_remove.append(claim.id)
+
+        for claim_id in to_remove:
+            self._claim_tracker.remove(claim_id)
 
 
 def fill_request(request: Request, request_manager: Contract, fill_manager: Contract) -> None:
@@ -371,7 +411,7 @@ def fill_request(request: Request, request_manager: Contract, fill_manager: Cont
 
     w3.eth.wait_for_transaction_receipt(txn_hash)
 
-    request.fill_unconfirmed()
+    request.try_to_fill()
     log.debug(
         "Filled request",
         request=request,
@@ -400,7 +440,7 @@ def claim_request(request: Request, request_manager: Contract) -> None:
 
     w3.eth.wait_for_transaction_receipt(txn_hash)
 
-    request.claim_unconfirmed()
+    request.try_to_claim()
     log.debug(
         "Claimed request",
         request=request,
@@ -408,23 +448,7 @@ def claim_request(request: Request, request_manager: Contract) -> None:
     )
 
 
-def check_claims(
-    request: Request, request_manager: Contract, own_address: ChecksumAddress
-) -> None:
-    for claim in request.iter_claims():
-        maybe_challenge(
-            request,
-            claim,
-            request.get_challenge_back_off_timestamp(claim.claim_id),
-            request_manager,
-            own_address,
-        )
-
-        if claim.claimer == own_address:
-            try_withdraw(claim, request_manager)
-
-
-def compute_challenge_stake(claim: ClaimMade) -> Wei:  # pylint:disable=no-self-use
+def compute_challenge_stake(claim: Claim) -> Wei:  # pylint:disable=no-self-use
     stake_increase = 1
     if claim.challenger_stake == 0:
         # we challenge with enough stake for L1 resolution
@@ -434,8 +458,7 @@ def compute_challenge_stake(claim: ClaimMade) -> Wei:  # pylint:disable=no-self-
 
 def maybe_challenge(
     request: Request,
-    claim: ClaimMade,
-    back_off_until: int,
+    claim: Claim,
     request_manager: Contract,
     own_address: ChecksumAddress,
 ) -> bool:
@@ -445,7 +468,7 @@ def maybe_challenge(
     #
     # 2) we participate in the game AND it is our turn
 
-    if int(time.time()) < back_off_until:
+    if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
     unchallenged = claim.challenger_stake == 0
@@ -463,9 +486,7 @@ def maybe_challenge(
     stake = compute_challenge_stake(claim)
 
     try:
-        txn_hash = request_manager.functions.challengeClaim(claim.claim_id).transact(
-            dict(value=stake)
-        )
+        txn_hash = request_manager.functions.challengeClaim(claim.id).transact(dict(value=stake))
     except web3.exceptions.ContractLogicError as exc:
         log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
         return False
@@ -482,7 +503,7 @@ def maybe_challenge(
     return True
 
 
-def try_withdraw(claim: ClaimMade, request_manager: Contract) -> None:
+def try_withdraw(claim: Claim, request_manager: Contract) -> None:
     w3 = request_manager.web3
     # check whether the claim period expired
     # TODO: avoid making these calls every time
@@ -491,7 +512,7 @@ def try_withdraw(claim: ClaimMade, request_manager: Contract) -> None:
         return
 
     try:
-        txn_hash = request_manager.functions.withdraw(claim.claim_id).transact()
+        txn_hash = request_manager.functions.withdraw(claim.id).transact()
     except web3.exceptions.ContractLogicError as exc:
         log.error("withdraw failed", claim, exc_args=exc.args)
         return
