@@ -129,9 +129,6 @@ class EventProcessor:
 
         self._fill_wait_time = fill_wait_time
 
-        if not self._fill_manager.functions.allowedLPs(self._address).call():
-            raise RuntimeError("Agent address is not whitelisted")
-
     @property
     def _synced(self) -> bool:
         with self._lock:
