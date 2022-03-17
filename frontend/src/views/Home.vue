@@ -4,7 +4,11 @@
       <Card v-if="criticalErrorMessage" class="text-center text-orange-dark">
         {{ criticalErrorMessage }}
       </Card>
-      <RequestDialog v-else-if="ethereumProvider" />
+      <RequestDialog
+        v-else-if="ethereumProvider"
+        :key="requestDialogReloadKey"
+        @reload="resetRequestDialog"
+      />
     </div>
   </div>
 </template>
@@ -16,12 +20,13 @@ import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
-import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
+import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import { injectStrict } from '@/utils/vue-utils';
 
 const criticalErrorMessage = ref('');
 const ethereumProvider = shallowRef<EthereumProvider | undefined>(undefined);
 const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
+const requestDialogReloadKey = ref(0);
 
 const beamerConfig = injectStrict(BeamerConfigKey);
 
@@ -38,6 +43,10 @@ const chainChangeHandler = async () => {
 };
 
 provide(EthereumProviderKey, readonlyEthereumProvider);
+
+const resetRequestDialog = () => {
+  requestDialogReloadKey.value += 1;
+};
 
 onMounted(async () => {
   ethereumProvider.value = await createMetaMaskProvider();

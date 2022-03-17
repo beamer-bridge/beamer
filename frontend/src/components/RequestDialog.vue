@@ -53,10 +53,10 @@
         </FormKit>
 
         <FormKit
-          v-if="requestState === RequestState.RequestSuccessful"
-          input-class="w-112 bg-green flex flex-row justify-center"
+          v-if="requestState !== RequestState.Init"
+          input-class="w-72 flex flex-row justify-center bg-green"
           type="button"
-          :disabled="false"
+          :disabled="isNewTransferDisabled"
           @click="newTransfer"
         >
           New Transfer
@@ -81,12 +81,18 @@ import {
   useRequestTransaction,
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
-import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
+import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
 
 import RequestProcessing from './RequestProcessing.vue';
+
+interface Emits {
+  (e: 'reload'): void;
+}
+
+const emit = defineEmits<Emits>();
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
 const beamerConfig = injectStrict(BeamerConfigKey);
@@ -109,7 +115,7 @@ const feesEther = computed(() => {
 });
 
 const newTransfer = async () => {
-  location.reload();
+  emit('reload');
 };
 // TODO improve types
 const submitRequestTransaction = async (formResult: {
@@ -151,6 +157,13 @@ watch(ethereumProvider.value.chainId, async () => {
   await executeGetFee();
 });
 executeGetFee();
+
+const isNewTransferDisabled = computed(() => {
+  return (
+    requestState.value !== RequestState.RequestSuccessful &&
+    requestState.value !== RequestState.RequestFailed
+  );
+});
 
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;
