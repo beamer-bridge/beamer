@@ -1317,6 +1317,14 @@ css-selector-parser@~1.0.3:
   resolved "https://registry.yarnpkg.com/css-selector-parser/-/css-selector-parser-1.0.4.tgz#65dfe614bd5fd175b64a0a3f193b870fc5790773"
   integrity sha1-Zd/mFL1f0XW2Sgo/GTuHD8V5B3M=
 
+css-selector-tokenizer@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/css-selector-tokenizer/-/css-selector-tokenizer-0.8.0.tgz#88267ef6238e64f2215ea2764b3e2cf498b845dd"
+  integrity sha512-Jd6Ig3/pe62/qe5SBPTN8h8LeUg/pT4lLgtavPf7updwwHpvFzxvOQBHYj2LZDMjUnBzgvIUSjRcf6oT5HzHFg==
+  dependencies:
+    cssesc "^3.0.0"
+    fastparse "^1.1.2"
+
 css@^2.1.0:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/css/-/css-2.2.4.tgz#c646755c73971f2bba6a601e2cf2fd71b1298929"
@@ -1337,12 +1345,14 @@ csstype@^2.6.8:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-2.6.19.tgz#feeb5aae89020bb389e1f63669a5ed490e391caa"
   integrity sha512-ZVxXaNy28/k3kJg0Fou5MiYpp88j7H9hLZp8PDC3jV0WFjfH5E9xHb56L0W59cPbKbcHXeP4qyT8PrHp8t6LcQ==
 
-daisyui@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-2.2.0.tgz#5dc9cd7216dcd2047b9beec24aa08ba9bb380a01"
-  integrity sha512-Af9u7AcQnusbkFa37Asg1NCxLJzYilnZ1LeFSGulRBQkGyBUeum/KkuiwGws6XQ/ZtjZNCr30p7h0iGQ266TQg==
+daisyui@^2.9.0:
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-2.9.0.tgz#08cb0320f0f2a56606266e245dcfe32595546d04"
+  integrity sha512-jYIFqwOi8JTUnNBJQafuMdGaYk5hpF42PKjWY9kF+humfGyLh8iKAscMUDbkLY3Sd+PRIFam7SUYXAzsdGwy7Q==
   dependencies:
     color "^4.2"
+    css-selector-tokenizer "^0.8.0"
+    postcss-js "^4.0.0"
     tailwindcss "^3.0"
 
 debug@^2.6.9:
@@ -1898,6 +1908,11 @@ fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fastparse@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/fastparse/-/fastparse-1.1.2.tgz#91728c5a5942eced8531283c79441ee4122c35a9"
+  integrity sha512-483XLLxTVIwWK3QTrMGRqUfUpoOs/0hbQrl2oz4J0pAcm3A3bu84wxTFqGqkJzewCLdME38xJLJAxBABfQT8sQ==
 
 fastq@^1.6.0:
   version "1.13.0"
