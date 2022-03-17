@@ -10,9 +10,7 @@ import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
-import { ChainData } from '@/types/config';
-
-import { EthereumProvider } from './types';
+import { ChainData, EthereumProvider } from './types';
 
 export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
   const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;

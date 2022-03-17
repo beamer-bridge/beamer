@@ -13,12 +13,6 @@ export type ChainConfig = {
   tokens: readonly Token[];
 };
 
-export type ChainData = {
-  chainId: number | string;
-  rpcUrl: string;
-  name: string;
-};
-
 export type Token = {
   address: string;
   symbol: string;
