@@ -10,6 +10,8 @@ import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
+import { ChainData } from '@/types/config';
+
 import { EthereumProvider } from './types';
 
 export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
@@ -21,18 +23,23 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
   }
   return undefined;
 }
+type OwnExternalProvider = ExternalProvider & {
+  on?: (e: string, cb: (param: any) => void) => void;
+};
 
 export class MetaMaskProvider implements EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
 
   private web3Provider: Web3Provider;
+  private provider: OwnExternalProvider;
 
-  constructor(provider: ExternalProvider) {
-    if (!provider.isMetaMask) {
+  constructor(_provider: ExternalProvider) {
+    if (!_provider.isMetaMask) {
       throw new Error('Given provider is not MetaMask!');
     }
-    this.web3Provider = new Web3Provider(provider);
+    this.web3Provider = new Web3Provider(_provider);
+    this.provider = this.web3Provider.provider;
   }
 
   async init(): Promise<void> {
@@ -50,23 +57,37 @@ export class MetaMaskProvider implements EthereumProvider {
     }
   }
 
-  async switchChain(newChainId: number, rpcUrl?: string): Promise<void> {
+  async switchChain(newChainId: number): Promise<boolean | null> {
+    const unrecognizedChainErrorCode = 4902;
     const newChainIdHex = hexValue(newChainId);
     try {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
+      return true;
     } catch (switchError) {
-      // This error code indicates that the chain has not been added to MetaMask.
-      // TODO add proper typing for error
-      if (rpcUrl && (switchError as { code?: number })?.code === 4902) {
-        try {
-          const { name } = getNetwork(newChainId);
-          await this.web3Provider.send('wallet_addEthereumChain', [
-            { chainId: newChainIdHex, chainName: name, rpcUrls: [rpcUrl] },
-          ]);
-          // eslint-disable-next-line no-empty
-        } catch {}
+      if ((switchError as { code: number })?.code === unrecognizedChainErrorCode) {
+        return null;
       }
+      throw switchError;
     }
+    return false;
+  }
+
+  async addChain(chainData: ChainData): Promise<boolean> {
+    try {
+      const { chainId, name, rpcUrl } = chainData;
+      const chainIdHexValue = hexValue(chainId);
+      const metaMaskNetworkData = getNetwork(chainId);
+      metaMaskNetworkData?.name !== 'unknown' ? metaMaskNetworkData?.name : name;
+      const networkData = {
+        chainId: chainIdHexValue,
+        chainName: name,
+        rpcUrls: [rpcUrl],
+      };
+      await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
+    } catch (error) {
+      return false;
+    }
+    return true;
   }
 
   async getLatestBlock(): Promise<Block> {
@@ -96,11 +117,12 @@ export class MetaMaskProvider implements EthereumProvider {
   }
 
   private listenToEvents(): void {
-    this.web3Provider.provider.on('accountsChanged', (accounts: string[]) =>
-      this.newDefaultSigner(accounts),
-    );
-    this.web3Provider.provider.on('chainChanged', (chainId: string) => {
-      this.chainId.value = BigNumber.from(chainId).toNumber();
-    });
+    this.provider.on &&
+      this.provider.on('accountsChanged', (accounts: string[]) =>
+        this.newDefaultSigner(accounts),
+      ) &&
+      this.provider.on('chainChanged', (chainId: string) => {
+        this.chainId.value = BigNumber.from(chainId).toNumber();
+      });
   }
 }
