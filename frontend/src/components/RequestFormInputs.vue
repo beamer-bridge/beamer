@@ -21,6 +21,7 @@
       />
     </div>
     <FormKit
+      :value="fromChainId"
       outer-class="mb-16"
       type="selector"
       name="fromChainId"
@@ -65,8 +66,9 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
+import { onBeforeMount, onMounted, ref, watch } from 'vue';
 
-import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
+import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
 
@@ -80,20 +82,53 @@ interface Props {
 defineProps<Props>();
 
 const chainsConfiguration = beamerConfig.value.chains;
-const CHAINS: SelectorOption[] = [];
 
-Object.keys(chainsConfiguration).forEach((chainId) => {
-  CHAINS.push({ value: Number(chainId), label: chainsConfiguration[chainId].name });
-});
+const getChainSelectorOption = (chainId: string) => {
+  return {
+    value: Number(chainId),
+    label: chainsConfiguration[chainId]?.name,
+  };
+};
 
-const TOKENS: SelectorOption[] = [];
-chainsConfiguration[String(ethereumProvider.value.chainId.value)]?.tokens.forEach((token) => {
-  TOKENS.push({ value: token.address, label: token.symbol });
-});
+const CHAINS: SelectorOption[] = Object.keys(chainsConfiguration).map((chainId) =>
+  getChainSelectorOption(chainId),
+);
 
-const switchChain = (chainId: any) => {
-  if (chainId !== ethereumProvider.value.chainId.value && ethereumProvider.value.switchChain) {
-    ethereumProvider.value.switchChain(chainId.value);
+const TOKENS: SelectorOption[] = chainsConfiguration[
+  String(ethereumProvider.value.chainId.value)
+]?.tokens.map((token) => ({ value: token.address, label: token.symbol }));
+
+const fromChainId = ref();
+
+const switchChain = async (chainId: any) => {
+  if (chainId !== ethereumProvider.value.chainId.value) {
+    try {
+      const isSuccessfulSwitch = await ethereumProvider.value.switchChain(chainId.value);
+      if (isSuccessfulSwitch === null) {
+        await ethereumProvider.value.addChain({
+          chainId: chainId.value,
+          name: chainsConfiguration[chainId.value].name,
+          rpcUrl: chainsConfiguration[chainId.value].rpcUrl,
+        });
+      }
+    } catch (error) {
+      location.reload();
+    }
   }
 };
+
+onMounted(async () => {
+  watch(ethereumProvider.value.chainId, () => {
+    localStorage.setItem('fromChainId', ethereumProvider.value.chainId.value.toString());
+    location.reload();
+  });
+});
+
+onBeforeMount(() => {
+  const storedFromChainId = localStorage.getItem('fromChainId');
+  if (storedFromChainId) {
+    fromChainId.value = getChainSelectorOption(storedFromChainId);
+    localStorage.removeItem('fromChainId');
+  }
+});
 </script>

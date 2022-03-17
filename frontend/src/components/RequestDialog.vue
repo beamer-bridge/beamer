@@ -81,7 +81,7 @@ import {
   useRequestTransaction,
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
-import { EthereumProviderKey, BeamerConfigKey } from '@/symbols';
+import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';

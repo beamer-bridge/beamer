@@ -8,8 +8,15 @@ export type ChainConfig = {
   requestManagerAddress: string;
   fillManagerAddress: string;
   explorerTransactionUrl: string;
+  rpcUrl: string;
   name: string;
   tokens: readonly Token[];
+};
+
+export type ChainData = {
+  chainId: number | string;
+  rpcUrl: string;
+  name: string;
 };
 
 export type Token = {

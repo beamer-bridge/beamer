@@ -2,8 +2,9 @@
   "chains": {
     "28": {
       "requestManagerAddress": "0xB1D64b5d92d0d5Ca0a23a0987Fe10A96c15868bB",
-      "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
       "fillManagerAddress": "0xA2e8228A4De5976f584471056B04Da0B9f0261c8",
+      "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
+      "rpcUrl": "https://rinkeby.boba.network/",
       "name": "Boba Rinkeby",
       "tokens": [
         {
@@ -14,8 +15,9 @@
     },
     "588": {
       "requestManagerAddress": "0xB1D64b5d92d0d5Ca0a23a0987Fe10A96c15868bB",
-      "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
       "fillManagerAddress": "0xA2e8228A4De5976f584471056B04Da0B9f0261c8",
+      "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
+      "rpcUrl": "https://stardust.metis.io/?owner=588",
       "name": "Metis Stardust",
       "tokens": [
         {
