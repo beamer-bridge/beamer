@@ -10,9 +10,15 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers:
+      - "istankovic"
+      - "palango"
 
   - package-ecosystem: "npm"
     directory: "/frontend/"
     schedule:
       interval: "weekly"
       day: "thursday"
+    reviewers:
+      - "nekhaly"
+      - "manuelwedler"
