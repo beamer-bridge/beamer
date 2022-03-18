@@ -20,17 +20,31 @@
         messages-class="hidden"
       />
     </div>
-    <FormKit
-      :value="fromChainId"
-      outer-class="mb-16"
-      type="selector"
-      name="fromChainId"
-      label="From"
-      :options="CHAINS"
-      validation="required"
-      messages-class="hidden"
-      @input="switchChain"
-    />
+    <div class="mb-16">
+      <FormKit
+        :value="fromChainId"
+        type="selector"
+        name="fromChainId"
+        label="From"
+        :options="CHAINS"
+        validation="required"
+        messages-class="hidden"
+        @input="switchChain"
+      />
+      <div class="flex flex-col items-end">
+        <FormKit
+          input-class="w-40 px-6 mt-6 text-lg bg-orange flex flex-row justify-center"
+          type="button"
+          :disabled="faucetButtonDisabled"
+          @click="runFaucetRequest"
+        >
+          <div v-if="faucetRequestActive" class="h-7 w-7">
+            <spinner></spinner>
+          </div>
+          <template v-else>Get Tokens</template>
+        </FormKit>
+      </div>
+    </div>
     <div class="mb-7">
       <FormKit
         outer-class="mb-6"
@@ -66,10 +80,13 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
-import { onBeforeMount, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
+import Spinner from '@/components/Spinner.vue';
+import { requestFaucet } from '@/services/transactions/faucet';
 import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import type { SelectorOption } from '@/types/form';
+import createAsyncProcess from '@/utils/create-async-process';
 import { injectStrict } from '@/utils/vue-utils';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
@@ -98,7 +115,7 @@ const TOKENS: SelectorOption[] = chainsConfiguration[
   String(ethereumProvider.value.chainId.value)
 ]?.tokens.map((token) => ({ value: token.address, label: token.symbol }));
 
-const fromChainId = ref();
+const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.value.chainId.value)));
 
 const switchChain = async (chainId: any) => {
   if (chainId !== ethereumProvider.value.chainId.value) {
@@ -121,7 +138,22 @@ watch(ethereumProvider.value.chainId, () => {
   location.reload();
 });
 
-onBeforeMount(() => {
-  fromChainId.value = getChainSelectorOption(String(ethereumProvider.value.chainId.value));
-});
+const faucetUsedForChain: Record<string, boolean> = reactive({});
+const faucetUsed = computed(() => Boolean(faucetUsedForChain[fromChainId.value.value]));
+const faucetButtonDisabled = computed(
+  () => faucetUsed.value || !ethereumProvider.value.signer.value,
+);
+
+const executeFaucetRequest = async () => {
+  if (!ethereumProvider.value.signerAddress.value) {
+    throw new Error('Signer address missing!');
+  }
+  const chainId = fromChainId.value.value;
+  const successful = await requestFaucet(chainId, ethereumProvider.value.signerAddress.value);
+  if (successful) {
+    faucetUsedForChain[chainId] = true;
+  }
+};
+const { active: faucetRequestActive, run: runFaucetRequest } =
+  createAsyncProcess(executeFaucetRequest);
 </script>

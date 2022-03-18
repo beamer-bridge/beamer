@@ -27,6 +27,7 @@ type OwnExternalProvider = ExternalProvider & {
 
 export class MetaMaskProvider implements EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
+  signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
 
   private web3Provider: Web3Provider;
@@ -48,10 +49,12 @@ export class MetaMaskProvider implements EthereumProvider {
 
   async requestSigner(): Promise<void> {
     try {
-      await this.web3Provider.send('eth_requestAccounts', []);
-      this.signer.value = this.web3Provider.getSigner();
+      const accounts: string[] = await this.web3Provider.send('eth_requestAccounts', []);
+      this.signer.value = this.web3Provider.getSigner(accounts[0]);
+      this.signerAddress.value = accounts[0];
     } catch (error) {
       this.signer.value = undefined;
+      this.signerAddress.value = undefined;
     }
   }
 
@@ -109,9 +112,11 @@ export class MetaMaskProvider implements EthereumProvider {
   private newDefaultSigner(accounts: string[]): void {
     if (accounts.length === 0) {
       this.signer.value = undefined;
+      this.signerAddress.value = undefined;
       return;
     }
-    this.signer.value = this.web3Provider.getSigner();
+    this.signer.value = this.web3Provider.getSigner(accounts[0]);
+    this.signerAddress.value = accounts[0];
   }
 
   private listenToEvents(): void {
