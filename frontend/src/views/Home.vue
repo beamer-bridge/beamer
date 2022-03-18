@@ -1,11 +1,11 @@
 <template>
   <div class="home flex justify-center pt-56">
-    <div class="max-w-2xl flex justify-center items-center">
-      <Card v-if="criticalErrorMessage" class="text-center text-orange-dark">
+    <div class="max-w-2xl flex flex-col justify-center items-center">
+      <Card v-if="criticalErrorMessage" class="text-center text-orange-dark p-2 text-lg">
         {{ criticalErrorMessage }}
       </Card>
       <RequestDialog
-        v-else-if="ethereumProvider"
+        v-if="ethereumProvider"
         :key="requestDialogReloadKey"
         @reload="resetRequestDialog"
       />
