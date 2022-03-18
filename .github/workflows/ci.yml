@@ -69,6 +69,7 @@ jobs:
         run: poetry run make docs
 
       - name: Publish docs
+        if: ${{ github.ref_name == 'main' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_dir: ./docs/build/html
