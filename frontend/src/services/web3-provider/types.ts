@@ -4,6 +4,7 @@ import { Ref, ShallowRef } from 'vue';
 
 export interface EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
+  signerAddress: ShallowRef<string | undefined>;
   chainId: Ref<number>;
   init(): Promise<void>;
   requestSigner(): Promise<void>;
