@@ -104,7 +104,7 @@ class RequestData:
 
     @staticmethod
     def from_chain_data(data: Sequence) -> "RequestData":
-        fields = tuple(RequestData.__annotations__)
+        fields = tuple(RequestData.__annotations__)  # pylint: disable=no-member
         assert len(fields) == len(data)
         kwargs = dict(zip(fields, data))
         return RequestData(**kwargs)
