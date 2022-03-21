@@ -5,15 +5,16 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable
+from typing import Any, Callable, Optional, cast
 
+import requests.exceptions
 import structlog
 import web3
 from eth_utils import is_checksum_address
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3.contract import Contract
-from web3.types import Wei
+from web3.types import TxParams, Wei
 
 import beamer.events
 from beamer.events import ClaimMade, Event, EventFetcher
@@ -308,6 +309,25 @@ class EventProcessor:
             self._tracker.remove(request_id)
 
 
+class _TransactionFailed(Exception):
+    def __repr__(self) -> str:
+        return "_TransactionFailed(%r)" % self.__cause__
+
+    def __str__(self) -> str:
+        return "transaction failed: %s" % self.cause()
+
+    def cause(self) -> str:
+        return str(self.__cause__)
+
+
+def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types.HexBytes:
+    try:
+        tx_hash = func.transact(cast(Optional[TxParams], kwargs))
+    except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
+        raise _TransactionFailed() from exc
+    return tx_hash
+
+
 def fill_request(request: Request, request_manager: Contract, fill_manager: Contract) -> None:
     block = request_manager.web3.eth.get_block("latest")
     if block["timestamp"] >= request.valid_until:
@@ -323,22 +343,24 @@ def fill_request(request: Request, request_manager: Contract, fill_manager: Cont
         log.debug("Unable to fill request", balance=balance, request_amount=request.amount)
         return
 
+    func = token.functions.approve(fill_manager.address, request.amount)
     try:
-        token.functions.approve(fill_manager.address, request.amount).transact()
-    except web3.exceptions.ContractLogicError as exc:
-        log.error("approve failed", request_id=request.id, exc_args=exc.args)
+        _transact(func)
+    except _TransactionFailed as exc:
+        log.error("approve failed", request_id=request.id, cause=exc.cause())
         return
 
+    func = fill_manager.functions.fillRequest(
+        requestId=request.id,
+        sourceChainId=request.source_chain_id,
+        targetTokenAddress=request.target_token_address,
+        targetReceiverAddress=request.target_address,
+        amount=request.amount,
+    )
     try:
-        txn_hash = fill_manager.functions.fillRequest(
-            requestId=request.id,
-            sourceChainId=request.source_chain_id,
-            targetTokenAddress=request.target_token_address,
-            targetReceiverAddress=request.target_address,
-            amount=request.amount,
-        ).transact()
-    except web3.exceptions.ContractLogicError as exc:
-        log.error("fillRequest failed", request_id=request.id, exc_args=exc.args)
+        txn_hash = _transact(func)
+    except _TransactionFailed as exc:
+        log.error("fillRequest failed", request_id=request.id, cause=exc.cause())
         return
 
     w3.eth.wait_for_transaction_receipt(txn_hash)
@@ -356,16 +378,15 @@ def claim_request(request: Request, request_manager: Contract) -> None:
     w3 = request_manager.web3
     stake = request_manager.functions.claimStake().call()
 
+    func = request_manager.functions.claimRequest(request.id, request.fill_id)
     try:
-        txn_hash = request_manager.functions.claimRequest(request.id, request.fill_id).transact(
-            dict(value=stake)
-        )
-    except web3.exceptions.ContractLogicError as exc:
+        txn_hash = _transact(func, value=stake)
+    except _TransactionFailed as exc:
         log.error(
             "claimRequest failed",
             request_id=request.id,
             fill_id=request.fill_id,
-            exc_args=exc.args,
+            cause=exc.cause(),
             stake=stake,
         )
         return
@@ -434,12 +455,11 @@ def maybe_challenge(
 
     stake = compute_challenge_stake(claim)
 
+    func = request_manager.functions.challengeClaim(claim.claim_id)
     try:
-        txn_hash = request_manager.functions.challengeClaim(claim.claim_id).transact(
-            dict(value=stake)
-        )
-    except web3.exceptions.ContractLogicError as exc:
-        log.error("challengeClaim failed", claim=claim, exc_args=exc.args, stake=stake)
+        txn_hash = _transact(func, value=stake)
+    except _TransactionFailed as exc:
+        log.error("challengeClaim failed", claim=claim, cause=exc.cause(), stake=stake)
         return False
 
     w3 = request_manager.web3
@@ -462,10 +482,11 @@ def try_withdraw(claim: ClaimMade, request_manager: Contract) -> None:
     if block["timestamp"] < claim.termination:
         return
 
+    func = request_manager.functions.withdraw(claim.claim_id)
     try:
-        txn_hash = request_manager.functions.withdraw(claim.claim_id).transact()
-    except web3.exceptions.ContractLogicError as exc:
-        log.error("withdraw failed", claim, exc_args=exc.args)
+        txn_hash = _transact(func)
+    except _TransactionFailed as exc:
+        log.error("withdraw failed", claim, cause=exc.cause())
         return
 
     w3.eth.wait_for_transaction_receipt(txn_hash)
