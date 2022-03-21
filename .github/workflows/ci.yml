@@ -30,7 +30,7 @@ jobs:
       - uses: ts-graphviz/setup-graphviz@v1
 
       - name: Cache ~/.local
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.local
           key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/ci.yml', 'poetry.lock') }}
@@ -39,7 +39,7 @@ jobs:
 
       - name: Cache Python packages
         id: cache-python-packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cache/pypoetry/virtualenvs
@@ -55,7 +55,7 @@ jobs:
 
       - name: Cache brownie packages
         id: cache-brownie-packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.brownie/packages
           key: ${{ runner.os }}-brownie-${{ hashFiles('brownie-config.yaml') }}
