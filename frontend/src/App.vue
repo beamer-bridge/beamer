@@ -10,12 +10,14 @@
       <spinner></spinner>
     </div>
   </div>
+  <feedback></feedback>
   <footer class="my-8 text-2xl text-center text-teal-light">Powered by Beamer</footer>
 </template>
 
 <script setup lang="ts">
 import { provide } from 'vue';
 
+import Feedback from '@/components/Feedback.vue';
 import Spinner from '@/components/Spinner.vue';
 import useBeamerConfig from '@/composables/useBeamerConfig';
 import { BeamerConfigKey } from '@/symbols';
