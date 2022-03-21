@@ -170,7 +170,11 @@ class EventFetcher:
             return events
 
     def fetch(self) -> list[Event]:
-        block_number = self._contract.web3.eth.block_number
+        try:
+            block_number = self._contract.web3.eth.block_number
+        except requests.exceptions.RequestException:
+            return []
+
         if block_number >= self._next_block_number:
             result = []
             from_block = self._next_block_number
