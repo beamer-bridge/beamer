@@ -53,6 +53,31 @@ def test_read_timeout(config):
     proxy_l2b.stop()
 
 
+# This test delays the processing of eth_sendRawTransaction so that an agent
+# sending a transaction gets a timeout. Previously, that would result in an
+# exception that would propagate upwards within the thread, causing the agent
+# to exit. With a proper fix the agent should catch the exception, continue
+# running and make a clean exit after our call agent.stop().
+def test_read_timeout_send_transaction(request_manager, token, config):
+    delay_period = 6
+    proxy_l2a = HTTPProxy(config.l2a_rpc_url)
+    proxy_l2a.delay_rpc({"eth_sendRawTransaction": delay_period})
+    proxy_l2a.start()
+
+    config.l2a_rpc_url = "http://%s:%s" % (
+        proxy_l2a.server_address[0],
+        proxy_l2a.server_address[1],
+    )
+
+    make_request(request_manager, token, accounts[0], accounts[2], 1, validity_period=3600)
+
+    agent = Agent(config)
+    agent.start()
+    time.sleep(delay_period)
+    agent.stop()
+    proxy_l2a.stop()
+
+
 def test_challenge_own_claim(config, request_manager, token):
     agent = Agent(config)
     agent_address = to_checksum_address(agent.address)
