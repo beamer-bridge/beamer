@@ -75,6 +75,7 @@ jobs:
           publish_dir: ./docs/build/html
           personal_token: ${{ secrets.REPO_ACCESS_TOKEN }}
           external_repository: beamer-bridge/docs
+          cname: docs.beamerbridge.com
 
       - name: Install solhint
         run: npm install solhint --global
