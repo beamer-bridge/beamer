@@ -84,7 +84,7 @@ If her request cannot be fulfilled by liquidity providers (e.g. amount too high,
 the `validity period` argument she specified will determine for how long the request will remain open. After this period,
 the request can no longer be filled and she can withdraw her locked token on roll-up A.
 
-Second concern: Claim and Challenge
+Second concern: claim and challenge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Bob will only fill a request if he is guaranteed by the protocol to receive the tokens locked by Alice on roll-up A,
@@ -104,24 +104,22 @@ that can later serve to prove that the request was properly filled.
 
     request hash = Hash(request ID, source chain ID, target chain ID, target token address, recipient address, amount)
 
-When filling the request, a `fill ID` is also computed, that serves to identify a request for every observers.
+When filling the request, a `fill ID` is also computed, that serves to identify a fill for every observers.
 
 ::
 
     fill ID = Hash(fill block number)
 
-Bob is also required to send a deposit `claim stake` of roll-up A's coin, that will be lost if his claim is proven
-to be incorrect.
-
 After filling the request, Bob will immediately claim the refund on roll-up A. In doing so, he submits the `request ID`,
 and `fill ID` computed before to roll-up A. This initiates a `claim period` during which the validity of the fill by Bob
-can be contested or proven.
+can be contested or proven. Bob is required to send a deposit `claim stake` in roll-up A's coin, that will be lost if
+his claim is proven to be incorrect.
 
 Since roll-up A does not have direct access to the state of roll-up B, we use a participative claim / challenge protocol
 to optimistically determine the validity of the claim. If the optimistic approach does not conclude, a proof can
 be passed from roll-up to B to roll-up A via L1 of the correct fill for the corresponding request.
 
-We use a cheap optimistic approach that does not require L1 to drastically reduce the costs of bridging the token for
+We use a cheap optimistic approach that does not require L1 to drastically reduce the costs of bridging the tokens for
 Bob, and only use the more costly `L1 resolution` in case of an `attack` to ensure the security of the protocol.
 Additionally, as we will see later, the cost of the L1 resolution will be paid by the attacker.
 
@@ -136,13 +134,13 @@ him and the challenger, Charles. Charles needs to stake a deposit higher than `c
 The challenge will be on-going until the end of the `challenge period`.
 
 During the challenge, the contested participant (in turn Bob, then Charles), can submit a transaction to confirm its
-position and contest the other party. It is required that the new stake of the participant is bigger than the current stake of the opponent.
+position and contest the other party. It is required that the new stake of the participant is higher than the current stake of the opponent.
 Everytime a participant responds to the challenge, the termination time of the challenge and underlying claim is extended to be at least
-`challenge period extension` to give time for the other party to respond.
+`challenge period extension`, to give time for the other party to respond.
 
 At the end of the challenge period, the last non-contested participant, and thus the highest staker, wins.
 
-To avoid this challenge to go on forever, or reach a point where Bob no longer have the funds to out-stake Charles,
+To avoid this challenge to go on forever, or reach a point where Bob no longer has the funds to out-stake Charles,
 Bob can trigger the `L1 resolution`.
 
 L1 resolutions
@@ -164,7 +162,7 @@ to verify that a claim to fill a certain request with a certain fill ID is hones
 restrict the call to authenticated `fill manager` and `cross domain messenger` contracts.
 
 After L1 resolution has transferred the fill information from roll-up B to roll-up A, Bob can directly call `withdraw` on
-the `request manager` on roll-up A. That will compute a `fill hash` and query the `resolution registry` for the filler
+the `request manager` on roll-up A. This will compute a `fill hash` and query the `resolution registry` for the filler
 address corresponding to `fill hash`, which will return Bob's address. Bob will be immediately considered the winner of
 the challenge and receive its stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
 
@@ -176,7 +174,7 @@ fill it once its claim is challenged, to gain the stake of the challenger.
 False claims challenges
 +++++++++++++++++++++++
 
-We saw that if Bob filled Alice's a claim, he will always be able to prove correctness of the fill in order to withdraw
+We saw that if Bob filled Alice's claim, he will always be able to prove correctness of the fill in order to withdraw
 its due from the `request manager` manager contract. However, if Charles falsely claims and withdraw rewards from the contract,
 there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claim.
 
@@ -237,18 +235,18 @@ In theory, the fee should follow the formula:
 In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
 Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the service provider, the
 user would have to register what fee they are willing to pay for their transfer upon requesting them. This would create
-a fee market where different service provider would compete and accept different fees. Users would then need to query the
+a fee market where different service providers would compete and accept different fees. Users would then need to query the
 market for which fee they should use.
 
 However, as the protocol intends to be as easy to use as possible for the user, and transactions fees are mostly stable
 on roll-ups, the protocol implements a fixed fee for every transfer. This fixed fee uses a fixed estimation of the gas
-price of the roll-up as well as a fixed margin for liquidity provider.
+price of the roll-up as well as a fixed margin for liquidity providers.
 
 
 Agent strategy
 --------------
 
-We call `agent` the software run by liquidity providers to observe the roll-ups, fill users request, and participate in
+We call `agent` the software run by liquidity providers to observe the roll-ups, fill users requests, and participate in
 challenges. The protocol defines some rules and demonstrate how honest participation is incentivized. However, the agent
 could still implement different strategies to follow the protocol. For example, the agent is free to chose the value
 with which it will bid in challenges. It is also allowed to decide when to stop out-bidding opponents in challenges and
@@ -269,8 +267,8 @@ Protocol parameters
 The choice of different protocol parameters such as `claim period` or `claim stake` is explained in the `Contract Parameters`
 page.
 
-One important decision is not to wait for the inclusion period of roll-ups to consider an event as successful. When
-liquidity providers fill a user request, the event regarding the successful fill is sent by the target roll-up sequencer.
+One important decision regarding parameters is not to wait for the inclusion period of roll-ups to consider an event as successful.
+When liquidity providers fill a user request, the event regarding the successful fill is sent by the target roll-up sequencer.
 The liquidity provider directly sends a claim for this filled request on the source roll-up and does not wait for the block
 produced by the sequencer to be committed to L1.
 
@@ -281,3 +279,14 @@ one additional week, which would result in higher opportunity costs for the liqu
 
 In practice the longest observed delay of block inclusion from a roll-up sequencer has been 18 hours, and was exceptional.
 Hence the decision not to take into account this delay.
+
+Open questions
+--------------
+
+Charles could claim filling a request that no one filled (or no one can fill) with a `fill ID = Hash(fill block number)`
+corresponding to a block that was not produced yet. If the block is expected to be produced after `claim period` but before
+`challenge period`, Charles can decide to only fill the request if he is challenged.
+
+This can be solved by using a `fill ID` that Charles cannot forge in the future such as `fill ID = Hash(previous block)`.
+
+How do we specifically implement non-fill proofs?
