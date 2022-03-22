@@ -1,0 +1,14 @@
+digraph claim_state_machine {
+    node [] claimer_winning, challenger_winning, ignored, withdrawn;
+
+    claimer_winning -> challenger_winning [label = challenge];
+    challenger_winning -> claimer_winning [label = challenge];
+    ignored -> ignored [label = challenge];
+
+    claimer_winning -> withdrawn [label = withdraw];
+    challenger_winning -> withdrawn [label = withdraw];
+    ignored -> withdrawn [label = withdraw];
+
+    claimer_winning -> ignore [label = ignore];
+    ignored -> ignored [label = ignore];
+}
