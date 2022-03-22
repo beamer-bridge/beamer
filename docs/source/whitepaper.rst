@@ -18,7 +18,6 @@ Ultimately and only if necessary, any dispute can be resolved with the help of L
 roll up to the source roll-up. As all roll ups live on the same base chain, eventually state will be able to be
 transmitted to each other.
 
-
 Principles
 ----------
 UX
@@ -129,6 +128,24 @@ Rightful claims resolutions
 In the game theoretic case, rightful claims will not be contested. After `claim period`, Bob can withdraw its stake, the
 tokens locked by Alice, and the fees paid by Alice for the service.
 
+.. mermaid::
+    :caption: `Unchallenged Claim`
+
+    sequenceDiagram
+
+    participant Alice
+    participant Bob
+    participant Rollup A
+    participant Rollup B
+
+    Alice->>Rollup A: requests transfer
+    Bob->>Rollup A: watches for requests
+    Bob->>Rollup B: fills request
+    Rollup B->>Rollup B: Alice receives tokens
+    Bob->>Rollup A: claims tokens
+    note over Rollup A: wait for `claim period`
+    Bob->>Rollup A: withdraws tokens
+
 The rightful claim of Bob can however be challenged by anyone during its `claim period`. This will start a challenge in between
 him and the challenger, Charles. Charles needs to stake a deposit higher than `claim stake` to challenge Bob's claim.
 The challenge will be on-going until the end of the `challenge period`.
@@ -139,6 +156,27 @@ Everytime a participant responds to the challenge, the termination time of the c
 `challenge period extension`, to give time for the other party to respond.
 
 At the end of the challenge period, the last non-contested participant, and thus the highest staker, wins.
+
+.. mermaid::
+    :caption: `Challenged Claim`
+
+    sequenceDiagram
+
+    participant Bob
+    participant Charles
+    participant Rollup A
+    participant Rollup B
+
+    Bob->> Rollup B: fills request
+    Bob->>Rollup A: claims tokens
+
+    loop
+    Charles->>Rollup A: challenges Bob's claim
+    Bob->>Rollup A: counter-challenges
+    end
+
+    note over Charles, Rollup A: wait for end of challenge
+    Bob->>Rollup A: withdraws tokens
 
 To avoid this challenge to go on forever, or reach a point where Bob no longer has the funds to out-stake Charles,
 Bob can trigger the `L1 resolution`.
@@ -171,11 +209,37 @@ claim by Bob is rightful. Upon submitting the claim with a certain `fill ID`, Ch
 and see whether a fill was correctly made by Bob. Without this ID, an evildoer could claim an unfilled request and only
 fill it once its claim is challenged, to gain the stake of the challenger.
 
+.. mermaid::
+    :caption: `L1 Resolution`
+
+    sequenceDiagram
+
+    participant Bob
+    participant Charles
+    participant Rollup A
+    participant Rollup B
+    participant L1
+
+    Bob ->> Rollup B: fills request
+    Rollup B ->> L1: registers fill proof
+    Bob ->>Rollup A: claims tokens
+
+    loop until stakes high enough for L1 resolution
+    Charles ->> Rollup A: challenges Bob's claim
+    Bob ->> Rollup A: counter-challenges
+    end
+    Charles ->> Rollup A: challenges Bob's claim
+    note over Rollup A: Charles will win if we \nwait for end of challenge
+
+    Bob ->> L1: triggers L1 resolution
+    L1 ->> Rollup A: sends fill proof
+    Bob ->>Rollup A: withdraws tokens
+
 False claims challenges
 +++++++++++++++++++++++
 
 We saw that if Bob filled Alice's claim, he will always be able to prove correctness of the fill in order to withdraw
-its due from the `request manager` manager contract. However, if Charles falsely claims and withdraw rewards from the contract,
+its due from the `request manager` contract. However, if Charles falsely claims and withdraw rewards from the contract,
 there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claim.
 
 As we saw in the previous part, Bob can use the `fill ID` provided by Charles during his claim to find out if the claim is
@@ -189,6 +253,31 @@ and reach a point where Bob no longer has enough funds to stake, Bob (or anyone 
 on roll-up A and trigger L1 resolution for that correct fill. This will prove that the request was filled by someone else
 than Charles and declare Bob as a winner of the challenge. Bob will then be rewarded for its participation by gaining
 Charles' stake.
+
+.. mermaid::
+    :caption: `False Claims Challenge`
+
+    sequenceDiagram
+
+    participant Bob
+    participant Charles
+    participant Rollup A
+    participant Rollup B
+    participant L1
+
+    Charles ->>Rollup A: claims tokens
+
+    loop until stakes high enough for L1 resolution
+    Bob ->> Rollup A: challanges Charles's claim
+    Charles ->> Rollup A: counter-challenges
+    end
+    note over Rollup A: Charles will win if we \nwait for end of challenge
+
+    Bob ->> Rollup B: fills request
+    Rollup B ->> L1: registers fill proof
+    Bob ->> L1: triggers L1 resolution
+    L1 ->> Rollup A: sends fill proof
+    Bob ->>Rollup A: withdraws tokens
 
 Self challenges
 +++++++++++++++
