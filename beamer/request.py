@@ -43,7 +43,7 @@ class Request(StateMachine):
     claimed = State("Claimed")
     claimed_unconfirmed = State("Claimed-unconfirmed")
     withdrawn = State("Withdrawn")
-    unfillable = State("Unfillable")
+    ignored = State("Ignored")
 
     fill = pending.to(filled) | filled_unconfirmed.to(filled) | claimed.to(claimed)
     fill_unconfirmed = pending.to(filled_unconfirmed)
@@ -55,7 +55,7 @@ class Request(StateMachine):
     )
     claim_unconfirmed = filled.to(claimed_unconfirmed)
     withdraw = claimed.to(withdrawn)
-    ignore = pending.to(unfillable)
+    ignore = pending.to(ignored) | filled.to(ignored)
 
     def on_fill(self, filler: Address, fill_id: int) -> None:
         self.filler = filler
