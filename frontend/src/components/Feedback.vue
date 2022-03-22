@@ -6,7 +6,6 @@
     data-tf-tooltip="Hey 👋&nbsp;&nbsp;How was your experience?"
     data-tf-chat
     data-tf-medium="snippet"
-    data-tf-hidden="utm_source=bridgeui,utm_medium=chatbot,utm_campaign=testfeedback,utm_content=form"
     style="all: unset"
   ></div>
 </template>
