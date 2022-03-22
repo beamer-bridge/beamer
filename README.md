@@ -1,5 +1,5 @@
 # Beamer Bridge
-*Bridging Roll ups with the L1 inherited security*
+*Bridging rollups with L1 inherited security*
 
 ### Working with a local Optimism instance
 
