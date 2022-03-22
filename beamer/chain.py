@@ -298,8 +298,8 @@ class EventProcessor:
             elif request.is_claimed:
                 assert isinstance(self._address, str)
                 check_claims(request, self._request_manager, self._address)
-            elif request.is_unfillable:
-                self._log.debug("Removing unfillable request", request=request)
+            elif request.is_ignored:
+                self._log.debug("Removing ignored request", request=request)
                 to_remove.append(request.id)
             elif request.is_withdrawn:
                 self._log.debug("Removing withdrawn request", request=request)
