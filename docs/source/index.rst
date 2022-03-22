@@ -7,4 +7,5 @@ Welcome to Beamer's documentation!
    agent.rst
    protocol.rst
    l1_resolution.rst
+   contributing.rst
    glossary.rst
