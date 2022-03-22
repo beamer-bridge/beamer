@@ -486,7 +486,7 @@ def try_withdraw(claim: ClaimMade, request_manager: Contract) -> None:
     try:
         txn_hash = _transact(func)
     except _TransactionFailed as exc:
-        log.error("withdraw failed", claim, cause=exc.cause())
+        log.error("withdraw failed", claim=claim, cause=exc.cause())
         return
 
     w3.eth.wait_for_transaction_receipt(txn_hash)
