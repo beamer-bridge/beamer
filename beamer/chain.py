@@ -376,6 +376,12 @@ def fill_request(request: Request, request_manager: Contract, fill_manager: Cont
 
 def claim_request(request: Request, request_manager: Contract) -> None:
     w3 = request_manager.web3
+    block = w3.eth.get_block("latest")
+    if block["timestamp"] >= request.valid_until:
+        log.info("Request expired, ignoring", request=request)
+        request.ignore()
+        return
+
     stake = request_manager.functions.claimStake().call()
 
     func = request_manager.functions.claimRequest(request.id, request.fill_id)
