@@ -253,7 +253,7 @@ contract RequestManager is Ownable {
             if (claim.challenger == address(0)) {
                 require(claim.claimer != msg.sender, "Cannot challenge own claim");
                 claim.challenger = msg.sender;
-                periodExtension = challengePeriod;
+                periodExtension = challengePeriod + challengePeriodExtension;
             } else {
                 periodExtension = challengePeriodExtension;
             }
