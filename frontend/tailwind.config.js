@@ -36,6 +36,15 @@ module.exports = {
       },
     },
   },
+  daisyui: {
+    themes: [
+      {
+        default: {
+          primary: '#4EADAA',
+        },
+      },
+    ],
+  },
   variants: {
     extend: {},
   },

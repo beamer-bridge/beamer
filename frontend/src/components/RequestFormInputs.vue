@@ -32,17 +32,23 @@
         @input="switchChain"
       />
       <div class="flex flex-col items-end">
-        <FormKit
-          input-class="w-40 px-6 mt-6 text-lg bg-orange flex flex-row justify-center"
-          type="button"
-          :disabled="faucetButtonDisabled"
-          @click="runFaucetRequest"
+        <div
+          class="tooltip tooltip-right tooltip-primary z-50"
+          data-theme="default"
+          data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your Metamask account"
         >
-          <div v-if="faucetRequestActive" class="h-7 w-7">
-            <spinner></spinner>
-          </div>
-          <template v-else>Get Tokens</template>
-        </FormKit>
+          <button
+            class="btn btn-ghost btn-xs text-orange m-2"
+            type="button"
+            :disabled="faucetButtonDisabled"
+            @click="runFaucetRequest"
+          >
+            <div v-if="faucetRequestActive" class="h-5 w-5">
+              <spinner></spinner>
+            </div>
+            <template v-else>Get Test Tokens</template>
+          </button>
+        </div>
       </div>
     </div>
     <div class="mb-7">
@@ -149,11 +155,23 @@ const executeFaucetRequest = async () => {
     throw new Error('Signer address missing!');
   }
   const chainId = fromChainId.value.value;
-  const successful = await requestFaucet(chainId, ethereumProvider.value.signerAddress.value);
-  if (successful) {
+  const isSuccessfulFaucetRequest = await requestFaucet(
+    chainId,
+    ethereumProvider.value.signerAddress.value,
+  );
+  if (isSuccessfulFaucetRequest) {
     faucetUsedForChain[chainId] = true;
   }
 };
 const { active: faucetRequestActive, run: runFaucetRequest } =
   createAsyncProcess(executeFaucetRequest);
 </script>
+<style lang="css">
+.tooltip:before {
+  @apply p-4;
+}
+.tooltip:before,
+.tooltip:after {
+  @apply ml-20;
+}
+</style>
