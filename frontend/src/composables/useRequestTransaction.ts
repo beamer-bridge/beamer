@@ -1,6 +1,6 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { ethers } from 'ethers';
-import { Ref, ref, ShallowRef, watch } from 'vue';
+import { Ref, ref, ShallowRef } from 'vue';
 
 import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
@@ -67,6 +67,7 @@ export function useRequestTransaction(
       request.requestManagerAddress = chainConfig.requestManagerAddress;
       const decimals = await getTokenDecimals(signer, request.sourceTokenAddress);
       request.amount = ethers.utils.parseUnits(request.amount.toString(), decimals);
+
       await ensureTokenAllowance(
         signer,
         request.sourceTokenAddress,
@@ -74,9 +75,6 @@ export function useRequestTransaction(
         request.amount,
       );
 
-      // Modified Request with additional information based
-      // on tx-receipt values and fee calculation
-      // TODO make sure this really mutates the state of the request obj
       await sendRequestTransaction(signer, request, requestState);
     } catch (error) {
       console.error(error);
@@ -99,60 +97,35 @@ export function useRequestTransaction(
   };
 }
 
-export function useWaitRequestFilled(
-  ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  beamerConfig: Ref<Readonly<BeamerConfig>>,
-) {
+export function useWaitRequestFilled(beamerConfig: Ref<Readonly<BeamerConfig>>) {
   const waitError = ref('');
 
-  const executeWaitFulfilled = async (
-    request: Request,
-    requestState: Ref<RequestState>,
-    signer: JsonRpcSigner,
-  ) => {
+  const executeWaitFulfilled = async (request: Request, requestState: Ref<RequestState>) => {
     waitError.value = '';
 
+    const targetChainId = request.targetChainId;
+    const targetChainConfig = beamerConfig.value.chains[String(targetChainId)];
+    const fillManagerAddress = targetChainConfig.fillManagerAddress;
+
+    const waitOnFulfillment = async () => {
+      requestState.value = RequestState.WaitFulfill;
+      const targetNetworkProvider = new ethers.providers.JsonRpcProvider(targetChainConfig.rpcUrl);
+      const currentBlockNumber = await targetNetworkProvider.getBlockNumber();
+
+      await listenOnFulfillment(
+        targetNetworkProvider,
+        request,
+        fillManagerAddress,
+        currentBlockNumber,
+      );
+    };
+
     try {
-      const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = beamerConfig.value.chains[String(chainId)];
-      request.fillManagerAddress = chainConfig.fillManagerAddress;
-      requestState.value = RequestState.WaitSwitchChain;
-
-      const waitOnFulfillment = async () => {
-        requestState.value = RequestState.WaitFulfill;
-        const { number: currentBlockNumber } = await ethereumProvider.value.getLatestBlock();
-        await listenOnFulfillment(signer, request, currentBlockNumber);
-        requestState.value = RequestState.RequestSuccessful;
-      };
-
-      if (ethereumProvider.value.chainId.value !== request.targetChainId) {
-        const chainSwitched = new Promise((resolve) => {
-          const stopWatch = watch(ethereumProvider.value.chainId, async (chainId) => {
-            if (chainId === request.targetChainId) {
-              stopWatch();
-              resolve(undefined);
-            }
-          });
-        });
-
-        if (ethereumProvider.value.switchChain) {
-          await ethereumProvider.value.switchChain(request.targetChainId);
-        }
-        if (ethereumProvider.value.chainId.value !== request.targetChainId) {
-          requestState.value = RequestState.FailedSwitchChain;
-        }
-
-        await chainSwitched;
-      }
-
       await waitOnFulfillment();
+      requestState.value = RequestState.RequestSuccessful;
     } catch (error) {
-      console.error(error);
-      if (error instanceof Error) {
-        waitError.value = error.message;
-      } else {
-        waitError.value = 'Unknown failure.';
-      }
+      console.log(error);
+      requestState.value = RequestState.RequestFailed;
     }
   };
 

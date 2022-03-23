@@ -103,7 +103,7 @@ const requestForm = ref<FormKitFrameworkContext>();
 const { fee, executeGetFee } = useGetFee(ethereumProvider, beamerConfig);
 const { requestTransactionActive, requestState, transactionError, executeRequestTransaction } =
   useRequestTransaction(ethereumProvider, beamerConfig);
-const { executeWaitFulfilled } = useWaitRequestFilled(ethereumProvider, beamerConfig);
+const { executeWaitFulfilled } = useWaitRequestFilled(beamerConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
 
@@ -150,7 +150,7 @@ const submitRequestTransaction = async (formResult: {
 
   await executeRequestTransaction(request, ethereumProvider.value.signer.value);
 
-  await executeWaitFulfilled(request, requestState, ethereumProvider.value.signer.value);
+  await executeWaitFulfilled(request, requestState);
 };
 
 watch(ethereumProvider.value.chainId, async () => {

@@ -68,8 +68,7 @@ export async function sendRequestTransaction(
 
   const transactionReceipt = await transaction.wait();
   request.receipt = transactionReceipt;
-
-  //events is addded dynamically when wait method called!
+  //events is added dynamically when wait method called!
   // TODO verification of other args?
   const event = findFirstEvent(request.receipt, 'RequestCreated');
   if (!event) {

@@ -6,7 +6,6 @@ export enum RequestState {
   Init,
   WaitConfirm,
   WaitTransaction,
-  WaitSwitchChain,
   FailedSwitchChain,
   WaitFulfill,
   RequestSuccessful,
