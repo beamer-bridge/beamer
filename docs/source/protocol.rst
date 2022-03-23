@@ -1,3 +1,5 @@
+.. _contract_parameters:
+
 Contract Parameters
 ===================
 
