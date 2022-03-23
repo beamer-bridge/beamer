@@ -1,9 +1,7 @@
 <template>
-  <img
-    class="absolute top-[112px] left-[112px] w-[458px]"
-    src="@/assets/images/logo.svg"
-    alt="logo"
-  />
+  <div class="flex justify-center items-center pt-16 pb-6">
+    <img class="w-[520px]" src="@/assets/images/logo.svg" alt="logo" />
+  </div>
   <router-view v-if="config" class="flex-auto m-3.5 z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
     <div class="w-48 h-48">
