@@ -1,5 +1,5 @@
 <template>
-  <div class="home flex justify-center pt-56">
+  <div class="home flex justify-center">
     <div class="max-w-2xl flex flex-col justify-center items-center">
       <Card v-if="criticalErrorMessage" class="text-center text-orange-dark p-2 text-lg">
         {{ criticalErrorMessage }}
