@@ -35,3 +35,29 @@ const classObject = computed(() => {
   return obj;
 });
 </script>
+
+<style lang="css">
+.steps .step:before {
+  @apply bg-light;
+}
+.steps .step:after {
+  @apply border-light bg-teal;
+  height: 1.5rem;
+  width: 1.5rem;
+  border-width: 2px;
+}
+.steps .step-success:after {
+  @apply border-teal bg-green;
+  border-width: 2px;
+}
+.steps .step-success + .step-success:before {
+  @apply bg-light;
+}
+.steps-vertical .step:before {
+  width: 0.2rem;
+}
+.steps-vertical .step {
+  gap: 1.5rem;
+  min-height: 5rem;;
+}
+</style>
