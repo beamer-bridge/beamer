@@ -32,7 +32,8 @@ release = '0.1'
 # ones.
 extensions = [
     'sphinx.ext.graphviz',
-    'sphinxcontrib.mermaid'
+    'sphinxcontrib.mermaid',
+    'sphinx.ext.todo'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -58,3 +59,4 @@ html_static_path = ['_static']
 
 html_permalinks = False
 html_show_sphinx = False
+todo_include_todos = True

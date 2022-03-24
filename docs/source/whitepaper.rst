@@ -200,8 +200,8 @@ rollup B on L1. This proof is a call to a `resolver` contract on L1 and contains
 To trigger L1 resolution, is to apply this call on L1 using the data from the rollup's outbox. This will forward the
 information from the resolver to the inbox of rollup A in the form of a call to the `resolution registry` on rollup A.
 This registry will store in its state a mapping from `fill hash` to `Bob`, allowing the `request manager`
-to verify that a claim to fill a certain request with a certain fill ID is honest. Roll-up A's chain ID is necessary for the
-`resolver` contract to know to which `resolution registry` to forward the proof to. Roll-up B's chain ID is used to
+to verify that a claim to fill a certain request with a certain fill ID is honest. Rollup A's chain ID is necessary for the
+`resolver` contract to know to which `resolution registry` to forward the proof to. Rollup B's chain ID is used to
 restrict the call to authenticated `fill manager` and `cross domain messenger` contracts.
 
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call `withdraw` on
@@ -311,7 +311,8 @@ for any reason (e.g. transfer value too high), instead of proving that someone o
 Bob will need to prove that no one filled the request before a certain block height. For that, Bob needs to create and
 submit an `L1 non-fill proof` from rollup B to rollup A.
 
-Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
+.. todo::
+    Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
 
 Fees
 ~~~~
@@ -349,7 +350,7 @@ go through L1 resolution or open parallel claims.
 The current implementation of the agent follows this strategy:
 
 * Challenge a false claim `claim stake + 1`
-* Challenge a claim with no filler with `cost of L1 non-fill proof` (Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346)
+* Challenge a claim with no filler with `cost of L1 non-fill proof`
 * Subsequent counter challenge should cover the cost of L1 resolution
 * Proceed with L1 resolution only when the stake of the opponent covers the cost and we are losing a challenge
 * Open a parallel claim to one of our rightful claims if:
@@ -385,4 +386,6 @@ the `challenge period` ends, Charles can decide to only fill the request if he i
 This can be solved by using a `fill ID` that Charles cannot forge in the future such as `fill ID = Hash(previous block)`.
 
 How do we specifically implement non-fill proofs?
-Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
+
+.. todo::
+    Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
