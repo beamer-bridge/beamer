@@ -259,6 +259,21 @@ on rollup A and trigger L1 resolution for it. This will prove that the request w
 than Charles and declare Bob as a winner of the challenge. Bob will then be rewarded for his participation by gaining
 Charles' stake.
 
+Note that we have a time constraint until when it is safe for Bob to fill the request. This is based on the assumption
+that Charles is able to win the challenge by bidding an amount high enough which Bob is not capable of outbidding
+anymore. While this is the very use case for L1 resolution, Bob must make sure that his fill proof arrives at the
+source rollup before Charles wins the false claim and thus becomes able to withdraw the deposit.
+To find a value until when it is safe for Bob to fill the request, we consider the end of `challengePeriod` of Charles'
+false claim called `false_claim_termination`. Transferring Bob's fill proof to the rollup A will take at least
+`finalization_time[rollup B]`. We derive the following condition:
+
+::
+
+    timestamp_bobs_fill < false_claim_termination - finalization_time[rollup B]
+
+In any case, this condition will always be fulfilled if Bob fills the request before he challenges Charles' false claim.
+
+
 .. mermaid::
     :caption: `False Claims Challenge`
 
@@ -301,6 +316,7 @@ is sufficient to cover Bob's fee for L1 resolution, Bob will proceed with L1 res
 parallel claims until Charles no longer contests one of them, or there is enough accumulated stake from Charles on the
 multiple challenges for Bob to do an L1 resolution. In any case, Bob will be able to prove his rightful claim before
 Charles' claim reach the end of its period.
+The time constraint described in the previous example also holds in this case.
 
 Claims that cannot be filled
 ++++++++++++++++++++++++++++
