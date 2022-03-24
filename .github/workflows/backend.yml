@@ -85,12 +85,10 @@ jobs:
           solhint 'contracts/**/*.sol'
 
       - name: Lint beamer
-        run: |
-          poetry run make lint
+        run: poetry run make lint
 
       - name: Run contract tests
-        run: |
-          poetry run brownie test -v -G
+        run: poetry run brownie test -v -G
 
       - name: Run agent tests
         run: |
