@@ -563,10 +563,10 @@
   dependencies:
     "@floating-ui/core" "^0.3.0"
 
-"@fontsource/sora@^4.5.1":
-  version "4.5.1"
-  resolved "https://registry.yarnpkg.com/@fontsource/sora/-/sora-4.5.1.tgz#2bf6a815074fe4db61930050f0db392bc3ccbb8e"
-  integrity sha512-NCtO8MWU/t+Q3Gnm8Yjb3i8gLlayIUH/cWr8dz3GiNO82fCUs8RWov6hCFpUg5LMdTnVHNUjgtN1Xn1JsXqt4w==
+"@fontsource/sora@^4.5.5":
+  version "4.5.5"
+  resolved "https://registry.yarnpkg.com/@fontsource/sora/-/sora-4.5.5.tgz#25e8e0a11d0a2a861ccce23a94383448c5beaa50"
+  integrity sha512-SeePOM5pvXaa2a1c9VuGPJGmHNcFSUBzVxfHMuQ/FrVeiXvF3XXyPbt68N6QmHK2rAH844BN1Y5zImxqa5ok6g==
 
 "@formkit/core@1.0.0-beta.6", "@formkit/core@^1.0.0-beta.2":
   version "1.0.0-beta.6"
