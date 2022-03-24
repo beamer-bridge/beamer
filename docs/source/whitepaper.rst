@@ -106,23 +106,26 @@ that can later serve to prove that the request was properly filled.
 
     request hash = Hash(request ID, source chain ID, target chain ID, target token address, recipient address, amount)
 
-When filling the request, a `fill ID` is also computed, that serves to identify a fill.
-
-::
-
-    fill ID = Hash(fill block number)
+When filling the request, a `fill ID` is also computed, that serves to identify a fill. Detailed information on the
+`fill ID` can be found in section :ref:`fill_id`.
 
 After filling the request, Bob will immediately claim the refund on rollup A. In doing so, he submits the `request ID`,
 and `fill ID` to rollup A. This initiates a `claim period` during which the validity of the fill by Bob
-can be contested or proven. Bob is required to send a deposit `claim stake` in rollup A's coin, that will be lost if
-his claim is proven to be incorrect.
+can be contested. Bob is required to send a deposit `claim stake` in rollup A's coin, that will be lost if
+his claim is proven to be incorrect eventually.
 
-Since rollup A does not have direct access to the state of rollup B, we use a participative claim / challenge protocol
-to optimistically determine the validity of the claim. If the optimistic approach does not conclude, a proof of the
-correct fill can be passed from rollup B to rollup A via L1 for the corresponding request.
+If any participant contests Bob's claim, the protocol will immediately enter the challenge game. This
+participative challenge protocol exists to optimistically determine the validity of the claim by the participants
+outbidding each other with increasing stakes. Once the challenge period ends, the highest bidder will win the challenge
+and thus the stakes. Additionally, the protocol evaluates the validity of the claim by the outcome of the challenge
+winner. In other words, if the claimer wins the challenge, the claim is accepted to be valid and vice versa.
+
+Since rollup A does not have direct access to the state of rollup B, we use this approach to assume the validity by
+putting financial pressure on the dishonest participant. If the optimistic approach does not conclude, a proof of the fill for the corresponding request can be passed from rollup B to rollup A via L1. 
 
 We use a cheap optimistic approach that does not require L1 to drastically reduce the costs of bridging the tokens for
-Bob, and only use the more costly `L1 resolution` in case of an attack to ensure the security of the protocol.
+Bob, and only use the more costly `L1 resolution` in case of an attack to ensure the security of the protocol. By
+implementing L1 resolution we can guarantee Layer 1 security if at least one honest participant follows the protocol.
 Additionally, as we will see later, the cost of the L1 resolution will be paid by the attacker.
 
 Rightful claims resolutions
@@ -197,8 +200,8 @@ rollup B on L1. This proof is a call to a `resolver` contract on L1 and contains
 - rollup A's chain ID
 - Bob's address
 
-To trigger L1 resolution, is to apply this call on L1 using the data from the rollup's outbox. This will forward the
-information from the resolver to the inbox of rollup A in the form of a call to the `resolution registry` on rollup A.
+To trigger L1 resolution is to apply this call on L1 using the data from the rollup B's outbox. This will forward the
+information from the resolver to the inbox of rollup A in the form of a call to the `resolution registry`.
 This registry will store in its state a mapping from `fill hash` to `Bob`, allowing the `request manager`
 to verify that a claim to fill a certain request with a certain fill ID is honest. Rollup A's chain ID is necessary for the
 `resolver` contract to know to which `resolution registry` to forward the proof to. Rollup B's chain ID is used to
@@ -208,11 +211,6 @@ After L1 resolution has transferred the fill information from rollup B to rollup
 the `request manager` on rollup A. This will compute a `fill hash` and query the `resolution registry` for the filler
 address corresponding to `fill hash`, which will return Bob's address. Bob will be immediately considered the winner of
 the challenge and receive his stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
-
-The reason we need to use `fill ID = Hash(fill block number)` in the proof is to allow Charles to make sure whether the
-claim by Bob is rightful. Upon submitting the claim with a certain `fill ID`, Charles can look for the block with the associated number
-and see whether a fill was correctly made by Bob. Without this ID, an evildoer could claim an unfilled request and only
-fill it once its claim is challenged, to gain the stake of the challenger.
 
 .. mermaid::
     :caption: `L1 Resolution`
@@ -239,6 +237,30 @@ fill it once its claim is challenged, to gain the stake of the challenger.
     Bob ->> L1: triggers L1 resolution
     L1 ->> Rollup A: sends fill proof
     Bob ->>Rollup A: withdraws tokens
+
+.. _fill_id:
+
+Why do we need the fill ID?
++++++++++++++++++++++++++++
+
+The reason a claimer needs to submit a `fill ID` is to make a statement of when the related request was filled. It is
+returned by the `FillManager` contract on rollup B and there will always be only one valid `fill ID` to a fill of a
+requests. Enforcing a submission of an ID, certain attacks on honest challengers are prevented. Without this ID, an
+evildoer could claim an unfilled request and only fill it once its claim is challenged thus turning it into a rightful
+claim and gaining the challenger's stake.
+Currently the `fill ID` is defined as
+
+::
+
+    fill_id = hash(fill_block_number)
+
+Upon submitting the claim with a certain `fill ID`, Charles can look for the block with the associated number
+and see whether a fill was correctly made by Bob. Any claim with a different `fill ID` than the generated value upon
+filling the request is considered to be a false claim.
+
+Ideally, the `fill ID` is chosen in a way that it cannot be generated in the future. With the current definition, this
+is not entirely the case and it is subject to being improved in the future.
+
 
 Challenging false claims
 ++++++++++++++++++++++++
