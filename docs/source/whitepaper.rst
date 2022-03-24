@@ -128,8 +128,8 @@ Additionally, as we will see later, the cost of the L1 resolution will be paid b
 Rightful claims resolutions
 +++++++++++++++++++++++++++
 
-In the game theoretic case, rightful claims will not be contested. After `claim period`, Bob can withdraw its stake, the
-tokens locked by Alice, and the fees paid by Alice for the service.
+In the game theoretic case, rightful claims will not be contested. After `claim period`, Bob can withdraw his stake,
+the tokens locked and the LP fee paid by Alice.
 
 .. mermaid::
     :caption: `Unchallenged Claim`
@@ -158,8 +158,8 @@ position and contest the other party. It is required that the new stake of the p
 Everytime a participant responds to the challenge, the termination time of the challenge and underlying claim is extended to be at least
 `challenge period extension`, to give time for the other party to respond.
 
-At the end of the challenge period, the last non-contested participant, and thus the highest staker, wins. The claim
-will be seen as valid if the winner of the challenge is the original claimer. This means that he will be able to
+At the end of the challenge period, the last non-contested participant, and thus the participant with the highest stake, wins. The claim
+will be seen as valid if the winner of the challenge game is the original claimer. This means that he will be able to
 withdraw Alice's deposit.
 
 .. mermaid::
@@ -193,11 +193,11 @@ When Bob filled Alice's request, a proof was sent by the `fill manager` contract
 rollup B on L1. This proof is a call to a `resolver` contract on L1 and contains the following fields:
 
 - fill hash = Hash(request hash, fill ID)
-- rollup A's chain ID
 - rollup B's chain ID
+- rollup A's chain ID
 - Bob's address
 
-To trigger the L1 resolution, is to apply this call on L1 using the data from the rollup's outbox. This will forward the
+To trigger L1 resolution, is to apply this call on L1 using the data from the rollup's outbox. This will forward the
 information from the resolver to the inbox of rollup A in the form of a call to the `resolution registry` on rollup A.
 This registry will store in its state a mapping from `fill hash` to `Bob`, allowing the `request manager`
 to verify that a claim to fill a certain request with a certain fill ID is honest. Roll-up A's chain ID is necessary for the
@@ -207,7 +207,7 @@ restrict the call to authenticated `fill manager` and `cross domain messenger` c
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call `withdraw` on
 the `request manager` on rollup A. This will compute a `fill hash` and query the `resolution registry` for the filler
 address corresponding to `fill hash`, which will return Bob's address. Bob will be immediately considered the winner of
-the challenge and receive its stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
+the challenge and receive his stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
 
 The reason we need to use `fill ID = Hash(fill block number)` in the proof is to allow Charles to make sure whether the
 claim by Bob is rightful. Upon submitting the claim with a certain `fill ID`, Charles can look for the block with the associated number
@@ -240,11 +240,11 @@ fill it once its claim is challenged, to gain the stake of the challenger.
     L1 ->> Rollup A: sends fill proof
     Bob ->>Rollup A: withdraws tokens
 
-False claims challenges
-+++++++++++++++++++++++
+Challenging false claims
+++++++++++++++++++++++++
 
 We saw that if Bob filled Alice's claim, he will always be able to prove correctness of the fill in order to withdraw
-its due from the `request manager` contract. However, if Charles falsely claims and withdraw rewards from the contract,
+its due from the `request manager` contract. However, if Charles falsely claims and withdraws rewards from the contract,
 there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claim.
 
 As we saw in the previous part, Bob can use the `fill ID` provided by Charles during his claim to find out if the claim is
@@ -253,10 +253,10 @@ in the previous part about rightful claims resolutions, except that Charles will
 that his claim is rightful.
 
 The first possible outcome is that the `challenge period` ends while Bob is ahead. In that case Bob will gain Charles'
-stake and Charles will not be able to withdraw anything. In the event that Charles keep on contesting Bob's challenges
-and reach a point where Bob no longer has enough funds to stake, Bob (or anyone else) will need to fill Alice's request
-on rollup A and trigger L1 resolution for that correct fill. This will prove that the request was filled by someone else
-than Charles and declare Bob as a winner of the challenge. Bob will then be rewarded for its participation by gaining
+stake and Charles will not be able to withdraw anything. In the event that Charles keeps on contesting Bob's challenges
+and reaches a point where Bob no longer has enough funds to stake, Bob (or anyone else) will need to fill Alice's request
+on rollup A and trigger L1 resolution for it. This will prove that the request was filled by someone other
+than Charles and declare Bob as a winner of the challenge. Bob will then be rewarded for his participation by gaining
 Charles' stake.
 
 .. mermaid::
@@ -288,28 +288,28 @@ Self challenges
 +++++++++++++++
 
 To make the protocol easier to reason about and implement, only two actors can participate in a challenge: the original
-claimer, and the initial challenger. This raises the concern that, after doing its false claim, Charles could challenge
-himself to prevent Bob from challenging him. This will let Charlie control the state of his challenge and he will be able to
+claimer, and the initial challenger. This raises the concern that, after submitting his false claim, Charles could challenge
+himself to prevent anyone from challenging him. This would let Charlie control the state of his challenge and he would be able to
 let it expire with his claim successful as an outcome.
 
 To prevent this successful `self-challenged claim` to allow Charles to withdraw Alice's deposit, Bob can fill Alice's request
 and do his own claim in parallel. If Bob's claim is not challenged and `claim period` is lower than the `challenge period`,
 Bob will be able to withdraw Alice's deposit before Charles, leaving nothing for Charles to gain.
 
-Charles can attempt to delay Bob's withdrawal by challenging its rightful claim. If Charles' stake on the rightful claim
+Charles can attempt to delay Bob's withdrawal by challenging Bob's rightful claim. If Charles' stake on the rightful claim
 is sufficient to cover Bob's fee for L1 resolution, Bob will proceed with L1 resolution. If not, Bob can continue opening
-parallel claims until Charles no longer contest one of them, or there is enough accumulated stake from Charles on the
-multiple challenges for Bob to do an L1 resolution. In any case, Bob will be able to prove its rightful claim before
+parallel claims until Charles no longer contests one of them, or there is enough accumulated stake from Charles on the
+multiple challenges for Bob to do an L1 resolution. In any case, Bob will be able to prove his rightful claim before
 Charles' claim reach the end of its period.
 
 Claims that cannot be filled
 ++++++++++++++++++++++++++++
 
-In either the regular `false claim` and `self-challenge claim` cases, we assumed that Bob could fill Alice's request in
+In both the regular `false claim` and `self-challenge claim` cases, we assumed that Bob could fill Alice's request in
 order to prove that the false claimer Charles was not the correct filler. However, If Alice's request cannot be filled
 for any reason (e.g. transfer value too high), instead of proving that someone other than Charles filled a request,
 Bob will need to prove that no one filled the request before a certain block height. For that, Bob needs to create and
-submit an `L1 non-fill proof` from rollup A to rollup B.
+submit an `L1 non-fill proof` from rollup B to rollup A.
 
 Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346
 
@@ -317,7 +317,7 @@ Fees
 ~~~~
 
 Users will pay a fee for bridging their tokens. This fee needs to cover the expense of the liquidity provider and reward
-them. The fees also include a protocol fee, which is used for further development of the protocol.
+them. The fees also include a Beamer service fee, which is used for further development of the protocol.
 
 In theory, the fee should follow the formula:
 
@@ -327,12 +327,12 @@ In theory, the fee should follow the formula:
           opportunity cost(requested tokens, claim period) + opportunity cost(claim stake, claim period) + margin
 
 In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
-Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the service provider, the
-user would have to register what fee they are willing to pay for their transfer upon requesting them. This would create
-a fee market where different service providers would compete and accept different fees. Users would then need to query the
+Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the liquidity provider, the
+user would have to register the maximum fee they are willing to pay for their transfer. This would create
+a fee market where different liquidity providers would compete and accept different fees. Users would then need to query the
 market for which fee they should use.
 
-However, as the protocol intends to be as easy to use as possible for the user, and transactions fees are mostly stable
+However, as the protocol intends to be as easy to use as possible, and transactions fees are mostly stable
 on rollups, the protocol implements a fixed fee for every transfer. This fixed fee uses a fixed estimation of the gas
 price of the rollup as well as a fixed margin for liquidity providers.
 
@@ -340,20 +340,22 @@ price of the rollup as well as a fixed margin for liquidity providers.
 Agent strategy
 --------------
 
-`Agents` is the term we use for the software run by liquidity providers to observe the rollups, fill users requests, and participate in
-challenges. The protocol defines some rules and demonstrate how honest participation is incentivized. However, the agent
-could still implement different strategies to follow the protocol. For example, the agent is free to chose the value
+`Agents` is the term we use for the software run by liquidity providers to observe the rollups, fill users' requests, and participate in
+challenges. The protocol defines some rules and demonstrates how honest participation is incentivized. However, the agent
+could still implement different strategies to follow the protocol. For example, the agent is free to choose the value
 with which it will bid in challenges. It is also allowed to decide when to stop out-bidding opponents in challenges and
-going through L1 resolution or opening parallel claims.
+go through L1 resolution or open parallel claims.
 
-The current implementation of the agent follows the strategy:
+The current implementation of the agent follows this strategy:
 
-- Challenge a claim from wrong filler with `claim stake + 1`
-- Challenge a claim with no filler with `cost of L1 non-fill proof` (Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346)
-- Subsequent counter challenge should cover the cost of L1 resolution
-- Proceed with L1 resolution only when the stake of the opponent covers the cost and you are losing a challenge
-- Open a parallel claim to one of your rightful claim if there is a challenged wrongful claim that expires before
-  your challenged rightful claim and there is not enough stakes for L1 resolution.
+* Challenge a false claim `claim stake + 1`
+* Challenge a claim with no filler with `cost of L1 non-fill proof` (Exact specification TBD: https://github.com/beamer-bridge/beamer/issues/346)
+* Subsequent counter challenge should cover the cost of L1 resolution
+* Proceed with L1 resolution only when the stake of the opponent covers the cost and we are losing a challenge
+* Open a parallel claim to one of our rightful claims if:
+    * there is a challenged wrongful claim C for the same request and 
+    * C expires before our challenged rightful claim and
+    * the stake amount is not high enough for L1 resolution.
 
 Protocol parameters
 -------------------
@@ -371,14 +373,14 @@ of the request by the liquidity provider. To take that into account, we would ne
 one additional week, which would result in higher opportunity costs for the liquidity provider.
 
 In practice the longest observed delay of block inclusion from a rollup sequencer has been 18 hours, and was exceptional.
-Hence the decision not to take into account this delay.
+Hence the decision not to take this delay into account.
 
 Open questions
 --------------
 
 Charles could claim a request that no one filled (or no one can fill) with a `fill ID = Hash(fill block number)`
 corresponding to a block that was not produced yet. If the block is expected to be produced after `claim period` but before
-`challenge period`, Charles can decide to only fill the request if he is challenged.
+the `challenge period` ends, Charles can decide to only fill the request if he is challenged.
 
 This can be solved by using a `fill ID` that Charles cannot forge in the future such as `fill ID = Hash(previous block)`.
 
