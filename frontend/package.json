@@ -18,7 +18,7 @@
     "autoprefixer": "^10",
     "daisyui": "^2.11.0",
     "ethers": "^5.5.1",
-    "floating-vue": "^2.0.0-beta.8",
+    "floating-vue": "^2.0.0-beta.11",
     "postcss": "^8.4",
     "tailwindcss": "^3",
     "tailwindcss-ripple": "^0.7.1",
