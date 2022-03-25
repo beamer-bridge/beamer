@@ -10,7 +10,7 @@
     "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix ."
   },
   "dependencies": {
-    "@ethersproject/providers": "^5.5.2",
+    "@ethersproject/providers": "^5.6.1",
     "@fontsource/sora": "^4.5.5",
     "@formkit/core": "^1.0.0-beta.2",
     "@formkit/vue": "^1.0.0-beta.6",
