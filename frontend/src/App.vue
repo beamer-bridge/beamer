@@ -1,6 +1,6 @@
 <template>
-  <div class="flex justify-center items-center py-12">
-    <img class="w-[24rem]" src="@/assets/images/logo.svg" alt="logo" />
+  <div class="flex justify-center items-center pt-12 pb-12">
+    <img class="w-[30rem]" src="@/assets/images/logo.svg" alt="logo" />
   </div>
   <router-view v-if="config" class="flex-auto z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">

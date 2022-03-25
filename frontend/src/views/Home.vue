@@ -1,6 +1,6 @@
 <template>
   <div class="home flex justify-center">
-    <div class="max-w-2xl flex flex-col">
+    <div class="max-w-2xl flex flex-col xl:justify-center xl:items-center">
       <div class="text-center text-orange-dark p-2 text-lg h-12">
         <div v-if="criticalErrorMessage">
           {{ criticalErrorMessage }}
