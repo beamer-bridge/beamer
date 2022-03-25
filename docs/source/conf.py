@@ -87,7 +87,7 @@ html_css_files = [
 ]
 html_favicon = 'favicon.png'
 
-html_title = f'Beamer {release} documentation'
+html_title = f'Beamer documentation'
 
 html_permalinks = False
 html_show_sphinx = False
