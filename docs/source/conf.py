@@ -50,10 +50,42 @@ exclude_patterns = []
 #
 html_theme = 'furo'
 
+html_theme_options = {
+    'light_css_variables': {
+        'color-foreground-primary': '#001B23',
+        'color-foreground-secondary': '#001B23',
+        'color-background-primary': '#F7FFFC',
+        'color-background-secondary': '#F7FFFC',
+        'color-brand-primary': '#005E63',
+        'color-brand-content': '#005E63',
+        'font-stack': 'Sora, sans-serif',
+        'font-stack--monospace': 'Courier, monospace',
+    },
+    'dark_css_variables': {
+        'color-foreground-primary': '#F7FFFC',
+        'color-foreground-secondary': '#F7FFFC',
+        'color-background-primary': '#001B23',
+        'color-background-secondary': '#001B23',
+        'color-brand-primary': '#05B0AB',
+        'color-brand-content': '#05B0AB',
+        'font-stack': 'Sora, sans-serif',
+        'font-stack--monospace': 'Courier, monospace',
+    },
+    "light_logo": "logo.png",
+    "dark_logo": "logo-white.png",
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_css_files = [
+    'css/styles.css',
+]
+html_favicon = 'favicon.png'
+
+html_title = f'Beamer {release} documentation'
 
 html_permalinks = False
 html_show_sphinx = False
