@@ -25,7 +25,7 @@
     </template>
 
     <template #open-indicator="{ attributes }">
-      <svg v-bind="attributes" width="22" height="9" viewBox="0 0 21 9">
+      <svg v-bind="attributes" class="w-4 h-4" viewBox="0 0 21 9">
         <path d="M20.9521 0H0.452148L10.4521 8.5L20.9521 0Z" />
       </svg>
     </template>
@@ -59,7 +59,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__dropdown-menu {
-  @apply p-0 rounded-b-xl border-0 bg-teal-light shadow-inner-bottom;
+  @apply p-0 rounded-b-xl border-0 bg-teal-light shadow-inner-bottom min-w-fit;
 }
 
 .selector .vs__dropdown-option,
@@ -93,11 +93,11 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__no-options {
-  @apply h-18 m-0 px-1 py-3 border-0 text-lg text-teal overflow-hidden;
+  @apply h-18 m-0 px-1 py-3 border-0 text-sm text-teal overflow-hidden;
 }
 
 .selector .vs__actions {
-  @apply py-0 pr-5 pl-[6px];
+  @apply py-0 pr-5 pl-[6px] pt-1;
 }
 
 .selector .vs__open-indicator {

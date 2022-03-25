@@ -1,9 +1,11 @@
 <template>
   <div class="home flex justify-center">
-    <div class="max-w-2xl flex flex-col justify-center items-center">
-      <Card v-if="criticalErrorMessage" class="text-center text-orange-dark p-2 text-lg">
-        {{ criticalErrorMessage }}
-      </Card>
+    <div class="max-w-2xl flex flex-col">
+      <div class="text-center text-orange-dark p-2 text-lg h-12">
+        <div v-if="criticalErrorMessage">
+          {{ criticalErrorMessage }}
+        </div>
+      </div>
       <RequestDialog
         v-if="ethereumProvider"
         :key="requestDialogReloadKey"
@@ -16,7 +18,6 @@
 <script setup lang="ts">
 import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef, watch } from 'vue';
 
-import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';

@@ -1,15 +1,15 @@
 <template>
-  <div class="flex justify-center items-center pt-16 pb-6">
-    <img class="w-[520px]" src="@/assets/images/logo.svg" alt="logo" />
+  <div class="flex justify-center items-center py-12">
+    <img class="w-[24rem]" src="@/assets/images/logo.svg" alt="logo" />
   </div>
-  <router-view v-if="config" class="flex-auto m-3.5 z-10" />
+  <router-view v-if="config" class="flex-auto z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
     <div class="w-48 h-48">
       <spinner></spinner>
     </div>
   </div>
   <feedback></feedback>
-  <footer class="my-8 text-2xl text-center text-teal-light">Powered by Beamer</footer>
+  <footer class="my-8 text-lg text-center text-teal-light">Powered by Beamer</footer>
 </template>
 
 <script setup lang="ts">
