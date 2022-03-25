@@ -1,6 +1,6 @@
 <template>
   <div class="request-form-inputs flex flex-col">
-    <div class="mb-28 flex flex-row gap-5 items-center">
+    <div class="mb-14 flex flex-row gap-5 items-center">
       <span class="text-3xl">Send</span>
       <FormKit
         type="text"
@@ -20,7 +20,7 @@
         messages-class="hidden"
       />
     </div>
-    <div class="mb-16">
+    <div class="mb-10">
       <FormKit
         :value="fromChainId"
         type="selector"
@@ -38,7 +38,7 @@
           data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your Metamask account"
         >
           <button
-            class="btn btn-ghost btn-xs text-orange m-2"
+            class="btn btn-ghost btn-sm text-orange m-2"
             type="button"
             :disabled="faucetButtonDisabled"
             @click="runFaucetRequest"
@@ -51,9 +51,9 @@
         </div>
       </div>
     </div>
-    <div class="mb-7">
+    <div>
       <FormKit
-        outer-class="mb-6"
+        outer-class="mb-4"
         type="selector"
         name="toChainId"
         label="To"
@@ -70,16 +70,19 @@
         messages-class="hidden"
       />
     </div>
-    <div v-if="fees" class="self-end flex flex-row gap-5 items-center text-2xl text-light">
+    <div
+      v-if="fees"
+      class="flex flex-row self-end gap-5 items-center text-base text-light mx-5 mt-2"
+    >
       <span>fees</span>
       <span> {{ fees }} ETH</span>
-      <img
+      <!-- <img
         v-tooltip.right="
           'This window appears when hovering the info (?) button. Here we confirm to the user that they are charged a certain fee, not an estimate. We briefly detail how this is done. We confirm that the funds they send are the funds the get on the other end.'
         "
         class="h-6 w-6 cursor-help"
         src="@/assets/images/help.svg"
-      />
+      /> -->
     </div>
   </div>
 </template>
