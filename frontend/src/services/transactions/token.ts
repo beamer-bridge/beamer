@@ -12,9 +12,10 @@ export async function ensureTokenAllowance(
 ): Promise<void> {
   const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
   const signerAddress = await signer.getAddress();
+  const signerTokenBalance = await tokenContract.balanceOf(signerAddress);
   const allowance: BigNumber = await tokenContract.allowance(signerAddress, allowedSpender);
   if (allowance.lt(amount)) {
-    const transaction = await tokenContract.approve(allowedSpender, amount);
+    const transaction = await tokenContract.approve(allowedSpender, signerTokenBalance);
     await transaction.wait();
   }
 }
