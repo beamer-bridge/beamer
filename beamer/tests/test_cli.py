@@ -17,8 +17,11 @@ def _generate_deployment_dir(output_dir, root, contracts):
         "beamer_commit": "0" * 40,
         "L2": {
             str(brownie.chain.id): {
-                "RequestManager": [contracts.request_manager.address, 1],
-                "FillManager": [contracts.fill_manager.address, 1],
+                "RequestManager": {
+                    "address": contracts.request_manager.address,
+                    "deployment_block": 1,
+                },
+                "FillManager": {"address": contracts.fill_manager.address, "deployment_block": 1},
             }
         },
     }
