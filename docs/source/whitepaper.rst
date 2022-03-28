@@ -104,7 +104,8 @@ that can later serve to prove that the request was properly filled.
 
 ::
 
-    request hash = Hash(request ID, source chain ID, target chain ID, target token address, recipient address, amount)
+    request hash = Hash(request ID, source chain ID, target chain ID,
+                        target token address, recipient address, amount)
 
 When filling the request, a `fill ID` is also computed, that serves to identify a fill. Detailed information on the
 `fill ID` can be found in section :ref:`fill_id`.
@@ -362,8 +363,12 @@ In theory, the fee should follow the formula:
 
 ::
 
-    fee = tx fee fill + tx fee claim + tx fee withdraw funds / number of cumulative withdraws +
-          opportunity cost(requested tokens, claim period) + opportunity cost(claim stake, claim period) + margin
+    fee = tx fee fill +
+          tx fee claim +
+          tx fee withdraw funds / number of cumulative withdraws +
+          opportunity cost(requested tokens, claim period) +
+          opportunity cost(claim stake, claim period) +
+          margin
 
 In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
 Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the liquidity provider, the
