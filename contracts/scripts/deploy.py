@@ -24,16 +24,16 @@ def main() -> None:
 
     claim_stake = Wei("0.01 ether")
     claim_period = 60 * 60  # 1 hour
-    challenge_period = 60 * 60 * 5  # 5 hours
+    finalization_time = (7 * 24) * 60 * 60  # 7 days
     challenge_period_extension = 60 * 60  # 1 hour
-    RequestManager.deploy(
+    request_manager = RequestManager.deploy(
         claim_stake,
         claim_period,
-        challenge_period,
         challenge_period_extension,
         resolution_registry.address,
         {"from": deployer},
     )
+    request_manager.setFinalizationTime(web3.eth.chain_id, finalization_time)
 
     proof_submitter = OptimismProofSubmitter.deploy(messenger.address, {"from": deployer})
     f = FillManager.deploy(resolver.address, proof_submitter.address, {"from": deployer})

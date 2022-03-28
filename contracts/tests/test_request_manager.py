@@ -6,6 +6,24 @@ from eth_utils import to_hex
 from contracts.tests.utils import alloc_accounts, create_fill_hash, make_request
 
 
+def test_request_invalid_target_chain(request_manager, token):
+    (requester,) = alloc_accounts(1)
+    with brownie.reverts("Target rollup not supported"):
+        make_request(
+            request_manager, target_chain_id=999, token=token, requester=requester, amount=1
+        )
+
+    assert request_manager.requestCounter() == 0
+    make_request(
+        request_manager,
+        target_chain_id=web3.eth.chain_id,
+        token=token,
+        requester=requester,
+        amount=1,
+    )
+    assert request_manager.requestCounter() == 1
+
+
 def test_claim(token, request_manager, claim_stake):
     """Test that making a claim creates correct claim and emits event"""
     (requester,) = alloc_accounts(1)
@@ -118,7 +136,12 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
 
 
 def test_claim_period_extension(
-    request_manager, token, claim_stake, claim_period, challenge_period, challenge_period_extension
+    request_manager,
+    token,
+    claim_stake,
+    claim_period,
+    finalization_time,
+    challenge_period_extension,
 ):
     """Test the extension of the claim/challenge period"""
     claimer, challenger, requester = alloc_accounts(3)
@@ -132,6 +155,8 @@ def test_claim_period_extension(
     challenge = request_manager.challengeClaim(
         claim_id, {"from": challenger, "value": claim_stake + 1}
     )
+    challenge_period = finalization_time + challenge_period_extension
+
     assert challenge.timestamp + challenge_period == request_manager.claims(claim_id)[6]
 
     # Another challenge with big margin to the end of the termination
@@ -207,7 +232,9 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
         request_manager.withdraw(claim_id, {"from": claimer})
 
 
-def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_period):
+def test_withdraw_with_challenge(
+    request_manager, token, claim_stake, finalization_time, challenge_period_extension
+):
     """Test withdraw when a claim was challenged, and the challenger won.
     In that case, the request funds must not be paid out to the challenger."""
 
@@ -242,8 +269,8 @@ def test_withdraw_with_challenge(request_manager, token, claim_stake, challenge_
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim_id, {"from": claimer})
 
-    # Timetravel after claim period
-    chain.mine(timedelta=challenge_period)
+    # Timetravel after challenge period
+    chain.mine(timedelta=finalization_time + challenge_period_extension)
 
     assert web3.eth.get_balance(request_manager.address) == 2 * claim_stake + 1
 
@@ -425,7 +452,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
 
 
 def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
-    request_manager, token, claim_stake, claim_period, challenge_period
+    request_manager, token, claim_stake, claim_period, finalization_time
 ):
     """Test withdraw when a request was claimed twice. The first claim fails, while the second
     is successful and should be paid out the request funds."""
@@ -471,7 +498,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
     # Timetravel after claim period
-    chain.mine(timedelta=claim_period + challenge_period)
+    chain.mine(timedelta=claim_period + finalization_time)
 
     assert token.balanceOf(request_manager.address) == transfer_amount
     assert web3.eth.get_balance(request_manager.address) == 3 * claim_stake + 1

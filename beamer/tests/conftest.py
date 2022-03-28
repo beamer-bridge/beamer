@@ -71,13 +71,12 @@ def contracts(deployer):
     resolution_registry = deployer.deploy(ResolutionRegistry)
     claim_stake = Wei("0.01 ether")
     claim_period = 60 * 60  # 1 hour
-    challenge_period = 60 * 60 * 5  # 5 hours
+    finalization_time = 60 * 60 * 5  # 5 hours
     challenge_period_extension = 60 * 60  # 1 hour
     request_manager = deployer.deploy(
         RequestManager,
         claim_stake,
         claim_period,
-        challenge_period,
         challenge_period_extension,
         resolution_registry.address,
     )
@@ -93,6 +92,7 @@ def contracts(deployer):
     resolution_registry.addCaller(l1_chain_id, messenger2.address, resolver.address)
 
     resolver.addRegistry(l2_chain_id, resolution_registry.address, messenger2.address)
+    request_manager.setFinalizationTime(l2_chain_id, finalization_time)
 
     return Contracts(
         messenger1=messenger1,

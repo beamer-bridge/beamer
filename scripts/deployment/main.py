@@ -89,7 +89,9 @@ def deploy_l1(web3: Web3) -> dict[str, DeployedContract]:
     return {"Resolver": resolver}
 
 
-def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, DeployedContract]:
+def deploy_l2(
+    web3: Web3, resolver: Contract, supported_target_chains: dict[int, int]
+) -> dict[str, DeployedContract]:
     token = deploy_contract(web3, "MintableToken", int(1e18))
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     resolution_registry.functions.addCaller(
@@ -102,17 +104,18 @@ def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, DeployedContract]:
 
     claim_stake = Wei("0.00047 ether")
     claim_period = 60 * 60  # 1 hour
-    challenge_period = (7 * 24 + 1) * 60 * 60  # 7 days + 1 hour
     challenge_period_extension = 60 * 60  # 1 hour
     request_manager = deploy_contract(
         web3,
         "RequestManager",
         claim_stake,
         claim_period,
-        challenge_period,
         challenge_period_extension,
         resolution_registry.address,
     )
+
+    for chain_id, finalization_time in supported_target_chains.items():
+        request_manager.functions.addTargetChain(chain_id, finalization_time).transact()
 
     fill_manager = deploy_contract(web3, "FillManager", resolver.address, proof_submitter.address)
 
@@ -194,7 +197,13 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
         chain_id = web3_l2.eth.chain_id
         assert chain_id == l2_config["chain_id"]
 
-        l2_data = deploy_l2(web3_l2, resolver)
+        supported_target_chains = {
+            l2["chain_id"]: l2["finalization_time"]
+            for l2 in config["L2"]
+            if l2["chain_id"] != chain_id
+        }
+
+        l2_data = deploy_l2(web3_l2, resolver, supported_target_chains)
         update_l1(resolver, web3_l2.eth.chain_id, l2_config["messenger_contract_address"], l2_data)
 
         deployment_data["L2"][chain_id] = contract_to_json(l2_data)
