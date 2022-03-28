@@ -21,4 +21,4 @@ Finally, still within the virtual environment, run:
     beamer-agent
 ```
 
-For more comprehensive documentation go to [Beamer documenation](docs.beamerbridge.com).
+For more comprehensive documentation go to [Beamer documenation](https://docs.beamerbridge.com).
