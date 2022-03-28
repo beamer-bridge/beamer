@@ -17,7 +17,7 @@ from web3.contract import Contract
 from web3.types import TxParams
 import beamer.events
 from beamer.events import ClaimEvent, Event, EventFetcher, RequestEvent
-from beamer.request import Claim, Request, RequestData, Tracker
+from beamer.request import Claim, Request, Tracker
 from beamer.typing import BlockNumber, ChainId, ChecksumAddress, ClaimId, RequestId
 from beamer.util import TokenMatchChecker
 
@@ -232,18 +232,15 @@ class EventProcessor:
                 self._log.debug("Invalid token pair in request", _event=event)
                 return True
 
-            data = self._request_manager.functions.requests(event.request_id).call()
-            request_data = RequestData.from_chain_data(data)
-
             req = Request(
                 request_id=event.request_id,
                 source_chain_id=event.chain_id,
-                target_chain_id=request_data.targetChainId,
-                source_token_address=request_data.sourceTokenAddress,
-                target_token_address=request_data.targetTokenAddress,
-                target_address=request_data.targetAddress,
-                amount=request_data.amount,
-                valid_until=request_data.validUntil,
+                target_chain_id=event.target_chain_id,
+                source_token_address=event.source_token_address,
+                target_token_address=event.target_token_address,
+                target_address=event.target_address,
+                amount=event.amount,
+                valid_until=event.valid_until,
             )
             self._request_tracker.add(req.id, req)
             return True
