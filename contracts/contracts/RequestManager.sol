@@ -76,7 +76,6 @@ contract RequestManager is Ownable {
     // Constants
     uint256 public claimStake;
     uint256 public claimPeriod;
-    uint256 public challengePeriod;
     uint256 public challengePeriodExtension;
 
     uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
@@ -86,6 +85,8 @@ contract RequestManager is Ownable {
     uint256 public requestCounter;
     uint256 public claimCounter;
     ResolutionRegistry public resolutionRegistry;
+
+    mapping (uint256 => uint256) public finalizationTimes; // target rollup chain id => finalization time
 
     mapping (uint256 => Request) public requests;
     mapping (uint256 => Claim) public claims;
@@ -132,13 +133,11 @@ contract RequestManager is Ownable {
     constructor(
         uint256 _claimStake,
         uint256 _claimPeriod,
-        uint256 _challengePeriod,
         uint256 _challengePeriodExtension,
         address _resolutionRegistry
     ) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
-        challengePeriod = _challengePeriod;
         challengePeriodExtension = _challengePeriodExtension;
         resolutionRegistry = ResolutionRegistry(_resolutionRegistry);
     }
@@ -155,6 +154,7 @@ contract RequestManager is Ownable {
     {
         uint256 lpFee = gasReimbursementFee() + lpServiceFee();
         uint256 beamerFee = beamerServiceFee();
+        require(finalizationTimes[targetChainId] != 0, "Target rollup not supported");
         require(lpFee + beamerFee == msg.value, "Wrong amount of fees sent");
         require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
         require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
@@ -243,6 +243,7 @@ contract RequestManager is Ownable {
 
     function challengeClaim(uint256 claimId) external validClaimId(claimId) payable {
         Claim storage claim = claims[claimId];
+        Request storage request = requests[claim.requestId];
         require(block.timestamp < claim.termination, "Claim expired");
 
         address nextActor;
@@ -253,7 +254,7 @@ contract RequestManager is Ownable {
             if (claim.challenger == address(0)) {
                 require(claim.claimer != msg.sender, "Cannot challenge own claim");
                 claim.challenger = msg.sender;
-                periodExtension = challengePeriod + challengePeriodExtension;
+                periodExtension = finalizationTimes[request.targetChainId] + challengePeriodExtension;
             } else {
                 periodExtension = challengePeriodExtension;
             }
@@ -390,5 +391,10 @@ contract RequestManager is Ownable {
     function updateFeeData(uint256 newGasPrice, uint256 newServiceFeePPM) external onlyOwner {
         gasPrice = newGasPrice;
         serviceFeePPM = newServiceFeePPM;
+    }
+
+    function setFinalizationTime(uint256 targetChainId, uint256 finalizationTime) external onlyOwner {
+        require(finalizationTime > 0, "Finalization time of rollup must be greater than 0");
+        finalizationTimes[targetChainId] = finalizationTime;
     }
 }

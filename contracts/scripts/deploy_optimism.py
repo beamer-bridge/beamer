@@ -39,16 +39,16 @@ def main() -> None:
 
     claim_stake = Wei("0.00047 ether")
     claim_period = 60 * 60  # 1 hour
-    challenge_period = (7 * 24 + 1) * 60 * 60  # 7 days + 1 hour
+    finalization_time = (7 * 24) * 60 * 60  # 7 days
     challenge_period_extension = 60 * 60  # 1 hour
     request_manager = RequestManager.deploy(
         claim_stake,
         claim_period,
-        challenge_period,
         challenge_period_extension,
         resolution_registry.address,
         {"from": deployer},
     )
+    request_manager.setFinalizationTime(L2_CHAIN_ID, finalization_time)
     save_contract_address(REQUEST_MANAGER, request_manager.address)
 
     fill_manager = FillManager.deploy(

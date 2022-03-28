@@ -46,7 +46,7 @@ def claim_period():
 
 
 @pytest.fixture
-def challenge_period():
+def finalization_time():
     return 200
 
 
@@ -56,7 +56,7 @@ def challenge_period_extension():
 
 
 @pytest.fixture
-def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_period_extension):
+def contracts(deployer, claim_stake, claim_period, finalization_time, challenge_period_extension):
     # L2b contracts
     messenger1 = deployer.deploy(TestCrossDomainMessenger)
     messenger1.setForwardState(True)
@@ -76,7 +76,6 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
         RequestManager,
         claim_stake,
         claim_period,
-        challenge_period,
         challenge_period_extension,
         resolution_registry.address,
     )
@@ -92,6 +91,8 @@ def contracts(deployer, claim_stake, claim_period, challenge_period, challenge_p
     resolution_registry.addCaller(l1_chain_id, messenger2.address, resolver.address)
 
     resolver.addRegistry(l2_chain_id, resolution_registry.address, messenger2.address)
+    request_manager.setFinalizationTime(l2_chain_id, finalization_time)
+
     return Contracts(
         messenger1=messenger1,
         messenger2=messenger2,

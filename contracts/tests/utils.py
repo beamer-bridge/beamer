@@ -18,7 +18,13 @@ def alloc_accounts(n):
 
 
 def make_request(
-    request_manager, token, requester, amount, zero_fees=True, validity_period=3600
+    request_manager,
+    token,
+    requester,
+    amount,
+    target_chain_id=None,
+    zero_fees=True,
+    validity_period=3600,
 ) -> int:
     if token.balanceOf(requester) < amount:
         token.mint(requester, amount, {"from": requester})
@@ -26,11 +32,14 @@ def make_request(
     if zero_fees:
         request_manager.updateFeeData(0, 0)
 
+    if target_chain_id is None:
+        target_chain_id = web3.eth.chain_id
+
     token.approve(request_manager.address, amount, {"from": requester})
 
     total_fee = request_manager.totalFee()
     request_tx = request_manager.createRequest(
-        web3.eth.chain_id,
+        target_chain_id,
         token.address,
         token.address,
         requester,
