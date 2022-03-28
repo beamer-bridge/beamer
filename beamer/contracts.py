@@ -38,10 +38,14 @@ def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
 
     for chain_id, deployed_contracts in deployment["L2"].items():
         infos = {}
-        for name, (address, deployment_block) in deployed_contracts.items():
+        for name, deployment_data in deployed_contracts.items():
             if name not in abis:
                 abis[name] = load_contract_abi(deployment_dir, name)
             abi = abis[name]
-            infos[name] = ContractInfo(address=address, deployment_block=deployment_block, abi=abi)
+            infos[name] = ContractInfo(
+                address=deployment_data["address"],
+                deployment_block=deployment_data["deployment_block"],
+                abi=abi,
+            )
         deployment_info[ChainId(int(chain_id))] = infos
     return deployment_info

@@ -18,6 +18,7 @@ OPTIMISM_L2_MESSENGER_ADDRESS = "0x4200000000000000000000000000000000000007"
 
 class DeployedContract(Contract):
     deployment_block: int
+    deployment_args: list[Any]
 
 
 def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
@@ -54,6 +55,17 @@ CONTRACTS_PATH = Path("contracts/build/contracts")
 CONTRACTS: dict[str, tuple] = load_contracts_info(CONTRACTS_PATH)
 
 
+def contract_to_json(contracts: dict[str, DeployedContract]) -> dict:
+    return {
+        name: dict(
+            address=contract.address,
+            deployment_block=contract.deployment_block,
+            deployment_args=contract.deployment_args,
+        )
+        for name, contract in contracts.items()
+    }
+
+
 def deploy_contract(web3: Web3, name: str, *args: Any) -> DeployedContract:
     data = CONTRACTS[name]
     print(f"Deploying {name}")
@@ -63,20 +75,21 @@ def deploy_contract(web3: Web3, name: str, *args: Any) -> DeployedContract:
     tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
 
     address = tx_receipt.contractAddress  # type: ignore
-    deployed = web3.eth.contract(address=address, abi=data[0])
+    deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
     deployed.deployment_block = tx_receipt.blockNumber  # type: ignore
+    deployed.deployment_args = list(args)
 
     print(f"Deployed contract {name} at {address} in {encode_hex(tx_hash)}")
     return deployed
 
 
-def deploy_l1(web3: Web3) -> tuple[DeployedContract, dict[str, tuple[str, int]]]:
+def deploy_l1(web3: Web3) -> dict[str, DeployedContract]:
     resolver = deploy_contract(web3, "Resolver")
 
-    return resolver, {"Resolver": (resolver.address, resolver.deployment_block)}
+    return {"Resolver": resolver}
 
 
-def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, tuple[str, int]]:
+def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, DeployedContract]:
     token = deploy_contract(web3, "MintableToken", int(1e18))
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     resolution_registry.functions.addCaller(
@@ -107,11 +120,11 @@ def deploy_l2(web3: Web3, resolver: Contract) -> dict[str, tuple[str, int]]:
     proof_submitter.functions.addCaller(web3.eth.chain_id, fill_manager.address).transact()
 
     return {
-        "MintableToken": (token.address, token.deployment_block),
-        "ResolutionRegistry": (resolution_registry.address, resolution_registry.deployment_block),
-        "OptimismProofSubmitter": (proof_submitter.address, proof_submitter.deployment_block),
-        "RequestManager": (request_manager.address, request_manager.deployment_block),
-        "FillManager": (fill_manager.address, fill_manager.deployment_block),
+        "MintableToken": token,
+        "ResolutionRegistry": resolution_registry,
+        "OptimismProofSubmitter": proof_submitter,
+        "RequestManager": request_manager,
+        "FillManager": fill_manager,
     }
 
 
@@ -119,11 +132,11 @@ def update_l1(
     resolver: DeployedContract, l2_chain_id: int, messenger_address: str, deployment_data: dict
 ) -> None:
     resolver.functions.addCaller(
-        l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"][0]
+        l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"].address
     ).transact()
     resolver.functions.addRegistry(
         l2_chain_id,
-        deployment_data["ResolutionRegistry"][0],
+        deployment_data["ResolutionRegistry"].address,
         messenger_address,
     ).transact()
 
@@ -162,9 +175,11 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
     deployment_data: dict = {}
 
     web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
-    resolver, l1_data = deploy_l1(web3_l1)
+    l1_data = deploy_l1(web3_l1)
+    resolver = l1_data["Resolver"]
+
     deployment_data["beamer_commit"] = commit_id
-    deployment_data["L1"] = l1_data
+    deployment_data["L1"] = contract_to_json(l1_data)
     deployment_data["L2"] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -182,7 +197,7 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
         l2_data = deploy_l2(web3_l2, resolver)
         update_l1(resolver, web3_l2.eth.chain_id, l2_config["messenger_contract_address"], l2_data)
 
-        deployment_data["L2"][chain_id] = l2_data
+        deployment_data["L2"][chain_id] = contract_to_json(l2_data)
 
         for contract_name in l2_data:
             shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
