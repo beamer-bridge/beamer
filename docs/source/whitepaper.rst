@@ -47,7 +47,7 @@ The protocol
 ------------
 
 The protocol is separated into two games with different levels of economic incentives. Those economic incentives
-interfere only slightly with each other. This model is chosen to cover the problem of economic viability of fraud 
+interfere only slightly with each other. This model is chosen to cover the problem of economic viability of fraud
 proofs when it comes to very low amounts of earnings.
 
 
@@ -68,7 +68,8 @@ The parameters that need to be specified by the users are:
 - validity period of request
 
 A liquidity provider, later called Bob, provides the service by directly filling the request on target rollup (B).
-He now pays Alice upfront through a contract called `FillManager` and Alice receives the tokens without having to send any subsequent transactions.
+He now pays Alice upfront through a contract called `FillManager` and Alice receives the tokens without having to
+send any subsequent transactions.
 
 Alice will pay a fee for bridging her tokens. This fee needs to cover the expense of the liquidity provider and reward
 them. The fee also includes the Beamer service fee, which is used for further development of the protocol.
@@ -122,7 +123,8 @@ and thus the stakes. Additionally, the protocol evaluates the validity of the cl
 winner. In other words, if the claimer wins the challenge, the claim is accepted to be valid and vice versa.
 
 Since rollup A does not have direct access to the state of rollup B, we use this approach to assume the validity by
-putting financial pressure on the dishonest participant. If the optimistic approach does not conclude, a proof of the fill for the corresponding request can be passed from rollup B to rollup A via L1. 
+putting financial pressure on the dishonest participant. If the optimistic approach does not conclude,
+a proof of the fill for the corresponding request can be passed from rollup B to rollup A via L1.
 
 We use a cheap optimistic approach that does not require L1 to drastically reduce the costs of bridging the tokens for
 Bob, and only use the more costly `L1 resolution` in case of an attack to ensure the security of the protocol. By
@@ -397,7 +399,7 @@ The current implementation of the agent follows this strategy:
 * Subsequent counter challenge should cover the cost of L1 resolution
 * Proceed with L1 resolution only when the stake of the opponent covers the cost and we are losing a challenge
 * Open a parallel claim to one of our rightful claims if:
-    * there is a challenged wrongful claim C for the same request and 
+    * there is a challenged wrongful claim C for the same request and
     * C expires before our challenged rightful claim and
     * the stake amount is not high enough for L1 resolution.
 
