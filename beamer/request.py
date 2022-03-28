@@ -1,6 +1,4 @@
 import threading
-from collections.abc import Sequence
-from dataclasses import dataclass
 from typing import Any, Generator, Generic, Optional, TypeVar
 
 from eth_typing import ChecksumAddress as Address
@@ -54,30 +52,6 @@ class Request(StateMachine):
     def __repr__(self) -> str:
         state = self.current_state.identifier
         return f"<Request id={self.id} state={state} filler={self.filler}>"
-
-
-@dataclass
-class RequestData:
-    # The order and types of these fields must always correspond to the order
-    # and types of RequestManager's Request structure.
-    sender: Address
-    sourceTokenAddress: Address
-    targetChainId: ChainId
-    targetTokenAddress: Address
-    targetAddress: Address
-    amount: TokenAmount
-    depositReceiver: Address
-    activeClaims: int
-    validUntil: int
-    lpFee: TokenAmount
-    beamerFee: TokenAmount
-
-    @staticmethod
-    def from_chain_data(data: Sequence) -> "RequestData":
-        fields = tuple(RequestData.__annotations__)  # pylint: disable=no-member
-        assert len(fields) == len(data)
-        kwargs = dict(zip(fields, data))
-        return RequestData(**kwargs)
 
 
 class Claim(StateMachine):

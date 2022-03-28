@@ -38,6 +38,7 @@ class RequestCreated(RequestEvent):
     target_token_address: ChecksumAddress
     target_address: ChecksumAddress
     amount: TokenAmount
+    valid_until: Termination
 
 
 @dataclass(frozen=True)

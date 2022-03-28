@@ -48,7 +48,8 @@ contract RequestManager is Ownable {
         address sourceTokenAddress,
         address targetTokenAddress,
         address targetAddress,
-        uint256 amount
+        uint256 amount,
+        uint256 validUntil
     );
 
     event DepositWithdrawn(
@@ -178,7 +179,8 @@ contract RequestManager is Ownable {
             sourceTokenAddress,
             targetTokenAddress,
             targetAddress,
-            amount
+            amount,
+            newRequest.validUntil
         );
 
         IERC20 token = IERC20(sourceTokenAddress);
