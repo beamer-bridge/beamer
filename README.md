@@ -18,7 +18,12 @@ Install the necessary dependencies:
 
 Finally, still within the virtual environment, run:
 ```
-    beamer-agent
+    beamer-agent --keystore-file <keyfile> \
+                 --password <keyfile-password> \
+                 --l2a-rpc-url <source-l2-rpc-url> \
+                 --l2b-rpc-url <target-l2-rpc-url> \
+                 --deployment-dir <contract-deployment-dir> \
+                 --token-match-file <token-match-file>
 ```
 
 For more comprehensive documentation go to [Beamer documenation](https://docs.beamerbridge.com).
