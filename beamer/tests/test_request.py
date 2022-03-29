@@ -107,9 +107,8 @@ def test_challenge_own_claim(config, request_manager, token):
         ),
         int(time.time()),
     )
-
     assert not maybe_challenge(
-        claim, request_manager, to_checksum_address(agent.address)
+        claim, agent._event_processor._context
     ), "Tried to challenge own claim"
 
 
