@@ -9,7 +9,11 @@
     </div>
   </div>
   <feedback></feedback>
-  <footer class="my-8 text-lg text-center text-teal-light">Powered by Beamer</footer>
+  <imprint-modal></imprint-modal>
+  <footer class="my-8 text-lg text-center text-teal-light">
+    Powered by Beamer .
+    <label for="imprint-modal" class="btn-link modal-button">Imprint</label>
+  </footer>
 </template>
 
 <script setup lang="ts">
@@ -19,6 +23,8 @@ import Feedback from '@/components/Feedback.vue';
 import Spinner from '@/components/Spinner.vue';
 import useBeamerConfig from '@/composables/useBeamerConfig';
 import { BeamerConfigKey } from '@/symbols';
+
+import ImprintModal from './components/ImprintModal.vue';
 
 const { config } = useBeamerConfig();
 
