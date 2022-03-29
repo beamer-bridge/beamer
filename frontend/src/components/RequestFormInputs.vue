@@ -11,6 +11,7 @@
         messages-class="hidden"
       />
       <FormKit
+        id="tokenAddress"
         type="selector"
         name="tokenAddress"
         outer-class="flex-1"
@@ -27,6 +28,7 @@
         name="fromChainId"
         label="From"
         :options="CHAINS"
+        placeholder="Source Rollup"
         validation="required"
         messages-class="hidden"
         @input="switchChain"
@@ -58,6 +60,7 @@
         name="toChainId"
         label="To"
         :options="CHAINS"
+        placeholder="Target Rollup"
         validation="required"
         messages-class="hidden"
       />
@@ -109,14 +112,15 @@ defineProps<Props>();
 
 const chainsConfiguration = beamerConfig.value.chains;
 
-const getChainSelectorOption = (chainId: string) => {
-  return {
-    value: Number(chainId),
-    label: chainsConfiguration[chainId]?.name,
-  };
-};
+const getChainSelectorOption = (chainId: string) =>
+  chainsConfiguration[chainId]
+    ? {
+        value: Number(chainId),
+        label: chainsConfiguration[chainId]?.name,
+      }
+    : '';
 
-const CHAINS: SelectorOption[] = Object.keys(chainsConfiguration).map((chainId) =>
+const CHAINS: Array<SelectorOption | string> = Object.keys(chainsConfiguration).map((chainId) =>
   getChainSelectorOption(chainId),
 );
 
@@ -148,7 +152,9 @@ watch(ethereumProvider.value.chainId, () => {
 });
 
 const faucetUsedForChain: Record<string, boolean> = reactive({});
-const faucetUsed = computed(() => Boolean(faucetUsedForChain[fromChainId.value.value]));
+const faucetUsed = computed(() =>
+  Boolean(faucetUsedForChain[(fromChainId.value as SelectorOption).value]),
+);
 const faucetButtonDisabled = computed(
   () => faucetUsed.value || !ethereumProvider.value.signer.value,
 );
@@ -157,7 +163,7 @@ const executeFaucetRequest = async () => {
   if (!ethereumProvider.value.signerAddress.value) {
     throw new Error('Signer address missing!');
   }
-  const chainId = fromChainId.value.value;
+  const chainId = (fromChainId.value as SelectorOption).value;
   const isSuccessfulFaucetRequest = await requestFaucet(
     chainId,
     ethereumProvider.value.signerAddress.value,
@@ -170,6 +176,9 @@ const { active: faucetRequestActive, run: runFaucetRequest } =
   createAsyncProcess(executeFaucetRequest);
 </script>
 <style lang="css">
+#tokenAddress.selector .vs__search::placeholder {
+  @apply text-right;
+}
 .tooltip:before {
   @apply p-4;
 }

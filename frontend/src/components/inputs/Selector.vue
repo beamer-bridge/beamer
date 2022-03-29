@@ -89,7 +89,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__search::placeholder {
-  @apply opacity-25 text-black text-right;
+  @apply opacity-25 text-black text-left pl-4;
 }
 
 .selector .vs__no-options {
