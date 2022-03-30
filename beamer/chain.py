@@ -19,14 +19,12 @@ from web3.types import TxParams
 
 import beamer.events
 from beamer.events import (
-    ClaimEvent,
     ClaimMade,
     ClaimWithdrawn,
     DepositWithdrawn,
     Event,
     EventFetcher,
     RequestCreated,
-    RequestEvent,
     RequestFilled,
 )
 from beamer.request import Claim, Request, Tracker
@@ -203,7 +201,7 @@ class EventProcessor:
             unprocessed = []
             any_state_changed = False
             for event in events:
-                state_changed = self._process_event(event)
+                state_changed = process_event(event, self._context)
                 any_state_changed |= state_changed
                 if not state_changed:
                     unprocessed.append(event)
@@ -227,38 +225,7 @@ class EventProcessor:
             if not any_state_changed:
                 break
 
-    def _process_event(self, event: Event) -> bool:
-        self._log.debug("Processing event", _event=event)
-        if isinstance(event, beamer.events.RequestEvent):
-            return self._process_request_event(event)
-        elif isinstance(event, beamer.events.ClaimEvent):
-            return self._process_claim_event(event)
-        else:
-            raise RuntimeError("Unrecognized event type")
-
-    def _process_request_event(self, event: RequestEvent) -> bool:
-        if isinstance(event, beamer.events.RequestCreated):
-            return handle_request_created(event, self._context)
-
-        elif isinstance(event, beamer.events.RequestFilled):
-            return handle_request_filled(event, self._context)
-
-        elif isinstance(event, beamer.events.DepositWithdrawn):
-            return handle_deposit_withdrawn(event, self._context)
-
-        else:
-            raise RuntimeError("Unrecognized event type")
-
-    def _process_claim_event(self, event: ClaimEvent) -> bool:
-        if isinstance(event, beamer.events.ClaimMade):
-            return handle_claim_made(event, self._context)
-
-        elif isinstance(event, beamer.events.ClaimWithdrawn):
-            return handle_claim_withdrawn(event, self._context)
-
-        else:
-            raise RuntimeError("Unrecognized event type")
-
+    # TODO: pull this out of the event processor, so it can be tested independently
     def _process_requests(self) -> None:
         assert self._synced, "Not synced yet"
 
@@ -282,6 +249,7 @@ class EventProcessor:
         # note: ignored claims may be okay
         # self._request_tracker.remove(request_id)
 
+    # TODO: pull this out of the event processor, so it can be tested independently
     def _process_claims(self) -> None:
         with self._lock:
             if self._num_syncs_done < 2:
@@ -342,6 +310,28 @@ def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types
     except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
         raise _TransactionFailed() from exc
     return tx_hash
+
+
+def process_event(event: Event, context: Context) -> bool:
+    log.debug("Processing event", _event=event)
+
+    if isinstance(event, beamer.events.RequestCreated):
+        return _handle_request_created(event, context)
+
+    elif isinstance(event, beamer.events.RequestFilled):
+        return _handle_request_filled(event, context)
+
+    elif isinstance(event, beamer.events.DepositWithdrawn):
+        return _handle_deposit_withdrawn(event, context)
+
+    elif isinstance(event, beamer.events.ClaimMade):
+        return _handle_claim_made(event, context)
+
+    elif isinstance(event, beamer.events.ClaimWithdrawn):
+        return _handle_claim_withdrawn(event, context)
+
+    else:
+        raise RuntimeError("Unrecognized event type")
 
 
 def fill_request(request: Request, context: Context) -> None:
@@ -480,7 +470,7 @@ def withdraw(claim: Claim, context: Context) -> None:
     log.debug("Withdrew", claim=claim.id, txn_hash=txn_hash.hex())
 
 
-def handle_request_created(event: RequestCreated, context: Context) -> bool:
+def _handle_request_created(event: RequestCreated, context: Context) -> bool:
     # Check if the address points to a valid token
     if context.fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
         log.info(
@@ -514,7 +504,7 @@ def handle_request_created(event: RequestCreated, context: Context) -> bool:
     return True
 
 
-def handle_request_filled(event: RequestFilled, context: Context) -> bool:
+def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
     request = context.requests.get(event.request_id)
     if request is None:
         return False
@@ -538,7 +528,7 @@ def handle_request_filled(event: RequestFilled, context: Context) -> bool:
     return True
 
 
-def handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool:
+def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool:
     request = context.requests.get(event.request_id)
     if request is None:
         return False
@@ -552,7 +542,7 @@ def handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool:
     return True
 
 
-def handle_claim_made(event: ClaimMade, context: Context) -> bool:
+def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
     claim = context.claims.get(event.claim_id)
     request = context.requests.get(event.request_id)
     if request is None:
@@ -584,7 +574,7 @@ def handle_claim_made(event: ClaimMade, context: Context) -> bool:
     return True
 
 
-def handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> bool:
+def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> bool:
     claim = context.claims.get(event.claim_id)
     assert claim is not None
     claim.withdraw()
