@@ -6,52 +6,77 @@ Testing
 
 First make sure beamer is installed::
 
-   poetry install
+    poetry install
 
 Then enter the virtual environment::
 
-   poetry shell
+    poetry shell
+
+Compile the contracts::
+
+    pushd contracts && brownie compile && popd
 
 Start ganache::
 
-   ganache-cli --accounts 10 --hardfork istanbul --gasLimit 12000000 --mnemonic brownie --port 8545
-
-Compile and deploy the contracts::
-
-   pushd contracts && brownie compile && brownie run deploy && popd
+    ganache-cli --accounts 10 --hardfork istanbul --gasLimit 12000000 \
+                --mnemonic brownie --port 8545 --chainId 1337
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
 
-   python -c "import eth_account, json;
-     acc = eth_account.Account.from_key('0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa');
-     obj = eth_account.account.create_keyfile_json(acc.key, b'');
-     print(json.dumps(obj))" > 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json
+    python -c "import eth_account, json;
+      acc = eth_account.Account.from_key('0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa');
+      obj = eth_account.account.create_keyfile_json(acc.key, b'');
+      print(json.dumps(obj))" > 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json
+
+Deploy the contracts on the local ganache test chain::
+
+    python scripts/deployment/main.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                                      --password '' \
+                                      --test-messenger \
+                                      --output-dir deployments/ganache-local \
+                                      --config-file scripts/deployment/ganache-local.json
+
+Generate the token match file::
+
+    jq '[[["1337", .L2."1337".MintableToken.address]]]' < deployments/ganache-local/deployment.json > test-tokens.json
 
 Mint some test tokens::
 
-   python scripts/mint.py --contract-deployment contracts/build/deployments/dev/0x5FbDB2315678afecb367f032d93F642f64180aa3.json \
-                          --recipient 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc \
-                          --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
-                          --password ''
+    python scripts/call_contracts.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                                     --password '' \
+                                     --eth-rpc http://localhost:8545 \
+                                     --deployment-dir deployments/ganache-local \
+                                     mint
+
+Whitelist the agent's address::
+
+    python scripts/call_contracts.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                                     --password '' \
+                                     --eth-rpc http://localhost:8545 \
+                                     --deployment-dir deployments/ganache-local \
+                                     whitelist 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 
 Start ``beamer-agent``::
 
-   beamer-agent --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
-                --password '' \
-                --l2a-rpc-url http://127.0.0.1:8545 \
-                --l2b-rpc-url http://127.0.0.1:8545 \
-                --l2a-contracts-deployment-dir contracts/build/deployments/dev \
-                --l2b-contracts-deployment-dir contracts/build/deployments/dev
+    beamer-agent --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                 --password '' \
+                 --l2a-rpc-url http://localhost:8545 \
+                 --l2b-rpc-url http://localhost:8545 \
+                 --deployment-dir deployments/ganache-local \
+                 --token-match-file test-tokens.json \
+                 --log-level debug
 
 Submit a request::
 
-   python scripts/request.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
-                             --password '' \
-                             --source-token-address 0x5FbDB2315678afecb367f032d93F642f64180aa3 \
-                             --target-token-address 0x5FbDB2315678afecb367f032d93F642f64180aa3 \
-                             --target-address 0x33A4622B82D4c04a53e170c638B944ce27cffce3 \
-                             --target-chain-id 1337 \
-                             --amount 1
+    python scripts/call_contracts.py --deployment-dir deployments/ganache-local \
+                                     --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                                     --password '' \
+                                     --eth-rpc http://localhost:8545 \
+                                     request \
+                                     --amount 1 \
+                                     --target-address 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc \
+                                     --target-chain-id 1337 \
+                                     --target-token-address $(jq -r '.[0][0][1]' < test-tokens.json)
 
 
 Working with a local Optimism instance
