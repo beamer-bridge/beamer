@@ -1,0 +1,15 @@
+{
+    "L1": {
+        "name": "ganache L1",
+        "rpc": "http://localhost:8545",
+        "chain_id": 1337
+    },
+    "L2": [
+        {
+            "name": "ganache L2",
+            "rpc": "http://localhost:8545",
+            "chain_id": 1337,
+            "finalization_time": 3600
+        }
+    ]
+}
