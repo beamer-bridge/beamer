@@ -8,12 +8,12 @@ import click
 from brownie import Wei
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
-from eth_utils import encode_hex
+from eth_utils import encode_hex, to_checksum_address
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-OPTIMISM_L2_MESSENGER_ADDRESS = "0x4200000000000000000000000000000000000007"
+OPTIMISM_L2_MESSENGER_ADDRESS = to_checksum_address("0x4200000000000000000000000000000000000007")
 
 
 class DeployedContract(Contract):
@@ -90,17 +90,22 @@ def deploy_l1(web3: Web3) -> dict[str, DeployedContract]:
 
 
 def deploy_l2(
-    web3: Web3, resolver: Contract, supported_target_chains: dict[int, int]
+    web3: Web3, resolver: Contract, supported_target_chains: dict[int, int], test_messenger: bool
 ) -> dict[str, DeployedContract]:
     token = deploy_contract(web3, "MintableToken", int(1e18))
+
+    if test_messenger:
+        messenger = deploy_contract(web3, "TestCrossDomainMessenger")
+        messenger_address = messenger.address
+    else:
+        messenger_address = OPTIMISM_L2_MESSENGER_ADDRESS
+
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     resolution_registry.functions.addCaller(
-        resolver.web3.eth.chain_id, OPTIMISM_L2_MESSENGER_ADDRESS, resolver.address
+        resolver.web3.eth.chain_id, messenger_address, resolver.address
     ).transact()
 
-    proof_submitter = deploy_contract(
-        web3, "OptimismProofSubmitter", OPTIMISM_L2_MESSENGER_ADDRESS
-    )
+    proof_submitter = deploy_contract(web3, "OptimismProofSubmitter", messenger_address)
 
     claim_stake = Wei("0.00047 ether")
     claim_period = 60 * 60  # 1 hour
@@ -115,20 +120,24 @@ def deploy_l2(
     )
 
     for chain_id, finalization_time in supported_target_chains.items():
-        request_manager.functions.addTargetChain(chain_id, finalization_time).transact()
+        request_manager.functions.setFinalizationTime(chain_id, finalization_time).transact()
 
     fill_manager = deploy_contract(web3, "FillManager", resolver.address, proof_submitter.address)
 
     # Authorize call chain
     proof_submitter.functions.addCaller(web3.eth.chain_id, fill_manager.address).transact()
 
-    return {
+    contracts = {
         "MintableToken": token,
         "ResolutionRegistry": resolution_registry,
         "OptimismProofSubmitter": proof_submitter,
         "RequestManager": request_manager,
         "FillManager": fill_manager,
     }
+
+    if test_messenger:
+        contracts["TestCrossDomainMessenger"] = messenger
+    return contracts
 
 
 def update_l1(
@@ -169,7 +178,15 @@ def update_l1(
     metavar="FILE",
     help="The file containing deployment information.",
 )
-def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path) -> None:
+@click.option(
+    "--test-messenger/--no-test-messenger",
+    default=False,
+    show_default=True,
+    help="Whether to use TestCrossDomainMessenger. Only useful for local testing.",
+)
+def main(
+    keystore_file: Path, password: str, output_dir: Path, config_file: Path, test_messenger: bool
+) -> None:
     commit_id = get_commit_id()
     account = account_from_keyfile(keystore_file, password)
     with open(config_file) as f:
@@ -197,14 +214,14 @@ def main(keystore_file: Path, password: str, output_dir: Path, config_file: Path
         chain_id = web3_l2.eth.chain_id
         assert chain_id == l2_config["chain_id"]
 
-        supported_target_chains = {
-            l2["chain_id"]: l2["finalization_time"]
-            for l2 in config["L2"]
-            if l2["chain_id"] != chain_id
-        }
+        supported_target_chains = {l2["chain_id"]: l2["finalization_time"] for l2 in config["L2"]}
 
-        l2_data = deploy_l2(web3_l2, resolver, supported_target_chains)
-        update_l1(resolver, web3_l2.eth.chain_id, l2_config["messenger_contract_address"], l2_data)
+        l2_data = deploy_l2(web3_l2, resolver, supported_target_chains, test_messenger)
+        if test_messenger:
+            messenger_address = l2_data["TestCrossDomainMessenger"].address
+        else:
+            messenger_address = l2_config["messenger_contract_address"]
+        update_l1(resolver, web3_l2.eth.chain_id, messenger_address, l2_data)
 
         deployment_data["L2"][chain_id] = contract_to_json(l2_data)
 
