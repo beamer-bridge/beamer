@@ -40,8 +40,8 @@ Optimistic protocol
 In order to guarantee the above, the protocol is designed in an optimistic manner. The protocol is streamlined for
 the optimal case where no evildoers attempt to attack it. We then make sure that anyone attacking the system will be
 punished financially. The protocol also tries to make up for additional opportunity costs suffered by the victims.
-This is done by forwarding the punishment to the victim. We also economically incentivize honest participants to
-enforce the security of the protocol.
+This is done by forwarding the loss of the attacker to the victim. We also economically incentivize honest participants
+to enforce the security of the protocol.
 
 The protocol
 ------------
@@ -49,7 +49,6 @@ The protocol
 The protocol is separated into two games with different levels of economic incentives. Those economic incentives
 interfere only slightly with each other. This model is chosen to cover the problem of economic viability of fraud
 proofs when it comes to very low amounts of earnings.
-
 
 First concern: service provision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,8 +83,8 @@ explained in the next section.
 In any case, once she received tokens on rollup B, Alice can ignore the rest of the protocol and enjoy her bridged tokens!
 
 If her request cannot be fulfilled by liquidity providers (e.g. amount too high, rollups sequencers offline for some time, ...),
-the `validity period` argument she specified will determine for how long the request will remain open. After this period,
-the request can no longer be filled and she can withdraw her locked tokens on rollup A.
+the `validity period` argument she specified will determine for how long the request will remain open on rollup A. After
+this period, the request can no longer be filled and she can withdraw her locked tokens.
 
 Second concern: claim and challenge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,7 +113,7 @@ When filling the request, a `fill ID` is also computed, that serves to identify 
 After filling the request, Bob will immediately claim the refund on rollup A. In doing so, he submits the `request ID`,
 and `fill ID` to rollup A. This initiates a `claim period` during which the validity of the fill by Bob
 can be contested. Bob is required to send a deposit `claim stake` in rollup A's coin, that will be lost if
-his claim is proven to be incorrect eventually.
+his claim is proven to be eventually incorrect.
 
 If any participant contests Bob's claim, the protocol will immediately enter the challenge game. This
 participative challenge protocol exists to optimistically determine the validity of the claim by the participants
@@ -135,7 +134,7 @@ Rightful claims resolutions
 +++++++++++++++++++++++++++
 
 In the game theoretic case, rightful claims will not be contested. After `claim period`, Bob can withdraw his stake,
-the tokens locked and the LP fee paid by Alice.
+the tokens locked, and the LP fee paid by Alice.
 
 .. mermaid::
     :caption: `Unchallenged Claim`
@@ -212,7 +211,7 @@ restrict the call to authenticated `fill manager` and `cross domain messenger` c
 
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call `withdraw` on
 the `request manager` on rollup A. This will compute a `fill hash` and query the `resolution registry` for the filler
-address corresponding to `fill hash`, which will return Bob's address. Bob will be immediately considered the winner of
+address corresponding to `fill hash`, which will return Bob's address. Bob will immediately be considered the winner of
 the challenge and receive his stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
 
 .. mermaid::
@@ -250,27 +249,24 @@ The reason a claimer needs to submit a `fill ID` is to make a statement of when 
 returned by the `FillManager` contract on rollup B and there will always be only one valid `fill ID` to a fill of a
 requests. Enforcing a submission of an ID, certain attacks on honest challengers are prevented. Without this ID, an
 evildoer could claim an unfilled request and only fill it once its claim is challenged thus turning it into a rightful
-claim and gaining the challenger's stake.
-Currently the `fill ID` is defined as
+claim and gaining the challenger's stake. The `fill ID` is defined as
 
 ::
 
-    fill_id = hash(fill_block_number)
+    fill_id = hash(previous block)
 
-Upon submitting the claim with a certain `fill ID`, Charles can look for the block with the associated number
-and see whether a fill was correctly made by Bob. Any claim with a different `fill ID` than the generated value upon
-filling the request is considered to be a false claim.
+When seeing a claim with a certain `fill ID`, observers can verify if a fill with corresponding ID has been made. If they
+know of no fill with this fill ID, they are guaranteed the claim is wrongful, as long as the claimer did not guess the hash
+of a block in the future correctly.
 
-Ideally, the `fill ID` is chosen in a way that it cannot be generated in the future. With the current definition, this
-is not entirely the case and it is subject to being improved in the future.
-
+Any claim with a different `fill ID` than the generated value upon filling the request is considered to be a false claim.
 
 Challenging false claims
 ++++++++++++++++++++++++
 
 We saw that if Bob filled Alice's claim, he will always be able to prove correctness of the fill in order to withdraw
 its due from the `request manager` contract. However, if Charles falsely claims and withdraws rewards from the contract,
-there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claim.
+there will be no funds left for Bob. In order to prevent that, Bob also needs to challenge Charles' false claims.
 
 As we saw in the previous part, Bob can use the `fill ID` provided by Charles during his claim to find out if the claim is
 rightful or not. Upon seeing that it is not, Bob can challenge Charles' claim. The process will be the same as described
@@ -289,15 +285,14 @@ that Charles is able to win the challenge by bidding an amount high enough which
 anymore. While this is the very use case for L1 resolution, Bob must make sure that his fill proof arrives at the
 source rollup before Charles wins the false claim and thus becomes able to withdraw the deposit.
 To find a value until when it is safe for Bob to fill the request, we consider the end of `challengePeriod` of Charles'
-false claim called `false_claim_termination`. Transferring Bob's fill proof to the rollup A will take at least
-`finalization_time[rollup B]`. We derive the following condition:
+false claim called `false claim termination`. Transferring Bob's fill proof to the rollup A will take at least
+`finalization time[rollup B]`. We derive the following condition:
 
 ::
 
-    timestamp_bobs_fill < false_claim_termination - finalization_time[rollup B]
+    timestamp Bob's fill < false claim termination - finalization time[rollup B]
 
 In any case, this condition will always be fulfilled if Bob fills the request before he challenges Charles' false claim.
-
 
 .. mermaid::
     :caption: `False Claims Challenge`
@@ -394,7 +389,7 @@ go through L1 resolution or open parallel claims.
 
 The current implementation of the agent follows this strategy:
 
-* Challenge a false claim `claim stake + 1`
+* Challenge a false claim with `claim stake + 1`
 * Challenge a claim with no filler with `cost of L1 non-fill proof`
 * Subsequent counter challenge should cover the cost of L1 resolution
 * Proceed with L1 resolution only when the stake of the opponent covers the cost and we are losing a challenge
@@ -423,12 +418,6 @@ Hence the decision not to take this delay into account.
 
 Open questions
 --------------
-
-Charles could claim a request that no one filled (or no one can fill) with a `fill ID = Hash(fill block number)`
-corresponding to a block that was not produced yet. If the block is expected to be produced after `claim period` but before
-the `challenge period` ends, Charles can decide to only fill the request if he is challenged.
-
-This can be solved by using a `fill ID` that Charles cannot forge in the future such as `fill ID = Hash(previous block)`.
 
 How do we specifically implement non-fill proofs?
 
