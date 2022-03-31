@@ -102,7 +102,7 @@ export class MetaMaskProvider implements EthereumProvider {
               options: {
                 address: tokenData.address,
                 symbol: tokenData.symbol,
-                decimals: tokenData.decimals || 18,
+                decimals: tokenData.decimals,
               },
             },
           })
