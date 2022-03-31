@@ -93,14 +93,14 @@
   </div>
 </template>
 <style lang="css">
-::-webkit-scrollbar {
+.modal-box::-webkit-scrollbar {
   width: 6px;
 }
-::-webkit-scrollbar-track {
+.modal-box::-webkit-scrollbar-track {
   @apply bg-teal my-4;
 }
 
-::-webkit-scrollbar-thumb {
+.modal-box::-webkit-scrollbar-thumb {
   @apply bg-teal-light-35;
 }
 
