@@ -9,10 +9,11 @@ from eth_typing import Address
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-from beamer.chain import ContractEventMonitor, EventProcessor, Tracker
+from beamer.chain import ContractEventMonitor, EventProcessor
 from beamer.contracts import DeploymentInfo, make_contracts
-from beamer.request import Claim, Request
-from beamer.typing import URL, ChainId, ClaimId, RequestId
+from beamer.request import Tracker
+from beamer.state_machine import Context
+from beamer.typing import URL, ChainId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -59,20 +60,19 @@ class Agent:
         if not fill_manager.functions.allowedLPs(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted")
 
-        self.request_tracker: Tracker[RequestId, Request] = Tracker()
-        self.claim_tracker: Tracker[ClaimId, Claim] = Tracker()
         with open(config.token_match_file, "r") as f:
             match_checker = TokenMatchChecker.from_file(f)
 
-        self._event_processor = EventProcessor(
-            self.request_tracker,
-            self.claim_tracker,
-            request_manager,
-            fill_manager,
-            match_checker,
-            config.fill_wait_time,
-            config.account.address,
+        self.context = Context(
+            requests=Tracker(),
+            claims=Tracker(),
+            request_manager=request_manager,
+            fill_manager=fill_manager,
+            match_checker=match_checker,
+            fill_wait_time=config.fill_wait_time,
+            address=config.account.address,
         )
+        self._event_processor = EventProcessor(self.context)
 
         self._contract_monitor_l2a = ContractEventMonitor(
             "RequestManager",
