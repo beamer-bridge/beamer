@@ -107,9 +107,7 @@ def test_challenge_own_claim(config, request_manager, token):
         ),
         int(time.time()),
     )
-    assert not maybe_challenge(
-        claim, agent._event_processor._context
-    ), "Tried to challenge own claim"
+    assert not maybe_challenge(claim, agent.context), "Tried to challenge own claim"
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
@@ -119,7 +117,7 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
 
     try:
         with Sleeper(5) as sleeper:
-            while (request := agent.request_tracker.get(request_id)) is None:
+            while (request := agent.context.requests.get(request_id)) is None:
                 sleeper.sleep(0.1)
     except Timeout:
         pass
@@ -137,7 +135,7 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
     found_claims: list[Claim] = []
     with Sleeper(5) as sleeper:
         while not found_claims:
-            for claim in agent.claim_tracker:
+            for claim in agent.context.claims:
                 if claim.request_id == request_id:
                     found_claims.append(claim)
             sleeper.sleep(0.1)
@@ -152,7 +150,7 @@ def test_withdraw(request_manager, token, agent):
     request_id = make_request(request_manager, token, accounts[0], target_address, 1)
 
     with Sleeper(10) as sleeper:
-        while (request := agent.request_tracker.get(request_id)) is None:
+        while (request := agent.context.requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
         while not request.is_claimed:
@@ -182,7 +180,7 @@ def test_expired_request_is_ignored(request_manager, token, agent):
 
     brownie.chain.mine(timedelta=validity_period / 2)
     with Sleeper(1) as sleeper:
-        while (request := agent.request_tracker.get(request_id)) is None:
+        while (request := agent.context.requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     assert request.is_pending
@@ -212,7 +210,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
     )
 
     with Sleeper(1) as sleeper:
-        while (request := agent.request_tracker.get(request_id)) is None:
+        while (request := agent.context.requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     event_processor = agent._event_processor
