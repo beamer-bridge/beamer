@@ -25,11 +25,7 @@
         />
       </div>
       <div class="flex flex-col items-end">
-        <div
-          class="tooltip tooltip-right tooltip-primary bg-transparent z-50"
-          data-theme="default"
-          data-tip="Adds current token to Metamask"
-        >
+        <div class="form-tooltip" data-theme="default" data-tip="Adds current token to Metamask">
           <button
             class="btn btn-ghost btn-sm text-orange m-2"
             type="button"
@@ -55,7 +51,7 @@
       />
       <div class="flex flex-col items-end">
         <div
-          class="tooltip tooltip-right tooltip-primary bg-transparent z-50"
+          class="form-tooltip"
           data-theme="default"
           data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your Metamask account"
         >
@@ -95,17 +91,17 @@
     </div>
     <div
       v-if="fees"
-      class="flex flex-row self-end gap-5 items-center text-base text-light mx-5 mt-2"
+      class="flex flex-row justify-end gap-3 items-center text-base text-light mt-4"
     >
       <span>fees</span>
       <span> {{ fees }} ETH</span>
-      <!-- <img
-        v-tooltip.right="
-          'This window appears when hovering the info (?) button. Here we confirm to the user that they are charged a certain fee, not an estimate. We briefly detail how this is done. We confirm that the funds they send are the funds the get on the other end.'
-        "
-        class="h-6 w-6 cursor-help"
-        src="@/assets/images/help.svg"
-      /> -->
+      <div
+        class="form-tooltip whitespace-pre-wrap"
+        data-theme="default"
+        :data-tip="gasFeesTooltipText"
+      >
+        <img class="h-6 w-6 mr-5 cursor-help" src="@/assets/images/help.svg" />
+      </div>
     </div>
   </div>
 </template>
@@ -228,8 +224,20 @@ const executeFaucetRequest = async () => {
 };
 const { active: faucetRequestActive, run: runFaucetRequest } =
   createAsyncProcess(executeFaucetRequest);
+
+const gasFeesTooltipText = `The fee amount is composed of three parts:
+  • the gas reimbursement fee
+  • the liquidity provider fee
+  • the Beamer service fee
+
+The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity provider servicing the request, while the Beamer service fee stays with the contract and supports the Beamer platform development.
+
+Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
 </script>
 <style lang="css">
+.form-tooltip {
+  @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-50;
+}
 #tokenAddress.selector .vs__search::placeholder {
   @apply text-right;
 }
@@ -238,6 +246,6 @@ const { active: faucetRequestActive, run: runFaucetRequest } =
 }
 .tooltip:before,
 .tooltip:after {
-  @apply ml-20;
+  @apply md:ml-20;
 }
 </style>
