@@ -10,7 +10,7 @@ import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
-import { ChainData, EthereumProvider } from './types';
+import { ChainData, EthereumProvider, TokenData } from './types';
 
 export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
   const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;
@@ -23,6 +23,7 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
 }
 type OwnExternalProvider = ExternalProvider & {
   on?: (e: string, cb: (param: any) => void) => void;
+  request?: (request: { method: string; params: { type: string; options: any } }) => Promise<any>;
 };
 
 export class MetaMaskProvider implements EthereumProvider {
@@ -38,7 +39,7 @@ export class MetaMaskProvider implements EthereumProvider {
       throw new Error('Given provider is not MetaMask!');
     }
     this.web3Provider = new Web3Provider(_provider);
-    this.provider = this.web3Provider.provider;
+    this.provider = this.web3Provider.provider as OwnExternalProvider;
   }
 
   async init(): Promise<void> {
@@ -89,6 +90,29 @@ export class MetaMaskProvider implements EthereumProvider {
       return false;
     }
     return true;
+  }
+
+  async addToken(tokenData: TokenData): Promise<void> {
+    try {
+      const wasAdded = this.provider?.request
+        ? await this.provider?.request({
+            method: 'wallet_watchAsset',
+            params: {
+              type: 'ERC20',
+              options: {
+                address: tokenData.address,
+                symbol: tokenData.symbol,
+                decimals: tokenData.decimals || 18,
+              },
+            },
+          })
+        : false;
+      if (!wasAdded) {
+        throw new Error("Couldn't add token to metamask");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async getLatestBlock(): Promise<Block> {
