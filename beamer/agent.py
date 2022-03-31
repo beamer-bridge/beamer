@@ -7,7 +7,12 @@ import web3
 from eth_account.signers.local import LocalAccount
 from eth_typing import Address
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
+from web3.middleware import (
+    construct_sign_and_send_raw_middleware,
+    geth_poa_middleware,
+    latest_block_based_cache_middleware,
+    simple_cache_middleware,
+)
 
 from beamer.chain import ContractEventMonitor, EventProcessor
 from beamer.contracts import DeploymentInfo, make_contracts
@@ -32,8 +37,15 @@ class Config:
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
     w3 = web3.Web3(web3.HTTPProvider(url, request_kwargs=dict(timeout=5)))
     w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
+
     # Add POA middleware for geth POA chains, no/op for other chains
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+    # Setup caching middlewares
+    w3.middleware_onion.add(simple_cache_middleware)
+    w3.middleware_onion.add(latest_block_based_cache_middleware)
+
+    # Add auto-signing middleware
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
     w3.eth.default_account = account.address
     return w3
