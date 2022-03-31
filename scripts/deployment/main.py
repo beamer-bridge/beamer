@@ -115,7 +115,7 @@ def deploy_l2(
     )
 
     for chain_id, finalization_time in supported_target_chains.items():
-        request_manager.functions.addTargetChain(chain_id, finalization_time).transact()
+        request_manager.functions.setFinalizationTime(chain_id, finalization_time).transact()
 
     fill_manager = deploy_contract(web3, "FillManager", resolver.address, proof_submitter.address)
 
