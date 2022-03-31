@@ -116,6 +116,7 @@ import { computed, reactive, ref, watch } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
 import { requestFaucet } from '@/services/transactions/faucet';
+import { getTokenDecimals } from '@/services/transactions/token';
 import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
 import { Token } from '@/types/config';
 import type { SelectorOption } from '@/types/form';
@@ -179,10 +180,18 @@ const switchToken = (token: SelectorOption) => {
 
 const addToken = async () => {
   try {
-    await ethereumProvider.value.addToken({
-      address: selectedToken.value.value,
-      symbol: selectedToken.value.label,
-    });
+    if (ethereumProvider.value.signer.value) {
+      const decimals = await getTokenDecimals(
+        ethereumProvider.value.signer.value,
+        selectedToken.value.value,
+      );
+
+      await ethereumProvider.value.addToken({
+        address: selectedToken.value.value,
+        symbol: selectedToken.value.label,
+        decimals: Number(decimals),
+      });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -200,7 +209,9 @@ const faucetButtonDisabled = computed(
   () => faucetUsed.value || !ethereumProvider.value.signer.value,
 );
 
-const addTokenButtonDisabled = computed(() => !selectedToken.value);
+const addTokenButtonDisabled = computed(
+  () => !ethereumProvider.value.signer.value || !selectedToken.value,
+);
 
 const executeFaucetRequest = async () => {
   if (!ethereumProvider.value.signerAddress.value) {
