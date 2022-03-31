@@ -17,7 +17,7 @@
       :actions="false"
       @submit="submitRequestTransaction"
     >
-      <Card class="bg-teal px-20 py-18 self-stretch mb-11">
+      <Card class="bg-teal px-20 pt-18 pb-16 self-stretch mb-11">
         <RequestFormInputs v-if="requestState === RequestState.Init" :fees="feesEther" />
         <RequestProcessing v-else :request-metadata="requestMetadata" />
         <Transition name="expand">
