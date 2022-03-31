@@ -13,10 +13,18 @@ export interface EthereumProvider {
   switchChain(newChainId: number): Promise<boolean | null>;
   addChain(chainData: ChainData): Promise<boolean>;
   getChainId(): Promise<number>;
+  addToken(tokenData: TokenData): Promise<void>;
 }
 
 export type ChainData = {
   chainId: number | string;
   rpcUrl: string;
   name: string;
+};
+
+export type TokenData = {
+  address: string;
+  symbol?: string;
+  decimals?: number;
+  image?: string;
 };

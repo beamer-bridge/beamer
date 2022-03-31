@@ -1,27 +1,47 @@
 <template>
   <div class="request-form-inputs flex flex-col">
-    <div class="mb-14 flex flex-row gap-5 items-center">
-      <span class="text-3xl">Send</span>
-      <FormKit
-        type="text"
-        outer-class="flex-1"
-        name="amount"
-        placeholder="0.00"
-        validation="required"
-        messages-class="hidden"
-      />
-      <FormKit
-        id="tokenAddress"
-        type="selector"
-        name="tokenAddress"
-        outer-class="flex-1"
-        :options="TOKENS"
-        placeholder="Token"
-        validation="required"
-        messages-class="hidden"
-      />
+    <div class="mb-6">
+      <div class="flex flex-row gap-5 items-center">
+        <span class="text-3xl">Send</span>
+        <FormKit
+          type="text"
+          outer-class="flex-1"
+          name="amount"
+          placeholder="0.00"
+          validation="required"
+          messages-class="hidden"
+        />
+        <FormKit
+          id="tokenAddress"
+          :value="selectedToken"
+          type="selector"
+          name="tokenAddress"
+          outer-class="flex-1"
+          :options="TOKENS"
+          placeholder="Token"
+          validation="required"
+          messages-class="hidden"
+          @input="switchToken"
+        />
+      </div>
+      <div class="flex flex-col items-end">
+        <div
+          class="tooltip tooltip-right tooltip-primary bg-transparent z-50"
+          data-theme="default"
+          data-tip="Adds current token to Metamask"
+        >
+          <button
+            class="btn btn-ghost btn-sm text-orange m-2"
+            type="button"
+            :disabled="addTokenButtonDisabled"
+            @click="addToken"
+          >
+            Add to Metamask
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="mb-10">
+    <div class="mb-6">
       <FormKit
         :value="fromChainId"
         type="selector"
@@ -35,7 +55,7 @@
       />
       <div class="flex flex-col items-end">
         <div
-          class="tooltip tooltip-right tooltip-primary z-50"
+          class="tooltip tooltip-right tooltip-primary bg-transparent z-50"
           data-theme="default"
           data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your Metamask account"
         >
@@ -97,6 +117,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import Spinner from '@/components/Spinner.vue';
 import { requestFaucet } from '@/services/transactions/faucet';
 import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
+import { Token } from '@/types/config';
 import type { SelectorOption } from '@/types/form';
 import createAsyncProcess from '@/utils/create-async-process';
 import { injectStrict } from '@/utils/vue-utils';
@@ -124,11 +145,16 @@ const CHAINS: Array<SelectorOption | string> = Object.keys(chainsConfiguration).
   getChainSelectorOption(chainId),
 );
 
+const getTokenSelectorOption = (token: Token) => ({
+  value: token.address,
+  label: token.symbol,
+});
 const TOKENS: SelectorOption[] = chainsConfiguration[
   String(ethereumProvider.value.chainId.value)
-]?.tokens.map((token) => ({ value: token.address, label: token.symbol }));
+]?.tokens.map((token) => getTokenSelectorOption(token));
 
 const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.value.chainId.value)));
+const selectedToken = ref();
 
 const switchChain = async (chainId: any) => {
   if (chainId !== ethereumProvider.value.chainId.value) {
@@ -147,6 +173,21 @@ const switchChain = async (chainId: any) => {
   }
 };
 
+const switchToken = (token: SelectorOption) => {
+  selectedToken.value = token;
+};
+
+const addToken = async () => {
+  try {
+    await ethereumProvider.value.addToken({
+      address: selectedToken.value.value,
+      symbol: selectedToken.value.label,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 watch(ethereumProvider.value.chainId, () => {
   location.reload();
 });
@@ -158,6 +199,8 @@ const faucetUsed = computed(() =>
 const faucetButtonDisabled = computed(
   () => faucetUsed.value || !ethereumProvider.value.signer.value,
 );
+
+const addTokenButtonDisabled = computed(() => !selectedToken.value);
 
 const executeFaucetRequest = async () => {
   if (!ethereumProvider.value.signerAddress.value) {
