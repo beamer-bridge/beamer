@@ -3,10 +3,11 @@ import pytest
 from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
-from contracts.tests.utils import alloc_accounts, create_fill_hash
+from beamer.tests.util import alloc_accounts, create_fill_hash
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
+@pytest.mark.parametrize("forward_state", [True])
 @pytest.mark.parametrize("use_correct_fill_id", [True, False])
 def test_l1_resolution_correct_hash(
     fill_manager, deployer, resolution_registry, token, amount, use_correct_fill_id
