@@ -1,7 +1,7 @@
 import brownie
 from brownie import chain, web3
 
-from contracts.tests.utils import alloc_accounts, make_request
+from beamer.tests.util import alloc_accounts, make_request
 
 RM_FIELD_LP_FEE = 9
 RM_FIELD_BEAMER_FEE = 10
@@ -11,7 +11,9 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     requester, claimer = alloc_accounts(2)
     transfer_amount = 23
 
-    request_id = make_request(request_manager, token, requester, transfer_amount, zero_fees=False)
+    request_id = make_request(
+        request_manager, token, requester, requester, transfer_amount, zero_fees=False
+    )
 
     reimbursement_fee = request_manager.gasReimbursementFee()
     lp_service_fee = request_manager.lpServiceFee()
@@ -46,7 +48,7 @@ def test_beamer_service_fee_withdrawable_by_owner(
     owner = deployer
     requester, claimer = alloc_accounts(2)
     beamer_fee = request_manager.beamerServiceFee()
-    request_id = make_request(request_manager, token, requester, 23, zero_fees=False)
+    request_id = make_request(request_manager, token, requester, requester, 23, zero_fees=False)
 
     with brownie.reverts("Ownable: caller is not the owner"):
         request_manager.withdrawbeamerFees({"from": requester})
@@ -74,7 +76,7 @@ def test_beamer_service_fee_withdrawable_by_owner(
 
 def test_fee_gas_price_updatable_by_owner(deployer, request_manager, token):
     (requester,) = alloc_accounts(1)
-    make_request(request_manager, token, requester, 23, zero_fees=False)
+    make_request(request_manager, token, requester, requester, 23, zero_fees=False)
 
     old_gas_price = request_manager.gasPrice()
     old_fee = request_manager.totalFee()
@@ -99,6 +101,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
     request_id = make_request(
         request_manager,
         token,
+        requester,
         requester,
         transfer_amount,
         zero_fees=False,

@@ -1,5 +1,6 @@
 import brownie
-from contracts.tests.utils import alloc_accounts
+
+from beamer.tests.util import alloc_accounts
 
 
 def test_fill_request(fill_manager, token, deployer):

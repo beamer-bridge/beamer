@@ -9,8 +9,23 @@ from typing import Any, List, Optional
 import brownie
 import requests
 import web3
+from eth_abi.packed import encode_abi_packed
+from eth_utils import keccak, to_canonical_address
 
 from beamer.typing import RequestId
+
+
+def _alloc_account():
+    address = brownie.web3.geth.personal.new_account("")
+    account = brownie.accounts.at(address)
+    assert brownie.web3.geth.personal.unlock_account(address, "", 0)
+    # transfer 1 ETH to the newly created account
+    brownie.accounts[0].transfer(account, brownie.web3.toWei(1, "ether"))
+    return account
+
+
+def alloc_accounts(n):
+    return tuple(_alloc_account() for _ in range(n))
 
 
 class Timeout(Exception):
@@ -143,13 +158,29 @@ def earnings(w3, account, num_fills=0):
 
 
 def make_request(
-    request_manager, token, requester, target_address, amount, validity_period=3600
+    request_manager,
+    token,
+    requester,
+    target_address,
+    amount,
+    validity_period=3600,
+    target_chain_id=None,
+    zero_fees=True,
 ) -> RequestId:
+    if token.balanceOf(requester) < amount:
+        token.mint(requester, amount, {"from": requester})
+
     token.approve(request_manager.address, amount, {"from": requester})
+
+    if zero_fees:
+        request_manager.updateFeeData(0, 0)
+
+    if target_chain_id is None:
+        target_chain_id = brownie.chain.id
 
     total_fee = request_manager.totalFee()
     request_tx = request_manager.createRequest(
-        brownie.chain.id,
+        target_chain_id,
         token.address,
         token.address,
         target_address,
@@ -158,3 +189,48 @@ def make_request(
         {"from": requester, "value": total_fee},
     )
     return request_tx.return_value
+
+
+def create_request_hash(
+    request_id, source_chain_id, target_chain_id, target_token_address, receiver_address, amount
+):
+    return keccak(
+        encode_abi_packed(
+            ["uint256", "uint256", "uint256", "address", "address", "uint256"],
+            [
+                request_id,
+                source_chain_id,
+                target_chain_id,
+                to_canonical_address(target_token_address),
+                to_canonical_address(receiver_address),
+                amount,
+            ],
+        )
+    )
+
+
+def create_fill_hash(
+    request_id,
+    source_chain_id,
+    target_chain_id,
+    target_token_address,
+    receiver_address,
+    amount,
+    fill_id,
+):
+    return keccak(
+        encode_abi_packed(
+            ["bytes32", "bytes32"],
+            [
+                create_request_hash(
+                    request_id,
+                    source_chain_id,
+                    target_chain_id,
+                    target_token_address,
+                    receiver_address,
+                    amount,
+                ),
+                fill_id,
+            ],
+        )
+    )

@@ -12,12 +12,12 @@ from brownie import (
     ResolutionRegistry,
     Resolver,
     TestCrossDomainMessenger,
-    Wei,
     accounts,
 )
 
 from beamer.agent import Agent, Config
 from beamer.contracts import ContractInfo
+from beamer.tests.util import alloc_accounts
 from beamer.typing import BlockNumber
 
 
@@ -40,7 +40,7 @@ _LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d99007
 
 @pytest.fixture
 def deployer():
-    return accounts[0]
+    return alloc_accounts(1)[0]
 
 
 # Make sure that the chain is reset after each test since brownie
@@ -52,14 +52,46 @@ def _reset_chain():
 
 
 @pytest.fixture
-def contracts(deployer):
+def claim_stake():
+    return 100
+
+
+@pytest.fixture
+def claim_period():
+    return 100
+
+
+@pytest.fixture
+def finalization_time():
+    return 200
+
+
+@pytest.fixture
+def challenge_period_extension():
+    return 50
+
+
+@pytest.fixture
+def forward_state():
+    return False
+
+
+@pytest.fixture
+def contracts(
+    deployer,
+    forward_state,
+    claim_stake,
+    claim_period,
+    finalization_time,
+    challenge_period_extension,
+):
     # L2b contracts
     messenger1 = deployer.deploy(TestCrossDomainMessenger)
-    messenger1.setForwardState(False)
+    messenger1.setForwardState(forward_state)
 
     # L1 contracts
     messenger2 = deployer.deploy(TestCrossDomainMessenger)
-    messenger2.setForwardState(False)
+    messenger2.setForwardState(forward_state)
     resolver = deployer.deploy(Resolver)
 
     # L2b contracts, again
@@ -69,10 +101,6 @@ def contracts(deployer):
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
-    claim_stake = Wei("0.01 ether")
-    claim_period = 60 * 60  # 1 hour
-    finalization_time = 60 * 60 * 5  # 5 hours
-    challenge_period_extension = 60 * 60  # 1 hour
     request_manager = deployer.deploy(
         RequestManager,
         claim_stake,

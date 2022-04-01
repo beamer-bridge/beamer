@@ -3,14 +3,19 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
-from contracts.tests.utils import alloc_accounts, create_fill_hash, make_request
+from beamer.tests.util import alloc_accounts, create_fill_hash, make_request
 
 
 def test_request_invalid_target_chain(request_manager, token):
     (requester,) = alloc_accounts(1)
     with brownie.reverts("Target rollup not supported"):
         make_request(
-            request_manager, target_chain_id=999, token=token, requester=requester, amount=1
+            request_manager,
+            target_chain_id=999,
+            token=token,
+            requester=requester,
+            target_address=requester,
+            amount=1,
         )
 
     assert request_manager.requestCounter() == 0
@@ -19,6 +24,7 @@ def test_request_invalid_target_chain(request_manager, token):
         target_chain_id=web3.eth.chain_id,
         token=token,
         requester=requester,
+        target_address=requester,
         amount=1,
     )
     assert request_manager.requestCounter() == 1
@@ -27,7 +33,9 @@ def test_request_invalid_target_chain(request_manager, token):
 def test_claim(token, request_manager, claim_stake):
     """Test that making a claim creates correct claim and emits event"""
     (requester,) = alloc_accounts(1)
-    request_id = make_request(request_manager, token=token, requester=requester, amount=1)
+    request_id = make_request(
+        request_manager, token=token, requester=requester, target_address=requester, amount=1
+    )
     fill_id = to_bytes(b"123")
     claim_tx = request_manager.claimRequest(
         request_id, fill_id, {"from": requester, "value": claim_stake}
@@ -51,7 +59,7 @@ def test_claim(token, request_manager, claim_stake):
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
     """Test that only claims with the correct stake can be submitted"""
     (requester,) = alloc_accounts(1)
-    request_id = make_request(request_manager, token, requester, 1)
+    request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
     assert "ClaimMade" in claim.events
@@ -69,7 +77,7 @@ def test_claim_with_different_stakes(token, request_manager, claim_stake):
 def test_claim_challenge(request_manager, token, claim_stake):
     """Test challenging a claim"""
     (requester,) = alloc_accounts(1)
-    request_id = make_request(request_manager, token, requester, 1)
+    request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
 
@@ -102,7 +110,7 @@ def test_claim_challenge(request_manager, token, claim_stake):
 def test_claim_counter_challenge(request_manager, token, claim_stake):
     """Test counter-challenging a challenge"""
     claimer, challenger, requester = alloc_accounts(3)
-    request_id = make_request(request_manager, token, requester, 1)
+    request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
@@ -145,7 +153,7 @@ def test_claim_period_extension(
 ):
     """Test the extension of the claim/challenge period"""
     claimer, challenger, requester = alloc_accounts(3)
-    request_id = make_request(request_manager, token, requester, 1)
+    request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
@@ -202,7 +210,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
     claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
@@ -251,7 +259,7 @@ def test_withdraw_with_challenge(
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
     claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
 
@@ -310,7 +318,7 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
         request_id, 0, {"from": claimer1, "value": claim_stake}
@@ -388,7 +396,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
         request_id, 0, {"from": claimer1, "value": claim_stake}
@@ -471,7 +479,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
         request_id, 0, {"from": claimer1, "value": claim_stake}
@@ -540,7 +548,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
     """Test that the same account can not claim a already withdrawn fill again"""
     requester, claimer = alloc_accounts(2)
-    request_id = make_request(request_manager, token, requester, 23)
+    request_id = make_request(request_manager, token, requester, requester, 23)
 
     claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
@@ -560,7 +568,7 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
     """Test that one can withdraw a claim immediately after the request
     deposit has been withdrawn via another claim."""
     requester, claimer1, claimer2 = alloc_accounts(3)
-    request_id = make_request(request_manager, token, requester, 23)
+    request_id = make_request(request_manager, token, requester, requester, 23)
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
     claimer2_eth_balance = web3.eth.get_balance(claimer2.address)
@@ -622,7 +630,7 @@ def test_withdraw_without_challenge_with_resolution(
 
     assert web3.eth.get_balance(request_manager.address) == 0
 
-    request_id = make_request(request_manager, token, requester, transfer_amount)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
     fill_id = to_bytes(b"123")
     claim_tx = request_manager.claimRequest(
         request_id, fill_id, {"from": claimer, "value": claim_stake}
@@ -673,7 +681,7 @@ def test_withdraw_expired(token, request_manager):
     token.mint(requester, amount)
 
     request_id = make_request(
-        request_manager, token, requester, amount, validity_period=validity_period
+        request_manager, token, requester, requester, amount, validity_period=validity_period
     )
 
     assert token.balanceOf(requester) == 0
@@ -690,7 +698,7 @@ def test_withdraw_before_expiration(token, request_manager):
     (requester,) = alloc_accounts(1)
 
     request_id = make_request(
-        request_manager, token, requester, 1, validity_period=validity_period
+        request_manager, token, requester, requester, 1, validity_period=validity_period
     )
 
     chain.mine(timedelta=validity_period / 2)
