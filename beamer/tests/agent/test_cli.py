@@ -39,7 +39,7 @@ def test_cli(config, tmp_path, contracts):
     obj = eth_account.account.create_keyfile_json(acc.key, b"")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
-    root = pathlib.Path(__file__).parents[2]
+    root = pathlib.Path(__file__).parents[3]
     deployment_dir = tmp_path / "deployment"
     deployment_dir.mkdir()
     _generate_deployment_dir(deployment_dir, root, contracts)
