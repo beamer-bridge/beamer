@@ -88,7 +88,7 @@ jobs:
         run: poetry run make lint
 
       - name: Run contract tests
-        run: poetry run brownie test -v -G
+        run: poetry run brownie test -v -G beamer/tests/contracts
 
       - name: Run agent tests
         run: |
@@ -100,7 +100,7 @@ jobs:
           pushd contracts && poetry run brownie run deploy && popd
           killall node
 
-          poetry run brownie test beamer/tests -v -G --cov beamer --cov-report=term
+          poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
 
       - name: Load images from cache
         uses: satackey/action-docker-layer-caching@v0.0.11
