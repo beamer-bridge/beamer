@@ -2,7 +2,7 @@ from time import sleep
 
 from brownie import Contract, MintableToken, accounts
 
-from contracts.tests.utils import create_fill_hash
+from beamer.tests.util import create_fill_hash
 
 from .utils import FILL_MANAGER, L2_CHAIN_ID, RESOLUTION_REGISTRY, get_contract_address
 
