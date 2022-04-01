@@ -71,7 +71,7 @@ strict_equality = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["tests.*", "beamer.tests.*"]
+module = ["beamer.tests.*"]
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
