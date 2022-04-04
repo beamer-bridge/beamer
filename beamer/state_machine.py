@@ -1,3 +1,4 @@
+import os
 import time
 from dataclasses import dataclass
 
@@ -59,24 +60,27 @@ def process_event(event: Event, context: Context) -> bool:
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> bool:
-    # Check if the address points to a valid token
-    if context.fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
-        log.info(
-            "Request unfillable, invalid token contract",
-            request_event=event,
-            token_address=event.target_token_address,
+    # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, do not check token match file
+    if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
+        # Check if the address points to some contract
+        if context.fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
+            log.info(
+                "Request unfillable, invalid token contract",
+                request_event=event,
+                token_address=event.target_token_address,
+            )
+            return True
+    else:
+        is_valid_request = context.match_checker.is_valid_pair(
+            event.chain_id,
+            event.source_token_address,
+            event.target_chain_id,
+            event.target_token_address,
         )
-        return True
 
-    is_valid_request = context.match_checker.is_valid_pair(
-        event.chain_id,
-        event.source_token_address,
-        event.target_chain_id,
-        event.target_token_address,
-    )
-    if not is_valid_request:
-        log.debug("Invalid token pair in request", _event=event)
-        return True
+        if not is_valid_request:
+            log.debug("Invalid token pair in request", _event=event)
+            return True
 
     request = Request(
         request_id=event.request_id,
