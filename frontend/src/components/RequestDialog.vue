@@ -100,8 +100,10 @@ const beamerConfig = injectStrict(BeamerConfigKey);
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
+const transactionError = ref('');
+
 const { fee, executeGetFee } = useGetFee(ethereumProvider, beamerConfig);
-const { requestTransactionActive, requestState, transactionError, executeRequestTransaction } =
+const { requestTransactionActive, requestState, executeRequestTransaction } =
   useRequestTransaction(ethereumProvider, beamerConfig);
 const { executeWaitFulfilled } = useWaitRequestFilled(beamerConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
@@ -133,32 +135,38 @@ const submitRequestTransaction = async (formResult: {
   if (!ethereumProvider.value.signer.value) {
     throw new Error('No signer available!');
   }
-  const request: Request = {
-    targetChainId: Number(formResult.toChainId.value),
-    sourceTokenAddress: formResult.tokenAddress.value,
-    sourceChainId: Number(formResult.fromChainId.value),
-    targetTokenAddress: getTargetTokenAddress(
-      formResult.toChainId.value,
-      formResult.tokenAddress.label,
-    ),
-    targetAddress: formResult.toAddress,
-    amount: formResult.amount,
-  };
 
-  requestMetadata.value = {
-    state: requestState,
-    tokenSymbol: formResult.tokenAddress.label,
-    sourceChainName: formResult.fromChainId.label,
-    targetChainName: formResult.toChainId.label,
-    targetAddress: request.targetAddress,
-    amount: formResult.amount,
-    fee: feesEther.value,
-  };
-  request.fee = fee.value;
+  try {
+    const request: Request = {
+      targetChainId: Number(formResult.toChainId.value),
+      sourceTokenAddress: formResult.tokenAddress.value,
+      sourceChainId: Number(formResult.fromChainId.value),
+      targetTokenAddress: getTargetTokenAddress(
+        formResult.toChainId.value,
+        formResult.tokenAddress.label,
+      ),
+      targetAddress: formResult.toAddress,
+      amount: formResult.amount,
+    };
 
-  await executeRequestTransaction(request, ethereumProvider.value.signer.value);
+    requestMetadata.value = {
+      state: requestState,
+      tokenSymbol: formResult.tokenAddress.label,
+      sourceChainName: formResult.fromChainId.label,
+      targetChainName: formResult.toChainId.label,
+      targetAddress: request.targetAddress,
+      amount: formResult.amount,
+      fee: feesEther.value,
+    };
+    request.fee = fee.value;
 
-  await executeWaitFulfilled(request, requestState);
+    transactionError.value = '';
+    await executeRequestTransaction(request, ethereumProvider.value.signer.value);
+
+    await executeWaitFulfilled(request, requestState);
+  } catch (error: any) {
+    transactionError.value = error.message;
+  }
 };
 
 watch(ethereumProvider.value.chainId, async () => {
