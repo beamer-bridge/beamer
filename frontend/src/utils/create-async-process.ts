@@ -13,10 +13,15 @@ export default function createAsyncProcess<T extends (...args: any[]) => any>(
   const active: CreateAsyncProcessReturn<T>['active'] = ref(false);
 
   const run: CreateAsyncProcessReturn<T>['run'] = async (...args) => {
-    active.value = true;
-    const result = await fn(...args);
-    active.value = false;
-    return result;
+    try {
+      active.value = true;
+      const result = await fn(...args);
+      active.value = false;
+      return result;
+    } catch (error: any) {
+      active.value = false;
+      throw error;
+    }
   };
 
   return { active, run };

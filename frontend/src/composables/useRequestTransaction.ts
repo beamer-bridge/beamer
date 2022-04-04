@@ -53,11 +53,9 @@ export function useRequestTransaction(
   ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
   beamerConfig: Ref<Readonly<BeamerConfig>>,
 ) {
-  const transactionError = ref('');
   const requestState = ref<RequestState>(RequestState.Init);
 
   const executeRequestTransaction = async (request: Request, signer: JsonRpcSigner) => {
-    transactionError.value = '';
     requestState.value = RequestState.WaitConfirm;
 
     try {
@@ -76,12 +74,13 @@ export function useRequestTransaction(
       );
 
       await sendRequestTransaction(signer, request, requestState);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
       if (error instanceof Error) {
-        transactionError.value = error.message;
+        throw error;
+      } else if (error.code && error.code === 4001) {
+        throw new Error('Error: User rejected the transaction!');
       } else {
-        transactionError.value = 'Unknown failure.';
+        throw new Error('Unknown failure!');
       }
     }
   };
@@ -91,7 +90,6 @@ export function useRequestTransaction(
   return {
     requestTransactionActive,
     requestState,
-    transactionError,
     getRequestFee,
     executeRequestTransaction: runExecuteRequestTransaction,
   };
