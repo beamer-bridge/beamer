@@ -8,7 +8,7 @@
       <spinner></spinner>
     </div>
   </div>
-  <feedback></feedback>
+  <feedback v-if="enableFeedback"></feedback>
   <imprint-modal></imprint-modal>
   <footer class="my-8 text-lg text-center text-teal-light">
     Powered by Beamer &bull;
@@ -27,6 +27,7 @@ import { BeamerConfigKey } from '@/symbols';
 import ImprintModal from './components/ImprintModal.vue';
 
 const { config } = useBeamerConfig();
+const enableFeedback = false;
 
 provide(BeamerConfigKey, config);
 </script>
