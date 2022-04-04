@@ -157,15 +157,20 @@ class EventFetcher:
             )
             logs = self._contract.web3.eth.get_logs(params)
             after_query = time.monotonic()
-        except requests.exceptions.ReadTimeout:
+
+        # Boba limits the range to 5000 blocks
+        # 'ValueError: {'code': -32000, 'message': 'exceed maximum block range: 5000'}'
+        except (requests.exceptions.ReadTimeout, ValueError):
             old = self._blocks_to_fetch
             self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, old // 5)
             self._log.debug(
                 "Failed to get events in time, reducing number of blocks",
+                chain_id=self._chain_id,
                 old=old,
                 new=self._blocks_to_fetch,
             )
             return None
+
         except requests.exceptions.ConnectionError as exc:
             assert isinstance(self._contract.web3.provider, web3.HTTPProvider)
             url = self._contract.web3.provider.endpoint_uri
