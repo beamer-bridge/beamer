@@ -131,8 +131,10 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool
 def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
     claim = context.claims.get(event.claim_id)
     request = context.requests.get(event.request_id)
-    if request is None:
-        return False
+
+    # RequestCreated event must arrive before ClaimMade
+    # Additionally, a request should never be dropped before all claims are finalized
+    assert request is not None, "Request object missing upon ClaimMade event"
 
     if claim is None:
         challenge_back_off_timestamp = int(time.time())

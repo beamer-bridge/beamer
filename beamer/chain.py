@@ -197,15 +197,16 @@ class EventProcessor:
             elif request.is_filled:
                 claim_request(request, self._context)
 
-            # TODO: This should be triggered some GC event and not be done here directly
             elif request.is_withdrawn:
-                self._log.debug("Removing withdrawn request", request=request)
-                to_remove.append(request.id)
+                active_claims = any(
+                    claim.request_id == request.id for claim in self._context.claims
+                )
+                if not active_claims:
+                    self._log.debug("Removing withdrawn request", request=request)
+                    to_remove.append(request.id)
 
-        # TODO skip removing for now. We must make sure that there are no claim objects anymore.
-        # for request_id in to_remove:
-        # note: ignored claims may be okay
-        # self._request_tracker.remove(request_id)
+        for request_id in to_remove:
+            self._context.requests.remove(request_id)
 
     # TODO: pull this out of the event processor, so it can be tested independently
     def _process_claims(self) -> None:
@@ -231,9 +232,10 @@ class EventProcessor:
             # As per definition an invalid or expired request cannot be claimed
             # This gives us a chronological order. The agent should never garbage collect
             # a request which has active claims
-            assert request is not None, "Received a claim for non-existent request"
+            assert request is not None, "Active claim for non-existent request"
 
-            # check if claim is an honest claim. Honest claims can be ignored
+            # check if claim is an honest claim. Honest claims can be ignored.
+            # This only counts for claims, where the agent is not the filler
             if claim.valid_claim_for_request(request) and request.filler != self._context.address:
                 claim.ignore()
                 continue
