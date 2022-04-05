@@ -75,7 +75,7 @@
         type="selector"
         name="toChainId"
         label="To"
-        :options="CHAINS"
+        :options="TARGET_CHAINS"
         placeholder="Target Rollup"
         validation="required"
         messages-class="hidden"
@@ -152,6 +152,11 @@ const TOKENS: SelectorOption[] = chainsConfiguration[
 
 const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.value.chainId.value)));
 const selectedToken = ref();
+
+const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
+  (chain: SelectorOption | string) =>
+    (chain as SelectorOption).value !== (fromChainId.value as SelectorOption).value,
+);
 
 const switchChain = async (chainId: any) => {
   if (chainId !== ethereumProvider.value.chainId.value) {
