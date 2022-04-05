@@ -123,8 +123,8 @@ export function useWaitRequestFilled(beamerConfig: Ref<Readonly<BeamerConfig>>) 
       await waitOnFulfillment();
       requestState.value = RequestState.RequestSuccessful;
     } catch (error) {
-      console.log(error);
       requestState.value = RequestState.RequestFailed;
+      throw error;
     }
   };
 
