@@ -187,7 +187,7 @@ const isNewTransferDisabled = computed(() => {
 
 const shownError = () => {
   const error = requestSignerError.value || transactionError.value;
-  if (error) {
+  if (error && requestState.value !== RequestState.RequestFailed) {
     requestState.value = RequestState.Init;
   }
   return error;

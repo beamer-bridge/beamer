@@ -43,6 +43,7 @@
         <ProgressStep
           :current-state="requestMetadata.state"
           :trigger-state="RequestState.RequestSuccessful"
+          :warn-state="RequestState.RequestFailed"
         >
           Transfer completed
         </ProgressStep>

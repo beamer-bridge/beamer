@@ -53,6 +53,10 @@ const classObject = computed(() => {
 .steps .step-success + .step-success:before {
   @apply bg-light;
 }
+.steps .step-warning:after {
+  @apply border-teal bg-orange-dark;
+  border-width: 2px;
+}
 .steps-vertical .step:before {
   width: 0.2rem;
 }
