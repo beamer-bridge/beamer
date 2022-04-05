@@ -162,6 +162,11 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
 
 def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> bool:
     claim = context.claims.get(event.claim_id)
-    assert claim is not None
+
+    # Check if claim exists, it could happen that we ignored the request because of an
+    # invalid token pair, and therefore also did not create the claim
+    if claim is None:
+        return False
+
     claim.withdraw()
     return True
