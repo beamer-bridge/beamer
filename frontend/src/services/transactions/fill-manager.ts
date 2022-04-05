@@ -40,5 +40,8 @@ export async function listenOnFulfillment(
     })
     .catch((err) => {
       throw err;
+    })
+    .finally(() => {
+      fillManagerContract.removeAllListeners(eventFilter);
     });
 }
