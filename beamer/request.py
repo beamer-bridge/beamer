@@ -43,7 +43,7 @@ class Request(StateMachine):
     try_to_fill = pending.to(filled)
     try_to_claim = filled.to(claimed)
     withdraw = claimed.to(withdrawn) | filled.to(withdrawn) | ignored.to(withdrawn)
-    ignore = pending.to(ignored)
+    ignore = pending.to(ignored) | filled.to(ignored)
 
     def on_fill(self, filler: Address, fill_id: FillId) -> None:
         self.filler = filler
