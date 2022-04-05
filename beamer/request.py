@@ -6,7 +6,7 @@ from statemachine import State, StateMachine
 from web3.types import Wei
 
 from beamer.events import ClaimMade
-from beamer.typing import ChainId, ClaimId, RequestId, Termination, TokenAmount
+from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
 class Request(StateMachine):
@@ -45,7 +45,7 @@ class Request(StateMachine):
     withdraw = claimed.to(withdrawn) | filled.to(withdrawn) | ignored.to(withdrawn)
     ignore = pending.to(ignored)
 
-    def on_fill(self, filler: Address, fill_id: int) -> None:
+    def on_fill(self, filler: Address, fill_id: FillId) -> None:
         self.filler = filler
         self.fill_id = fill_id
 
