@@ -146,8 +146,9 @@ class EventProcessor:
                 self._process_events()
 
             if self._synced:
-                self._process_requests()
-                self._process_claims()
+                process_requests(self._context)
+                process_claims(self._context)
+
         self._log.info("EventProcessor stopped")
 
     def _process_events(self) -> None:
@@ -183,79 +184,6 @@ class EventProcessor:
             if not any_state_changed:
                 break
 
-    # TODO: pull this out of the event processor, so it can be tested independently
-    def _process_requests(self) -> None:
-        assert self._synced, "Not synced yet"
-        self._log.info("Processing requests", num_requests=len(self._context.requests))
-
-        to_remove = []
-        for request in self._context.requests:
-            if self._stop:
-                break
-
-            self._log.debug("Processing request", request=request)
-
-            if request.is_pending:
-                fill_request(request, self._context)
-
-            elif request.is_filled:
-                claim_request(request, self._context)
-
-            elif request.is_withdrawn:
-                active_claims = any(
-                    claim.request_id == request.id for claim in self._context.claims
-                )
-                if not active_claims:
-                    self._log.debug("Removing withdrawn request", request=request)
-                    to_remove.append(request.id)
-
-        for request_id in to_remove:
-            self._context.requests.remove(request_id)
-
-    # TODO: pull this out of the event processor, so it can be tested independently
-    def _process_claims(self) -> None:
-        assert self._synced, "Not synced yet"
-        self._log.info("Processing claims", num_claims=len(self._context.claims))
-
-        block = self._context.request_manager.web3.eth.get_block("latest")
-        latest_timestamp = block["timestamp"]
-
-        to_remove = []
-        for claim in self._context.claims:
-            if self._stop:
-                break
-
-            self._log.debug("Processing claim", claim=claim)
-
-            if claim.is_withdrawn:
-                self._log.debug("Removing withdrawn claim", claim=claim)
-                to_remove.append(claim.id)
-                continue
-
-            request = self._context.requests.get(claim.request_id)
-            # As per definition an invalid or expired request cannot be claimed
-            # This gives us a chronological order. The agent should never garbage collect
-            # a request which has active claims
-            assert request is not None, "Active claim for non-existent request"
-
-            # check if claim is an honest claim. Honest claims can be ignored.
-            # This only counts for claims, where the agent is not the filler
-            if claim.valid_claim_for_request(request) and request.filler != self._context.address:
-                claim.ignore()
-                continue
-
-            if claim.transaction_pending:
-                continue
-
-            if latest_timestamp >= claim.termination:
-                withdraw(claim, self._context)
-
-            if claim.is_claimer_winning or claim.is_challenger_winning:
-                maybe_challenge(claim, self._context)
-
-        for claim_id in to_remove:
-            self._context.claims.remove(claim_id)
-
 
 class _TransactionFailed(Exception):
     def __repr__(self) -> str:
@@ -274,6 +202,67 @@ def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types
     except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
         raise _TransactionFailed() from exc
     return tx_hash
+
+
+def process_requests(context: Context) -> None:
+    log.info("Processing requests", num_requests=len(context.requests))
+
+    to_remove = []
+    for request in context.requests:
+        log.debug("Processing request", request=request)
+
+        if request.is_pending:
+            fill_request(request, context)
+
+        elif request.is_filled:
+            claim_request(request, context)
+
+        elif request.is_withdrawn:
+            active_claims = any(claim.request_id == request.id for claim in context.claims)
+            if not active_claims:
+                log.debug("Removing withdrawn request", request=request)
+                to_remove.append(request.id)
+
+    for request_id in to_remove:
+        context.requests.remove(request_id)
+
+
+def process_claims(context: Context) -> None:
+    log.info("Processing claims", num_claims=len(context.claims))
+
+    to_remove = []
+    for claim in context.claims:
+        log.debug("Processing claim", claim=claim)
+
+        if claim.is_withdrawn:
+            log.debug("Removing withdrawn claim", claim=claim)
+            to_remove.append(claim.id)
+            continue
+
+        request = context.requests.get(claim.request_id)
+        # As per definition an invalid or expired request cannot be claimed
+        # This gives us a chronological order. The agent should never garbage collect
+        # a request which has active claims
+        assert request is not None, "Active claim for non-existent request"
+
+        # check if claim is an honest claim. Honest claims can be ignored.
+        # This only counts for claims, where the agent is not the filler
+        if claim.valid_claim_for_request(request) and request.filler != context.address:
+            claim.ignore()
+            continue
+
+        if claim.transaction_pending:
+            continue
+
+        block = context.request_manager.web3.eth.get_block("latest")
+        if block["timestamp"] >= claim.termination:
+            withdraw(claim, context)
+
+        if claim.is_claimer_winning or claim.is_challenger_winning:
+            maybe_challenge(claim, context)
+
+    for claim_id in to_remove:
+        context.claims.remove(claim_id)
 
 
 def fill_request(request: Request, context: Context) -> None:
