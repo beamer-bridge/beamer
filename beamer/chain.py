@@ -198,10 +198,12 @@ class EventProcessor:
                 claim_request(request, self._context)
 
             elif request.is_withdrawn:
-                active_claims = any([claim.is_withdrawn for claim in self._context.claims])
+                active_claims = any(
+                    claim.request_id == request.id for claim in self._context.claims
+                )
                 if not active_claims:
-                    to_remove.append(request.id)
                     self._log.debug("Removing withdrawn request", request=request)
+                    to_remove.append(request.id)
 
         for request_id in to_remove:
             self._context.requests.remove(request_id)
