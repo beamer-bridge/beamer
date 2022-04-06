@@ -11,8 +11,8 @@ from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_mid
 
 from beamer.chain import ContractEventMonitor, EventProcessor
 from beamer.contracts import DeploymentInfo, make_contracts
-from beamer.request import Tracker
 from beamer.state_machine import Context
+from beamer.tracker import Tracker
 from beamer.typing import URL, ChainId
 from beamer.util import TokenMatchChecker
 
