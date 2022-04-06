@@ -16,7 +16,8 @@ from beamer.events import (
     RequestCreated,
     RequestFilled,
 )
-from beamer.request import Claim, Request, Tracker
+from beamer.request import Claim, Request
+from beamer.tracker import Tracker
 from beamer.typing import ClaimId, RequestId
 from beamer.util import TokenMatchChecker
 

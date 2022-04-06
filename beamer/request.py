@@ -1,5 +1,4 @@
-import threading
-from typing import Any, Generator, Generic, Optional, TypeVar
+from typing import Optional
 
 from eth_typing import ChecksumAddress as Address
 from statemachine import State, StateMachine
@@ -148,44 +147,3 @@ class Claim(StateMachine):
     def __repr__(self) -> str:
         state = self.current_state.identifier
         return f"<Claim id={self.id} state={state} request_id={self.request_id}>"
-
-
-K = TypeVar("K")
-V = TypeVar("V")
-
-
-class Tracker(Generic[K, V]):
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._map: dict[K, V] = {}
-
-    def add(self, key: K, value: V) -> None:
-        with self._lock:
-            self._map[key] = value
-
-    def remove(self, key: K) -> None:
-        with self._lock:
-            del self._map[key]
-
-    def __contains__(self, key: K) -> bool:
-        with self._lock:
-            return key in self._map
-
-    def get(self, key: K) -> Optional[V]:
-        return self._map.get(key)
-
-    def __iter__(self) -> Any:
-        def locked_iter() -> Generator:
-            with self._lock:
-                it = iter(self._map.values())
-                while True:
-                    try:
-                        yield next(it)
-                    except StopIteration:
-                        return
-
-        return locked_iter()
-
-    def __len__(self) -> int:
-        with self._lock:
-            return len(self._map)
