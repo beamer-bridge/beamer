@@ -185,3 +185,7 @@ class Tracker(Generic[K, V]):
                         return
 
         return locked_iter()
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._map)

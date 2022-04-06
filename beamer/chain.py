@@ -186,6 +186,7 @@ class EventProcessor:
     # TODO: pull this out of the event processor, so it can be tested independently
     def _process_requests(self) -> None:
         assert self._synced, "Not synced yet"
+        self._log.info("Processing requests", num_requests=len(self._context.requests))
 
         to_remove = []
         for request in self._context.requests:
@@ -210,16 +211,13 @@ class EventProcessor:
 
     # TODO: pull this out of the event processor, so it can be tested independently
     def _process_claims(self) -> None:
-        with self._lock:
-            if self._num_syncs_done < 2:
-                # We need to wait until we are synced with both chains.
-                return
-
-        to_remove = []
+        assert self._synced, "Not synced yet"
+        self._log.info("Processing claims", num_claims=len(self._context.claims))
 
         block = self._context.request_manager.web3.eth.get_block("latest")
         latest_timestamp = block["timestamp"]
 
+        to_remove = []
         for claim in self._context.claims:
             self._log.debug("Processing claim", claim=claim)
 
