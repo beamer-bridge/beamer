@@ -162,7 +162,7 @@ const submitRequestTransaction = async (formResult: {
 };
 
 watch(ethereumProvider.value.chainId, async () => {
-  await executeGetFee();
+  location.reload();
 });
 executeGetFee();
 

@@ -193,10 +193,6 @@ const addToken = async () => {
   }
 };
 
-watch(ethereumProvider.value.chainId, () => {
-  location.reload();
-});
-
 const faucetUsedForChain: Record<string, boolean> = reactive({});
 const faucetUsed = computed(() =>
   Boolean(faucetUsedForChain[(fromChainId.value as SelectorOption).value]),
