@@ -13,7 +13,7 @@ import web3
 from web3.types import TxParams
 
 from beamer.events import Event, EventFetcher
-from beamer.request import Claim, Request
+from beamer.models import Claim, Request
 from beamer.state_machine import Context, process_event
 from beamer.typing import BlockNumber, ChainId
 
