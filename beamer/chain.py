@@ -190,6 +190,9 @@ class EventProcessor:
 
         to_remove = []
         for request in self._context.requests:
+            if self._stop:
+                break
+
             self._log.debug("Processing request", request=request)
 
             if request.is_pending:
@@ -219,6 +222,9 @@ class EventProcessor:
 
         to_remove = []
         for claim in self._context.claims:
+            if self._stop:
+                break
+
             self._log.debug("Processing claim", claim=claim)
 
             if claim.is_withdrawn:
