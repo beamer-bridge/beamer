@@ -198,10 +198,9 @@ class _TransactionFailed(Exception):
 
 def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types.HexBytes:
     try:
-        tx_hash = func.transact(cast(Optional[TxParams], kwargs))
+        return func.transact(cast(Optional[TxParams], kwargs))
     except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
         raise _TransactionFailed() from exc
-    return tx_hash
 
 
 def process_requests(context: Context) -> None:
