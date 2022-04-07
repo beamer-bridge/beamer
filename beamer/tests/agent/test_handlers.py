@@ -2,9 +2,10 @@ import random
 import string
 from unittest.mock import MagicMock
 
+from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
 from web3.contract import Contract
-from web3.types import ChecksumAddress, Wei
+from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
 from beamer.agent import Config
 from beamer.chain import Context, claim_request, process_claims, process_requests
@@ -15,16 +16,12 @@ from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
 
+SOURCE_CHAIN_ID = ChainId(2)
+
 
 class MockEth:
     def __init__(self, chain_id):
         self.chain_id = chain_id
-
-    def get_block(self, _block_identifier):  # pylint: disable=unused-argument, no-self-use
-        return {
-            "number": 42,
-            "timestamp": 457,
-        }
 
     wait_for_transaction_receipt = MagicMock()
 
@@ -45,7 +42,7 @@ def make_address() -> ChecksumAddress:
 def make_request(token) -> Request:
     return Request(
         request_id=RequestId(1),
-        source_chain_id=ChainId(2),
+        source_chain_id=SOURCE_CHAIN_ID,
         target_chain_id=ChainId(4),
         source_token_address=token.address,
         target_token_address=token.address,
@@ -79,7 +76,21 @@ def make_context(config: Config, request_manager: Contract = None):
     checker = TokenMatchChecker([])
 
     return Context(
-        Tracker(), Tracker(), request_manager, MagicMock(), checker, 5, config.account.address
+        requests=Tracker(),
+        claims=Tracker(),
+        request_manager=request_manager,
+        fill_manager=MagicMock(),
+        match_checker=checker,
+        fill_wait_time=5,
+        address=config.account.address,
+        latest_blocks={
+            SOURCE_CHAIN_ID: BlockData(
+                {
+                    "number": BlockNumber(42),
+                    "timestamp": Timestamp(457),
+                }
+            )
+        },
     )
 
 
@@ -98,15 +109,12 @@ def test_ignore_expired(token, config: Config):
     request = make_request(token)
     request.filler = config.account.address
 
-    request_manager = MagicMock(web3=MockWeb3(2))
-    context = make_context(config, request_manager)
+    context = make_context(config)
     context.requests.add(request.id, request)
 
     assert request.is_pending  # pylint:disable=no-member
     claim_request(request, context)
     assert request.is_ignored  # pylint:disable=no-member
-
-    assert not request_manager.functions.called
 
 
 def test_request_garbage_collection_without_claim(token, config: Config):
@@ -129,8 +137,7 @@ def test_request_garbage_collection_with_claim(token, config: Config):
 
     claim = make_claim(request)
 
-    request_manager = MagicMock(web3=MockWeb3(2))
-    context = make_context(config, request_manager=request_manager)
+    context = make_context(config)
     context.requests.add(request.id, request)
     context.claims.add(claim.id, claim)
 
