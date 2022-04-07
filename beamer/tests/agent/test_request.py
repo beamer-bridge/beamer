@@ -10,7 +10,8 @@ from web3.types import Wei
 from beamer.agent import Agent
 from beamer.chain import maybe_challenge
 from beamer.events import ClaimMade, RequestFilled
-from beamer.models import Claim, Request
+from beamer.models.claim import Claim
+from beamer.models.request import Request
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 

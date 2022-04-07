@@ -9,7 +9,8 @@ from web3.types import ChecksumAddress, Wei
 from beamer.agent import Config
 from beamer.chain import Context, claim_request, process_claims, process_requests
 from beamer.events import ClaimMade
-from beamer.models import Claim, Request
+from beamer.models.claim import Claim
+from beamer.models.request import Request
 from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
