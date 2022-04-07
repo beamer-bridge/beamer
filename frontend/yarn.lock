@@ -3045,10 +3045,10 @@ vue-router@^4.0.0-0:
   dependencies:
     "@vue/devtools-api" "^6.0.0-beta.18"
 
-vue-select@^4.0.0-beta.2:
-  version "4.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-4.0.0-beta.2.tgz#767c07a3ef4cf23cdebc4b050f3054bc2a0425da"
-  integrity sha512-uR7Jn6dkfaFbvbXfKKp6s//ArkbP+U4mK432D6rbsQKk6NfG9J7Nwe0jonzQdttfHPuBPCiw0PV8nnWmpY5jtg==
+vue-select@^4.0.0-beta.3:
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-4.0.0-beta.3.tgz#12096cdc5701af94bac66a60e7bbe560d5ef1d54"
+  integrity sha512-sXufbTDluz26a39UUZE9jeh9Hojnn8zr9qDDUlVEBc7E0F+h3+Nzy8YzyFHuVNrrYLmK0zrPkb7hWFulAEW41Q==
 
 vue@^2.0.0:
   version "2.6.14"
