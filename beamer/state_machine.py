@@ -1,6 +1,7 @@
 import os
 import time
 from dataclasses import dataclass
+from typing import Dict
 
 import structlog
 from eth_typing import ChecksumAddress
@@ -8,19 +9,21 @@ from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
+from web3.types import BlockData
 
 from beamer.events import (
     ClaimMade,
     ClaimWithdrawn,
     DepositWithdrawn,
     Event,
+    LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
 )
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
-from beamer.typing import ClaimId, RequestId
+from beamer.typing import ChainId, ClaimId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -35,12 +38,16 @@ class Context:
     match_checker: TokenMatchChecker
     fill_wait_time: int
     address: ChecksumAddress
+    latest_blocks: Dict[ChainId, BlockData]
 
 
 def process_event(event: Event, context: Context) -> bool:
     log.debug("Processing event", _event=event)
 
-    if isinstance(event, RequestCreated):
+    if isinstance(event, LatestBlockUpdatedEvent):
+        return _handle_latest_block_updated(event, context)
+
+    elif isinstance(event, RequestCreated):
         return _handle_request_created(event, context)
 
     elif isinstance(event, RequestFilled):
@@ -57,6 +64,11 @@ def process_event(event: Event, context: Context) -> bool:
 
     else:
         raise RuntimeError("Unrecognized event type")
+
+
+def _handle_latest_block_updated(event: LatestBlockUpdatedEvent, context: Context) -> bool:
+    context.latest_blocks[event.chain_id] = event.block_data
+    return True
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> bool:

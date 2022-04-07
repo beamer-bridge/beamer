@@ -71,6 +71,7 @@ class Agent:
             match_checker=match_checker,
             fill_wait_time=config.fill_wait_time,
             address=config.account.address,
+            latest_blocks={},
         )
         self._event_processor = EventProcessor(self.context)
 

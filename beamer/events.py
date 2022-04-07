@@ -8,7 +8,7 @@ import web3
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
 from web3.contract import Contract, get_event_data
-from web3.types import ABIEvent, ChecksumAddress, FilterParams, LogReceipt, Wei
+from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
 
 from beamer.typing import (
     BlockNumber,
@@ -24,6 +24,11 @@ from beamer.typing import (
 @dataclass(frozen=True)
 class Event:
     chain_id: ChainId
+
+
+@dataclass(frozen=True)
+class LatestBlockUpdatedEvent(Event):
+    block_data: BlockData
 
 
 @dataclass(frozen=True)
@@ -177,6 +182,7 @@ class EventFetcher:
             self._log.error("Connection error", url=url, exc=exc)
             # Propagate the exception upwards so we don't make further attempts.
             raise exc
+
         else:
             duration = after_query - before_query
             if duration < EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
@@ -184,28 +190,36 @@ class EventFetcher:
             elif duration > EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
                 self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
             codec = self._contract.web3.codec
-            events = _decode_events(logs, codec, self._chain_id, self._event_abis)
-            return events
+            return _decode_events(logs, codec, self._chain_id, self._event_abis)
 
     def fetch(self) -> list[Event]:
         try:
             block_number = self._contract.web3.eth.block_number
+            block_data = self._contract.web3.eth.get_block(block_number)
         except requests.exceptions.RequestException:
             return []
 
-        if block_number >= self._next_block_number:
-            result = []
-            from_block = self._next_block_number
-            while from_block <= block_number:
-                to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
-                try:
-                    events = self._fetch_range(from_block, to_block)
-                except requests.exceptions.ConnectionError:
-                    break
-                if events is not None:
-                    result.extend(events)
-                    from_block = BlockNumber(to_block + 1)
+        if block_number < self._next_block_number:
+            return []
 
-            self._next_block_number = from_block
-            return result
-        return []
+        result = []
+        from_block = self._next_block_number
+        while from_block <= block_number:
+            to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
+            try:
+                events = self._fetch_range(from_block, to_block)
+            except requests.exceptions.ConnectionError:
+                break
+            if events is not None:
+                result.extend(events)
+                from_block = BlockNumber(to_block + 1)
+
+        self._next_block_number = from_block
+
+        result.append(
+            LatestBlockUpdatedEvent(
+                chain_id=self._chain_id,
+                block_data=block_data,
+            )
+        )
+        return result

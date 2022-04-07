@@ -110,7 +110,6 @@ class EventProcessor:
         # 1 = one of the chains was synced, waiting for the other one
         # 2 = both chains synced
         self._num_syncs_done = 0
-
         self._context = context
 
     @property
@@ -254,7 +253,7 @@ def process_claims(context: Context) -> None:
         if claim.transaction_pending:
             continue
 
-        block = context.request_manager.web3.eth.get_block("latest")
+        block = context.latest_blocks[request.source_chain_id]
         if block["timestamp"] >= claim.termination:
             withdraw(claim, context)
 
@@ -266,7 +265,7 @@ def process_claims(context: Context) -> None:
 
 
 def fill_request(request: Request, context: Context) -> None:
-    block = context.request_manager.web3.eth.get_block("latest")
+    block = context.latest_blocks[request.target_chain_id]
     if block["timestamp"] >= request.valid_until:
         log.info("Request expired, ignoring", request=request)
         request.ignore()
@@ -315,8 +314,7 @@ def claim_request(request: Request, context: Context) -> None:
     if request.filler != context.address:
         return
 
-    w3 = context.request_manager.web3
-    block = w3.eth.get_block("latest")
+    block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] >= request.valid_until:
         log.info("Request expired, ignoring", request=request)
         request.ignore()
@@ -337,7 +335,7 @@ def claim_request(request: Request, context: Context) -> None:
         )
         return
 
-    w3.eth.wait_for_transaction_receipt(txn_hash)
+    context.request_manager.web3.eth.wait_for_transaction_receipt(txn_hash)
 
     request.try_to_claim()
     log.debug(
