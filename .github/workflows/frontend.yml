@@ -32,3 +32,6 @@ jobs:
       - name: Build
         working-directory: frontend/
         run: yarn build
+      - name: Lint
+        working-directory: frontend/
+        run: yarn lint
