@@ -63,7 +63,7 @@ export function useRequestTransaction(
       const chainConfig = beamerConfig.value.chains[String(chainId)];
       request.sourceChainId = chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
-      const decimals = await getTokenDecimals(signer, request.sourceTokenAddress);
+      const decimals = await getTokenDecimals(ethereumProvider.value, request.sourceTokenAddress);
       request.amount = ethers.utils.parseUnits(request.amount.toString(), decimals);
 
       await ensureTokenAllowance(

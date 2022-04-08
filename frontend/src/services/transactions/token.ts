@@ -1,8 +1,9 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { BigNumber, BigNumberish, Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { DeepReadonly } from 'vue';
 
 import StandardToken from '@/assets/StandardToken.json';
+import { EthereumProvider } from '@/services/web3-provider';
 
 export async function ensureTokenAllowance(
   signer: DeepReadonly<JsonRpcSigner>,
@@ -21,10 +22,20 @@ export async function ensureTokenAllowance(
 }
 
 export async function getTokenDecimals(
-  signer: DeepReadonly<JsonRpcSigner>,
+  ethereumProvider: Readonly<EthereumProvider>,
   tokenAddress: string,
-): Promise<BigNumberish> {
-  const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
-  const decimals = await tokenContract.decimals();
-  return decimals;
+): Promise<BigNumber> {
+  const tokenContract = new Contract(tokenAddress, StandardToken.abi);
+  const connectedContract = ethereumProvider.connectContract(tokenContract);
+  return await connectedContract.decimals();
+}
+
+export async function getTokenBalance(
+  ethereumProvider: Readonly<EthereumProvider>,
+  tokenAddress: string,
+  accountAddress: string,
+): Promise<BigNumber> {
+  const tokenContract = new Contract(tokenAddress, StandardToken.abi);
+  const connectedContract = ethereumProvider.connectContract(tokenContract);
+  return await connectedContract.balanceOf(accountAddress);
 }
