@@ -1,39 +1,47 @@
 <template>
   <div class="request-form-inputs flex flex-col">
     <div class="mb-6">
-      <div class="flex flex-row gap-5 items-center">
-        <span class="text-3xl">Send</span>
-        <FormKit
-          type="text"
-          outer-class="flex-1"
-          name="amount"
-          placeholder="0.00"
-          validation="required"
-          messages-class="hidden"
-        />
-        <FormKit
-          id="tokenAddress"
-          :value="selectedToken"
-          type="selector"
-          name="tokenAddress"
-          outer-class="flex-1"
-          :options="TOKENS"
-          placeholder="Token"
-          validation="required"
-          messages-class="hidden"
-          @input="switchToken"
-        />
-      </div>
-      <div class="flex flex-col items-end">
-        <div class="form-tooltip" data-theme="default" data-tip="Adds current token to Metamask">
-          <button
-            class="btn btn-ghost btn-sm text-orange m-2"
-            type="button"
-            :disabled="addTokenButtonDisabled"
-            @click="addToken"
+      <div class="flex flex-row gap-5 items-stretch">
+        <div class="h-18 flex flex-col justify-center">
+          <span class="text-3xl">Send</span>
+        </div>
+        <div class="flex-1 flex flex-col items-end">
+          <FormKit
+            type="text"
+            name="amount"
+            placeholder="0.00"
+            validation="required"
+            messages-class="hidden"
+          />
+          <div
+            v-if="showTokenBalance"
+            class="text-sm max-w-3xs flex-1 overflow-hidden flex flex-col justify-center"
           >
-            Add to Metamask
-          </button>
+            {{ formattedTokenBalance }} {{ selectedToken?.label }} available
+          </div>
+        </div>
+        <div class="flex-1 flex flex-col">
+          <FormKit
+            id="tokenAddress"
+            :value="selectedToken"
+            type="selector"
+            name="tokenAddress"
+            :options="TOKENS"
+            placeholder="Token"
+            validation="required"
+            messages-class="hidden"
+            @input="switchToken"
+          />
+          <div class="form-tooltip" data-theme="default" data-tip="Adds current token to Metamask">
+            <button
+              class="btn btn-ghost btn-sm text-orange m-2"
+              type="button"
+              :disabled="addTokenButtonDisabled"
+              @click="addToken"
+            >
+              Add to Metamask
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -94,7 +102,7 @@
       class="flex flex-row justify-end gap-3 items-center text-base text-light mt-4"
     >
       <span>fees</span>
-      <span> {{ fees }} ETH</span>
+      <span>{{ fees }} ETH</span>
       <div
         class="form-tooltip whitespace-pre-wrap"
         data-theme="default"
@@ -111,6 +119,7 @@ import { FormKit } from '@formkit/vue';
 import { computed, reactive, Ref, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
+import useTokenBalance from '@/composables/useTokenBalance';
 import { requestFaucet } from '@/services/transactions/faucet';
 import { getTokenDecimals } from '@/services/transactions/token';
 import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
@@ -130,7 +139,7 @@ defineProps<Props>();
 
 const chainsConfiguration = beamerConfig.value.chains;
 
-const getChainSelectorOption = (chainId: string) =>
+const getChainSelectorOption: (chainId: string) => SelectorOption | string = (chainId: string) =>
   chainsConfiguration[chainId]
     ? {
         value: Number(chainId),
@@ -151,7 +160,7 @@ const TOKENS: SelectorOption[] = chainsConfiguration[
 ]?.tokens.map((token) => getTokenSelectorOption(token));
 
 const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.value.chainId.value)));
-const selectedToken = ref();
+const selectedToken: Ref<SelectorOption | undefined> = ref();
 
 const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
   (chain: SelectorOption | string) =>
@@ -180,12 +189,12 @@ const switchToken = (token: SelectorOption) => {
 };
 
 const addToken = async () => {
+  if (!selectedToken.value) {
+    return;
+  }
   try {
     if (ethereumProvider.value.signer.value) {
-      const decimals = await getTokenDecimals(
-        ethereumProvider.value.signer.value,
-        selectedToken.value.value,
-      );
+      const decimals = await getTokenDecimals(ethereumProvider.value, selectedToken.value.value);
 
       await ethereumProvider.value.addToken({
         address: selectedToken.value.value,
@@ -234,6 +243,11 @@ const gasFeesTooltipText = `The fee amount is composed of three parts:
 The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity provider servicing the request, while the Beamer service fee stays with the contract and supports the Beamer platform development.
 
 Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
+
+const { showTokenBalance, formattedTokenBalance } = useTokenBalance(
+  ethereumProvider,
+  selectedToken,
+);
 </script>
 <style lang="css">
 .form-tooltip {
