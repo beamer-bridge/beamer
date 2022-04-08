@@ -1,4 +1,4 @@
-import { Block, JsonRpcSigner } from '@ethersproject/providers';
+import { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { Contract } from 'ethers';
 import { Ref, ShallowRef } from 'vue';
 
@@ -27,4 +27,15 @@ export type TokenData = {
   symbol?: string;
   decimals?: number;
   image?: string;
+};
+
+interface RequestArguments {
+  readonly method: string;
+  readonly params?: readonly unknown[] | object;
+}
+
+export type Eip1193Provider = ExternalProvider & {
+  request(args: RequestArguments): Promise<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(eventName: string, listener: (...args: any[]) => void): void;
 };

@@ -9,7 +9,7 @@ export async function listenOnFulfillment(
   request: Request,
   fillManagerAddress: string,
   currentBlockNumber: number,
-): Promise<any> {
+): Promise<void> {
   const fillManagerContract = new Contract(
     fillManagerAddress,
     FillManager.abi,
@@ -22,22 +22,19 @@ export async function listenOnFulfillment(
 
   const eventListeningTimeout = 1000 * 30;
 
-  const fulfillmentPromise = new Promise((resolve) => {
-    fillManagerContract.on(eventFilter, (fullRequestId) => {
-      resolve(fullRequestId);
+  const fulfillmentPromise: Promise<void> = new Promise((resolve) => {
+    fillManagerContract.on(eventFilter, () => {
+      resolve();
     });
   });
 
-  const timeoutPromise = new Promise((_resolve, reject) => {
+  const timeoutPromise: Promise<never> = new Promise((_resolve, reject) => {
     setTimeout(() => {
       reject(new Error('Timeout!'));
     }, eventListeningTimeout);
   });
 
   return Promise.race([fulfillmentPromise, timeoutPromise])
-    .then((fullRequestId) => {
-      return fullRequestId;
-    })
     .catch((err) => {
       throw err;
     })

@@ -74,10 +74,11 @@ export function useRequestTransaction(
       );
 
       await sendRequestTransaction(signer, request, requestState);
-    } catch (error: any) {
+    } catch (error) {
+      const maybeErrorCode = (error as { code?: number }).code;
       if (error instanceof Error) {
         throw error;
-      } else if (error.code && error.code === 4001) {
+      } else if (maybeErrorCode && maybeErrorCode === 4001) {
         throw new Error('Error: User rejected the transaction!');
       } else {
         throw new Error('Unknown failure!');
