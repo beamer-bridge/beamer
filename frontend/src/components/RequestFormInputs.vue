@@ -256,9 +256,6 @@ const { showTokenBalance, formattedTokenBalance } = useTokenBalance(
 .form-tooltip {
   @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-50;
 }
-#tokenAddress.selector .vs__search::placeholder {
-  @apply text-right;
-}
 .tooltip:before {
   @apply p-4;
 }

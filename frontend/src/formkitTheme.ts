@@ -19,7 +19,7 @@ function rootClasses(sectionKey: string, node: FormKitNode): Record<string, bool
         return 'py-6 px-14 rounded-xl bg-green shadow text-teal text-2xl disabled:bg-dark disabled:text-teal-light-35';
       }
       if (type === 'text') {
-        return 'h-18 w-full px-8 rounded-xl bg-teal-light shadow-inner text-teal text-2xl text-right placeholder:opacity-25 placeholder:text-black';
+        return 'h-18 w-full px-8 rounded-xl bg-teal-light shadow-inner text-teal text-2xl text-left placeholder:opacity-25 placeholder:text-black';
       }
     },
   };

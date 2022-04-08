@@ -65,11 +65,11 @@ const props = defineProps<Props>();
 .selector .vs__dropdown-option,
 .selector .vs__selected,
 .selector.vs--open .vs__search {
-  @apply h-18 w-full m-0 pl-4 py-3 border-0 text-2xl text-teal flex flex-row gap-2 items-center justify-between overflow-hidden;
+  @apply h-18 w-full m-0 pl-8 py-3 border-0 text-2xl text-teal flex flex-row gap-2 items-center overflow-hidden text-left;
 }
 
 .selector .vs__search {
-  @apply m-0 p-0 border-0 text-2xl text-teal;
+  @apply mt-0 pl-8 border-0 text-2xl text-teal;
 }
 
 .selector .vs__dropdown-option {
@@ -81,7 +81,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__selected-options {
-  @apply p-0 m-0 pl-4 flex-nowrap;
+  @apply p-0 m-0 flex-nowrap;
 }
 
 .selector .vs__option-image {
@@ -89,7 +89,7 @@ const props = defineProps<Props>();
 }
 
 .selector .vs__search::placeholder {
-  @apply opacity-25 text-black text-left pl-4;
+  @apply opacity-25 text-black text-left pl-8;
 }
 
 .selector .vs__no-options {
