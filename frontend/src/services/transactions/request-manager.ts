@@ -1,4 +1,4 @@
-import { JsonRpcSigner, TransactionResponse } from '@ethersproject/providers';
+import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
 import { Contract } from 'ethers';
 import { DeepReadonly, Ref } from 'vue';
 
@@ -14,13 +14,18 @@ export async function getRequestFee(
   const connectedContract = ethereumProvider.connectContract(requestManagerContract);
   return await connectedContract.totalFee();
 }
+interface TransactionReceiptInterface extends TransactionReceipt {
+  events: Array<any>;
+}
 
+function getEvent(receipt: TransactionReceiptInterface, eventName: string) {
+  return receipt.events.find((event) => event.event === eventName);
+}
 export async function sendRequestTransaction(
   signer: DeepReadonly<JsonRpcSigner>,
   request: Request,
   requestState: Ref<RequestState>,
 ): Promise<Request> {
-  // TODO handle requestManagerAddress undefined
   if (!request.fee) {
     request.fee = await getRequestFee(signer, request);
   }
@@ -55,8 +60,14 @@ export async function sendRequestTransaction(
 
   requestState.value = RequestState.WaitTransaction;
 
-  const transactionReceipt = await transaction.wait();
-  request.receipt = transactionReceipt;
+  const transactionReceipt = (await transaction.wait()) as TransactionReceiptInterface;
+  const requestEvent = getEvent(transactionReceipt, 'RequestCreated');
+
+  if (!requestEvent) {
+    throw new Error("Request Failed. Couldn't retrieve Request ID");
+  }
+
+  request.requestId = requestEvent.args.requestId;
 
   return request;
 }
