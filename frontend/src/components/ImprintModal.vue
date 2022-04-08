@@ -105,14 +105,14 @@
 }
 
 .modal-box h2 {
-	@apply text-2xl font-bold py-6;
+  @apply text-2xl font-bold py-6;
 }
 
 .modal-box h3 {
-	@apply text-xl font-bold pb-2;
+  @apply text-xl font-bold pb-2;
 }
 
 .modal-box p {
-	@apply pb-10;
+  @apply pb-10;
 }
 </style>

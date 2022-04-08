@@ -58,9 +58,8 @@
           type="button"
           :disabled="isNewTransferDisabled"
           @click="newTransfer"
+          >New Transfer</FormKit
         >
-          New Transfer
-        </FormKit>
       </div>
     </FormKit>
   </div>
@@ -108,8 +107,8 @@ const { requestTransactionActive, requestState, executeRequestTransaction } =
 const { executeWaitFulfilled } = useWaitRequestFilled(beamerConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
-const getTargetTokenAddress = (targetChainId: any, tokenSymbol: string) => {
-  return beamerConfig.value.chains[targetChainId].tokens.find(
+const getTargetTokenAddress = (targetChainId: number, tokenSymbol: string) => {
+  return beamerConfig.value.chains[String(targetChainId)].tokens.find(
     (token) => token.symbol === tokenSymbol,
   )?.address as string;
 };
@@ -164,8 +163,13 @@ const submitRequestTransaction = async (formResult: {
   try {
     await executeRequestTransaction(request, ethereumProvider.value.signer.value);
     await executeWaitFulfilled(request, requestState);
-  } catch (error: any) {
-    transactionError.value = error.message;
+  } catch (error) {
+    const maybeErrorMessage = (error as { message?: string }).message;
+    if (maybeErrorMessage) {
+      transactionError.value = maybeErrorMessage;
+    } else {
+      transactionError.value = 'Unknown failure!';
+    }
   }
 };
 

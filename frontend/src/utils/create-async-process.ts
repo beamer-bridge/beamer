@@ -18,7 +18,7 @@ export default function createAsyncProcess<T extends (...args: any[]) => any>(
       const result = await fn(...args);
       active.value = false;
       return result;
-    } catch (error: any) {
+    } catch (error) {
       active.value = false;
       throw error;
     }

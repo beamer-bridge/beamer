@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, Ref, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
 import { requestFaucet } from '@/services/transactions/faucet';
@@ -158,8 +158,8 @@ const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
     (chain as SelectorOption).value !== (fromChainId.value as SelectorOption).value,
 );
 
-const switchChain = async (chainId: any) => {
-  if (chainId !== ethereumProvider.value.chainId.value) {
+const switchChain = async (chainId: Ref<number>) => {
+  if (chainId.value !== ethereumProvider.value.chainId.value) {
     try {
       const isSuccessfulSwitch = await ethereumProvider.value.switchChain(chainId.value);
       if (isSuccessfulSwitch === null) {

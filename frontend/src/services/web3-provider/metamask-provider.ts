@@ -10,21 +10,17 @@ import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
-import { ChainData, EthereumProvider, TokenData } from './types';
+import { ChainData, Eip1193Provider, EthereumProvider, TokenData } from './types';
 
 export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
   const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;
   if (detectedProvider && detectedProvider.isMetaMask) {
-    const metaMaskProvider = new MetaMaskProvider(detectedProvider);
+    const metaMaskProvider = new MetaMaskProvider(detectedProvider as Eip1193Provider);
     await metaMaskProvider.init();
     return metaMaskProvider;
   }
   return undefined;
 }
-type OwnExternalProvider = ExternalProvider & {
-  on?: (e: string, cb: (param: any) => void) => void;
-  request?: (request: { method: string; params: { type: string; options: any } }) => Promise<any>;
-};
 
 export class MetaMaskProvider implements EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
@@ -32,14 +28,14 @@ export class MetaMaskProvider implements EthereumProvider {
   chainId: Ref<number> = ref(1);
 
   private web3Provider: Web3Provider;
-  private provider: OwnExternalProvider;
+  private externalProvider: Eip1193Provider;
 
-  constructor(_provider: ExternalProvider) {
+  constructor(_provider: Eip1193Provider) {
     if (!_provider.isMetaMask) {
       throw new Error('Given provider is not MetaMask!');
     }
     this.web3Provider = new Web3Provider(_provider);
-    this.provider = this.web3Provider.provider as OwnExternalProvider;
+    this.externalProvider = _provider;
   }
 
   async init(): Promise<void> {
@@ -94,19 +90,17 @@ export class MetaMaskProvider implements EthereumProvider {
 
   async addToken(tokenData: TokenData): Promise<void> {
     try {
-      const wasAdded = this.provider?.request
-        ? await this.provider?.request({
-            method: 'wallet_watchAsset',
-            params: {
-              type: 'ERC20',
-              options: {
-                address: tokenData.address,
-                symbol: tokenData.symbol,
-                decimals: tokenData.decimals,
-              },
-            },
-          })
-        : false;
+      const wasAdded = await this.externalProvider.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: tokenData.address,
+            symbol: tokenData.symbol,
+            decimals: tokenData.decimals,
+          },
+        },
+      });
       if (!wasAdded) {
         throw new Error("Couldn't add token to metamask");
       }
@@ -144,12 +138,11 @@ export class MetaMaskProvider implements EthereumProvider {
   }
 
   private listenToEvents(): void {
-    this.provider.on &&
-      this.provider.on('accountsChanged', (accounts: string[]) =>
-        this.newDefaultSigner(accounts),
-      ) &&
-      this.provider.on('chainChanged', (chainId: string) => {
-        this.chainId.value = BigNumber.from(chainId).toNumber();
-      });
+    this.externalProvider.on('accountsChanged', (accounts: string[]) =>
+      this.newDefaultSigner(accounts),
+    );
+    this.externalProvider.on('chainChanged', (chainId: string) => {
+      this.chainId.value = BigNumber.from(chainId).toNumber();
+    });
   }
 }
