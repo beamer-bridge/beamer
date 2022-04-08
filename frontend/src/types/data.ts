@@ -23,7 +23,6 @@ export interface Request {
   requestManagerAddress?: string;
   fillManagerAddress?: string;
   requestId?: BigNumber;
-  receipt?: TransactionReceipt;
   fee?: number;
   validityPeriod?: number;
 }
