@@ -11,6 +11,7 @@ const configuration: Config.InitialOptions = {
     '^~/(.*)$': '<rootDir>/tests/$1',
   },
   testEnvironment: 'jsdom',
+  reporters: ['default', ['jest-junit', { outputDirectory: './tests/output' }]],
 };
 
 export default configuration;
