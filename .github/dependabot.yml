@@ -14,11 +14,11 @@ updates:
       - "istankovic"
       - "palango"
 
-  - package-ecosystem: "npm"
-    directory: "/frontend/"
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-    reviewers:
-      - "nekhaly"
-      - "manuelwedler"
+  # - package-ecosystem: "npm"
+  #   directory: "/frontend/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "thursday"
+  #   reviewers:
+  #     - "nekhaly"
+  #     - "manuelwedler"
