@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings 0 .",
-    "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix ."
+    "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix .",
+    "test:unit": "jest ./tests/unit"
   },
   "dependencies": {
     "@ethersproject/providers": "^5.5.2",
@@ -42,8 +43,11 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-vue": "^8.5.0",
+    "jest": "^27.5.1",
     "prettier": "^2.6.0",
     "sass": "^1.49.9",
+    "ts-jest": "^27.1.4",
+    "ts-node": "^10.7.0",
     "typescript": "~4.1.5",
     "vite": "^2.9.0",
     "vue-jest": "^5.0.0-0"
