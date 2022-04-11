@@ -80,7 +80,8 @@ import {
   useRequestTransaction,
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
-import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
+import { useConfiguration } from '@/stores/configuration';
+import { EthereumProviderKey } from '@/symbols';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 import { injectStrict } from '@/utils/vue-utils';
@@ -94,21 +95,21 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
-const beamerConfig = injectStrict(BeamerConfigKey);
+const configuration = useConfiguration();
 
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
 const transactionError = ref('');
 
-const { fee, executeGetFee } = useGetFee(ethereumProvider, beamerConfig);
+const { fee, executeGetFee } = useGetFee(ethereumProvider);
 const { requestTransactionActive, requestState, executeRequestTransaction } =
-  useRequestTransaction(ethereumProvider, beamerConfig);
-const { executeWaitFulfilled } = useWaitRequestFilled(beamerConfig);
+  useRequestTransaction(ethereumProvider);
+const { executeWaitFulfilled } = useWaitRequestFilled();
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
 const getTargetTokenAddress = (targetChainId: number, tokenSymbol: string) => {
-  return beamerConfig.value.chains[String(targetChainId)].tokens.find(
+  return configuration.chains[String(targetChainId)].tokens.find(
     (token) => token.symbol === tokenSymbol,
   )?.address as string;
 };

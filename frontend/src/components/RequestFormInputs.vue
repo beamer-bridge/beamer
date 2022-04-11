@@ -125,14 +125,15 @@ import Spinner from '@/components/Spinner.vue';
 import useTokenBalance from '@/composables/useTokenBalance';
 import { requestFaucet } from '@/services/transactions/faucet';
 import { getTokenDecimals } from '@/services/transactions/token';
-import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
-import { Token } from '@/types/config';
+import { useConfiguration } from '@/stores/configuration';
+import { EthereumProviderKey } from '@/symbols';
+import type { Token } from '@/types/config';
 import type { SelectorOption } from '@/types/form';
 import createAsyncProcess from '@/utils/create-async-process';
 import { injectStrict } from '@/utils/vue-utils';
 
 const ethereumProvider = injectStrict(EthereumProviderKey);
-const beamerConfig = injectStrict(BeamerConfigKey);
+const configuration = useConfiguration();
 
 interface Props {
   readonly fees: string;
@@ -140,17 +141,15 @@ interface Props {
 
 defineProps<Props>();
 
-const chainsConfiguration = beamerConfig.value.chains;
-
 const getChainSelectorOption: (chainId: string) => SelectorOption | string = (chainId: string) =>
-  chainsConfiguration[chainId]
+  configuration.chains[chainId]
     ? {
         value: Number(chainId),
-        label: chainsConfiguration[chainId]?.name,
+        label: configuration.chains[chainId]?.name,
       }
     : '';
 
-const CHAINS: Array<SelectorOption | string> = Object.keys(chainsConfiguration).map((chainId) =>
+const CHAINS: Array<SelectorOption | string> = Object.keys(configuration.chains).map((chainId) =>
   getChainSelectorOption(chainId),
 );
 
@@ -158,7 +157,8 @@ const getTokenSelectorOption = (token: Token) => ({
   value: token.address,
   label: token.symbol,
 });
-const TOKENS: SelectorOption[] = chainsConfiguration[
+
+const TOKENS: SelectorOption[] = configuration.chains[
   String(ethereumProvider.value.chainId.value)
 ]?.tokens.map((token) => getTokenSelectorOption(token));
 
@@ -177,8 +177,8 @@ const switchChain = async (chainId: Ref<number>) => {
       if (isSuccessfulSwitch === null) {
         await ethereumProvider.value.addChain({
           chainId: chainId.value,
-          name: chainsConfiguration[chainId.value].name,
-          rpcUrl: chainsConfiguration[chainId.value].rpcUrl,
+          name: configuration.chains[chainId.value].name,
+          rpcUrl: configuration.chains[chainId.value].rpcUrl,
         });
       }
     } catch (error) {

@@ -2,7 +2,7 @@
   <div class="flex justify-center items-center pt-12 pb-12">
     <img class="w-[30rem]" src="@/assets/images/logo.svg" alt="logo" />
   </div>
-  <router-view v-if="config" class="flex-auto z-10" />
+  <router-view v-if="configurationLoaded" class="flex-auto z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
     <div class="w-48 h-48">
       <spinner></spinner>
@@ -17,19 +17,38 @@
 </template>
 
 <script setup lang="ts">
-import { provide } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import Feedback from '@/components/Feedback.vue';
 import Spinner from '@/components/Spinner.vue';
-import useBeamerConfig from '@/composables/useBeamerConfig';
-import { BeamerConfigKey } from '@/symbols';
+import { useConfiguration } from '@/stores/configuration';
+import type { BeamerConfig } from '@/types/config';
 
 import ImprintModal from './components/ImprintModal.vue';
 
-const { config } = useBeamerConfig();
 const enableFeedback = false;
+const configuration = useConfiguration();
+const configurationLoaded = ref(false);
 
-provide(BeamerConfigKey, config);
+const fetchConfigurationFile = async (): Promise<BeamerConfig> => {
+  try {
+    const response = await fetch(import.meta.env.VITE_CONFIG_URL);
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    return { chains: {} };
+  }
+};
+
+onMounted(async () => {
+  const configurationFile = await fetchConfigurationFile();
+
+  for (const [chainId, chainConfiguration] of Object.entries(configurationFile.chains)) {
+    configuration.setChainConfiguration(chainId, chainConfiguration);
+  }
+
+  configurationLoaded.value = true;
+});
 </script>
 
 <style lang="css">
