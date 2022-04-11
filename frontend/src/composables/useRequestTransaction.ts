@@ -74,7 +74,7 @@ export function useRequestTransaction(
       );
 
       await sendRequestTransaction(signer, request, requestState);
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof Error) {
         throw error;
       } else if (error.code && error.code === 4001) {

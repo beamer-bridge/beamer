@@ -108,7 +108,8 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
-import { computed, reactive, ref, watch } from 'vue';
+import type { Ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
 import { requestFaucet } from '@/services/transactions/faucet';
@@ -158,16 +159,22 @@ const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
     (chain as SelectorOption).value !== (fromChainId.value as SelectorOption).value,
 );
 
-const switchChain = async (chainId: any) => {
-  if (chainId !== ethereumProvider.value.chainId.value) {
+const addNewChain = async (chainId: number): Promise<void> => {
+  const chainConfiguration = chainsConfiguration[chainId];
+  await ethereumProvider.value.addChain({
+    chainId: chainId,
+    name: chainConfiguration.name,
+    rpcUrl: chainConfiguration.rpcUrl,
+  });
+};
+
+const switchChain = async (chainId: Ref<number>): Promise<void> => {
+  if (chainId.value !== ethereumProvider.value.chainId.value) {
     try {
       const isSuccessfulSwitch = await ethereumProvider.value.switchChain(chainId.value);
+
       if (isSuccessfulSwitch === null) {
-        await ethereumProvider.value.addChain({
-          chainId: chainId.value,
-          name: chainsConfiguration[chainId.value].name,
-          rpcUrl: chainsConfiguration[chainId.value].rpcUrl,
-        });
+        addNewChain(chainId.value);
       }
     } catch (error) {
       location.reload();

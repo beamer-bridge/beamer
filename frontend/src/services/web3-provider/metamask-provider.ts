@@ -22,8 +22,11 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
   return undefined;
 }
 type OwnExternalProvider = ExternalProvider & {
-  on?: (e: string, cb: (param: any) => void) => void;
-  request?: (request: { method: string; params: { type: string; options: any } }) => Promise<any>;
+  on?: (e: string, cb: (param: unknown) => void) => void;
+  request?: (request: {
+    method: string;
+    params: { type: string; options: unknown };
+  }) => Promise<unknown>;
 };
 
 export class MetaMaskProvider implements EthereumProvider {

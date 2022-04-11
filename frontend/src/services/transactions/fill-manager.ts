@@ -9,7 +9,7 @@ export async function listenOnFulfillment(
   request: Request,
   fillManagerAddress: string,
   currentBlockNumber: number,
-): Promise<any> {
+): Promise<string | undefined> {
   const fillManagerContract = new Contract(
     fillManagerAddress,
     FillManager.abi,
@@ -36,7 +36,7 @@ export async function listenOnFulfillment(
 
   return Promise.race([fulfillmentPromise, timeoutPromise])
     .then((fullRequestId) => {
-      return fullRequestId;
+      return fullRequestId as string;
     })
     .catch((err) => {
       throw err;

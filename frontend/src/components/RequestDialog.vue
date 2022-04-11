@@ -108,7 +108,7 @@ const { requestTransactionActive, requestState, executeRequestTransaction } =
 const { executeWaitFulfilled } = useWaitRequestFilled(beamerConfig);
 const { requestSigner, requestSignerActive, requestSignerError } =
   useRequestSigner(ethereumProvider);
-const getTargetTokenAddress = (targetChainId: any, tokenSymbol: string) => {
+const getTargetTokenAddress = (targetChainId: string, tokenSymbol: string) => {
   return beamerConfig.value.chains[targetChainId].tokens.find(
     (token) => token.symbol === tokenSymbol,
   )?.address as string;
@@ -164,7 +164,7 @@ const submitRequestTransaction = async (formResult: {
   try {
     await executeRequestTransaction(request, ethereumProvider.value.signer.value);
     await executeWaitFulfilled(request, requestState);
-  } catch (error: any) {
+  } catch (error) {
     transactionError.value = error.message;
   }
 };

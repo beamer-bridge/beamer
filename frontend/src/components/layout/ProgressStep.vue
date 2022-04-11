@@ -58,6 +58,6 @@ const classObject = computed(() => {
 }
 .steps-vertical .step {
   gap: 1.5rem;
-  min-height: 5rem;;
+  min-height: 5rem;
 }
 </style>
