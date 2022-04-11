@@ -195,7 +195,6 @@ class EventFetcher:
     def fetch(self) -> list[Event]:
         try:
             block_number = self._contract.web3.eth.block_number
-            block_data = self._contract.web3.eth.get_block(block_number)
         except requests.exceptions.RequestException:
             return []
 
@@ -215,11 +214,16 @@ class EventFetcher:
                 from_block = BlockNumber(to_block + 1)
 
         self._next_block_number = from_block
-
-        result.append(
-            LatestBlockUpdatedEvent(
-                chain_id=self._chain_id,
-                block_data=block_data,
+        try:
+            # Block number needs to be decremented here, because it is already incremented above
+            block_data = self._contract.web3.eth.get_block(from_block - 1)
+        except requests.exceptions.RequestException:
+            return result
+        else:
+            result.append(
+                LatestBlockUpdatedEvent(
+                    chain_id=self._chain_id,
+                    block_data=block_data,
+                )
             )
-        )
         return result
