@@ -6,15 +6,12 @@ import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance, getTokenDecimals } from '@/services/transactions/token';
 import { EthereumProvider } from '@/services/web3-provider';
-import { BeamerConfig } from '@/types/config';
+import { useConfiguration } from '@/stores/configuration';
 import { Request, RequestState } from '@/types/data';
 import createAsyncProcess from '@/utils/create-async-process';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function useGetFee(
-  ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  beamerConfig: Ref<Readonly<BeamerConfig>>,
-) {
+export function useGetFee(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
   const getFeeError = ref('');
   const fee = ref<number>();
 
@@ -23,7 +20,8 @@ export function useGetFee(
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = beamerConfig.value.chains[String(chainId)];
+      const configuration = useConfiguration();
+      const chainConfig = configuration.chains[chainId.toString()];
       const requestManagerAddress = chainConfig?.requestManagerAddress;
       if (requestManagerAddress) {
         const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
@@ -49,10 +47,7 @@ export function useGetFee(
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function useRequestTransaction(
-  ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-  beamerConfig: Ref<Readonly<BeamerConfig>>,
-) {
+export function useRequestTransaction(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
   const requestState = ref<RequestState>(RequestState.Init);
 
   const executeRequestTransaction = async (request: Request, signer: JsonRpcSigner) => {
@@ -60,7 +55,8 @@ export function useRequestTransaction(
 
     try {
       const chainId = ethereumProvider.value.chainId.value;
-      const chainConfig = beamerConfig.value.chains[String(chainId)];
+      const configuration = useConfiguration();
+      const chainConfig = configuration.chains[String(chainId)];
       request.sourceChainId = chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
       const decimals = await getTokenDecimals(ethereumProvider.value, request.sourceTokenAddress);
@@ -99,14 +95,15 @@ export function useRequestTransaction(
   };
 }
 
-export function useWaitRequestFilled(beamerConfig: Ref<Readonly<BeamerConfig>>) {
+export function useWaitRequestFilled() {
   const waitError = ref('');
 
   const executeWaitFulfilled = async (request: Request, requestState: Ref<RequestState>) => {
     waitError.value = '';
 
     const targetChainId = request.targetChainId;
-    const targetChainConfig = beamerConfig.value.chains[String(targetChainId)];
+    const configuration = useConfiguration();
+    const targetChainConfig = configuration.chains[String(targetChainId)];
     const fillManagerAddress = targetChainConfig.fillManagerAddress;
 
     const waitOnFulfillment = async () => {

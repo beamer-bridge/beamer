@@ -9,6 +9,7 @@ import {
   plugin as formkitPlugin,
 } from '@formkit/vue';
 import FloatingVue from 'floating-vue';
+import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 
 import App from './App.vue';
@@ -30,4 +31,5 @@ createApp(App)
     }),
   )
   .use(FloatingVue)
+  .use(createPinia())
   .mount('#app');

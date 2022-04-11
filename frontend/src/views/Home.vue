@@ -21,21 +21,18 @@ import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef, watch
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
-import { BeamerConfigKey, EthereumProviderKey } from '@/symbols';
-import { injectStrict } from '@/utils/vue-utils';
+import { EthereumProviderKey } from '@/symbols';
 
 const criticalErrorMessage = ref('');
 const ethereumProvider = shallowRef<EthereumProvider | undefined>(undefined);
 const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
 const requestDialogReloadKey = ref(0);
 
-const beamerConfig = injectStrict(BeamerConfigKey);
-
 const chainChangeHandler = async () => {
   const { connectedChainSupported } = useChainCheck(
     readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
   );
-  const isSupportedChain = await connectedChainSupported(beamerConfig);
+  const isSupportedChain = await connectedChainSupported();
   if (!isSupportedChain) {
     criticalErrorMessage.value = `Connected chain not supported!`;
   } else {
