@@ -31,6 +31,7 @@ shiv = "^1.0.1"
 Sphinx = "^4.5.0"
 furo = "^2022.4.7"
 sphinxcontrib-mermaid = "^0.7.1"
+prometheus-client = "^0.14.1"
 
 [tool.poetry.scripts]
 beamer-agent = 'beamer.cli:main'
