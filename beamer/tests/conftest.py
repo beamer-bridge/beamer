@@ -15,6 +15,7 @@ from brownie import (
     accounts,
 )
 
+import beamer.metrics
 from beamer.agent import Agent, Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
@@ -159,7 +160,9 @@ def config(request_manager, fill_manager, token):
         token_match_file=token_match_file,
         account=account,
         fill_wait_time=0,
+        prometheus_metrics_port=None,
     )
+    beamer.metrics.init(config)
     return config
 
 
