@@ -21,8 +21,8 @@
         <RequestFormInputs v-if="requestState === RequestState.Init" :fees="feesEther" />
         <RequestProcessing v-else :request-metadata="requestMetadata" />
         <Transition name="expand">
-          <div v-if="shownError()" class="mt-7 text-right text-lg text-orange-dark">
-            {{ shownError() }}
+          <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
+            {{ shownError }}
           </div>
         </Transition>
       </Card>
@@ -185,11 +185,13 @@ const isNewTransferDisabled = computed(() => {
   );
 });
 
-const shownError = () => {
-  const error = requestSignerError.value || transactionError.value;
-  if (error && requestState.value !== RequestState.RequestFailed) {
+const shownError = computed(() => {
+  return requestSignerError.value || transactionError.value;
+});
+
+watch(shownError, async () => {
+  if (shownError.value && requestState.value !== RequestState.RequestFailed) {
     requestState.value = RequestState.Init;
   }
-  return error;
-};
+});
 </script>
