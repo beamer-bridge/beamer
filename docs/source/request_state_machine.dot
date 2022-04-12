@@ -7,5 +7,6 @@ digraph request_state_machine {
     filled -> claimed [label = try_to_claim];
     claimed -> withdrawn [label = withdraw];
     filled -> withdrawn [label = withdraw];
+    filled -> ignored [label = ignore];
     ignored -> withdrawn [label = withdraw];
 }
