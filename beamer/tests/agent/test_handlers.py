@@ -129,6 +129,14 @@ def test_request_garbage_collection_without_claim(token, config: Config):
     process_requests(context)
     assert len(context.requests) == 0
 
+    request = make_request(token)
+    request.ignore()
+    context.requests.add(request.id, request)
+
+    assert len(context.requests) == 1
+    process_requests(context)
+    assert len(context.requests) == 0
+
 
 def test_request_garbage_collection_with_claim(token, config: Config):
     request = make_request(token)
