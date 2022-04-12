@@ -76,10 +76,13 @@ export function useRequestTransaction(
       await sendRequestTransaction(signer, request, requestState);
     } catch (error) {
       const maybeErrorCode = (error as { code?: number }).code;
+      // TODO move all custom errors to error handling library
       if (error instanceof Error) {
         throw error;
       } else if (maybeErrorCode && maybeErrorCode === 4001) {
         throw new Error('Error: User rejected the transaction!');
+      } else if (maybeErrorCode && maybeErrorCode === -32603) {
+        throw new Error('Error: Insufficient balance!');
       } else {
         throw new Error('Unknown failure!');
       }

@@ -30,7 +30,11 @@ export async function listenOnFulfillment(
 
   const timeoutPromise: Promise<never> = new Promise((_resolve, reject) => {
     setTimeout(() => {
-      reject(new Error('Timeout while waiting for fulfillment acknowledgement!'));
+      reject(
+        new Error(
+          'It looks like it will take longer than expected! Please check your balances later!',
+        ),
+      );
     }, eventListeningTimeout);
   });
 
