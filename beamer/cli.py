@@ -1,6 +1,7 @@
 import json
 import signal
 from pathlib import Path
+from typing import Optional
 
 import click
 import structlog
@@ -77,6 +78,14 @@ def _sigint_handler(agent: Agent) -> None:
     show_default=True,
     help="The log level.",
 )
+@click.option(
+    "--prometheus-metrics-port",
+    type=int,
+    default=None,
+    metavar="PORT",
+    show_default=True,
+    help="Provide Prometheus metrics on PORT.",
+)
 @click.version_option()
 def main(
     keystore_file: Path,
@@ -87,6 +96,7 @@ def main(
     token_match_file: Path,
     fill_wait_time: int,
     log_level: str,
+    prometheus_metrics_port: Optional[int],
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
@@ -100,6 +110,7 @@ def main(
         l2b_rpc_url=l2b_rpc_url,
         token_match_file=token_match_file,
         fill_wait_time=fill_wait_time,
+        prometheus_metrics_port=prometheus_metrics_port,
     )
 
     signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(agent))

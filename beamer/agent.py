@@ -1,6 +1,7 @@
 import threading
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import structlog
 import web3
@@ -9,6 +10,7 @@ from eth_typing import Address
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
+import beamer.metrics
 from beamer.chain import ContractEventMonitor, EventProcessor
 from beamer.contracts import DeploymentInfo, make_contracts
 from beamer.state_machine import Context
@@ -27,6 +29,7 @@ class Config:
     l2b_rpc_url: URL
     token_match_file: Path
     fill_wait_time: int
+    prometheus_metrics_port: Optional[int]
 
 
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
@@ -93,6 +96,7 @@ class Agent:
 
     def start(self) -> None:
         assert self._stopped.is_set()
+        beamer.metrics.init(self._config)
         self._event_processor.start()
         self._contract_monitor_l2a.start()
         self._contract_monitor_l2b.start()
