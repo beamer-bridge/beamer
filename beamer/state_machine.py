@@ -11,6 +11,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.types import BlockData
 
+import beamer.metrics
 from beamer.events import (
     ClaimMade,
     ClaimWithdrawn,
@@ -72,6 +73,9 @@ def _handle_latest_block_updated(event: LatestBlockUpdatedEvent, context: Contex
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> bool:
+    with beamer.metrics.update() as data:
+        data.requests_created.inc()
+
     # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, do not check token match file
     if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
         # Check if the address points to some contract
@@ -109,6 +113,11 @@ def _handle_request_created(event: RequestCreated, context: Context) -> bool:
 
 
 def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
+    with beamer.metrics.update() as data:
+        data.requests_filled.inc()
+        if event.filler == context.address:
+            data.requests_filled_by_agent.inc()
+
     request = context.requests.get(event.request_id)
     if request is None:
         return False
