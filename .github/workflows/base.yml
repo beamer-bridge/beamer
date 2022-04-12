@@ -1,0 +1,14 @@
+name: Base CI
+
+on:
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+  block-fixup-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.0.0
+      - name: 'Block Merging Fixup Commits'
+        uses: 13rac1/block-fixup-merge-action@v2.0.0
