@@ -216,10 +216,10 @@ def process_requests(context: Context) -> None:
         elif request.is_filled:
             claim_request(request, context)
 
-        elif request.is_withdrawn:
+        elif request.is_withdrawn or request.is_ignored:
             active_claims = any(claim.request_id == request.id for claim in context.claims)
             if not active_claims:
-                log.debug("Removing withdrawn request", request=request)
+                log.debug("Removing request", request=request)
                 to_remove.append(request.id)
 
     for request_id in to_remove:
