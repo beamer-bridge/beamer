@@ -198,9 +198,12 @@ class _TransactionFailed(Exception):
 
 def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types.HexBytes:
     try:
-        return func.transact(cast(Optional[TxParams], kwargs))
+        txn_hash = func.transact(cast(Optional[TxParams], kwargs))
     except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
         raise _TransactionFailed() from exc
+
+    func.web3.eth.wait_for_transaction_receipt(txn_hash)
+    return txn_hash
 
 
 def process_requests(context: Context) -> None:
@@ -299,8 +302,6 @@ def fill_request(request: Request, context: Context) -> None:
         log.error("fillRequest failed", request_id=request.id, cause=exc.cause())
         return
 
-    w3.eth.wait_for_transaction_receipt(txn_hash)
-
     request.try_to_fill()
     log.debug(
         "Filled request",
@@ -335,8 +336,6 @@ def claim_request(request: Request, context: Context) -> None:
         )
         return
 
-    context.request_manager.web3.eth.wait_for_transaction_receipt(txn_hash)
-
     request.try_to_claim()
     log.debug(
         "Claimed request",
@@ -367,8 +366,6 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
         log.error("challengeClaim failed", claim=claim, cause=exc.cause(), stake=stake)
         return False
 
-    w3 = context.request_manager.web3
-    w3.eth.wait_for_transaction_receipt(txn_hash)
     claim.transaction_pending = True
 
     log.debug(
@@ -394,6 +391,5 @@ def withdraw(claim: Claim, context: Context) -> None:
         log.error("Withdraw failed", claim=claim, cause=exc.cause())
         return
 
-    context.request_manager.web3.eth.wait_for_transaction_receipt(txn_hash)
     claim.transaction_pending = True
     log.debug("Withdrew", claim=claim.id, txn_hash=txn_hash.hex())
