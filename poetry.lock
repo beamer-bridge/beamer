@@ -929,7 +929,7 @@ testing = ["pytest", "pytest-benchmark"]
 name = "prometheus-client"
 version = "0.14.1"
 description = "Python client for the Prometheus monitoring system."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -1675,7 +1675,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9, <3.10"
-content-hash = "5aa3e13a48a72d9da2d83b214ee8b39d73fb904175bf1a908823dc96d2d9161c"
+content-hash = "43c2e98ae7c5636c3fe43da6265e4d270f6100eaea14f514e12b5c3bd0507f51"
 
 [metadata.files]
 aiohttp = [
