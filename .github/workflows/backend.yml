@@ -3,8 +3,11 @@ name: Agent CI
 on:
   push:
     branches: [ main ]
+
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      -  'frontend/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
