@@ -1,4 +1,3 @@
-import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { Ref } from 'vue';
 

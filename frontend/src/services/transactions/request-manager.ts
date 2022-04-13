@@ -1,5 +1,5 @@
 import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { DeepReadonly, Ref } from 'vue';
 
 import RequestManager from '@/assets/RequestManager.json';
@@ -15,7 +15,7 @@ export async function getRequestFee(
   return await connectedContract.totalFee();
 }
 interface TransactionReceiptInterface extends TransactionReceipt {
-  events: Array<any>;
+  events: Array<{ event: string; args: { requestId: BigNumber } }>;
 }
 
 function getEvent(receipt: TransactionReceiptInterface, eventName: string) {
