@@ -323,7 +323,7 @@ Self challenges
 +++++++++++++++
 
 In the previous explanation, we only talked about two participants to the challenges, Bob and Charles. What if, after
-submitting his false claim, Charles challenges himself. This would let Charles control the state of his challenge and
+submitting his false claim, Charles challenges himself? This would let Charles control the state of his challenge and
 he would be able to let it expire with his claim successful as an outcome.
 
 To prevent this successful ``self-challenged claim`` to allow Charles to withdraw Alice's deposit, Bob can fill Alice's request
@@ -340,31 +340,34 @@ Claims that cannot be filled
 ++++++++++++++++++++++++++++
 
 In both the regular ``false claim`` and ``self-challenge claim`` cases, we assumed that Bob could fill Alice's request in
-order to prove that the false claimer Charles was not the correct filler. However, If Alice's request cannot be filled
-for any reason (e.g. transfer value too high), instead of proving that someone other than Charles filled a request,
+order to prove that the false claimer Charles was not the correct filler. However, Alice's request might not be able to
+be filled (e.g. transfer value too high). Instead of proving that someone other than Charles filled a request,
 Bob will need to prove that Charles did not fill the request as claimed. For that, Bob needs to create and submit an
 ``L1 non-fill proof`` from rollup B to rollup A.
 
-When called, the fill manager contract on rollup B recomputes the fill hash from the request hash, and fill ID,
-and checks that no fills exists for the corresponding request hash and fill hash. It then submits a proof
-to the outbox of rollup B indicating that the fill hash is invalid, i.e. that the request hash cannot be mapped to the
-fill hash.
+When called, the fill manager contract on rollup B recomputes the fill hash from the request hash, and fill ID which
+were made public during the claim, and checks that no fills exists for the corresponding request hash and fill hash.
+It then submits a proof to the outbox of rollup B indicating that the fill hash is invalid, i.e. that the request hash
+cannot be mapped to the fill hash.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
-message will store in the ``resolution registry`` that the ``fill hash`` is invalid and make any claim from Charles with
-the corresponding hash an invalid claim.
+message will store a flag in the ``resolution registry`` stating that the ``fill hash`` is invalid. This invalidates any
+claim with the corresponding ``fill hash``.
 
 To make sure the proof arrives in time on rollup A, Bob will need to call the ``fill manager`` as soon as he notices a
 false claim for a non-filled request. It takes ``finalization time of rollup B`` after Bob's call to be able to send the
-proof, while the challenge period is defined to be ``finalization time of rollup B + challenge period extension``.
+proof to the resolution registry, while the challenge period is defined to be
+``finalization time of rollup B + challenge period extension``.
+
+:TODO: rewrite paragraph below if we explain the challenge extension earlier
 
 In the case where someone challenges Charles on the false claim at the same time as Bob sends the transaction for the
 proof on rollup B, Bob will not be able to challenge Charles and will not receive any financial reward from having sent
 this transaction. The situation being unlikely to happen and the costs of rollup transactions being low, we believe this
 not to be too big of a problem.
 
-The costly L1 transaction can however be sent only when Bob is properly incentivized, that is he is at stake in the
-challenge against Charles.
+Bob can however wait to be properly incentivized before sending the costly L1 transaction, that is he can wait to be at
+stake in the challenge against Charles.
 
 Non-fill proofs and self challenges
 +++++++++++++++++++++++++++++++++++
