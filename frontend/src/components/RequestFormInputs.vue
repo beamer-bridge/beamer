@@ -13,11 +13,10 @@
             validation="required"
             messages-class="hidden"
           />
-          <div
-            v-if="showTokenBalance"
-            class="text-sm max-w-3xs flex-1 overflow-hidden flex flex-col justify-center"
-          >
-            {{ formattedTokenBalance }} {{ selectedToken?.label }} available
+          <div>
+            <div v-if="showTokenBalance" class="text-sm m-3 mr-5">
+              {{ formattedTokenBalance }} {{ selectedToken?.label }} available
+            </div>
           </div>
         </div>
         <div class="flex-1 flex flex-col">
@@ -32,7 +31,11 @@
             messages-class="hidden"
             @input="switchToken"
           />
-          <div class="form-tooltip" data-theme="default" data-tip="Adds current token to Metamask">
+          <div
+            class="form-tooltip self-end"
+            data-theme="default"
+            data-tip="Adds current token to Metamask"
+          >
             <button
               class="btn btn-ghost btn-sm text-orange m-2"
               type="button"
