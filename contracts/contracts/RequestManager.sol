@@ -153,12 +153,13 @@ contract RequestManager is Ownable {
     )
     external payable returns (uint256)
     {
-        uint256 lpFee = gasReimbursementFee() + lpServiceFee();
-        uint256 beamerFee = beamerServiceFee();
         require(finalizationTimes[targetChainId] != 0, "Target rollup not supported");
-        require(lpFee + beamerFee == msg.value, "Wrong amount of fees sent");
         require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
         require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
+
+        uint256 lpFee = gasReimbursementFee() + lpServiceFee();
+        uint256 beamerFee = beamerServiceFee();
+        require(lpFee + beamerFee == msg.value, "Wrong amount of fees sent");
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
