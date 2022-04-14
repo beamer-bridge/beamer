@@ -126,14 +126,13 @@ import useTokenBalance from '@/composables/useTokenBalance';
 import { requestFaucet } from '@/services/transactions/faucet';
 import { getTokenDecimals } from '@/services/transactions/token';
 import { useConfiguration } from '@/stores/configuration';
-import { EthereumProviderKey } from '@/symbols';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { Token } from '@/types/config';
 import type { SelectorOption } from '@/types/form';
 import createAsyncProcess from '@/utils/create-async-process';
-import { injectStrict } from '@/utils/vue-utils';
 
-const ethereumProvider = injectStrict(EthereumProviderKey);
 const configuration = useConfiguration();
+const ethereumProvider = useEthereumProvider();
 
 interface Props {
   readonly fees: string;
@@ -159,11 +158,11 @@ const getTokenSelectorOption = (token: Token) => ({
 });
 
 const TOKENS: SelectorOption[] = configuration.chains[
-  String(ethereumProvider.value.chainId.value)
+  String(ethereumProvider.chainId)
 ]?.tokens.map((token) => getTokenSelectorOption(token));
 
-const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.value.chainId.value)));
-const selectedToken: Ref<SelectorOption | undefined> = ref();
+const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.chainId)));
+const selectedToken = ref();
 
 const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
   (chain: SelectorOption | string) =>
@@ -171,11 +170,11 @@ const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
 );
 
 const switchChain = async (chainId: Ref<number>) => {
-  if (chainId.value !== ethereumProvider.value.chainId.value) {
+  if (ethereumProvider.provider && chainId.value !== ethereumProvider.chainId) {
     try {
-      const isSuccessfulSwitch = await ethereumProvider.value.switchChain(chainId.value);
+      const isSuccessfulSwitch = await ethereumProvider.provider.switchChain(chainId.value);
       if (isSuccessfulSwitch === null) {
-        await ethereumProvider.value.addChain({
+        await ethereumProvider.provider.addChain({
           chainId: chainId.value,
           name: configuration.chains[chainId.value].name,
           rpcUrl: configuration.chains[chainId.value].rpcUrl,
@@ -196,10 +195,10 @@ const addToken = async () => {
     return;
   }
   try {
-    if (ethereumProvider.value.signer.value) {
-      const decimals = await getTokenDecimals(ethereumProvider.value, selectedToken.value.value);
+    if (ethereumProvider.provider && ethereumProvider.signer) {
+      const decimals = await getTokenDecimals(selectedToken.value.value);
 
-      await ethereumProvider.value.addToken({
+      await ethereumProvider.provider.addToken({
         address: selectedToken.value.value,
         symbol: selectedToken.value.label,
         decimals: Number(decimals),
@@ -214,23 +213,16 @@ const faucetUsedForChain: Record<string, boolean> = reactive({});
 const faucetUsed = computed(() =>
   Boolean(faucetUsedForChain[(fromChainId.value as SelectorOption).value]),
 );
-const faucetButtonDisabled = computed(
-  () => faucetUsed.value || !ethereumProvider.value.signer.value,
-);
+const faucetButtonDisabled = computed(() => faucetUsed.value || !ethereumProvider.signer);
 
-const addTokenButtonDisabled = computed(
-  () => !ethereumProvider.value.signer.value || !selectedToken.value,
-);
+const addTokenButtonDisabled = computed(() => !ethereumProvider.signer || !selectedToken.value);
 
 const executeFaucetRequest = async () => {
-  if (!ethereumProvider.value.signerAddress.value) {
+  if (!ethereumProvider.signerAddress) {
     throw new Error('Signer address missing!');
   }
   const chainId = (fromChainId.value as SelectorOption).value;
-  const isSuccessfulFaucetRequest = await requestFaucet(
-    chainId,
-    ethereumProvider.value.signerAddress.value,
-  );
+  const isSuccessfulFaucetRequest = await requestFaucet(chainId, ethereumProvider.signerAddress);
   if (isSuccessfulFaucetRequest) {
     faucetUsedForChain[chainId] = true;
   }
@@ -247,18 +239,17 @@ The gas reimbursement fee and the liquidity provider fee are paid out to the liq
 
 Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
 
-const { showTokenBalance, formattedTokenBalance } = useTokenBalance(
-  ethereumProvider,
-  selectedToken,
-);
+const { showTokenBalance, formattedTokenBalance } = useTokenBalance(selectedToken);
 </script>
 <style lang="css">
 .form-tooltip {
   @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-50;
 }
+
 .tooltip:before {
   @apply p-4;
 }
+
 .tooltip:before,
 .tooltip:after {
   @apply md:ml-20;

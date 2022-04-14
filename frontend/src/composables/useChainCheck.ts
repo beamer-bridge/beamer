@@ -1,20 +1,16 @@
-import { ShallowRef } from 'vue';
-
-import { EthereumProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function useChainCheck(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
+export default function useChainCheck() {
   const configuration = useConfiguration();
+  const ethereumProvider = useEthereumProvider();
 
-  const chainMatchesExpected = async (expectedChainId: number) => {
-    const chainId = await ethereumProvider.value.chainId.value;
-    return chainId === expectedChainId;
+  const chainMatchesExpected = (expectedChainId: number) => {
+    return ethereumProvider.chainId === expectedChainId;
   };
 
-  const connectedChainSupported = async () => {
-    const chainId = await ethereumProvider.value.chainId.value;
-    return Object.prototype.hasOwnProperty.call(configuration.chains, String(chainId));
+  const connectedChainSupported = () => {
+    return String(ethereumProvider.chainId) in configuration.chains;
   };
 
   return { chainMatchesExpected, connectedChainSupported };
