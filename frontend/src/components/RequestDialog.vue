@@ -1,10 +1,7 @@
 <template>
   <div class="request-dialog">
     <div class="h-14">
-      <div
-        v-if="ethereumProvider.signer.value"
-        class="flex flex-row gap-4 justify-center items-center"
-      >
+      <div v-if="ethereumProvider.signer" class="flex flex-row gap-4 justify-center items-center">
         <div class="h-7 w-7 rounded-50 border-4 border-solid border-teal-light bg-green"></div>
         <span class="text-lg">You are currently connected via Metamask</span>
       </div>
@@ -27,7 +24,7 @@
         </Transition>
       </Card>
 
-      <div v-if="!ethereumProvider.signer.value">
+      <div v-if="!ethereumProvider.signer">
         <FormKit
           input-class="w-112 bg-orange flex flex-row justify-center"
           type="button"
@@ -69,6 +66,7 @@
 import { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
 import { utils } from 'ethers';
+import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
@@ -81,10 +79,9 @@ import {
   useWaitRequestFilled,
 } from '@/composables/useRequestTransaction';
 import { useConfiguration } from '@/stores/configuration';
-import { EthereumProviderKey } from '@/symbols';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
-import { injectStrict } from '@/utils/vue-utils';
 
 import RequestProcessing from './RequestProcessing.vue';
 
@@ -94,24 +91,22 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
-const ethereumProvider = injectStrict(EthereumProviderKey);
 const configuration = useConfiguration();
+const ethereumProvider = useEthereumProvider();
 
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
 const transactionError = ref('');
 
-const { fee, executeGetFee } = useGetFee(ethereumProvider);
+const { fee, executeGetFee } = useGetFee();
 const { requestTransactionActive, requestState, executeRequestTransaction } =
-  useRequestTransaction(ethereumProvider);
+  useRequestTransaction();
 const { executeWaitFulfilled } = useWaitRequestFilled();
-const { requestSigner, requestSignerActive, requestSignerError } =
-  useRequestSigner(ethereumProvider);
+const { requestSigner, requestSignerActive, requestSignerError } = useRequestSigner();
 const getTargetTokenAddress = (targetChainId: number, tokenSymbol: string) => {
-  return configuration.chains[String(targetChainId)].tokens.find(
-    (token) => token.symbol === tokenSymbol,
-  )?.address as string;
+  return configuration.chains[targetChainId].tokens.find((token) => token.symbol === tokenSymbol)
+    ?.address as string;
 };
 
 const feesEther = computed(() => {
@@ -132,7 +127,7 @@ const submitRequestTransaction = async (formResult: {
   toAddress: string;
   tokenAddress: SelectorOption;
 }) => {
-  if (!ethereumProvider.value.signer.value) {
+  if (!ethereumProvider.signer) {
     throw new Error('No signer available!');
   }
 
@@ -162,7 +157,7 @@ const submitRequestTransaction = async (formResult: {
   transactionError.value = '';
 
   try {
-    await executeRequestTransaction(request, ethereumProvider.value.signer.value);
+    await executeRequestTransaction(request, ethereumProvider.signer);
     await executeWaitFulfilled(request, requestState);
   } catch (error) {
     const maybeErrorMessage = (error as { message?: string }).message;
@@ -174,9 +169,9 @@ const submitRequestTransaction = async (formResult: {
   }
 };
 
-watch(ethereumProvider.value.chainId, async () => {
-  location.reload();
-});
+const { chainId } = storeToRefs(ethereumProvider);
+watch(chainId, () => location.reload());
+
 executeGetFee();
 
 const isNewTransferDisabled = computed(() => {

@@ -1,17 +1,15 @@
-import { ref, ShallowRef } from 'vue';
+import { ref } from 'vue';
 
-import { EthereumProvider } from '@/services/web3-provider';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import createAsyncProcess from '@/utils/create-async-process';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function useRequestSigner(
-  ethereumProvider: ShallowRef<Readonly<EthereumProvider>>,
-) {
+export default function useRequestSigner() {
   const requestSignerError = ref('');
+  const ethereumProvider = useEthereumProvider();
   const requestSigner = async () => {
     requestSignerError.value = '';
-    await ethereumProvider.value.requestSigner();
-    if (!ethereumProvider.value.signer.value) {
+    await ethereumProvider.provider?.requestSigner();
+    if (!ethereumProvider.signer) {
       requestSignerError.value = 'Accessing Wallet failed!';
     }
   };

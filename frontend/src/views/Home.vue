@@ -7,7 +7,7 @@
         </div>
       </div>
       <RequestDialog
-        v-if="ethereumProvider"
+        v-if="ethereumProvider.provider"
         :key="requestDialogReloadKey"
         @reload="resetRequestDialog"
       />
@@ -16,42 +16,34 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, provide, ref, shallowReadonly, ShallowRef, shallowRef, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { onMounted, ref, watch } from 'vue';
 
 import RequestDialog from '@/components/RequestDialog.vue';
 import useChainCheck from '@/composables/useChainCheck';
-import { createMetaMaskProvider, EthereumProvider } from '@/services/web3-provider';
-import { EthereumProviderKey } from '@/symbols';
+import { createMetaMaskProvider } from '@/services/web3-provider';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 
 const criticalErrorMessage = ref('');
-const ethereumProvider = shallowRef<EthereumProvider | undefined>(undefined);
-const readonlyEthereumProvider = shallowReadonly(ethereumProvider);
+const ethereumProvider = useEthereumProvider();
 const requestDialogReloadKey = ref(0);
 
-const chainChangeHandler = async () => {
-  const { connectedChainSupported } = useChainCheck(
-    readonlyEthereumProvider as ShallowRef<Readonly<EthereumProvider>>,
-  );
-  const isSupportedChain = await connectedChainSupported();
-  if (!isSupportedChain) {
-    criticalErrorMessage.value = `Connected chain not supported!`;
-  } else {
-    criticalErrorMessage.value = '';
-  }
+const chainChangeHandler = () => {
+  const { connectedChainSupported } = useChainCheck();
+  criticalErrorMessage.value = connectedChainSupported() ? '' : 'Connected chain not supported!';
 };
-
-provide(EthereumProviderKey, readonlyEthereumProvider);
 
 const resetRequestDialog = () => {
   requestDialogReloadKey.value += 1;
 };
 
 onMounted(async () => {
-  ethereumProvider.value = await createMetaMaskProvider();
-  if (ethereumProvider.value) {
-    watch(ethereumProvider.value.chainId, () => {
-      chainChangeHandler();
-    });
+  ethereumProvider.provider = await createMetaMaskProvider();
+
+  if (ethereumProvider.provider) {
+    const { chainId } = storeToRefs(ethereumProvider);
+
+    watch(chainId, chainChangeHandler);
     chainChangeHandler();
   } else {
     criticalErrorMessage.value = 'Could not detect MetaMask!';

@@ -3,16 +3,17 @@ import { BigNumber, Contract } from 'ethers';
 import { DeepReadonly, Ref } from 'vue';
 
 import RequestManager from '@/assets/RequestManager.json';
-import { EthereumProvider } from '@/services/web3-provider';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestState } from '@/types/data';
 
-export async function getRequestFee(
-  ethereumProvider: Readonly<EthereumProvider>,
-  requestManagerAddress: string,
-): Promise<number> {
+/**
+ * @returns the total fee to pay for a request, unknown if not connected
+ */
+export async function getRequestFee(requestManagerAddress: string): Promise<number | undefined> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi);
-  const connectedContract = ethereumProvider.connectContract(requestManagerContract);
-  return await connectedContract.totalFee();
+  const ethereumProvider = useEthereumProvider();
+  const connectedContract = ethereumProvider.provider?.connectContract(requestManagerContract);
+  return await connectedContract?.totalFee();
 }
 interface TransactionReceiptInterface extends TransactionReceipt {
   events: Array<{ event: string; args: { requestId: BigNumber } }>;
@@ -27,7 +28,7 @@ export async function sendRequestTransaction(
   requestState: Ref<RequestState>,
 ): Promise<Request> {
   if (!request.fee) {
-    request.fee = await getRequestFee(signer, request);
+    request.fee = await getRequestFee(request);
   }
   if (!request.validityPeriod) {
     request.validityPeriod = 600;

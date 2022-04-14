@@ -1,17 +1,16 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { ethers } from 'ethers';
-import { Ref, ref, ShallowRef } from 'vue';
+import { Ref, ref } from 'vue';
 
 import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import { getRequestFee, sendRequestTransaction } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance, getTokenDecimals } from '@/services/transactions/token';
-import { EthereumProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestState } from '@/types/data';
 import createAsyncProcess from '@/utils/create-async-process';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function useGetFee(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
+export function useGetFee() {
   const getFeeError = ref('');
   const fee = ref<number>();
 
@@ -19,12 +18,12 @@ export function useGetFee(ethereumProvider: ShallowRef<Readonly<EthereumProvider
     getFeeError.value = '';
 
     try {
-      const chainId = ethereumProvider.value.chainId.value;
       const configuration = useConfiguration();
-      const chainConfig = configuration.chains[chainId.toString()];
+      const ethereumProvider = useEthereumProvider();
+      const chainConfig = configuration.chains[String(ethereumProvider.chainId)];
       const requestManagerAddress = chainConfig?.requestManagerAddress;
       if (requestManagerAddress) {
-        const res = await getRequestFee(ethereumProvider.value, requestManagerAddress);
+        const res = await getRequestFee(requestManagerAddress);
         fee.value = res;
       }
     } catch (error) {
@@ -46,24 +45,22 @@ export function useGetFee(ethereumProvider: ShallowRef<Readonly<EthereumProvider
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function useRequestTransaction(ethereumProvider: ShallowRef<Readonly<EthereumProvider>>) {
+export function useRequestTransaction() {
   const requestState = ref<RequestState>(RequestState.Init);
 
   const executeRequestTransaction = async (request: Request, signer: JsonRpcSigner) => {
     requestState.value = RequestState.WaitConfirm;
 
     try {
-      const chainId = ethereumProvider.value.chainId.value;
       const configuration = useConfiguration();
-      const chainConfig = configuration.chains[String(chainId)];
-      request.sourceChainId = chainId;
+      const ethereumProvider = useEthereumProvider();
+      const chainConfig = configuration.chains[String(ethereumProvider.chainId)];
+      request.sourceChainId = ethereumProvider.chainId;
       request.requestManagerAddress = chainConfig.requestManagerAddress;
-      const decimals = await getTokenDecimals(ethereumProvider.value, request.sourceTokenAddress);
+      const decimals = await getTokenDecimals(request.sourceTokenAddress);
       request.amount = ethers.utils.parseUnits(request.amount.toString(), decimals);
 
       await ensureTokenAllowance(
-        signer,
         request.sourceTokenAddress,
         request.requestManagerAddress,
         request.amount,
