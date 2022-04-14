@@ -158,14 +158,14 @@ The rightful claim of Bob can however be challenged by anyone during its ``claim
 him and the challenger, Charles. Charles needs to stake a deposit higher than ``claim stake`` to challenge Bob's claim.
 The challenge will be on-going until the end of the ``challenge period``.
 
-During the challenge, the contested participant (in turn Bob, then Charles), can submit a transaction to confirm its
+During the challenge, the contested participant (in turn the claimer and the challenger), can submit a transaction to confirm its
 position and contest the other party. It is required that the new stake of the participant is higher than the current
 stake of the opponent. Everytime a participant responds to the challenge, the termination time of the challenge and
 underlying claim is extended to be at least ``challenge period extension``, to give time for the other party to respond.
 
 At the end of the challenge period, the last non-contested participant, and thus the participant with the highest stake, wins. The claim
 will be seen as valid if the winner of the challenge game is the original claimer. This means that he will be able to
-withdraw Alice's deposit.
+withdraw Alice's deposit. In any case, the winning participant will be rewarded with the deposit of the losing side.
 
 .. mermaid::
     :caption: `Challenged Claim`
@@ -188,7 +188,45 @@ withdraw Alice's deposit.
     note over Charles, Rollup A: wait for end of challenge
     Bob->>Rollup A: withdraws tokens
 
-To avoid this challenge to go on forever, or reach a point where Bob no longer has the funds to out-stake Charles,
+The protocol also allows additional participants to join the challenge and contest the claim in place of Charles. This can be
+done only when the claimer is ahead in the challenge and it is the challenger's turn to participate. The reason behind
+it is to prevent a single actor from playing both sides of the challenge and controlling the result.
+
+To properly reward the winners of the challenge, we need a bookkeeping mechanism of bidders and bids. We store in a mapping
+who bid which amount in total and who was the last bidder. When the challenge ends, if the claimer is
+ahead, he will earn the stakes of every challenger. If a challenger is ahead, each non-last challenger earns a value
+equal to their total stake. The stake of the last challenger being only partially covered by the claimer, he will only
+earn ``stake claimer - stake other challengers``, i.e. the remaining tokens.
+
+In the case where the dishonest party was leading and the L1 resolution proved him to be incorrect, there will be an
+excess of stake that can be redistributed to the last bidder, or, if known, to the one responsible for the L1 resolution.
+
+This allows honest watchers to enter into any challenge at any point in time, provoking the dishonest counterpart to
+either bid more (and thus lose more) or to end the challenge game. The potential minimum gain for each bid is
+``stake winning party - stake losing party``, if not overbid.
+
+For example, if Bob makes a claim with a stake of 5, and Charles challenges with a stake of 6, the bookkeeping will
+look like so:
+
+======  =========
+ Bob     Charles
+======  =========
+  5         6
+======  =========
+
+After Bob overbids by 5, his total stake is now 10, and challengers need to bid more than 4 to join the challenge. After
+David bids 5, the stakes look like so:
+
+======  ========= =======
+ Bob     Charles   David
+======  ========= =======
+  10        6        5
+======  ========= =======
+
+If the challenge ends at this point, Charles would earn 6 coins from Bob's stake, and David only 4. However, if Bob is
+proven via L1 resolutions to be the correct filler, he will earn 11 coins from the cumulated stakes of Charles and David.
+
+To avoid this challenge to go on forever, or reach a point where Bob no longer has the funds to out-stake challengers,
 Bob can trigger the ``L1 resolution``.
 
 L1 resolutions
@@ -212,7 +250,7 @@ restrict the call to authenticated ``fill manager`` and ``cross domain messenger
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call ``withdraw`` on
 the ``request manager`` on rollup A. This will compute a ``fill hash`` and query the ``resolution registry`` for the filler
 address corresponding to ``fill hash``, which will return Bob's address. Bob will immediately be considered the winner of
-the challenge and receive his stake as well as Charles' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
+the challenge and receive the challengers' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
 
 .. mermaid::
     :caption: `L1 Resolution`
@@ -253,7 +291,7 @@ claim and gaining the challenger's stake. The ``fill ID`` is defined as:
 
 ::
 
-    fill_id = hash(previous block)
+    fill ID = hash(previous block)
 
 When seeing a claim with a certain ``fill ID``, observers can verify if a fill with corresponding ID has been made. If they
 know of no fill with this fill ID, they are guaranteed the claim is wrongful, as long as the claimer did not guess the hash
@@ -319,31 +357,13 @@ In any case, this condition will always be fulfilled if Bob fills the request be
     L1 ->> Rollup A: sends fill proof
     Bob ->>Rollup A: withdraws tokens
 
-Self challenges
-+++++++++++++++
-
-In the previous explanation, we only talked about two participants to the challenges, Bob and Charles. What if, after
-submitting his false claim, Charles challenges himself? This would let Charles control the state of his challenge and
-he would be able to let it expire with his claim successful as an outcome.
-
-To prevent this successful ``self-challenged claim`` to allow Charles to withdraw Alice's deposit, Bob can fill Alice's request
-and do his own claim in parallel. If Bob's claim is not challenged and ``claim period`` is lower than the ``challenge period``,
-Bob will be able to withdraw Alice's deposit before Charles, leaving nothing for Charles to gain.
-
-Charles can attempt to delay Bob's withdrawal by challenging Bob's rightful claim. If Charles' stake on the rightful claim
-is sufficient to cover Bob's fee for L1 resolution, Bob will proceed with L1 resolution. If not, Bob can continue opening
-parallel claims until Charles no longer contests one of them, or there is enough accumulated stake from Charles on the
-multiple challenges for Bob to do an L1 resolution. In any case, Bob will be able to prove his rightful claim before
-Charles' claim reach the end of its period. The time constraint described in the previous example also holds in this case.
-
 Claims that cannot be filled
 ++++++++++++++++++++++++++++
 
-In both the regular ``false claim`` and ``self-challenge claim`` cases, we assumed that Bob could fill Alice's request in
-order to prove that the false claimer Charles was not the correct filler. However, Alice's request might not be able to
-be filled (e.g. transfer value too high). Instead of proving that someone other than Charles filled a request,
-Bob will need to prove that Charles did not fill the request as claimed. For that, Bob needs to create and submit an
-``L1 non-fill proof`` from rollup B to rollup A.
+In the previous part, we assumed that Bob could fill Alice's request in order to prove that the false claimer Charles
+was not the correct filler. However, Alice's request might not be able to be filled (e.g. transfer value too high).
+Instead of proving that someone other than Charles filled a request, Bob will need to prove that Charles did not fill
+the request as claimed. For that, Bob needs to create and submit an ``L1 non-fill proof`` from rollup B to rollup A.
 
 When called, the fill manager contract on rollup B recomputes the fill hash from the request hash, and fill ID which
 were made public during the claim, and checks that no fills exists for the corresponding request hash and fill hash.
@@ -359,60 +379,13 @@ false claim for a non-filled request. It takes ``finalization time of rollup B``
 proof to the resolution registry, while the challenge period is defined to be
 ``finalization time of rollup B + challenge period extension``.
 
-:TODO: rewrite paragraph below if we explain the challenge extension earlier
-
 In the case where someone challenges Charles on the false claim at the same time as Bob sends the transaction for the
-proof on rollup B, Bob will not be able to challenge Charles and will not receive any financial reward from having sent
+proof on rollup B, Bob may not be able to challenge Charles. If so, Bob may not receive financial reward from having sent
 this transaction. The situation being unlikely to happen and the costs of rollup transactions being low, we believe this
 not to be too big of a problem.
 
 Bob can however wait to be properly incentivized before sending the costly L1 transaction, that is he can wait to be at
 stake in the challenge against Charles.
-
-Non-fill proofs and self challenges
-+++++++++++++++++++++++++++++++++++
-
-We explained in a previous part a strategy for honest fillers to counter wrongful self-challenged claims. To be properly
-incentivized for the submission of the non-fill proof on L1, we need to allow Bob to join a self-challenged claim
-initiated by Charles as an additional challenger.
-
-There is no need for Bob to enter the challenge if the claimer is in a losing position, we only allow new challengers if
-the claimer is ahead in the challenge. This is done by a bookkeeping mechanism of bidders and bids. We store in a mapping
-who bid which amount in total and who was the last bidder.
-
-The rationale behind the book keeping is that anybody who entered into a challenge and put in some stake should be
-rewarded when his position wins, depending on the amount they had to put in. When the challenge ends, if the claimer is
-ahead, he will earn the stakes of every challenger. If a challenger is ahead, each non-last challenger earns a value
-equal to their total stake. The stake of the last challenger being only partially covered by the claimer, he will only
-earn ``stake claimer - stake other challengers``, i.e. the remaining tokens.
-
-In the case where the dishonest party was leading and the L1 resolution proved him to be incorrect, there will be an
-excess of stake that can be redistributed to the last bidder, or, if known, to the one responsible for the L1 transaction.
-
-This allows honest watchers to enter into any challenge at any point in time, provoking the dishonest counterpart to
-either bid more (and thus lose more) or to end the challenge game. The potential minimum gain for each bid is
-``stake winning party - stake losing party``, if not overbid.
-
-For example, if Charles makes a claim with a stake of 5, and David challenges with a stake of 6, the bookkeeping will
-look like so:
-
-=========  =======
- Charles    David
-=========  =======
-    5         6
-=========  =======
-
-After Charles overbids by 5, his total stake is now 10, and Bob needs to bid more than 4 to join the challenge. After
-Bob bids 5, the stakes look like so:
-
-=========  =======  ======
- Charles    David    Bob
-=========  =======  ======
-    10        6       5
-=========  =======  ======
-
-If the challenge end at this point, David would earn 6 coins from Charles' stake, and Bob only 4. However, if Charles is
-proven via L1 resolutions to be the correct filler, he will earn 11 coins from the cumulated stakes of David and Bob.
 
 Fees
 ~~~~
@@ -459,10 +432,6 @@ The current implementation of the agent follows this strategy:
 * Subsequent counter challenge should cover the cost of L1 resolution
 * Immediately send ``non-fill proof call`` on target rollup for claims with no corresponding fills
 * Proceed with L1 resolution only when the stake of the opponent covers the cost and we are losing a challenge
-* Open a parallel claim to one of our rightful claims if:
-    * there is a challenged wrongful claim C for the same request and
-    * C expires before our challenged rightful claim and
-    * the stake amount is not high enough for L1 resolution.
 
 Protocol parameters
 -------------------
