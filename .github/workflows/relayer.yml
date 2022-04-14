@@ -1,0 +1,40 @@
+name: Relayer CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      -  'relayer/**'
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      -  'relayer/**'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'false'
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'yarn'
+          cache-dependency-path: relayer/yarn.lock
+
+      - name: Install
+        working-directory: relayer/
+        run: yarn install
+
+      - name: Build
+        working-directory: relayer/
+        run: yarn build
+
+      - name: Lint
+        working-directory: relayer/
+        run: yarn lint
