@@ -14,6 +14,7 @@ from web3.contract import Contract
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 OPTIMISM_L2_MESSENGER_ADDRESS = to_checksum_address("0x4200000000000000000000000000000000000007")
+GANACHE_CHAIN_ID = 1337
 
 
 class DeployedContract(Contract):
@@ -214,7 +215,11 @@ def main(
         chain_id = web3_l2.eth.chain_id
         assert chain_id == l2_config["chain_id"]
 
-        supported_target_chains = {l2["chain_id"]: l2["finalization_time"] for l2 in config["L2"]}
+        supported_target_chains = {
+            l2["chain_id"]: l2["finalization_time"]
+            for l2 in config["L2"]
+            if l2["chain_id"] != chain_id or chain_id == GANACHE_CHAIN_ID
+        }
 
         l2_data = deploy_l2(web3_l2, resolver, supported_target_chains, test_messenger)
         if test_messenger:
