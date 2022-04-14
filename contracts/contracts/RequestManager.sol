@@ -396,7 +396,7 @@ contract RequestManager is Ownable {
     }
 
     function setFinalizationTime(uint256 targetChainId, uint256 finalizationTime) external onlyOwner {
-        require(finalizationTime > 0, "Finalization time of rollup must be greater than 0");
+        require(finalizationTime > 0, "Finalization time must be greater than 0");
         finalizationTimes[targetChainId] = finalizationTime;
     }
 }
