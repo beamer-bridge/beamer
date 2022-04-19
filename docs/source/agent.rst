@@ -9,7 +9,7 @@ Basic requirements
   waiting on any operation, regardless of reasons. Typical common issues here are a slow RPC server
   and a slow/unstable network.
 * It must be possible to shut down the agent cleanly and reasonably quickly (at most few seconds).
-* Restarting the agent must not lose any information about previously executed actions e.g. filed
+* Restarting the agent must not lose any information about previously executed actions e.g. filled
   requests, claims, challenges etc.
 * The agent should avoid serializing anything to non-volatile storage.
 

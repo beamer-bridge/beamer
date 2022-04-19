@@ -130,7 +130,9 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
         request_manager.challengeClaim(claim_id, {"from": challenger})
 
     # The other party must be able to re-challenge
-    outbid = request_manager.challengeClaim(claim_id, {"from": claimer, "value": 2})
+    with brownie.reverts("Not enough stake provided"):
+        request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake})
+    outbid = request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
     assert "ClaimMade" in outbid.events
 
     # Check that the roles are reversed now
@@ -139,8 +141,8 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
 
     # The other party must be able to re-challenge, but must increase the stake
     with brownie.reverts("Not enough stake provided"):
-        request_manager.challengeClaim(claim_id, {"from": challenger, "value": 1})
-    request_manager.challengeClaim(claim_id, {"from": challenger, "value": 2})
+        request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake})
+    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
 
 
 def test_claim_period_extension(
@@ -169,12 +171,12 @@ def test_claim_period_extension(
 
     # Another challenge with big margin to the end of the termination
     # shouldn't increase the termination
-    request_manager.challengeClaim(claim_id, {"from": claimer, "value": 2})
+    request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
     assert challenge.timestamp + challenge_period == request_manager.claims(claim_id)[6]
 
     # Timetravel close to end of challenge period
     chain.mine(timedelta=challenge_period * 8 / 10)
-    rechallenge = request_manager.challengeClaim(claim_id, {"from": challenger, "value": 2})
+    rechallenge = request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
     assert (
         rechallenge.timestamp + challenge_period_extension == request_manager.claims(claim_id)[6]
     )
@@ -182,7 +184,7 @@ def test_claim_period_extension(
     # Timetravel over the end of challenge period
     chain.mine(timedelta=challenge_period_extension)
     with brownie.reverts("Claim expired"):
-        request_manager.challengeClaim(claim_id, {"from": claimer, "value": 2})
+        request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
 
 
 def test_withdraw_nonexistent_claim(request_manager):

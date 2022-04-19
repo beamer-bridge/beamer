@@ -262,14 +262,14 @@ contract RequestManager is Ownable {
                 periodExtension = challengePeriodExtension;
             }
             nextActor = claim.challenger;
-            minValue = claim.claimerStake - claim.challengerStake;
+            minValue = claim.claimerStake - claim.challengerStake + 1;
         } else {
             nextActor = claim.claimer;
-            minValue = claim.challengerStake - claim.claimerStake;
+            minValue = claim.challengerStake - claim.claimerStake + claimStake;
         }
 
         require(msg.sender == nextActor, "Not eligible to outbid");
-        require(msg.value > minValue, "Not enough stake provided");
+        require(msg.value >= minValue, "Not enough stake provided");
 
         if (nextActor == claim.claimer) {
             claim.claimerStake += msg.value;
