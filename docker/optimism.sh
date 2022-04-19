@@ -34,11 +34,10 @@ e2e() {
     rm -rf contracts/build/deployments &&
     addresses > addresses.json &&
     cat addresses.json &&
-    cd "${ROOT}/contracts" &&
-    poetry run brownie run deploy_l1.py --network l1 &&
-    poetry run brownie run deploy_optimism.py --network l2 &&
-    poetry run brownie run setup_l1.py --network l1 &&
-    poetry run brownie run check_l2.py --network l2
+    poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_l1.py --network l1 &&
+    poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_optimism.py --network l2 &&
+    poetry run brownie run $(pwd)/docker/optimism-scripts/setup_l1.py --network l1 &&
+    poetry run brownie run $(pwd)/docker/optimism-scripts/check_l2.py --network l2
 }
 
 usage() {
