@@ -3,7 +3,6 @@ project_structure:
     contracts: contracts/contracts
     interfaces: contracts/interfaces
     reports: contracts/reports
-    scripts: contracts/scripts
     tests: contracts/tests
 
 dependencies:
