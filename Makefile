@@ -1,6 +1,6 @@
 .PHONY: dist-exe container-image all lint black format docs clean
 
-CODE_DIRS = contracts/ beamer/ scripts/
+CODE_DIRS = beamer/ scripts/
 
 all: lint
 
