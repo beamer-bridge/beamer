@@ -32,8 +32,8 @@ up() {
 e2e() {
     setup_chains &&
     rm -rf contracts/build/deployments &&
-    addresses > addresses.json &&
-    cat addresses.json &&
+    export ADDRESS_FILE_PATH=$(mktemp -d)/addresses.json &&
+    addresses | tee $ADDRESS_FILE_PATH &&
     poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_l1.py --network l1 &&
     poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_optimism.py --network l2 &&
     poetry run brownie run $(pwd)/docker/optimism-scripts/setup_l1.py --network l1 &&
