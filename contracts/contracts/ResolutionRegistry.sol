@@ -10,8 +10,14 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
         address filler
     );
 
+    event FillHashInvalidated(
+        bytes32 fillHash
+    );
+
     // mapping from fillHash to filler
     mapping(bytes32 => address) public fillers;
+    // mapping from fillHash to validity flag
+    mapping(bytes32 => bool) public invalidFillHashes;
 
     function resolveRequest(bytes32 fillHash, uint256 resolutionChainId, address filler)
         external restricted(resolutionChainId, msg.sender) {
@@ -22,6 +28,17 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
         emit RequestResolved(
             fillHash,
             filler
+        );
+    }
+
+    function invalidateFillHash(bytes32 fillHash, uint256 resolutionChainId)
+        external restricted(resolutionChainId, msg.sender) {
+
+        require(invalidFillHashes[fillHash] == false, "FillHash already invalidated");
+        invalidFillHashes[fillHash] = true;
+
+        emit FillHashInvalidated(
+            fillHash
         );
     }
 }
