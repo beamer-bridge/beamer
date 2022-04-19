@@ -366,7 +366,8 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     if agent_winning:
         return False
 
-    stake = claim.get_next_challenge_stake()
+    initial_claim_stake = context.request_manager.functions.claimStake().call()
+    stake = claim.get_next_challenge_stake(initial_claim_stake)
 
     func = context.request_manager.functions.challengeClaim(claim.id)
     try:

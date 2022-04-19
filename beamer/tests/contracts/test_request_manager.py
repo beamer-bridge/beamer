@@ -176,7 +176,9 @@ def test_claim_period_extension(
 
     # Timetravel close to end of challenge period
     chain.mine(timedelta=challenge_period * 8 / 10)
-    rechallenge = request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+    rechallenge = request_manager.challengeClaim(
+        claim_id, {"from": challenger, "value": claim_stake + 1}
+    )
     assert (
         rechallenge.timestamp + challenge_period_extension == request_manager.claims(claim_id)[6]
     )
