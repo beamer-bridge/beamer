@@ -94,16 +94,7 @@ jobs:
         run: poetry run brownie test -v -G beamer/tests/contracts
 
       - name: Run agent tests
-        run: |
-          # Generate deployment artifacts under contracts/build/deployments/dev.
-          # Start ganache separately so that brownie does not need to start
-          # it. If brownie starts ganache, it will remove the generated
-          # deployment artifacts after it is done.
-          ganache-cli --accounts 10 --hardfork istanbul --gasLimit 12000000 --mnemonic brownie --port 8545 -q &
-          pushd contracts && poetry run brownie run deploy && popd
-          killall node
-
-          poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
+        run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
 
       - name: Load images from cache
         uses: satackey/action-docker-layer-caching@v0.0.11
