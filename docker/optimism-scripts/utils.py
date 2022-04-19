@@ -1,12 +1,11 @@
 import json
+import os
 from typing import Any, Dict, Optional
 
 from brownie import ResolutionRegistry, Resolver, web3
 from eth_utils.abi import event_abi_to_log_topic
 from web3._utils.abi import filter_by_type
 from web3.contract import get_event_data
-
-_ADDRESS_FILE = "../addresses.json"
 
 
 PROXY_OVM_L1_CROSS_DOMAIN_MESSENGER = "Proxy__OVM_L1CrossDomainMessenger"
@@ -22,20 +21,24 @@ L2_CHAIN_ID = 420
 OPTIMISM_L2_MESSENGER_ADDRESS = "0x4200000000000000000000000000000000000007"
 
 
+def _address_file_path() -> str:
+    return os.environ["ADDRESS_FILE_PATH"]
+
+
 def get_contract_address(name: str) -> str:
-    with open(_ADDRESS_FILE, mode="r") as f:
+    with open(_address_file_path(), mode="r") as f:
         contracts = json.load(f)
 
         return contracts[name]
 
 
 def save_contract_address(name: str, address: str) -> None:
-    with open(_ADDRESS_FILE, mode="r") as f:
+    with open(_address_file_path(), mode="r") as f:
         contracts = json.load(f)
 
     contracts[name] = address
 
-    with open(_ADDRESS_FILE, "w") as f:
+    with open(_address_file_path(), "w") as f:
         json.dump(contracts, f, indent=2)
 
 
