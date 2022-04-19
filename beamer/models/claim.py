@@ -76,15 +76,17 @@ class Claim(StateMachine):
             return self.claimer
         return self.challenger
 
-    def get_next_challenge_stake(self) -> Wei:
-        stake_increase = 1
+    def get_next_challenge_stake(self, initial_claim_stake: Wei) -> Wei:
         claimer_stake = self._latest_claim_made.claimer_stake
         challenger_stake = self._latest_claim_made.challenger_stake
 
         if challenger_stake == 0:
             # we challenge with enough stake for L1 resolution
-            stake_increase = 10 ** 15
-        return Wei(max(claimer_stake, challenger_stake) + stake_increase)
+            return Wei(initial_claim_stake + 10 ** 15)
+        if challenger_stake > claimer_stake:
+            return Wei(challenger_stake - claimer_stake + initial_claim_stake)
+        else:
+            return Wei(claimer_stake - challenger_stake + 1)
 
     def on_challenge(self, new_claim_made: ClaimMade) -> None:
         self._on_new_claim_made(new_claim_made)
