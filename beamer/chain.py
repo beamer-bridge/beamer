@@ -245,6 +245,9 @@ def process_claims(context: Context) -> None:
     for claim in context.claims:
         log.debug("Processing claim", claim=claim)
 
+        if claim.is_ignored:
+            continue
+
         if claim.is_withdrawn:
             log.debug("Removing withdrawn claim", claim=claim)
             to_remove.append(claim.id)
@@ -265,11 +268,8 @@ def process_claims(context: Context) -> None:
         if claim.transaction_pending:
             continue
 
-        block = context.latest_blocks[request.source_chain_id]
-        if block["timestamp"] >= claim.termination:
-            withdraw(claim, context)
-
         if claim.is_claimer_winning or claim.is_challenger_winning:
+            maybe_withdraw(claim, context)
             maybe_challenge(claim, context)
 
     for claim_id in to_remove:
@@ -359,6 +359,10 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     # 1) the claim is dishonest AND nobody challenged it yet
     #
     # 2) we participate in the game AND it is our turn
+    request = context.requests.get(claim.request_id)
+    block = context.latest_blocks[request.source_chain_id]
+    if block["timestamp"] >= claim.termination:
+        return False
     if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
@@ -387,7 +391,17 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     return True
 
 
-def withdraw(claim: Claim, context: Context) -> None:
+def maybe_withdraw(claim: Claim, context: Context) -> None:
+    request = context.requests.get(claim.request_id)
+    block = context.latest_blocks[request.source_chain_id]
+    if block["timestamp"] < claim.termination:
+        # TODO: once L1 resolution is implemented, maybe withdraw before claim is terminated
+        return
+
+    agent_winning = claim.get_winning_address() == context.address
+    if not agent_winning:
+        return
+
     func = context.request_manager.functions.withdraw(claim.id)
     try:
         txn_hash = _transact(func)

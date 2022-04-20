@@ -311,3 +311,43 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     agent.stop()
     proxy_l2b.stop()
     agent.wait()
+
+
+# Scenario 6:
+#
+# Charlie          Dave
+# --------------------------
+# claim
+#                  challenge
+#
+# Winner: Charlie
+#
+# Note: Bob is not participating in the challenge here. We test whether Bob
+# will attempt to withdraw the stakes in place of Dave.
+def test_withdraw_not_participant(request_manager, token, config):
+    target_address = accounts[8]
+    requester, charlie, dave = accounts[:3]
+
+    agent = beamer.agent.Agent(config)
+
+    # Submit a request that Bob cannot fill.
+    amount = token.balanceOf(agent.address) + 1
+    request_id = make_request(request_manager, token, requester, target_address, amount)
+
+    stake = request_manager.claimStake()
+    request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+
+    collector = EventCollector(request_manager, "ClaimMade")
+    claim = collector.next_event()
+    request_manager.challengeClaim(claim.claimId, {"from": dave, "value": stake + 1})
+    brownie.chain.mine(timestamp=claim.termination)
+
+    agent.start()
+
+    # We wait enough time for agent to potentially withdraw
+    collector = EventCollector(request_manager, "ClaimWithdrawn")
+    withdraw_event = collector.next_event(wait_time=2)
+    agent.stop()
+    agent.wait()
+
+    assert withdraw_event is None
