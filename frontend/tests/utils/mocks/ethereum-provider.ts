@@ -15,12 +15,12 @@ export class MockedEthereumProvider implements EthereumProvider {
     this.chainId = ref(options?.chainId ?? 5);
   }
 
-  init = jest.fn();
-  requestSigner = jest.fn();
-  getLatestBlock = jest.fn();
-  connectContract = jest.fn();
-  switchChain = jest.fn();
-  addChain = jest.fn();
-  getChainId = jest.fn(async () => this.chainId.value);
-  addToken = jest.fn();
+  init = vi.fn();
+  requestSigner = vi.fn();
+  getLatestBlock = vi.fn();
+  connectContract = vi.fn();
+  switchChain = vi.fn();
+  addChain = vi.fn();
+  getChainId = vi.fn(async () => this.chainId.value);
+  addToken = vi.fn();
 }

@@ -34,14 +34,6 @@ module.exports = {
     'simple-import-sort/exports': 'warn',
     'vue/multi-word-component-names': 'off',
   },
-  overrides: [
-    {
-      files: ['**/__tests__/*.{j,t}s?(x)', '**/tests/unit/**/*.spec.{j,t}s?(x)'],
-      env: {
-        jest: true,
-      },
-    },
-  ],
   globals: {
     defineProps: 'readonly',
     defineEmits: 'readonly',
