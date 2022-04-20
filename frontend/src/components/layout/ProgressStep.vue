@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from 'vue';
+import { computed } from 'vue';
 
 import { RequestState } from '@/types/data';
 
@@ -14,25 +14,18 @@ interface Props {
   readonly triggerState: RequestState;
   readonly warnState?: RequestState;
 }
+
 const props = defineProps<Props>();
 
 const classObject = computed(() => {
-  var showWarning = false;
-  var showSuccess = false;
+  const { currentState, triggerState, warnState } = props;
+  const showWarning = currentState === warnState;
+  const showSuccess = !showWarning && currentState >= triggerState;
 
-  const state = props.currentState;
-  if (state) {
-    if (props.warnState) {
-      showWarning = state === props.warnState;
-    }
-    showSuccess = !showWarning && state >= props.triggerState;
-  }
-
-  const obj = {
+  return {
     'step-warning': showWarning,
     'step-success': showSuccess,
   };
-  return obj;
 });
 </script>
 

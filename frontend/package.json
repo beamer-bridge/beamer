@@ -45,6 +45,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-vue": "^8.5.0",
+    "jsdom": "^19.0.0",
     "prettier": "^2.6.0",
     "sass": "^1.49.9",
     "ts-node": "^10.7.0",
