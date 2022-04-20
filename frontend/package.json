@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings 0 .",
     "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix .",
-    "test:unit": "vitest run --dir=./tests/unit"
+    "test:unit": "vitest run --dir=./tests/unit",
+    "test:coverage": "vitest run --dir=./tests --coverage"
   },
   "dependencies": {
     "@ethersproject/providers": "^5.5.2",
@@ -37,6 +38,7 @@
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^10.0.0",
     "@vue/test-utils": "^2.0.0-rc.18",
+    "c8": "^7.11.0",
     "eslint": "^8.12.0",
     "eslint-import-resolver-typescript": "^2.7.0",
     "eslint-plugin-import": "^2.25.4",
