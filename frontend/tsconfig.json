@@ -15,7 +15,7 @@
     "baseUrl": ".",
     "types": [
       "vite/client",
-      "jest"
+      "vitest/globals"
     ],
     "paths": {
       "@/*": [

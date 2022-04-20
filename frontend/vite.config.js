@@ -9,6 +9,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '~': path.resolve(__dirname, './tests'),
     },
+  },
+  test: {
+    globals: true,
+    reporters: ['default', 'junit'],
+    mockClear: true,
   },
 });
