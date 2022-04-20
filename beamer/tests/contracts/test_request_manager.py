@@ -672,6 +672,127 @@ def test_withdraw_without_challenge_with_resolution(
         request_manager.withdraw(claim_id, {"from": claimer})
 
 
+def test_withdraw_with_invalidated_hash_without_challenge(
+    request_manager, resolution_registry, token, claim_stake, contracts
+):
+    """Test withdraw with L1 invalidated fill"""
+    requester, claimer = alloc_accounts(2)
+    transfer_amount = 23
+
+    claimer_eth_balance = web3.eth.get_balance(claimer.address)
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+    fill_id = to_bytes(b"123")
+    claim_tx = request_manager.claimRequest(
+        request_id, fill_id, {"from": claimer, "value": claim_stake}
+    )
+    claim_id = claim_tx.return_value
+
+    assert web3.eth.get_balance(request_manager.address) == claim_stake
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
+
+    fill_hash = create_fill_hash(
+        request_id,
+        web3.eth.chain_id,
+        web3.eth.chain_id,
+        token.address,
+        requester.address,
+        transfer_amount,
+        fill_id,
+    )
+
+    # Invalidate fillhash via L1
+    contracts.messenger2.setLastSender(contracts.resolver.address)
+    resolution_registry.invalidateFillHash(
+        fill_hash, web3.eth.chain_id, {"from": contracts.messenger2.address}
+    )
+    assert resolution_registry.invalidFillHashes(fill_hash) is True
+
+    # The claim is not challenged, but the claimer must be able to withdraw his claim
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
+
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(claimer) == 0
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance
+
+    # Another withdraw must fail
+    with brownie.reverts("Claim already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+
+def test_withdraw_with_invalidated_hash_with_challenge(
+    request_manager, resolution_registry, token, claim_stake, contracts
+):
+    """Test withdraw with L1 invalidated fill"""
+    requester, claimer, challenger = alloc_accounts(3)
+    transfer_amount = 23
+
+    claimer_eth_balance = web3.eth.get_balance(claimer.address)
+    challenger_eth_balance = web3.eth.get_balance(challenger.address)
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+    fill_id = to_bytes(b"123")
+    claim_tx = request_manager.claimRequest(
+        request_id, fill_id, {"from": claimer, "value": claim_stake}
+    )
+    claim_id = claim_tx.return_value
+
+    assert web3.eth.get_balance(request_manager.address) == claim_stake
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
+
+    fill_hash = create_fill_hash(
+        request_id,
+        web3.eth.chain_id,
+        web3.eth.chain_id,
+        token.address,
+        requester.address,
+        transfer_amount,
+        fill_id,
+    )
+
+    # Invalidate fillhash via L1
+    contracts.messenger2.setLastSender(contracts.resolver.address)
+    resolution_registry.invalidateFillHash(
+        fill_hash, web3.eth.chain_id, {"from": contracts.messenger2.address}
+    )
+    assert resolution_registry.invalidFillHashes(fill_hash) is True
+
+    # Challenge the claim
+    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
+
+    assert "DepositWithdrawn" in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(claimer) == 0
+    assert token.balanceOf(challenger) == transfer_amount
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
+    assert web3.eth.get_balance(challenger.address) == challenger_eth_balance + claim_stake
+
+    # Another withdraw must fail
+    with brownie.reverts("Claim already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+
 def test_withdraw_expired(token, request_manager):
     """Test that a request can be withdrawn once it is expired"""
     validity_period = 60 * 5
