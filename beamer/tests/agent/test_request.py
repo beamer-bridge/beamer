@@ -110,6 +110,10 @@ def test_challenge_own_claim(config, request_manager, token):
         ),
         int(time.time()),
     )
+    # Add context so that maybe_challenge verifies that the claim is not expired
+    agent.context.requests.add(request.id, request)
+    agent.context.latest_blocks[brownie.chain.id] = {"timestamp": 0}
+
     assert not maybe_challenge(claim, agent.context), "Tried to challenge own claim"
 
 
