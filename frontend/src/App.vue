@@ -17,38 +17,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-
 import Feedback from '@/components/Feedback.vue';
+import ImprintModal from '@/components/ImprintModal.vue';
 import Spinner from '@/components/Spinner.vue';
+import useLoadConfiguration from '@/composables/useLoadConfiguration';
 import { useConfiguration } from '@/stores/configuration';
-import type { BeamerConfig } from '@/types/config';
-
-import ImprintModal from './components/ImprintModal.vue';
 
 const enableFeedback = false;
 const configuration = useConfiguration();
-const configurationLoaded = ref(false);
 
-const fetchConfigurationFile = async (): Promise<BeamerConfig> => {
-  try {
-    const response = await fetch(import.meta.env.VITE_CONFIG_URL);
-    return response.json();
-  } catch (error) {
-    console.error(error);
-    return { chains: {} };
-  }
-};
-
-onMounted(async () => {
-  const configurationFile = await fetchConfigurationFile();
-
-  for (const [chainId, chainConfiguration] of Object.entries(configurationFile.chains)) {
-    configuration.setChainConfiguration(chainId, chainConfiguration);
-  }
-
-  configurationLoaded.value = true;
-});
+const { configurationLoaded } = useLoadConfiguration(configuration.setChainConfiguration);
 </script>
 
 <style lang="css">
