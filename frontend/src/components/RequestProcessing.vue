@@ -1,6 +1,9 @@
 <template>
   <Card class="bg-teal-light p-10 mb-14 mt-2">
-    <div class="flex flex-col justify-center items-center gap-4 text-black text-lg">
+    <div
+      class="flex flex-col justify-center items-center gap-4 text-black text-lg"
+      data-test="request-summary"
+    >
       <div class="flex flex-col justify-center items-center">
         <div>
           Sending <span>{{ Number(requestMetadata.amount).toFixed(2) }}&nbsp;</span>
@@ -19,7 +22,7 @@
       </div>
     </div>
   </Card>
-  <div class="flex flex-col justify-center items-center text-xl">
+  <div class="flex flex-col justify-center items-center text-xl" data-test="request-progress">
     <div>
       <ul class="steps steps-vertical">
         <ProgressStep
@@ -53,8 +56,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
-
 import { RequestMetadata, RequestState } from '@/types/data';
 
 import Card from './layout/Card.vue';

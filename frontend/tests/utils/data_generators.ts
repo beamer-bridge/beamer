@@ -1,6 +1,10 @@
+import { ref } from 'vue';
+
 import { ChainConfig, Token } from '@/types/config';
+import { RequestMetadata, RequestState } from '@/types/data';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
+const DECIMAL_CHARACTERS = '0123456789';
 const ALPHABET_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz';
 
 function getRandomString(charSet: string, length: number, prefix = ''): string {
@@ -21,10 +25,26 @@ function getRandomUrl(subDomain: string): string {
   return getRandomString(ALPHABET_CHARACTERS, 8, `https://${subDomain}.`);
 }
 
+function getRandomTokenSymbol(): string {
+  return getRandomString(ALPHABET_CHARACTERS, 3).toUpperCase();
+}
+
+function getRandomChainName(): string {
+  const name = getRandomString(ALPHABET_CHARACTERS, 5);
+  const nameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
+  return `${nameCapitalized} Chain`;
+}
+
+function getRandomDecimalPointNumber(): string {
+  const beforeDot = getRandomString(DECIMAL_CHARACTERS, 1);
+  const afterDot = getRandomString(DECIMAL_CHARACTERS, 1);
+  return `${beforeDot}.${afterDot}`;
+}
+
 export function generateToken(partialToken?: Partial<Token>): Token {
   return {
     address: getRandomEthereumAddress(),
-    symbol: getRandomString(ALPHABET_CHARACTERS, 3).toUpperCase(),
+    symbol: getRandomTokenSymbol(),
     ...partialToken,
   } as Token;
 }
@@ -37,8 +57,23 @@ export function generateChainConfiguration(
     fillManagerAddress: getRandomEthereumAddress(),
     explorerTransactionUrl: getRandomUrl('explorer'),
     rpcUrl: getRandomUrl('rpc'),
-    name: getRandomString(ALPHABET_CHARACTERS, 8, 'name-'),
+    name: getRandomChainName(),
     tokens: [generateToken()],
     ...partialConfiguration,
-  } as ChainConfig;
+  };
+}
+
+export function generateRequestMetadata(
+  partialRequestMetadata?: Partial<RequestMetadata>,
+): RequestMetadata {
+  return {
+    state: ref(RequestState.Init),
+    amount: getRandomDecimalPointNumber(),
+    sourceChainName: getRandomChainName(),
+    targetChainName: getRandomChainName(),
+    targetAddress: getRandomEthereumAddress(),
+    tokenSymbol: getRandomTokenSymbol(),
+    fee: getRandomDecimalPointNumber(),
+    ...partialRequestMetadata,
+  };
 }
