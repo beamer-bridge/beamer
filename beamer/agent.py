@@ -58,6 +58,7 @@ class Agent:
         l2b_contracts = make_contracts(w3_l2b, l2b_contracts_info)
 
         request_manager = l2a_contracts["RequestManager"]
+        resolution_registry = l2a_contracts["ResolutionRegistry"]
         fill_manager = l2b_contracts["FillManager"]
 
         if not fill_manager.functions.allowedLPs(config.account.address).call():
@@ -86,6 +87,14 @@ class Agent:
             self._event_processor.mark_sync_done,
         )
 
+        self._contract_monitor_l2a_registry = ContractEventMonitor(
+            "ResolutionRegistry",
+            resolution_registry,
+            l2a_contracts_info["ResolutionRegistry"].deployment_block,
+            self._event_processor.add_events,
+            self._event_processor.mark_sync_done,
+        )
+
         self._contract_monitor_l2b = ContractEventMonitor(
             "FillManager",
             fill_manager,
@@ -99,6 +108,7 @@ class Agent:
         beamer.metrics.init(self._config)
         self._event_processor.start()
         self._contract_monitor_l2a.start()
+        self._contract_monitor_l2a_registry.start()
         self._contract_monitor_l2b.start()
         self._stopped.clear()
 
@@ -106,6 +116,7 @@ class Agent:
         assert not self._stopped.is_set()
         self._event_processor.stop()
         self._contract_monitor_l2a.stop()
+        self._contract_monitor_l2a_registry.stop()
         self._contract_monitor_l2b.stop()
         self._stopped.set()
 

@@ -115,11 +115,11 @@ class EventProcessor:
     @property
     def _synced(self) -> bool:
         with self._lock:
-            return self._num_syncs_done == 2
+            return self._num_syncs_done == 3
 
     def mark_sync_done(self) -> None:
         with self._lock:
-            assert self._num_syncs_done < 2
+            assert self._num_syncs_done < 3
             self._num_syncs_done += 1
 
     def start(self) -> None:

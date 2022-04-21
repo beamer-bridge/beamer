@@ -82,6 +82,17 @@ class ClaimWithdrawn(ClaimEvent):
     claim_receiver: ChecksumAddress
 
 
+@dataclass(frozen=True)
+class RequestResolved(Event):
+    fill_hash: str
+    filler: ChecksumAddress
+
+
+@dataclass(frozen=True)
+class FillHashInvalidated(Event):
+    fill_hash: str
+
+
 def _camel_to_snake(s: str) -> str:
     return "".join("_" + c.lower() if c.isupper() else c for c in s).lstrip("_")
 
@@ -92,6 +103,8 @@ _EVENT_TYPES = dict(
     DepositWithdrawn=DepositWithdrawn,
     ClaimMade=ClaimMade,
     ClaimWithdrawn=ClaimWithdrawn,
+    RequestResolved=RequestResolved,
+    FillHashInvalidated=FillHashInvalidated,
 )
 
 
