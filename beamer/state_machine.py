@@ -17,9 +17,11 @@ from beamer.events import (
     ClaimWithdrawn,
     DepositWithdrawn,
     Event,
+    FillHashInvalidated,
     LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
+    RequestResolved,
 )
 from beamer.models.claim import Claim
 from beamer.models.request import Request
@@ -62,6 +64,9 @@ def process_event(event: Event, context: Context) -> bool:
 
     elif isinstance(event, ClaimWithdrawn):
         return _handle_claim_withdrawn(event, context)
+
+    elif isinstance(event, (RequestResolved, FillHashInvalidated)):
+        return False
 
     else:
         raise RuntimeError("Unrecognized event type")

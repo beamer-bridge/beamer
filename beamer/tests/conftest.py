@@ -135,18 +135,23 @@ def contracts(
 
 
 @pytest.fixture
-def config(request_manager, fill_manager, token):
+def config(request_manager, fill_manager, resolution_registry, token):
     root = pathlib.Path(__file__).parents[2]
     token_match_file = root / "beamer/data/tokens.example.json"
 
     contracts_info = dict(
         RequestManager=ContractInfo(
-            deployment_block=BlockNumber(0),
+            deployment_block=BlockNumber(1),
             address=request_manager.address,
             abi=request_manager.abi,
         ),
         FillManager=ContractInfo(
-            deployment_block=BlockNumber(0), address=fill_manager.address, abi=fill_manager.abi
+            deployment_block=BlockNumber(1), address=fill_manager.address, abi=fill_manager.abi
+        ),
+        ResolutionRegistry=ContractInfo(
+            deployment_block=BlockNumber(1),
+            address=resolution_registry.address,
+            abi=resolution_registry.abi,
         ),
     )
     deployment_info = {brownie.chain.id: contracts_info}
