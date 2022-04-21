@@ -46,6 +46,29 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         emit Resolution(sourceChainId, fillChainId, fillHash, filler);
     }
 
+    function resolveNonFill(bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId)
+        external restricted(fillChainId, msg.sender) {
+
+        ResolutionInfos storage info = resolutionInfos[sourceChainId];
+        require(info.resolutionRegistry != address(0), "No registry available for source chain");
+        require(info.messenger != address(0), "No messenger available for source chain");
+
+        ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
+        messenger.sendMessage(
+            info.resolutionRegistry,
+            abi.encodeCall(
+                ResolutionRegistry.invalidateFillHash,
+                (
+                    fillHash,
+                    block.chainid
+                )
+            ),
+            1_000_000
+        );
+
+        emit Resolution(sourceChainId, fillChainId, fillHash, address(0));
+    }
+
     function addRegistry(uint256 chainId, address resolutionRegistry, address messenger) external onlyOwner {
         resolutionInfos[chainId] = ResolutionInfos(resolutionRegistry, messenger);
     }
