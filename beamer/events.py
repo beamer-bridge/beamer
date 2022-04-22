@@ -1,12 +1,12 @@
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import Iterable, Optional
 
 import requests.exceptions
 import structlog
-import web3
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
+from web3 import HTTPProvider, Web3
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
 
@@ -108,7 +108,15 @@ _EVENT_TYPES = dict(
 )
 
 
-def _make_topics_to_abi(contract: web3.contract.Contract) -> dict[bytes, ABIEvent]:
+def _make_topics_abi_mapping_for_contracts(contracts: Iterable[Contract]) -> dict[bytes, ABIEvent]:
+    result = {}
+    for contract in contracts:
+        result.update(_make_topics_to_abi(contract))
+
+    return result
+
+
+def _make_topics_to_abi(contract: Contract) -> dict[bytes, ABIEvent]:
     event_abis = {}
     for abi in contract.abi:
         if abi["type"] == "event":
@@ -147,14 +155,19 @@ class EventFetcher:
     _ETH_GET_LOGS_THRESHOLD_FAST = 2
     _ETH_GET_LOGS_THRESHOLD_SLOW = 5
 
-    def __init__(self, contract_name: str, contract: Contract, start_block: BlockNumber):
-        self._contract_name = contract_name
-        self._contract = contract
+    def __init__(self, web3: Web3, contracts: tuple[Contract, ...], start_block: BlockNumber):
+        self._web3 = web3
+        self._chain_id = ChainId(web3.eth.chain_id)
+        self._contract_addresses = [c.address for c in contracts]
         self._next_block_number = start_block
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
-        self._chain_id = ChainId(contract.web3.eth.chain_id)
-        self._event_abis = _make_topics_to_abi(contract)
+        self._event_abis = _make_topics_abi_mapping_for_contracts(contracts)
         self._log = structlog.get_logger(type(self).__name__)
+
+        for contract in contracts:
+            assert (
+                self._chain_id == contract.web3.eth.chain_id
+            ), f"Chain id mismatch for {contract}"
 
     def _fetch_range(
         self, from_block: BlockNumber, to_block: BlockNumber
@@ -164,16 +177,16 @@ class EventFetcher:
         self._log.debug(
             "Fetching events",
             chain_id=self._chain_id,
-            contract=self._contract_name,
+            contracts=self._contract_addresses,
             from_block=from_block,
             to_block=to_block,
         )
         try:
             before_query = time.monotonic()
             params: FilterParams = dict(
-                fromBlock=from_block, toBlock=to_block, address=self._contract.address
+                fromBlock=from_block, toBlock=to_block, address=self._contract_addresses
             )
-            logs = self._contract.web3.eth.get_logs(params)
+            logs = self._web3.eth.get_logs(params)
             after_query = time.monotonic()
 
         # Boba limits the range to 5000 blocks
@@ -190,8 +203,8 @@ class EventFetcher:
             return None
 
         except requests.exceptions.ConnectionError as exc:
-            assert isinstance(self._contract.web3.provider, web3.HTTPProvider)
-            url = self._contract.web3.provider.endpoint_uri
+            assert isinstance(self._web3.provider, HTTPProvider)
+            url = self._web3.provider.endpoint_uri
             self._log.error("Connection error", url=url, exc=exc)
             # Propagate the exception upwards so we don't make further attempts.
             raise exc
@@ -202,12 +215,17 @@ class EventFetcher:
                 self._blocks_to_fetch = min(EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
             elif duration > EventFetcher._ETH_GET_LOGS_THRESHOLD_SLOW:
                 self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, self._blocks_to_fetch // 2)
-            codec = self._contract.web3.codec
-            return _decode_events(logs, codec, self._chain_id, self._event_abis)
+
+            return _decode_events(
+                logs=logs,
+                codec=self._web3.codec,
+                chain_id=self._chain_id,
+                event_abis=self._event_abis,
+            )
 
     def fetch(self) -> list[Event]:
         try:
-            block_number = self._contract.web3.eth.block_number
+            block_number = self._web3.eth.block_number
         except requests.exceptions.RequestException:
             return []
 
@@ -229,7 +247,7 @@ class EventFetcher:
         self._next_block_number = from_block
         try:
             # Block number needs to be decremented here, because it is already incremented above
-            block_data = self._contract.web3.eth.get_block(from_block - 1)
+            block_data = self._web3.eth.get_block(from_block - 1)
         except requests.exceptions.RequestException:
             return result
         else:

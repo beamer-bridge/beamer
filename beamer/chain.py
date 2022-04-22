@@ -9,7 +9,10 @@ from typing import Any, Callable, Optional, cast
 
 import requests.exceptions
 import structlog
-import web3
+from hexbytes import HexBytes
+from web3 import Web3
+from web3.contract import Contract, ContractFunction
+from web3.exceptions import ContractLogicError
 from web3.types import TxParams
 
 from beamer.events import Event, EventFetcher
@@ -48,26 +51,32 @@ def _wrap_thread_func(func: Callable) -> Callable:
     return wrapper
 
 
-class ContractEventMonitor:
+class EventMonitor:
     def __init__(
         self,
-        name: str,
-        contract: web3.contract.Contract,
+        web3: Web3,
+        contracts: tuple[Contract, ...],
         deployment_block: BlockNumber,
         on_new_events: Callable[[list[Event]], None],
         on_sync_done: Callable[[], None],
     ):
-        self._name = name
-        self._contract = contract
+        self._web3 = web3
+        self._chain_id = ChainId(self._web3.eth.chain_id)
+        self._contracts = contracts
         self._deployment_block = deployment_block
         self._stop = False
         self._on_new_events = on_new_events
         self._on_sync_done = on_sync_done
-        self._log = structlog.get_logger(type(self).__name__).bind(contract=name)
+        self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
+
+        for contract in contracts:
+            assert (
+                self._chain_id == contract.web3.eth.chain_id
+            ), f"Chain id mismatch for {contract}"
 
     def start(self) -> None:
         self._thread = threading.Thread(
-            name=self._name, target=_wrap_thread_func(self._thread_func)
+            name=f"EventMonitor[cid={self._chain_id}]", target=_wrap_thread_func(self._thread_func)
         )
         self._thread.start()
 
@@ -76,23 +85,23 @@ class ContractEventMonitor:
         self._thread.join(_STOP_TIMEOUT)
 
     def _thread_func(self) -> None:
-        chain_id = ChainId(self._contract.web3.eth.chain_id)
         self._log.info(
-            "ContractEventMonitor started", chain_id=chain_id, address=self._contract.address
+            "EventMonitor started",
+            addresses=[c.address for c in self._contracts],
         )
-        fetcher = EventFetcher(self._name, self._contract, self._deployment_block)
+        fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
         events = fetcher.fetch()
         if events:
             self._on_new_events(events)
         self._on_sync_done()
-        self._log.info("Sync done", chain_id=chain_id)
+        self._log.info("Sync done")
         while not self._stop:
             events = fetcher.fetch()
             if events:
                 self._on_new_events(events)
             # TODO: wait for new block instead of the sleep here
             time.sleep(1)
-        self._log.info("ContractEventMonitor stopped", chain_id=chain_id)
+        self._log.info("EventMonitor stopped")
 
 
 class EventProcessor:
@@ -115,11 +124,11 @@ class EventProcessor:
     @property
     def _synced(self) -> bool:
         with self._lock:
-            return self._num_syncs_done == 3
+            return self._num_syncs_done == 2
 
     def mark_sync_done(self) -> None:
         with self._lock:
-            assert self._num_syncs_done < 3
+            assert self._num_syncs_done < 2
             self._num_syncs_done += 1
 
     def start(self) -> None:
@@ -196,10 +205,10 @@ class _TransactionFailed(Exception):
         return str(self.__cause__)
 
 
-def _transact(func: web3.contract.ContractFunction, **kwargs: Any) -> web3.types.HexBytes:
+def _transact(func: ContractFunction, **kwargs: Any) -> HexBytes:
     try:
         txn_hash = func.transact(cast(Optional[TxParams], kwargs))
-    except (web3.exceptions.ContractLogicError, requests.exceptions.RequestException) as exc:
+    except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise _TransactionFailed() from exc
 
     func.web3.eth.wait_for_transaction_receipt(txn_hash)

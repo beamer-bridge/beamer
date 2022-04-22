@@ -11,7 +11,7 @@ from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 import beamer.metrics
-from beamer.chain import ContractEventMonitor, EventProcessor
+from beamer.chain import EventMonitor, EventProcessor
 from beamer.contracts import DeploymentInfo, make_contracts
 from beamer.state_machine import Context
 from beamer.tracker import Tracker
@@ -79,45 +79,38 @@ class Agent:
         )
         self._event_processor = EventProcessor(self.context)
 
-        self._contract_monitor_l2a = ContractEventMonitor(
-            "RequestManager",
-            request_manager,
-            l2a_contracts_info["RequestManager"].deployment_block,
-            self._event_processor.add_events,
-            self._event_processor.mark_sync_done,
+        self._event_monitor_l2a = EventMonitor(
+            web3=w3_l2a,
+            contracts=(request_manager, resolution_registry),
+            deployment_block=min(
+                l2a_contracts_info["RequestManager"].deployment_block,
+                l2a_contracts_info["ResolutionRegistry"].deployment_block,
+            ),
+            on_new_events=self._event_processor.add_events,
+            on_sync_done=self._event_processor.mark_sync_done,
         )
 
-        self._contract_monitor_l2a_registry = ContractEventMonitor(
-            "ResolutionRegistry",
-            resolution_registry,
-            l2a_contracts_info["ResolutionRegistry"].deployment_block,
-            self._event_processor.add_events,
-            self._event_processor.mark_sync_done,
-        )
-
-        self._contract_monitor_l2b = ContractEventMonitor(
-            "FillManager",
-            fill_manager,
-            l2b_contracts_info["FillManager"].deployment_block,
-            self._event_processor.add_events,
-            self._event_processor.mark_sync_done,
+        self._event_monitor_l2b = EventMonitor(
+            web3=w3_l2b,
+            contracts=(fill_manager,),
+            deployment_block=l2b_contracts_info["FillManager"].deployment_block,
+            on_new_events=self._event_processor.add_events,
+            on_sync_done=self._event_processor.mark_sync_done,
         )
 
     def start(self) -> None:
         assert self._stopped.is_set()
         beamer.metrics.init(self._config)
         self._event_processor.start()
-        self._contract_monitor_l2a.start()
-        self._contract_monitor_l2a_registry.start()
-        self._contract_monitor_l2b.start()
+        self._event_monitor_l2a.start()
+        self._event_monitor_l2b.start()
         self._stopped.clear()
 
     def stop(self) -> None:
         assert not self._stopped.is_set()
         self._event_processor.stop()
-        self._contract_monitor_l2a.stop()
-        self._contract_monitor_l2a_registry.stop()
-        self._contract_monitor_l2b.stop()
+        self._event_monitor_l2a.stop()
+        self._event_monitor_l2b.stop()
         self._stopped.set()
 
     @property
