@@ -24,38 +24,22 @@
   </Card>
   <div class="flex flex-col justify-center items-center text-xl" data-test="request-progress">
     <div>
-      <ul class="steps steps-vertical">
+      <ul class="steps">
         <ProgressStep
-          :current-state="requestMetadata.state"
-          :trigger-state="RequestState.WaitConfirm"
-        >
-          Please confirm your request on Metamask
-        </ProgressStep>
-        <ProgressStep
-          :current-state="requestMetadata.state"
-          :trigger-state="RequestState.WaitTransaction"
-        >
-          Waiting for transaction receipt
-        </ProgressStep>
-        <ProgressStep
-          :current-state="requestMetadata.state"
-          :trigger-state="RequestState.WaitFulfill"
-        >
-          Request is being fulfilled
-        </ProgressStep>
-        <ProgressStep
-          :current-state="requestMetadata.state"
-          :trigger-state="RequestState.RequestSuccessful"
-          :warn-state="RequestState.RequestFailed"
-        >
-          Transfer completed
-        </ProgressStep>
+          v-for="(step, index) in progressSteps"
+          :key="index"
+          :label="step.label"
+          :completed="step.completed"
+          :failed="step.failed"
+        />
       </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import { RequestMetadata, RequestState } from '@/types/data';
 
 import Card from './layout/Card.vue';
@@ -64,5 +48,26 @@ import ProgressStep from './layout/ProgressStep.vue';
 interface Props {
   readonly requestMetadata: RequestMetadata;
 }
-defineProps<Props>();
+
+const props = defineProps<Props>();
+
+const progressSteps = computed(() => [
+  {
+    label: 'Please confirm your request on Metamask',
+    completed: props.requestMetadata.state >= RequestState.WaitConfirm,
+  },
+  {
+    label: 'Waiting for transaction receipt',
+    completed: props.requestMetadata.state >= RequestState.WaitTransaction,
+  },
+  {
+    label: 'Request is being fulfilled',
+    completed: props.requestMetadata.state >= RequestState.WaitFulfill,
+  },
+  {
+    label: 'Transfer completed',
+    completed: props.requestMetadata.state >= RequestState.RequestSuccessful,
+    failed: props.requestMetadata.state == RequestState.RequestFailed,
+  },
+]);
 </script>

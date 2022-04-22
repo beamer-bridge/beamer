@@ -1,14 +1,18 @@
 import { BigNumber } from 'ethers';
 import { Ref } from 'vue';
 
+/*
+ * The explicitly defined numeric values are important for the order of the
+ * state progression and comparison between them.
+ */
 export enum RequestState {
-  Init,
-  WaitConfirm,
-  WaitTransaction,
-  FailedSwitchChain,
-  WaitFulfill,
-  RequestSuccessful,
-  RequestFailed,
+  Init = 0,
+  WaitConfirm = 1,
+  WaitTransaction = 2,
+  FailedSwitchChain = 3,
+  WaitFulfill = 4,
+  RequestSuccessful = 5,
+  RequestFailed = 6,
 }
 
 export interface Request {
