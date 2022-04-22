@@ -101,11 +101,11 @@
       />
     </div>
     <div
-      v-if="fees"
+      v-if="showRequestFee"
       class="flex flex-row justify-end gap-3 items-center text-base text-light mt-4"
     >
       <span>fees</span>
-      <span>{{ fees }} ETH</span>
+      <span>{{ formattedRequestFeeAmount }} ETH</span>
       <div
         class="form-tooltip whitespace-pre-wrap"
         data-theme="default"
@@ -119,10 +119,12 @@
 
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
+import { storeToRefs } from 'pinia';
 import { computed, reactive, Ref, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
-import useTokenBalance from '@/composables/useTokenBalance';
+import { useRequestFee } from '@/composables/useRequestFee';
+import { useTokenBalance } from '@/composables/useTokenBalance';
 import { requestFaucet } from '@/services/transactions/faucet';
 import { getTokenDecimals } from '@/services/transactions/token';
 import { useConfiguration } from '@/stores/configuration';
@@ -133,12 +135,6 @@ import createAsyncProcess from '@/utils/create-async-process';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
-
-interface Props {
-  readonly fees: string;
-}
-
-defineProps<Props>();
 
 const getChainSelectorOption: (chainId: string) => SelectorOption | string = (chainId: string) =>
   configuration.chains[chainId]
@@ -163,6 +159,7 @@ const TOKENS: SelectorOption[] = configuration.chains[
 
 const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.chainId)));
 const selectedToken = ref();
+const selectedTokenAddress = computed(() => selectedToken.value?.value);
 
 const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
   (chain: SelectorOption | string) =>
@@ -196,7 +193,10 @@ const addToken = async () => {
   }
   try {
     if (ethereumProvider.provider && ethereumProvider.signer) {
-      const decimals = await getTokenDecimals(selectedToken.value.value);
+      const decimals = await getTokenDecimals(
+        ethereumProvider.provider,
+        selectedToken.value.value,
+      );
 
       await ethereumProvider.provider.addToken({
         address: selectedToken.value.value,
@@ -239,8 +239,24 @@ The gas reimbursement fee and the liquidity provider fee are paid out to the liq
 
 Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
 
-const { showTokenBalance, formattedTokenBalance } = useTokenBalance(selectedToken);
+const { provider, signer, chainId } = storeToRefs(ethereumProvider);
+
+const requestManagerAddress = computed(
+  () => configuration.chains[chainId.value]?.requestManagerAddress,
+);
+
+const { show: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
+  provider,
+  requestManagerAddress,
+);
+
+const { show: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
+  provider,
+  signer,
+  selectedTokenAddress,
+);
 </script>
+
 <style lang="css">
 .form-tooltip {
   @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-50;

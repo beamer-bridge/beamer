@@ -20,17 +20,18 @@ import { storeToRefs } from 'pinia';
 import { onMounted, ref, watch } from 'vue';
 
 import RequestDialog from '@/components/RequestDialog.vue';
-import useChainCheck from '@/composables/useChainCheck';
 import { createMetaMaskProvider } from '@/services/web3-provider';
+import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 
 const criticalErrorMessage = ref('');
+const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const requestDialogReloadKey = ref(0);
 
 const chainChangeHandler = () => {
-  const { connectedChainSupported } = useChainCheck();
-  criticalErrorMessage.value = connectedChainSupported() ? '' : 'Connected chain not supported!';
+  const isSupported = ethereumProvider.chainId in configuration.chains;
+  criticalErrorMessage.value = isSupported ? '' : 'Connected chain not supported!';
 };
 
 const resetRequestDialog = () => {
