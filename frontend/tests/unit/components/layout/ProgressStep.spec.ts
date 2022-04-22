@@ -1,68 +1,40 @@
 import { mount } from '@vue/test-utils';
 
 import ProgressStep from '@/components/layout/ProgressStep.vue';
-import { RequestState } from '@/types/data';
 
-function createWrapper(options?: {
-  currentState?: RequestState;
-  triggerState?: RequestState;
-  warnState?: RequestState;
-  slot?: string;
-}) {
+function createWrapper(options?: { completed?: boolean; failed?: boolean; label?: string }) {
   return mount(ProgressStep, {
     shallow: true,
     props: {
-      currentState: options?.currentState ?? RequestState.Init,
-      triggerState: options?.triggerState ?? RequestState.WaitConfirm,
-      warnState: options?.warnState,
-    },
-    slots: {
-      default: options?.slot ?? '',
+      label: options?.label ?? 'label',
+      completed: options?.completed,
+      failed: options?.failed,
     },
   });
 }
 
 describe('ProgressStep.vue', () => {
-  it('shows success if current state equals trigger state', () => {
-    const wrapper = createWrapper({
-      currentState: RequestState.WaitConfirm,
-      triggerState: RequestState.WaitConfirm,
-    });
+  it('renders the given label', () => {
+    const wrapper = createWrapper({ label: 'test label' });
 
-    expect(wrapper.classes()).toContain('step-success');
+    expect(wrapper.text()).toContain('test label');
   });
 
-  it('shows success if current state is greater than trigger state', () => {
-    const wrapper = createWrapper({
-      currentState: RequestState.WaitFulfill,
-      triggerState: RequestState.WaitConfirm,
-    });
+  it('indicates that a step got completed', () => {
+    const wrapper = createWrapper({ completed: true });
 
-    expect(wrapper.classes()).toContain('step-success');
+    expect(wrapper.classes()).toContain('step--completed');
   });
 
-  it('shows warning if current state equals warn state', () => {
-    const wrapper = createWrapper({
-      currentState: RequestState.RequestFailed,
-      warnState: RequestState.RequestFailed,
-    });
+  it('indicates that a step failed', () => {
+    const wrapper = createWrapper({ failed: true });
 
-    expect(wrapper.classes()).toContain('step-warning');
+    expect(wrapper.classes()).toContain('step--failed');
   });
 
-  it('does not show success if current state is warn state and greater equal trigger state', () => {
-    const wrapper = createWrapper({
-      currentState: RequestState.WaitConfirm,
-      triggerState: RequestState.WaitConfirm,
-      warnState: RequestState.WaitConfirm,
-    });
+  it('never indictates completion if a step failed', () => {
+    const wrapper = createWrapper({ completed: true, failed: true });
 
-    expect(wrapper.classes()).not.toContain('step-success');
-  });
-
-  it('renders given default slot content', () => {
-    const wrapper = createWrapper({ slot: 'test content' });
-
-    expect(wrapper.text()).toContain('test content');
+    expect(wrapper.classes()).not.toContain('step--completed');
   });
 });

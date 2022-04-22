@@ -1,30 +1,27 @@
 <template>
   <li data-content="" class="step" :class="classObject">
-    <slot></slot>
+    {{ label }}
   </li>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import { RequestState } from '@/types/data';
-
 interface Props {
-  readonly currentState: RequestState;
-  readonly triggerState: RequestState;
-  readonly warnState?: RequestState;
+  readonly label: string;
+  readonly completed?: boolean;
+  readonly failed?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  completed: false,
+  failed: false,
+});
 
 const classObject = computed(() => {
-  const { currentState, triggerState, warnState } = props;
-  const showWarning = currentState === warnState;
-  const showSuccess = !showWarning && currentState >= triggerState;
-
   return {
-    'step-warning': showWarning,
-    'step-success': showSuccess,
+    'step--completed': props.completed && !props.failed,
+    'step--failed': props.failed,
   };
 });
 </script>
@@ -39,14 +36,14 @@ const classObject = computed(() => {
   width: 1.5rem;
   border-width: 2px;
 }
-.steps .step-success:after {
+.steps .step--completed:after {
   @apply border-teal bg-green;
   border-width: 2px;
 }
-.steps .step-success + .step-success:before {
+.steps .step--completed + .step--completed:before {
   @apply bg-light;
 }
-.steps .step-warning:after {
+.steps .step--failed:after {
   @apply border-teal bg-orange-dark;
   border-width: 2px;
 }

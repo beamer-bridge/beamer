@@ -87,57 +87,40 @@ describe('RequestProcessing.vue', () => {
       expect(requestProgress.isVisible()).toBeTruthy();
     });
 
-    it('shows wait for confirmation as first step', () => {
-      const requestMetadata = generateRequestMetadata({ state: ref(RequestState.Init) });
-      const wrapper = createWrapper({ requestMetadata });
+    it('shows all four steps', () => {
+      const wrapper = createWrapper();
       const requestProgress = wrapper.get(requestProgressSelector);
-      const waitConfirmStep = requestProgress.findAllComponents(ProgressStep)[0];
+      const progressSteps = requestProgress.findAllComponents(ProgressStep);
 
-      expect(waitConfirmStep).toBeDefined();
-      expect(waitConfirmStep.isVisible()).toBeTruthy();
-      expect(waitConfirmStep.props()).toContain({ currentState: RequestState.Init });
-      expect(waitConfirmStep.props()).toContain({ triggerState: RequestState.WaitConfirm });
-    });
-
-    it('shows wait for transaction as second step', () => {
-      const requestMetadata = generateRequestMetadata({ state: ref(RequestState.Init) });
-      const wrapper = createWrapper({ requestMetadata });
-      const requestProgress = wrapper.get(requestProgressSelector);
-      const waitTransactionStep = requestProgress.findAllComponents(ProgressStep)[1];
-
-      expect(waitTransactionStep).toBeDefined();
-      expect(waitTransactionStep.isVisible()).toBeTruthy();
-      expect(waitTransactionStep.props()).toContain({ currentState: RequestState.Init });
-      expect(waitTransactionStep.props()).toContain({
-        triggerState: RequestState.WaitTransaction,
+      expect(progressSteps.length).toBe(4);
+      expect(progressSteps[0].props()).toContain({
+        label: 'Please confirm your request on Metamask',
       });
+      expect(progressSteps[1].props()).toContain({ label: 'Waiting for transaction receipt' });
+      expect(progressSteps[2].props()).toContain({ label: 'Request is being fulfilled' });
+      expect(progressSteps[3].props()).toContain({ label: 'Transfer completed' });
     });
 
-    it('shows wait for fulfilment as third step', () => {
-      const requestMetadata = generateRequestMetadata({ state: ref(RequestState.Init) });
-      const wrapper = createWrapper({ requestMetadata });
-      const requestProgress = wrapper.get(requestProgressSelector);
-      const waitFulfillStep = requestProgress.findAllComponents(ProgressStep)[2];
+    it('sets correct completion state according to current request state', () => {
+      const requestMetadata = generateRequestMetadata();
+      const stepOrderToRequestState = [
+        RequestState.WaitConfirm,
+        RequestState.WaitTransaction,
+        RequestState.WaitFulfill,
+        RequestState.RequestSuccessful,
+      ];
 
-      expect(waitFulfillStep).toBeDefined();
-      expect(waitFulfillStep.isVisible()).toBeTruthy();
-      expect(waitFulfillStep.props()).toContain({ currentState: RequestState.Init });
-      expect(waitFulfillStep.props()).toContain({ triggerState: RequestState.WaitFulfill });
-    });
+      for (const [stepIndex, stepState] of stepOrderToRequestState.entries()) {
+        for (const state in RequestState) {
+          const wrapper = createWrapper({
+            requestMetadata: { ...requestMetadata, state: ref(Number(state)) },
+          });
+          const progressStep = wrapper.findAllComponents(ProgressStep)[stepIndex];
+          const completed = Number(state) >= stepState;
 
-    it('shows request successful as last step', () => {
-      const requestMetadata = generateRequestMetadata({ state: ref(RequestState.Init) });
-      const wrapper = createWrapper({ requestMetadata });
-      const requestProgress = wrapper.get(requestProgressSelector);
-      const requestSuccessfulStep = requestProgress.findAllComponents(ProgressStep).slice(-1)[0];
-
-      expect(requestSuccessfulStep).toBeDefined();
-      expect(requestSuccessfulStep.isVisible()).toBeTruthy();
-      expect(requestSuccessfulStep.props()).toContain({ currentState: RequestState.Init });
-      expect(requestSuccessfulStep.props()).toContain({
-        triggerState: RequestState.RequestSuccessful,
-      });
-      expect(requestSuccessfulStep.props()).toContain({ warnState: RequestState.RequestFailed });
+          expect(progressStep.props()).toContain({ completed: completed });
+        }
+      }
     });
   });
 });
