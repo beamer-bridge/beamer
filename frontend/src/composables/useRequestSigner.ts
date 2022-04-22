@@ -1,22 +1,21 @@
 import { ref } from 'vue';
 
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import type { EthereumProvider } from '@/services/web3-provider';
 import createAsyncProcess from '@/utils/create-async-process';
 
-export default function useRequestSigner() {
-  const requestSignerError = ref('');
-  const ethereumProvider = useEthereumProvider();
-  const requestSigner = async () => {
-    requestSignerError.value = '';
-    await ethereumProvider.provider?.requestSigner();
-    if (!ethereumProvider.signer) {
-      requestSignerError.value = 'Accessing Wallet failed!';
+export function useRequestSigner() {
+  const error = ref<string | undefined>(undefined);
+
+  const requestSigner = async (provider: EthereumProvider) => {
+    error.value = undefined;
+
+    await provider.requestSigner();
+
+    if (!provider.signer.value) {
+      error.value = 'Accessing Wallet failed!';
     }
   };
-  const { active: requestSignerActive, run: runRequestSigner } = createAsyncProcess(requestSigner);
-  return {
-    requestSigner: runRequestSigner,
-    requestSignerActive,
-    requestSignerError,
-  };
+
+  const { active, run } = createAsyncProcess(requestSigner);
+  return { run, active, error };
 }

@@ -15,7 +15,7 @@
       @submit="submitRequestTransaction"
     >
       <Card class="bg-teal px-20 pt-18 pb-16 self-stretch mb-11">
-        <RequestFormInputs v-if="requestState === RequestState.Init" :fees="feesEther" />
+        <RequestFormInputs v-if="requestState === RequestState.Init" />
         <RequestProcessing v-else :request-metadata="requestMetadata" />
         <Transition name="expand">
           <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
@@ -28,7 +28,7 @@
         <FormKit
           input-class="w-112 bg-orange flex flex-row justify-center"
           type="button"
-          @click="requestSigner"
+          @click="runRequestSigner"
         >
           <div v-if="requestSignerActive" class="h-8 w-8">
             <spinner></spinner>
@@ -63,21 +63,19 @@
 </template>
 
 <script setup lang="ts">
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
-import { utils } from 'ethers';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import Spinner from '@/components/Spinner.vue';
-import useRequestSigner from '@/composables/useRequestSigner';
-import {
-  useGetFee,
-  useRequestTransaction,
-  useWaitRequestFilled,
-} from '@/composables/useRequestTransaction';
+import { useRequestFee } from '@/composables/useRequestFee';
+import { useRequestSigner } from '@/composables/useRequestSigner';
+import { useRequestTransaction } from '@/composables/useRequestTransaction';
+import { useWaitForRequestFulfilment } from '@/composables/useWaitForRequestFulfilment';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
@@ -93,32 +91,53 @@ const emit = defineEmits<Emits>();
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
+const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 
 const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
 
 const transactionError = ref('');
 
-const { fee, executeGetFee } = useGetFee();
-const { requestTransactionActive, requestState, executeRequestTransaction } =
-  useRequestTransaction();
-const { executeWaitFulfilled } = useWaitRequestFilled();
-const { requestSigner, requestSignerActive, requestSignerError } = useRequestSigner();
+const requestManagerAddress = computed(
+  () => configuration.chains[chainId.value]?.requestManagerAddress,
+);
+
+const { amount: requestFeeAmount, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
+  provider,
+  requestManagerAddress,
+);
+
+const {
+  active: requestTransactionActive,
+  state: requestState,
+  run: executeRequestTransaction,
+} = useRequestTransaction();
+
+const { run: waitForRequestFulfilment } = useWaitForRequestFulfilment();
+
+const {
+  run: requestSigner,
+  active: requestSignerActive,
+  error: requestSignerError,
+} = useRequestSigner();
+
+const runRequestSigner = () => {
+  // TOOD: In future we will not separate getting provider and signer which
+  // resolve the undefined provider case.
+  if (provider.value) {
+    requestSigner(provider.value);
+  }
+};
+
 const getTargetTokenAddress = (targetChainId: number, tokenSymbol: string) => {
   return configuration.chains[targetChainId].tokens.find((token) => token.symbol === tokenSymbol)
     ?.address as string;
 };
 
-const feesEther = computed(() => {
-  if (fee.value) {
-    return utils.formatEther(fee.value);
-  }
-  return '';
-});
-
 const newTransfer = async () => {
   emit('reload');
 };
+
 // TODO improve types
 const submitRequestTransaction = async (formResult: {
   amount: string;
@@ -127,7 +146,7 @@ const submitRequestTransaction = async (formResult: {
   toAddress: string;
   tokenAddress: SelectorOption;
 }) => {
-  if (!ethereumProvider.signer) {
+  if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
 
@@ -150,15 +169,22 @@ const submitRequestTransaction = async (formResult: {
     targetChainName: formResult.toChainId.label,
     targetAddress: request.targetAddress,
     amount: formResult.amount,
-    fee: feesEther.value,
+    fee: formattedRequestFeeAmount.value, // TODO: Do we need the formatted amount here?!
   };
-  request.fee = fee.value;
+  (request.fee = requestFeeAmount.value), (transactionError.value = '');
 
-  transactionError.value = '';
+  const targetChainRpcUrl = configuration.chains[formResult.toChainId.value].rpcUrl;
+  const targetChainProvider = new JsonRpcProvider(targetChainRpcUrl);
+  const fillManagerAddress = configuration.chains[formResult.toChainId.value].fillManagerAddress;
 
   try {
-    await executeRequestTransaction(request, ethereumProvider.signer);
-    await executeWaitFulfilled(request, requestState);
+    await executeRequestTransaction(
+      provider.value,
+      signer.value,
+      requestManagerAddress.value,
+      request,
+    );
+    await waitForRequestFulfilment(targetChainProvider, fillManagerAddress, request, requestState);
   } catch (error) {
     const maybeErrorMessage = (error as { message?: string }).message;
     if (maybeErrorMessage) {
@@ -169,10 +195,7 @@ const submitRequestTransaction = async (formResult: {
   }
 };
 
-const { chainId } = storeToRefs(ethereumProvider);
 watch(chainId, () => location.reload());
-
-executeGetFee();
 
 const isNewTransferDisabled = computed(() => {
   return (

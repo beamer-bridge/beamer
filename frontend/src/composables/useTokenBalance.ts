@@ -1,65 +1,75 @@
+import type { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber, Contract, ethers } from 'ethers';
-import { storeToRefs } from 'pinia';
-import { computed, Ref, ref, watch } from 'vue';
+import type { Ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import StandardToken from '@/assets/StandardToken.json';
 import { getTokenBalance, getTokenDecimals } from '@/services/transactions/token';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
-import { SelectorOption } from '@/types/form';
+import type { EthereumProvider } from '@/services/web3-provider';
 
-export default function useTokenBalance(selectedToken: Ref<SelectorOption | undefined>) {
-  const ethereumProvider = useEthereumProvider();
-  const showTokenBalance = computed(() => Boolean(ethereumProvider.signer && selectedToken.value));
-  const tokenBalance = ref(BigNumber.from(0));
-  const tokenDecimals = ref(BigNumber.from(0));
+export function useTokenBalance(
+  provider: Ref<EthereumProvider | undefined>,
+  signer: Ref<JsonRpcSigner | undefined>,
+  tokenAddress: Ref<string | undefined>,
+) {
+  const error = ref<string | undefined>(undefined);
+  const signerAddress = ref<string | undefined>(undefined);
+  const balance = ref(BigNumber.from(0));
+  const decimals = ref(BigNumber.from(0));
+
+  const show = computed(() => !!signerAddress.value && !!tokenAddress.value);
+  const formattedBalance = computed(() => {
+    const cutoff = balance.value.mod(1e14);
+    return ethers.utils.formatUnits(balance.value.sub(cutoff), decimals.value);
+  });
+
   let tokenContract: Contract;
 
   async function listenToTokenBalance() {
-    if (!selectedToken.value || !ethereumProvider.provider || !ethereumProvider.signerAddress) {
+    error.value = undefined;
+
+    if (!provider.value || !tokenAddress.value || !signer.value) {
+      balance.value = BigNumber.from(0);
       return;
     }
+
+    try {
+      signerAddress.value = await signer.value.getAddress();
+      decimals.value = await getTokenDecimals(provider.value, tokenAddress.value);
+      balance.value = await getTokenBalance(
+        provider.value,
+        tokenAddress.value,
+        signerAddress.value,
+      );
+    } catch (exception) {
+      error.value = exception.message ?? exception;
+    }
+
     if (tokenContract) {
       tokenContract.removeAllListeners();
     }
-    tokenContract = ethereumProvider.provider.connectContract(
-      new Contract(selectedToken.value.value, StandardToken.abi),
+
+    tokenContract = provider.value.connectContract(
+      new Contract(tokenAddress.value, StandardToken.abi),
     );
 
-    tokenBalance.value =
-      (await getTokenBalance(selectedToken.value.value, ethereumProvider.signerAddress)) ??
-      BigNumber.from(0);
-    const sendFilter = tokenContract.filters.Transfer(ethereumProvider.signerAddress, undefined);
-    const receiveFilter = tokenContract.filters.Transfer(
-      undefined,
-      ethereumProvider.signerAddress,
-    );
+    const sendFilter = tokenContract.filters.Transfer(signerAddress.value, undefined);
+    const receiveFilter = tokenContract.filters.Transfer(undefined, signerAddress.value);
+
     tokenContract.on(
       sendFilter,
-      (from: string, to: string, amount: BigNumber) =>
-        (tokenBalance.value = tokenBalance.value.sub(amount)),
+      (_from: string, _to: string, amount: BigNumber) =>
+        (balance.value = balance.value.sub(amount)),
     );
+
     tokenContract.on(
       receiveFilter,
-      (from: string, to: string, amount: BigNumber) =>
-        (tokenBalance.value = tokenBalance.value.add(amount)),
+      (_from: string, _to: string, amount: BigNumber) =>
+        (balance.value = balance.value.add(amount)),
     );
   }
 
-  watch(selectedToken, async () => {
-    if (!selectedToken.value) {
-      return;
-    }
-    tokenDecimals.value = (await getTokenDecimals(selectedToken.value.value)) ?? BigNumber.from(0);
-    listenToTokenBalance();
-  });
+  watch([tokenAddress, provider, signer], listenToTokenBalance, { immediate: true });
 
-  const { signerAddress } = storeToRefs(ethereumProvider);
-  watch(signerAddress, listenToTokenBalance);
-
-  const formattedTokenBalance = computed(() => {
-    const cutoff = tokenBalance.value.mod(1e14);
-    return ethers.utils.formatUnits(tokenBalance.value.sub(cutoff), tokenDecimals.value);
-  });
-
-  return { showTokenBalance, formattedTokenBalance };
+  return { show, balance, formattedBalance, error };
 }
