@@ -102,10 +102,7 @@ const requestManagerAddress = computed(
   () => configuration.chains[chainId.value]?.requestManagerAddress,
 );
 
-const { amount: requestFeeAmount, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
-  provider,
-  requestManagerAddress,
-);
+const { amount: requestFeeAmount } = useRequestFee(provider, requestManagerAddress);
 
 const {
   active: requestTransactionActive,
@@ -169,7 +166,6 @@ const submitRequestTransaction = async (formResult: {
     targetChainName: formResult.toChainId.label,
     targetAddress: request.targetAddress,
     amount: formResult.amount,
-    fee: formattedRequestFeeAmount.value, // TODO: Do we need the formatted amount here?!
   };
   (request.fee = requestFeeAmount.value), (transactionError.value = '');
 

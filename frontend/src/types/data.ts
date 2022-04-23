@@ -33,5 +33,4 @@ export interface RequestMetadata {
   targetAddress: string;
   targetChainName: string;
   tokenSymbol: string;
-  fee: string;
 }
