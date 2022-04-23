@@ -27,6 +27,7 @@ import { useEthereumProvider } from '@/stores/ethereum-provider';
 const criticalErrorMessage = ref('');
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
+const { provider, chainId } = storeToRefs(ethereumProvider);
 const requestDialogReloadKey = ref(0);
 
 const chainChangeHandler = () => {
@@ -38,15 +39,12 @@ const resetRequestDialog = () => {
   requestDialogReloadKey.value += 1;
 };
 
+watch(chainId, chainChangeHandler);
+
 onMounted(async () => {
-  ethereumProvider.provider = await createMetaMaskProvider();
+  provider.value = await createMetaMaskProvider();
 
-  if (ethereumProvider.provider) {
-    const { chainId } = storeToRefs(ethereumProvider);
-
-    watch(chainId, chainChangeHandler);
-    chainChangeHandler();
-  } else {
+  if (!provider.value) {
     criticalErrorMessage.value = 'Could not detect MetaMask!';
   }
 });
