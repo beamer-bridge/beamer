@@ -14,4 +14,6 @@ interface IProofSubmitter {
         uint256 sourceChainId,
         address eligibleClaimer
     ) external returns (ProofReceipt memory);
+
+    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, bytes32 fillHash) external;
 }

@@ -9,6 +9,9 @@ import "./Resolver.sol";
 import "./RestrictedCalls.sol";
 
 contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
+
+    uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
+
     ICrossDomainMessenger public messenger;
 
     constructor(address _messenger)
@@ -33,9 +36,24 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
                     filler
                 )
             ),
-            1_000_000
+            MESSAGE_GAS_LIMIT
         );
 
         return ProofReceipt(fillId, fillHash);
+    }
+
+    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, bytes32 fillHash) external {
+        messenger.sendMessage(
+            l1Resolver,
+            abi.encodeCall(
+                Resolver.resolveNonFill,
+                    (
+                        fillHash,
+                        block.chainid,
+                        sourceChainId
+                    )
+                ),
+            MESSAGE_GAS_LIMIT
+        );
     }
 }
