@@ -31,7 +31,8 @@ contract FillManager is Ownable {
     address public l1Resolver;
     IProofSubmitter public proofSubmitter;
 
-    mapping(bytes32 => bool) public fills;
+    // mapping from request hash to fill hash of filled requests
+    mapping(bytes32 => bytes32) public fills;
     mapping(address => bool) public allowedLPs;
 
     constructor(address _l1Resolver, address _proofSubmitter)
@@ -55,21 +56,22 @@ contract FillManager is Ownable {
                 requestId, sourceChainId, block.chainid, targetTokenAddress, targetReceiverAddress, amount
             );
 
-        require(!fills[requestHash], "Already filled");
-        fills[requestHash] = true;
+        require(fills[requestHash] == bytes32(0), "Already filled");
 
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
-        bytes32 fillId = proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender);
+        IProofSubmitter.ProofReceipt memory proofReceipt = proofSubmitter.submitProof(l1Resolver, requestHash, sourceChainId, msg.sender);
         require(
-            fillId != 0,
+            proofReceipt.fillId != 0,
             "Submitting proof data failed"
         );
 
-        emit RequestFilled(requestId, fillId, sourceChainId, targetTokenAddress, msg.sender, amount);
+        fills[requestHash] = proofReceipt.fillHash;
 
-        return fillId;
+        emit RequestFilled(requestId, proofReceipt.fillId, sourceChainId, targetTokenAddress, msg.sender, amount);
+
+        return proofReceipt.fillId;
     }
 
     function addAllowedLP(address newLP) public onlyOwner {
