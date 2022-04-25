@@ -1,5 +1,6 @@
 import brownie
 import pytest
+from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
@@ -46,6 +47,27 @@ def test_l1_resolution_correct_hash(
         expected_address = filler
 
     assert resolution_registry.fillers(fill_hash) == expected_address
+
+
+@pytest.mark.parametrize("forward_state", [True])
+def test_l1_non_fil_proof(fill_manager, resolution_registry):
+    request_hash = "1234" + "00" * 30
+    fill_id = "5678" + "00" * 30
+    chain_id = brownie.web3.eth.chain_id
+
+    fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+
+    fill_hash = keccak(
+        encode_abi_packed(
+            ["bytes32", "bytes32"],
+            [
+                bytes.fromhex(request_hash),
+                bytes.fromhex(fill_id),
+            ],
+        )
+    )
+
+    assert resolution_registry.invalidFillHashes(fill_hash)
 
 
 def test_restricted_calls(contracts, resolver):
