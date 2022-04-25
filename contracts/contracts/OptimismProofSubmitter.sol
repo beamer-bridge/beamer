@@ -17,16 +17,17 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     }
 
     function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address filler)
-        external restricted(block.chainid, msg.sender) returns (bytes32)
+        external restricted(block.chainid, msg.sender) returns (ProofReceipt memory)
     {
         bytes32 fillId = keccak256(abi.encode(block.number));
+        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
 
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
                 (
-                    BeamerUtils.createFillHash(requestHash, fillId),
+                    fillHash,
                     block.chainid,
                     sourceChainId,
                     filler
@@ -35,6 +36,6 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             1_000_000
         );
 
-        return fillId;
+        return ProofReceipt(fillId, fillHash);
     }
 }
