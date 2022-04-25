@@ -34,9 +34,10 @@ contract RequestManager is Ownable {
         uint256 requestId;
         address claimer;
         uint256 claimerStake;
-        address challenger;
-        uint256 challengerStake;
-        bool withdrawn;
+        mapping (address => uint256) challengersStakes;
+        address lastChallenger;
+        uint256 challengerStakeTotal;
+        uint256 withdrawnAmount;
         uint256 termination;
         bytes32 fillId;
     }
@@ -58,19 +59,19 @@ contract RequestManager is Ownable {
     );
 
     event ClaimMade(
-        uint256 requestId,
+        uint256 indexed requestId,
         uint256 claimId,
         address claimer,
         uint256 claimerStake,
-        address challenger,
-        uint256 challengerStake,
+        address lastChallenger,
+        uint256 challengerStakeTotal,
         uint256 termination,
         bytes32 fillId
     );
 
     event ClaimWithdrawn(
         uint256 claimId,
-        uint256 requestId,
+        uint256 indexed requestId,
         address claimReceiver
     );
 
@@ -217,9 +218,9 @@ contract RequestManager is Ownable {
         claim.requestId = requestId;
         claim.claimer = msg.sender;
         claim.claimerStake = claimStake;
-        claim.challenger = address(0);
-        claim.challengerStake = 0;
-        claim.withdrawn = false;
+        claim.lastChallenger = address(0);
+        claim.challengerStakeTotal = 0;
+        claim.withdrawnAmount = 0;
         claim.termination = block.timestamp + claimPeriod;
         claim.fillId = fillId;
 
@@ -228,8 +229,8 @@ contract RequestManager is Ownable {
             claimCounter,
             claim.claimer,
             claim.claimerStake,
-            claim.challenger,
-            claim.challengerStake,
+            claim.lastChallenger,
+            claim.challengerStakeTotal,
             claim.termination,
             fillId
         );
@@ -245,20 +246,21 @@ contract RequestManager is Ownable {
         address nextActor;
         uint256 minValue;
         uint256 periodExtension;
+        uint256 claimerStake = claim.claimerStake;
+        uint256 challengerStakeTotal = claim.challengerStakeTotal;
 
-        if (claim.claimerStake > claim.challengerStake) {
-            if (claim.challenger == address(0)) {
-                require(claim.claimer != msg.sender, "Cannot challenge own claim");
-                claim.challenger = msg.sender;
+        if (claimerStake > challengerStakeTotal) {
+            if (challengerStakeTotal == 0) {
                 periodExtension = finalizationTimes[request.targetChainId] + challengePeriodExtension;
             } else {
                 periodExtension = challengePeriodExtension;
             }
-            nextActor = claim.challenger;
-            minValue = claim.claimerStake - claim.challengerStake + 1;
+            require(claim.claimer != msg.sender, "Cannot challenge own claim");
+            nextActor = msg.sender;
+            minValue = claimerStake - challengerStakeTotal + 1;
         } else {
             nextActor = claim.claimer;
-            minValue = claim.challengerStake - claim.claimerStake + claimStake;
+            minValue = challengerStakeTotal - claimerStake + claimStake;
         }
 
         require(msg.sender == nextActor, "Not eligible to outbid");
@@ -267,7 +269,9 @@ contract RequestManager is Ownable {
         if (nextActor == claim.claimer) {
             claim.claimerStake += msg.value;
         } else {
-            claim.challengerStake += msg.value;
+            claim.lastChallenger = msg.sender;
+            claim.challengersStakes[msg.sender] += msg.value;
+            claim.challengerStakeTotal += msg.value;
         }
 
         claim.termination = Math.max(claim.termination, block.timestamp + periodExtension);
@@ -277,8 +281,8 @@ contract RequestManager is Ownable {
             claimId,
             claim.claimer,
             claim.claimerStake,
-            claim.challenger,
-            claim.challengerStake,
+            claim.lastChallenger,
+            claim.challengerStakeTotal,
             claim.termination,
             claim.fillId
         );
@@ -287,7 +291,9 @@ contract RequestManager is Ownable {
     function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
-        require(!claim.withdrawn, "Claim already withdrawn");
+        uint256 claimerStake = claim.claimerStake;
+        uint256 challengerStakeTotal = claim.challengerStakeTotal;
+        require(claim.withdrawnAmount < claimerStake + challengerStakeTotal, "Claim already withdrawn");
 
         bytes32 fillHash = BeamerUtils.createFillHash(
                 claim.requestId,
@@ -299,46 +305,74 @@ contract RequestManager is Ownable {
                 claim.fillId
             );
 
-        address claimReceiver;
+        bool claimValid = false;
         address depositReceiver = request.depositReceiver;
 
-        // Priority list for claim settlement, settlement according to
-        // 1) resolutionRegistry entry, the filler
-        // 2) depositReceiver, the address that withdrew the deposit with a valid claim
-        // 3) claim properties
+        // Priority list for validity check of claim
+        // Claim is valid if either
+        // 1) ResolutionRegistry entry, claimer is the filler
+        // 2) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
+        // 3) Claim properties, claim terminated and claimer has the highest stake
         address filler = resolutionRegistry.fillers(fillHash);
         if(filler == address(0)) {
             filler = depositReceiver;
         }
-
         if (filler == address(0)) {
-            // Claim resolution via claim properties
+            // Claim resolution via 3)
             require(block.timestamp >= claim.termination, "Claim period not finished");
-            claimReceiver = claim.claimerStake > claim.challengerStake ? claim.claimer : claim.challenger;
-        } else if (filler != claim.claimer) {
-            // Claim resolution via 1) or 2) but claim is invalid (challenger wins challenge)
-            claimReceiver = claim.challenger;
-        } else {
-            // Claim resolution via 1) or 2) and claim is valid (claimer wins challenge)
-            claimReceiver = claim.claimer;
+            claimValid = claimerStake > challengerStakeTotal;
+        }
+        else {
+            // Claim resolution via 1) or 2)
+            claimValid = filler == claim.claimer;
         }
 
-        claim.withdrawn = true;
-        request.activeClaims -= 1;
+        // Calculate withdraw scheme for claim stakes
+        uint256 ethToTransfer;
+        address claimReceiver;
+
+        if (claimValid) {
+            // If claim is valid, all stakes go to the claimer
+            ethToTransfer = claimerStake + challengerStakeTotal;
+            claimReceiver = claim.claimer;
+        }
+        else if (challengerStakeTotal > 0) {
+            // If claim is invalid, partial withdrawal by the sender
+            ethToTransfer = 2 * claim.challengersStakes[msg.sender];
+            claimReceiver = msg.sender;
+
+            require(ethToTransfer > 0, "Challenger has nothing to withdraw");
+            //Re-entrancy protection
+            claim.challengersStakes[msg.sender] = 0;
+        }
+        else {
+            // The unlikely event is possible that a false claim has no challenger
+            // If it is known that the claim is false then the claim stake goes to the platform
+            ethToTransfer = claimerStake;
+            claimReceiver = owner();
+        }
+
+        // If the challenger wins and is the last challenger, he gets either
+        // twice his stake plus the excess stake (if the claimer was winning), or
+        // twice his stake minus the difference between the claimer and challenger stakes (if the claimer was losing)
+        if (msg.sender == claim.lastChallenger) {
+            if (claimerStake > challengerStakeTotal) {
+                ethToTransfer += (claimerStake - challengerStakeTotal);
+            }
+            else {
+                ethToTransfer -= (challengerStakeTotal - claimerStake);
+            }
+        }
+
+        // First time withdraw is called, remove it from active claim
+        if (claim.withdrawnAmount == 0) {
+            request.activeClaims -= 1;
+        }
+        claim.withdrawnAmount += ethToTransfer;
+        require(claim.withdrawnAmount <= claimerStake + challengerStakeTotal, "Amount to withdraw too large");
 
         if (depositReceiver == address(0) && claimReceiver == claim.claimer) {
             withdrawDeposit(request, claim, claimReceiver);
-        }
-
-        // The claim is set the `withdrawn` state above, so the following effects
-        // needs to happen afterwards to avoid reentrency problems
-        uint256 ethToTransfer = claim.claimerStake + claim.challengerStake;
-
-        // The unlikely event is possible that a false claim has no
-        // challenger.  If it is known that the claim is false then the claim
-        // stake goes to the contract owner.
-        if(claimReceiver == address(0)) {
-            claimReceiver = owner();
         }
 
         (bool sent,) = claimReceiver.call{value: ethToTransfer}("");

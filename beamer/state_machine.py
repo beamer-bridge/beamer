@@ -193,7 +193,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         # if fill event is not fetched yet, wait `_fill_wait_time`
         # to give the target chain time to sync before challenging
         # additionally, if we are already in the challenge game, no need to back off
-        if request.filler is None and event.challenger_stake == 0:
+        if request.filler is None and event.challenger_stake_total == 0:
             challenge_back_off_timestamp += context.config.fill_wait_time
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
@@ -201,10 +201,10 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return True, events
 
     # this is at least the second ClaimMade event for this claim id
-    assert event.challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
+    assert event.last_challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
     try:
         # Agent is not part of ongoing challenge
-        if context.address not in {event.claimer, event.challenger}:
+        if context.address not in {event.claimer, event.last_challenger}:
             claim.ignore(event)
 
         claim.challenge(event)
