@@ -450,3 +450,40 @@ one additional week, which would result in higher opportunity costs for the liqu
 
 In practice the longest observed delay of block inclusion from a rollup sequencer has been 18 hours, and was exceptional.
 Hence the decision not to take this delay into account.
+
+Potential attacks
+-----------------
+
+Exhausting the agents funds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A dishonest agent may submit a false claim (i.e. attempts to claim a request which the agent did not fulfill). In
+response, an honest agent (most likely the agent who did fulfill the request) will likely challenge the false claim with
+an initial stake of claimStake + 1, the minimum possible stake required to challenge. The dishonest agent may respond
+with a counter-challenge of 2 * claimStake + 1 in total. If the dishonest agent counter-challenges, the honest agent
+will likely escalate the challenge so the stake total is high enough to cover the cost of the L1 non-fill proof in the
+event the dishonest agent counter-challenges again. If the honest agent does escalate the challenge, then the dishonest
+agent may stop participating in the escalation game (i.e. decline to counter-challenge again). As a result, the honest
+agent will have locked a higher stake than the dishonest agent. The honest agent will be temporarily unable to utilize
+the stake amount for other purposes, including claiming/challenging other transfers and providing liquidity.
+
+The dishonest agent can open parallel claims in an attempt to exhaust the funds of the honest agents. Once the honest
+agents have no funds, the dishonest participant is the sole participant of the protocol and can do as he pleases.
+
+For each opened claim, the attacker stakes ``claimStake + cost of L1 proof`` less than the honest
+agent. The advantage factor of the attacker is ``(claimStake + cost of L1 proof) / (2 * claimStake + 1)``.
+The attack is successful if
+
+::
+
+  ``total funds of attacker * advantage factor > total funds of honest agents``.
+
+The attacker will lose all it staked during the attack if liquidity providers discover the attack within the
+``challenge period`` and are able to refund their agents or manually trigger the L1 non-fill proof. However, for
+as long as it is the only participant, it will be able to wrongful claim any request and collect their rewards.
+
+A strategy could be put in place by the challenger to only ever outbid the claimer by 1. This would prevent such attack
+but it would take many more transactions to gather the funds for the L1 proof.
+
+Since the protocol is open and any participant can join with its funds, we believe for this attack to be unpractical and
+do not feel the need to mitigate it further.
