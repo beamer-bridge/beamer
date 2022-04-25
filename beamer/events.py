@@ -83,8 +83,8 @@ class ClaimMade(ClaimEvent):
     fill_id: FillId
     claimer: ChecksumAddress
     claimer_stake: Wei
-    challenger: ChecksumAddress
-    challenger_stake: Wei
+    last_challenger: ChecksumAddress
+    challenger_stake_total: Wei
     termination: Termination
 
 

@@ -95,12 +95,12 @@ def test_challenge_2(request_manager, token, config):
         # Charlie's claim.
         claim = collector.next_event()
         assert claim is not None
-        assert claim.claimerStake < claim.challengerStake
+        assert claim.claimerStake < claim.challengerStakeTotal
 
         # Bob's claim.
         claim = collector.next_event()
         assert claim is not None
-        assert claim.claimerStake > claim.challengerStake
+        assert claim.claimerStake > claim.challengerStakeTotal
 
         brownie.chain.mine(timestamp=claim.termination)
         request_manager.withdraw(claim.claimId, {"from": agent.address})
@@ -108,8 +108,8 @@ def test_challenge_2(request_manager, token, config):
         agent.stop()
         agent.wait()
 
-    assert agent_earnings() == claim.challengerStake
-    assert charlie_earnings() == -claim.challengerStake
+    assert agent_earnings() == claim.challengerStakeTotal
+    assert charlie_earnings() == -claim.challengerStakeTotal
 
 
 # Scenario 3:
@@ -148,7 +148,10 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         # Get Bob's challenge.
         claim = collector.next_event()
         assert claim is not None
-        assert claim.challengerStake > claim.claimerStake and claim.challenger == agent.address
+        assert (
+            claim.challengerStakeTotal > claim.claimerStake
+            and claim.lastChallenger == agent.address
+        )
 
         # Ensure that Bob did not fill the request.
         assert EventCollector(fill_manager, "RequestFilled").next_event(wait_time=2) is None
@@ -200,7 +203,10 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         # Get Bob's challenge.
         claim = collector.next_event()
         assert claim is not None
-        assert claim.challengerStake > claim.claimerStake and claim.challenger == agent.address
+        assert (
+            claim.challengerStakeTotal > claim.claimerStake
+            and claim.lastChallenger == agent.address
+        )
 
         # Ensure that Bob did not fill the request.
         assert EventCollector(fill_manager, "RequestFilled").next_event(wait_time=2) is None
@@ -209,18 +215,18 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         agent.wait()
 
         request_manager.challengeClaim(
-            claim.claimId, {"from": charlie, "value": claim.challengerStake + 1}
+            claim.claimId, {"from": charlie, "value": claim.challengerStakeTotal + 1}
         )
 
         claim = collector.next_event()
         assert claim is not None
-        assert claim.claimerStake > claim.challengerStake and claim.claimer == charlie.address
+        assert claim.claimerStake > claim.challengerStakeTotal and claim.claimer == charlie.address
 
         brownie.chain.mine(timestamp=claim.termination)
         request_manager.withdraw(claim.claimId, {"from": charlie})
 
-    assert agent_earnings() == -claim.challengerStake
-    assert charlie_earnings() == claim.challengerStake
+    assert agent_earnings() == -claim.challengerStakeTotal
+    assert charlie_earnings() == claim.challengerStakeTotal
 
 
 # Scenario 5:
@@ -302,7 +308,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     else:
         # Challenge expected
         assert claim is not None
-        assert claim.challenger == to_checksum_address(agent.address)
+        assert claim.lastChallenger == to_checksum_address(agent.address)
 
     agent.stop()
     proxy_l2b.stop()

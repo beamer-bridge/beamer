@@ -51,7 +51,8 @@ def test_claim(token, request_manager, claim_stake):
     assert claim_event["claimId"] == claim_id
     assert claim_event["claimer"] == requester
     assert claim_event["claimerStake"] == claim_stake
-    assert claim_event["challenger"] == brownie.ZERO_ADDRESS
+    assert claim_event["lastChallenger"] == brownie.ZERO_ADDRESS
+    assert claim_event["challengerStakeTotal"] == 0
     assert claim_event["termination"] == expected_termination
     assert claim_event["fillId"] == to_hex(fill_id)
 

@@ -55,7 +55,7 @@ class Claim(StateMachine):
 
     @property
     def challenger(self) -> Address:
-        return self._latest_claim_made.challenger
+        return self._latest_claim_made.last_challenger
 
     @property
     def termination(self) -> Termination:
@@ -76,13 +76,13 @@ class Claim(StateMachine):
         return True
 
     def get_winning_address(self) -> Address:
-        if self._latest_claim_made.claimer_stake > self._latest_claim_made.challenger_stake:
+        if self._latest_claim_made.claimer_stake > self._latest_claim_made.challenger_stake_total:
             return self.claimer
         return self.challenger
 
     def get_next_challenge_stake(self, initial_claim_stake: Wei) -> Wei:
         claimer_stake = self._latest_claim_made.claimer_stake
-        challenger_stake = self._latest_claim_made.challenger_stake
+        challenger_stake = self._latest_claim_made.challenger_stake_total
 
         if challenger_stake == 0:
             # we challenge with enough stake for L1 resolution
