@@ -10,7 +10,6 @@ Summary
 .. code::
 
     claimStake = k * avg\_gp\_l2a * (gas_{challenge} + gas_{withdraw})
-    counterChallengeStake = gas_{non-fill proof}
     claimPeriod = max(offline rollup) = 1 day
     challengePeriod = finalizationTime[targetRollup] + buffer = 8 days
     challengePeriodExtension = 1 day
@@ -28,6 +27,10 @@ after the claim expired.
 
 A lower boundary can be defined as the minimum value to cover the cost of challenging. Otherwise
 there would be no financial incentive for challengers to secure the protocol.
+
+Since every time the claimer is leading, new challengers can join the challenge, every outbid by
+the claimer also needs to cover ``claimStake`` for a potential new agent to join. That is, the claimer needs to respond
+to challenges with enough funds to cover the stake of the current challenger plus ``claimStake``.
 
 The higher ``claimStake`` is chosen, the more capital an honest claimer must lock for the period
 ``claimPeriod``.  This can be reflected in opportunity costs for each LP. This being said, the
@@ -58,25 +61,6 @@ Proposed Values
 
 We propose a value of ``k = 1.3`` so that honest challengers are rewarded with a minimum of 30% of the challenge gas
 costs. The other parameters should be determined at time of deployment.
-
-counterChallengeStake
----------------------
-
-The ``counterChallengeStake`` is the minimum stake that a claimer must deposit to respond to a challenge. Upon seeing a
-claim to a non-filled request, honest users will challenge them. If they want to reduce their opportunity costs, they
-will challenge with a stake of ``claimStake + 1``. To which the dishonest claimer can respond with a ``claimStake + 2``
-and little progress is made towards reaching a sufficient stake for the L1 non-fill proof.
-
-The honest challenger will be tempted to stake enough for the L1 non-fill proof. If he does so, the claimer can stop
-participating in the challenge and the honest challenger will solely bear the opportunity cost of a high stake. This is
-a griefing attack.
-
-To prevent it, we need to enforce that the first counter challenge by the claimer has a stake sufficient for the L1
-non-fill proof.
-
-.. math::
-
-    counterChallengeStake = gas_{non-fill proof}
 
 claimPeriod
 -----------
