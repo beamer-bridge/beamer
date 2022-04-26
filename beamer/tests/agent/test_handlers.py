@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
+from hexbytes import HexBytes
 from web3.contract import Contract
 from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
@@ -56,6 +57,7 @@ def make_claim(request: Request) -> Claim:
     return Claim(
         claim_made=ClaimMade(
             chain_id=request.source_chain_id,
+            tx_hash=HexBytes(b""),
             claim_id=ClaimId(1),
             request_id=request.id,
             fill_id=FillId(456),
@@ -119,7 +121,7 @@ def test_ignore_expired(token, config: Config):
 
 def test_request_garbage_collection_without_claim(token, config: Config):
     request = make_request(token)
-    request.fill(config.account.address, b"")
+    request.fill(config.account.address, b"", b"")
     request.withdraw()
 
     context = make_context(config)
@@ -140,7 +142,7 @@ def test_request_garbage_collection_without_claim(token, config: Config):
 
 def test_request_garbage_collection_with_claim(token, config: Config):
     request = make_request(token)
-    request.fill(config.account.address, b"")
+    request.fill(config.account.address, b"", b"")
     request.withdraw()
 
     claim = make_claim(request)

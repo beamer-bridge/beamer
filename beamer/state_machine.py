@@ -138,7 +138,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
         return True
 
     try:
-        request.fill(filler=event.filler, fill_id=event.fill_id)
+        request.fill(filler=event.filler, fill_tx=event.tx_hash, fill_id=event.fill_id)
     except TransitionNotAllowed:
         return False
 

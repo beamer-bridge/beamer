@@ -6,6 +6,7 @@ import requests.exceptions
 import structlog
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
+from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
@@ -32,7 +33,12 @@ class LatestBlockUpdatedEvent(Event):
 
 
 @dataclass(frozen=True)
-class RequestEvent(Event):
+class TxEvent(Event):
+    tx_hash: HexBytes
+
+
+@dataclass(frozen=True)
+class RequestEvent(TxEvent):
     request_id: RequestId
 
 
@@ -61,7 +67,7 @@ class DepositWithdrawn(RequestEvent):
 
 
 @dataclass(frozen=True)
-class ClaimEvent(Event):
+class ClaimEvent(TxEvent):
     claim_id: ClaimId
 
 
@@ -83,13 +89,13 @@ class ClaimWithdrawn(ClaimEvent):
 
 
 @dataclass(frozen=True)
-class RequestResolved(Event):
+class RequestResolved(TxEvent):
     fill_hash: str
     filler: ChecksumAddress
 
 
 @dataclass(frozen=True)
-class FillHashInvalidated(Event):
+class FillHashInvalidated(TxEvent):
     fill_hash: str
 
 
@@ -133,6 +139,7 @@ def _decode_event(
     if data.event in _EVENT_TYPES:
         kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
         kwargs["chain_id"] = chain_id
+        kwargs["tx_hash"] = log_entry["transactionHash"]
         return _EVENT_TYPES[data.event](**kwargs)
     return None
 
