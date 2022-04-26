@@ -74,12 +74,10 @@ export class MessageRelayerService extends BaseServiceV2<
 
     // No messages in this transaction, so there's nothing to do
     if (messages.length === 0) {
-      this.logger.warn(`no message found in L2 transaction ${this.options.fromL2TransactionHash}`);
-      return;
+      throw new Error(`no message found in L2 transaction ${this.options.fromL2TransactionHash}`);
     }
     if (messages.length > 1) {
-      this.logger.warn(`multiple messages found in L2 transaction ${this.options.fromL2TransactionHash}`);
-      return;
+      throw new Error(`multiple messages found in L2 transaction ${this.options.fromL2TransactionHash}`);
     }
 
     const message = messages[0];
@@ -87,10 +85,7 @@ export class MessageRelayerService extends BaseServiceV2<
 
     if (status === MessageStatus.IN_CHALLENGE_PERIOD ||
       status === MessageStatus.STATE_ROOT_NOT_PUBLISHED) {
-      this.logger.info(
-        "tx not yet finalized"
-      );
-      return;
+      throw new Error("tx not yet finalized");
     } else {
       this.logger.info(
         "tx is finalized, relaying..."
@@ -112,5 +107,11 @@ export class MessageRelayerService extends BaseServiceV2<
 
 if (require.main === module) {
   const service = new MessageRelayerService();
-  service.run();
+
+  try {
+    service.run();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
 }
