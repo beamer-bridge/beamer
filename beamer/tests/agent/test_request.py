@@ -5,6 +5,7 @@ import brownie
 import pytest
 from brownie import ZERO_ADDRESS, accounts
 from eth_utils import to_checksum_address
+from hexbytes import HexBytes
 from web3.types import Wei
 
 from beamer.agent import Agent
@@ -96,15 +97,16 @@ def test_challenge_own_claim(config, request_manager, token):
 
     claim = Claim(
         ClaimMade(
-            brownie.chain.id,
-            ClaimId(1),
-            request.id,
-            FillId(0),
-            agent_address,
-            claim_stake,
-            ZERO_ADDRESS,
-            Wei(0),
-            Termination(1700000000),
+            chain_id=brownie.chain.id,
+            tx_hash=HexBytes(b""),
+            claim_id=ClaimId(1),
+            request_id=request.id,
+            fill_id=FillId(0),
+            claimer=agent_address,
+            claimer_stake=claim_stake,
+            challenger=ZERO_ADDRESS,
+            challenger_stake=Wei(0),
+            termination=Termination(1700000000),
         ),
         int(time.time()),
     )
@@ -221,6 +223,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
         [
             RequestFilled(
                 chain_id=chain_id,
+                tx_hash=HexBytes(b""),
                 request_id=RequestId(request_id),
                 fill_id=FillId(1),
                 source_chain_id=chain_id,
@@ -238,6 +241,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
         [
             RequestFilled(
                 chain_id=chain_id,
+                tx_hash=HexBytes(b""),
                 request_id=RequestId(request_id),
                 fill_id=FillId(1),
                 source_chain_id=ChainId(chain_id + 1),
@@ -255,6 +259,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
         [
             RequestFilled(
                 chain_id=chain_id,
+                tx_hash=HexBytes(b""),
                 request_id=RequestId(request_id),
                 fill_id=FillId(1),
                 source_chain_id=chain_id,
@@ -272,6 +277,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
         [
             RequestFilled(
                 chain_id=chain_id,
+                tx_hash=HexBytes(b""),
                 request_id=RequestId(request_id),
                 fill_id=FillId(1),
                 source_chain_id=chain_id,
