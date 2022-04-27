@@ -82,10 +82,9 @@ contract FillManager is Ownable {
 
     function invalidateFillHash(bytes32 requestHash, bytes32 fillId, uint256 sourceChainId) external {
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
-        if (fills[requestHash] != fillHash) {
-            proofSubmitter.submitNonFillProof(l1Resolver, sourceChainId, fillHash);
-            emit HashInvalidated(requestHash, fillId, fillHash);
-        }
+        require(fills[requestHash] != fillHash, "Fill hash valid");
+        proofSubmitter.submitNonFillProof(l1Resolver, sourceChainId, fillHash);
+        emit HashInvalidated(requestHash, fillId, fillHash);
     }
 
     function addAllowedLP(address newLP) public onlyOwner {
