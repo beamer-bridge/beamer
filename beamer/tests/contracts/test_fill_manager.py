@@ -2,7 +2,7 @@ import brownie
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 
-from beamer.tests.util import alloc_accounts
+from beamer.tests.util import alloc_accounts, create_request_hash
 
 
 def test_fill_request(fill_manager, token, deployer):
@@ -49,6 +49,37 @@ def test_fill_request(fill_manager, token, deployer):
 
     blacklist_tx = fill_manager.removeAllowedLP(deployer, {"from": deployer})
     assert "LPRemoved" in blacklist_tx.events
+
+
+def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
+    chain_id = brownie.web3.eth.chain_id
+    amount = 100
+    receiver = alloc_accounts(1)[0]
+
+    fill_manager.addAllowedLP(deployer, {"from": deployer})
+
+    token.approve(fill_manager.address, amount, {"from": deployer})
+    request_id = 1
+    tx = fill_manager.fillRequest(
+        request_id,
+        chain_id,
+        token.address,
+        receiver,
+        amount,
+        {"from": deployer},
+    )
+    fill_id = tx.return_value
+    request_hash = create_request_hash(
+        request_id,
+        chain_id,
+        chain_id,
+        token.address,
+        receiver.address,
+        amount,
+    )
+    with brownie.reverts("Fill hash valid"):
+        fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+
 
 def test_invalidated_fill_hash_event(fill_manager):
     request_hash = "1234" + "00" * 30
