@@ -20,6 +20,12 @@ contract FillManager is Ownable {
         uint256 amount
     );
 
+    event HashInvalidated(
+        bytes32 indexed requestHash,
+        bytes32 indexed fillId,
+        bytes32 indexed fillHash
+    );
+
     event LPAdded(
         address lp
     );
@@ -78,6 +84,7 @@ contract FillManager is Ownable {
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         if (fills[requestHash] != fillHash) {
             proofSubmitter.submitNonFillProof(l1Resolver, sourceChainId, fillHash);
+            emit HashInvalidated(requestHash, fillId, fillHash);
         }
     }
 

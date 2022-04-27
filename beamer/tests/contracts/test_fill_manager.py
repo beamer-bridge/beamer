@@ -1,4 +1,6 @@
 import brownie
+from eth_abi.packed import encode_abi_packed
+from eth_utils import keccak
 
 from beamer.tests.util import alloc_accounts
 
@@ -47,3 +49,25 @@ def test_fill_request(fill_manager, token, deployer):
 
     blacklist_tx = fill_manager.removeAllowedLP(deployer, {"from": deployer})
     assert "LPRemoved" in blacklist_tx.events
+
+def test_invalidated_fill_hash_event(fill_manager):
+    request_hash = "1234" + "00" * 30
+    fill_id = "5678" + "00" * 30
+    chain_id = brownie.web3.eth.chain_id
+
+    tx = fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+
+    fill_hash = keccak(
+        encode_abi_packed(
+            ["bytes32", "bytes32"],
+            [
+                bytes.fromhex(request_hash),
+                bytes.fromhex(fill_id),
+            ],
+        )
+    )
+
+    assert "HashInvalidated" in tx.events
+    assert tx.events["HashInvalidated"]["requestHash"] == "0x" + request_hash
+    assert tx.events["HashInvalidated"]["fillId"] == "0x" + fill_id
+    assert tx.events["HashInvalidated"]["fillHash"] == "0x" + fill_hash.hex()
