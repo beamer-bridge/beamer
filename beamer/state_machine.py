@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass
-from typing import Dict
+from typing import Optional
 
 import structlog
 from eth_typing import ChecksumAddress
@@ -19,6 +19,7 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
+    InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
@@ -41,11 +42,14 @@ class Context:
     fill_manager: Contract
     match_checker: TokenMatchChecker
     address: ChecksumAddress
-    latest_blocks: Dict[ChainId, BlockData]
+    latest_blocks: dict[ChainId, BlockData]
     config: Config
 
 
-def process_event(event: Event, context: Context) -> bool:
+HandlerResult = tuple[bool, Optional[list[Event]]]
+
+
+def process_event(event: Event, context: Context) -> HandlerResult:
     log.debug("Processing event", _event=event)
 
     if isinstance(event, LatestBlockUpdatedEvent):
@@ -66,19 +70,21 @@ def process_event(event: Event, context: Context) -> bool:
     elif isinstance(event, ClaimWithdrawn):
         return _handle_claim_withdrawn(event, context)
 
-    elif isinstance(event, (RequestResolved, FillHashInvalidated)):
-        return False
+    elif isinstance(event, (RequestResolved, FillHashInvalidated, InitiateL1ResolutionEvent)):
+        return False, None
 
     else:
         raise RuntimeError("Unrecognized event type")
 
 
-def _handle_latest_block_updated(event: LatestBlockUpdatedEvent, context: Context) -> bool:
+def _handle_latest_block_updated(
+    event: LatestBlockUpdatedEvent, context: Context
+) -> HandlerResult:
     context.latest_blocks[event.chain_id] = event.block_data
-    return True
+    return True, None
 
 
-def _handle_request_created(event: RequestCreated, context: Context) -> bool:
+def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
     with beamer.metrics.update() as data:
         data.requests_created.inc()
 
@@ -91,7 +97,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> bool:
                 request_event=event,
                 token_address=event.target_token_address,
             )
-            return True
+            return True, None
     else:
         is_valid_request = context.match_checker.is_valid_pair(
             event.chain_id,
@@ -102,7 +108,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> bool:
 
         if not is_valid_request:
             log.debug("Invalid token pair in request", _event=event)
-            return True
+            return True, None
 
     request = Request(
         request_id=event.request_id,
@@ -115,10 +121,10 @@ def _handle_request_created(event: RequestCreated, context: Context) -> bool:
         valid_until=event.valid_until,
     )
     context.requests.add(request.id, request)
-    return True
+    return True, None
 
 
-def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
+def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
     with beamer.metrics.update() as data:
         data.requests_filled.inc()
         if event.filler == context.address:
@@ -126,7 +132,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
 
     request = context.requests.get(event.request_id)
     if request is None:
-        return False
+        return False, None
 
     fill_matches_request = (
         request.id == event.request_id
@@ -136,34 +142,52 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> bool:
     )
     if not fill_matches_request:
         log.warn("Fill not matching request. Ignoring.", request=request, fill=event)
-        return True
+        return True, None
 
     try:
         request.fill(filler=event.filler, fill_tx=event.tx_hash, fill_id=event.fill_id)
     except TransitionNotAllowed:
-        return False
+        return False, None
 
     log.info("Request filled", request=request)
-    return True
+    return True, None
 
 
-def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool:
+def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     if request is None:
-        return False
+        return False, None
 
     try:
         request.withdraw()
     except TransitionNotAllowed:
-        return False
+        return False, None
 
     log.info("Deposit withdrawn", request=request)
-    return True
+    return True, None
 
 
-def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
+def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
+    l1_resolution_gas_cost = 1_000_000  # FIXME
+    l1_gas_price = 1e9  # FIXME
+    l1_safety_factor = 1.25
+    limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
+
+    if claim.claimer == context.address:
+        if claim._latest_claim_made.challenger_stake > limit:
+            return True
+    elif claim.challenger == context.address:
+        if claim._latest_claim_made.claimer_stake > limit:
+            return True
+
+    return False
+
+
+def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
     request = context.requests.get(event.request_id)
+
+    events: Optional[List[Event]] = None
 
     # RequestCreated event must arrive before ClaimMade
     # Additionally, a request should never be dropped before all claims are finalized
@@ -179,7 +203,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
 
-        return True
+        return True, events
 
     # this is at least the second ClaimMade event for this claim id
     assert event.challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
@@ -188,20 +212,28 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
         if context.address not in {event.claimer, event.challenger}:
             claim.ignore(event)
         claim.challenge(event)
+
+        if _l1_resolution_criteria_fulfilled(claim, context):
+            events = [
+                InitiateL1ResolutionEvent(
+                    chain_id=request.target_chain_id,
+                    request_id=request.id,
+                )
+            ]
     except TransitionNotAllowed:
-        return False
+        return False, events
 
     log.info("Request claimed", request=request, claim_id=event.claim_id)
-    return True
+    return True, events
 
 
-def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> bool:
+def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
 
     # Check if claim exists, it could happen that we ignored the request because of an
     # invalid token pair, and therefore also did not create the claim
     if claim is None:
-        return False
+        return False, None
 
     claim.withdraw()
     return True
