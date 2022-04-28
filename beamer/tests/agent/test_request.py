@@ -6,7 +6,7 @@ import pytest
 from brownie import ZERO_ADDRESS, accounts
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
-from web3.types import Wei
+from web3.types import Timestamp, Wei
 
 from beamer.agent import Agent
 from beamer.chain import maybe_challenge
@@ -112,7 +112,7 @@ def test_challenge_own_claim(config, request_manager, token):
     )
     # Add context so that maybe_challenge verifies that the claim is not expired
     agent.context.requests.add(request.id, request)
-    agent.context.latest_blocks[brownie.chain.id] = {"timestamp": 0}
+    agent.context.latest_blocks[brownie.chain.id] = {"timestamp": Timestamp(0)}
 
     assert not maybe_challenge(claim, agent.context), "Tried to challenge own claim"
 

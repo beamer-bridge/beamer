@@ -339,6 +339,7 @@ def test_withdraw_not_participant(request_manager, token, config):
 
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()
+    assert claim is not None
     request_manager.challengeClaim(claim.claimId, {"from": dave, "value": stake + 1})
     brownie.chain.mine(timestamp=claim.termination)
 
