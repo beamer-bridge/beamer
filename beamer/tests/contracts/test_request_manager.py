@@ -4,6 +4,7 @@ from brownie.convert import to_bytes
 from eth_utils import to_hex
 
 from beamer.tests.util import alloc_accounts, create_fill_hash, earnings, make_request
+from beamer.typing import ClaimId, Termination
 
 
 def test_request_invalid_target_chain(request_manager, token):
@@ -122,7 +123,7 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
     # Do a proper challenge
     request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
 
-    # Another party must not be able to join the challenge game
+    # Only the claimer is eligible to outbid the challengers
     with brownie.reverts("Not eligible to outbid"):
         request_manager.challengeClaim(claim_id, {"from": requester})
 
@@ -130,20 +131,52 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
     with brownie.reverts("Not eligible to outbid"):
         request_manager.challengeClaim(claim_id, {"from": challenger})
 
-    # The other party must be able to re-challenge
+    # The other party, in this case the claimer, must be able to re-challenge
     with brownie.reverts("Not enough stake provided"):
         request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake})
     outbid = request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
     assert "ClaimMade" in outbid.events
 
-    # Check that the roles are reversed now
-    with brownie.reverts("Not eligible to outbid"):
+    # Check that claimer is leading and cannot challenge own claim
+    with brownie.reverts("Cannot challenge own claim"):
         request_manager.challengeClaim(claim_id, {"from": claimer, "value": 1})
 
-    # The other party must be able to re-challenge, but must increase the stake
+    # The challenger must be able to re-challenge, but must increase the stake
     with brownie.reverts("Not enough stake provided"):
         request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake})
-    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+    outbid = request_manager.challengeClaim(
+        claim_id, {"from": challenger, "value": claim_stake + 1}
+    )
+    assert "ClaimMade" in outbid.events
+
+
+def test_claim_two_challengers(request_manager, token, claim_stake):
+    """Test that two different challengers can challenge"""
+    claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
+    request_id = make_request(request_manager, token, requester, requester, 1)
+
+    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim_id = claim.return_value
+
+    # First challenger challenges
+    outbid = request_manager.challengeClaim(
+        claim_id, {"from": first_challenger, "value": claim_stake + 1}
+    )
+    assert "ClaimMade" in outbid.events
+
+    # Claimer outbids again
+    outbid = request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
+    assert "ClaimMade" in outbid.events
+
+    # Check that claimer cannot be second challenger
+    with brownie.reverts("Cannot challenge own claim"):
+        request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
+
+    # Second challenger challenges
+    outbid = request_manager.challengeClaim(
+        claim_id, {"from": second_challenger, "value": claim_stake + 1}
+    )
+    assert "ClaimMade" in outbid.events
 
 
 def test_claim_period_extension(
@@ -161,31 +194,55 @@ def test_claim_period_extension(
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
 
-    assert claim.timestamp + claim_period == request_manager.claims(claim_id)[6]
+    def _get_claim_termination(_claim_id: ClaimId) -> Termination:
+        return request_manager.claims(_claim_id)[6]
+
+    assert claim.timestamp + claim_period == _get_claim_termination(claim_id)
 
     challenge = request_manager.challengeClaim(
         claim_id, {"from": challenger, "value": claim_stake + 1}
     )
     challenge_period = finalization_time + challenge_period_extension
-
-    assert challenge.timestamp + challenge_period == request_manager.claims(claim_id)[6]
+    claim_termination = _get_claim_termination(claim_id)
+    assert challenge.timestamp + challenge_period == claim_termination
 
     # Another challenge with big margin to the end of the termination
     # shouldn't increase the termination
     request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
-    assert challenge.timestamp + challenge_period == request_manager.claims(claim_id)[6]
+    assert claim_termination == _get_claim_termination(claim_id)
+
+    # Another challenge by challenger also shouldn't increase the end of termination
+    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+    assert claim_termination == _get_claim_termination(claim_id)
 
     # Timetravel close to end of challenge period
-    chain.mine(timedelta=challenge_period * 8 / 10)
+    chain.mine(timestamp=_get_claim_termination(claim_id) - 10)
+
+    old_claim_termination = claim_termination
+    # Claimer challenges close to the end of challenge
+    # Should increase the challenge termination
+    challenge = request_manager.challengeClaim(
+        claim_id, {"from": claimer, "value": claim_stake + 1}
+    )
+
+    new_claim_termination = _get_claim_termination(claim_id)
+    assert challenge.timestamp + challenge_period_extension == new_claim_termination
+    assert new_claim_termination > old_claim_termination
+
+    # Timetravel close to end of challenge period
+    chain.mine(timestamp=_get_claim_termination(claim_id) - 10)
+
+    old_claim_termination = new_claim_termination
     rechallenge = request_manager.challengeClaim(
         claim_id, {"from": challenger, "value": claim_stake + 1}
     )
-    assert (
-        rechallenge.timestamp + challenge_period_extension == request_manager.claims(claim_id)[6]
-    )
+    new_claim_termination = _get_claim_termination(claim_id)
+    assert rechallenge.timestamp + challenge_period_extension == new_claim_termination
+    assert new_claim_termination > old_claim_termination
 
     # Timetravel over the end of challenge period
-    chain.mine(timedelta=challenge_period_extension)
+    chain.mine(timestamp=_get_claim_termination(claim_id) + 1)
+
     with brownie.reverts("Claim expired"):
         request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
 
@@ -287,10 +344,10 @@ def test_withdraw_with_challenge(
 
     assert web3.eth.get_balance(request_manager.address) == 2 * claim_stake + 1
 
-    # The challenger sent the last bet
+    # The challenger sent the last bid
     # Even if the requester calls withdraw, the challenge stakes go to the challenger
     # However, the request funds stay in the contract
-    withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": challenger})
     assert "ClaimWithdrawn" in withdraw_tx.events
     assert "DepositWithdrawn" not in withdraw_tx.events
 
@@ -450,7 +507,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
     # The other claim must be withdrawable, but mustn't transfer tokens again
-    request_manager.withdraw(claim2_id, {"from": requester})
+    request_manager.withdraw(claim2_id, {"from": challenger})
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == transfer_amount
@@ -516,7 +573,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
     # The first claim gets withdrawn first
     # As the challenger wins, no requests funds must be paid out
-    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
+    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": challenger})
     assert "DepositWithdrawn" not in withdraw1_tx.events
 
     assert token.balanceOf(requester) == 0
@@ -672,6 +729,64 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance
 
     # Another withdraw must fail
+    with brownie.reverts("Claim already withdrawn"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+
+def test_withdraw_two_challengers(
+    request_manager, token, claim_stake, finalization_time, challenge_period_extension
+):
+    claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
+    request_id = make_request(request_manager, token, requester, requester, 1)
+    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim_id = claim.return_value
+    first_challenger_eth_balance = web3.eth.get_balance(first_challenger.address)
+    second_challenger_eth_balance = web3.eth.get_balance(second_challenger.address)
+
+    # First challenger challenges
+    request_manager.challengeClaim(claim_id, {"from": first_challenger, "value": claim_stake + 1})
+    # Claimer outbids again
+    request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 10})
+    # Second challenger challenges
+    request_manager.challengeClaim(
+        claim_id, {"from": second_challenger, "value": claim_stake + 11}
+    )
+
+    # Withdraw must fail when claim period is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id, {"from": first_challenger})
+    # Withdraw must fail when claim period is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id, {"from": second_challenger})
+    # Withdraw must fail when claim period is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=finalization_time + challenge_period_extension)
+
+    # Show that last challenger can withdraw first
+    request_manager.withdraw(claim_id, {"from": second_challenger})
+
+    # Challenger cannot withdraw twice
+    with brownie.reverts("Challenger has nothing to withdraw"):
+        request_manager.withdraw(claim_id, {"from": second_challenger})
+    with brownie.reverts("Challenger has nothing to withdraw"):
+        request_manager.withdraw(claim_id, {"from": claimer})
+
+    # First challenger withdraws his partial stake
+    request_manager.withdraw(claim_id, {"from": first_challenger})
+
+    assert (
+        web3.eth.get_balance(first_challenger.address)
+        == first_challenger_eth_balance + claim_stake + 1
+    )
+    assert (
+        web3.eth.get_balance(second_challenger.address)
+        == second_challenger_eth_balance + claim_stake + 9
+    )
+
+    # All stakes are withdrawn already
     with brownie.reverts("Claim already withdrawn"):
         request_manager.withdraw(claim_id, {"from": claimer})
 
