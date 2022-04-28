@@ -35,6 +35,7 @@ class Agent:
         self._stopped = threading.Event()
         self._stopped.set()
 
+        w3_l1 = _make_web3(config.l1_rpc_url, config.account)
         w3_l2a = _make_web3(config.l2a_rpc_url, config.account)
         w3_l2b = _make_web3(config.l2b_rpc_url, config.account)
 
@@ -63,6 +64,7 @@ class Agent:
             address=config.account.address,
             latest_blocks={},
             config=config,
+            web3_l1=w3_l1,
         )
         self._event_processor = EventProcessor(self.context)
 

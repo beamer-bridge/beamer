@@ -60,6 +60,8 @@ def test_cli(config, tmp_path, contracts):
             str(keyfile),
             "--password",
             "",
+            "--l1-rpc-url",
+            "",
             "--l2a-rpc-url",
             config.l2a_rpc_url,
             "--l2b-rpc-url",
