@@ -93,6 +93,7 @@ def make_context(config: Config, request_manager: Contract = None):
                 }
             )
         },
+        web3_l1=MagicMock(),
     )
 
 

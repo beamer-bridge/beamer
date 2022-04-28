@@ -25,6 +25,7 @@ log = structlog.get_logger(__name__)
 class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
+    l1_rpc_url: URL
     l2a_rpc_url: URL
     l2b_rpc_url: URL
     token_match_file: Path
@@ -48,6 +49,7 @@ class Agent:
         self._stopped = threading.Event()
         self._stopped.set()
 
+        w3_l1 = _make_web3(config.l1_rpc_url, config.account)
         w3_l2a = _make_web3(config.l2a_rpc_url, config.account)
         w3_l2b = _make_web3(config.l2b_rpc_url, config.account)
 
@@ -76,6 +78,7 @@ class Agent:
             fill_wait_time=config.fill_wait_time,
             address=config.account.address,
             latest_blocks={},
+            web3_l1=w3_l1,
         )
         self._event_processor = EventProcessor(self.context)
 

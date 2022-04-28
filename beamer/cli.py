@@ -38,6 +38,13 @@ def _sigint_handler(agent: Agent) -> None:
 )
 @click.password_option(required=True, help="The password needed to unlock the account.")
 @click.option(
+    "--l1-rpc-url",
+    type=str,
+    required=True,
+    metavar="URL",
+    help="The URL of the L1 chain RPC server (e.g. http://10.0.0.3:8545).",
+)
+@click.option(
     "--l2a-rpc-url",
     type=str,
     required=True,
@@ -90,6 +97,7 @@ def _sigint_handler(agent: Agent) -> None:
 def main(
     keystore_file: Path,
     password: str,
+    l1_rpc_url: URL,
     l2a_rpc_url: URL,
     l2b_rpc_url: URL,
     deployment_dir: Path,
@@ -106,6 +114,7 @@ def main(
     config = Config(
         account=account,
         deployment_info=deployment_info,
+        l1_rpc_url=l1_rpc_url,
         l2a_rpc_url=l2a_rpc_url,
         l2b_rpc_url=l2b_rpc_url,
         token_match_file=token_match_file,
