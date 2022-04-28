@@ -33,6 +33,11 @@ class LatestBlockUpdatedEvent(Event):
 
 
 @dataclass(frozen=True)
+class InitiateL1ResolutionEvent(Event):
+    request_id: RequestId
+
+
+@dataclass(frozen=True)
 class TxEvent(Event):
     tx_hash: HexBytes
 

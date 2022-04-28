@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List, Optional, Tuple
 
 import structlog
 from eth_typing import ChecksumAddress
@@ -18,6 +18,7 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
+    InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
@@ -44,29 +45,32 @@ class Context:
     latest_blocks: Dict[ChainId, BlockData]
 
 
-def process_event(event: Event, context: Context) -> bool:
+HandlerResult = Tuple[bool, Optional[List[Event]]]
+
+
+def process_event(event: Event, context: Context) -> HandlerResult:
     log.debug("Processing event", _event=event)
 
     if isinstance(event, LatestBlockUpdatedEvent):
-        return _handle_latest_block_updated(event, context)
+        return _handle_latest_block_updated(event, context), None
 
     elif isinstance(event, RequestCreated):
-        return _handle_request_created(event, context)
+        return _handle_request_created(event, context), None
 
     elif isinstance(event, RequestFilled):
-        return _handle_request_filled(event, context)
+        return _handle_request_filled(event, context), None
 
     elif isinstance(event, DepositWithdrawn):
-        return _handle_deposit_withdrawn(event, context)
+        return _handle_deposit_withdrawn(event, context), None
 
     elif isinstance(event, ClaimMade):
         return _handle_claim_made(event, context)
 
     elif isinstance(event, ClaimWithdrawn):
-        return _handle_claim_withdrawn(event, context)
+        return _handle_claim_withdrawn(event, context), None
 
-    elif isinstance(event, (RequestResolved, FillHashInvalidated)):
-        return False
+    elif isinstance(event, (RequestResolved, FillHashInvalidated, InitiateL1ResolutionEvent)):
+        return False, None
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -160,9 +164,27 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> bool
     return True
 
 
-def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
+def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
+    l1_resolution_gas_cost = 1_000_000  # FIXME
+    l1_gas_price = 1e9  # FIXME
+    l1_safety_factor = 1.25
+    limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
+
+    if claim.claimer == context.address:
+        if claim._latest_claim_made.challenger_stake > limit:
+            return True
+    elif claim.challenger == context.address:
+        if claim._latest_claim_made.claimer_stake > limit:
+            return True
+
+    return False
+
+
+def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
     request = context.requests.get(event.request_id)
+
+    events: Optional[List[Event]] = None
 
     # RequestCreated event must arrive before ClaimMade
     # Additionally, a request should never be dropped before all claims are finalized
@@ -178,7 +200,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
 
-        return True
+        return True, events
 
     # this is at least the second ClaimMade event for this claim id
     assert event.challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
@@ -187,11 +209,19 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
         if context.address not in {event.claimer, event.challenger}:
             claim.ignore(event)
         claim.challenge(event)
+
+        if _l1_resolution_criteria_fulfilled(claim, context):
+            events = [
+                InitiateL1ResolutionEvent(
+                    chain_id=request.target_chain_id,
+                    request_id=request.id,
+                )
+            ]
     except TransitionNotAllowed:
-        return False
+        return False, events
 
     log.info("Request claimed", request=request, claim_id=event.claim_id)
-    return True
+    return True, events
 
 
 def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> bool:
