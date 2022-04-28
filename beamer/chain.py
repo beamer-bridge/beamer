@@ -360,6 +360,11 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     #
     # 2) we participate in the game AND it is our turn
     request = context.requests.get(claim.request_id)
+    # As per definition an invalid or expired request cannot be claimed
+    # This gives us a chronological order. The agent should never garbage collect
+    # a request which has active claims
+    assert request is not None, "Active claim for non-existent request"
+
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] >= claim.termination:
         return False
@@ -393,6 +398,11 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
 
 def maybe_withdraw(claim: Claim, context: Context) -> None:
     request = context.requests.get(claim.request_id)
+    # As per definition an invalid or expired request cannot be claimed
+    # This gives us a chronological order. The agent should never garbage collect
+    # a request which has active claims
+    assert request is not None, "Active claim for non-existent request"
+
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] < claim.termination:
         # TODO: once L1 resolution is implemented, maybe withdraw before claim is terminated
