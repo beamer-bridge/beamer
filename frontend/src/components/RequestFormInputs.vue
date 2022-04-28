@@ -69,7 +69,7 @@
           <button
             class="btn btn-ghost btn-sm text-orange m-2"
             type="button"
-            :disabled="faucetButtonDisabled"
+            :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
             <div v-if="faucetRequestActive" class="h-5 w-5">
@@ -120,32 +120,33 @@
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
-import { computed, reactive, Ref, ref } from 'vue';
+import { computed, Ref, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
+import { useFaucet } from '@/composables/useFaucet';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useTokenBalance } from '@/composables/useTokenBalance';
-import { requestFaucet } from '@/services/transactions/faucet';
 import { getTokenDecimals } from '@/services/transactions/token';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { Token } from '@/types/config';
 import type { SelectorOption } from '@/types/form';
-import createAsyncProcess from '@/utils/create-async-process';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 
-const getChainSelectorOption: (chainId: string) => SelectorOption | string = (chainId: string) =>
+const getChainSelectorOption: (chainId: string) => SelectorOption | undefined = (
+  chainId: string,
+) =>
   configuration.chains[chainId]
     ? {
         value: Number(chainId),
         label: configuration.chains[chainId]?.name,
       }
-    : '';
+    : undefined;
 
-const CHAINS: Array<SelectorOption | string> = Object.keys(configuration.chains).map((chainId) =>
-  getChainSelectorOption(chainId),
+const CHAINS: Array<SelectorOption | undefined> = Object.keys(configuration.chains).map(
+  (chainId) => getChainSelectorOption(chainId),
 );
 
 const getTokenSelectorOption = (token: Token) => ({
@@ -161,9 +162,9 @@ const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.chainId))
 const selectedToken = ref();
 const selectedTokenAddress = computed(() => selectedToken.value?.value);
 
-const TARGET_CHAINS: Array<SelectorOption | string> = CHAINS.filter(
-  (chain: SelectorOption | string) =>
-    (chain as SelectorOption).value !== (fromChainId.value as SelectorOption).value,
+const TARGET_CHAINS: Array<SelectorOption | undefined> = CHAINS.filter(
+  (chain: SelectorOption | undefined) =>
+    (chain as SelectorOption).value !== fromChainId.value?.value,
 );
 
 const switchChain = async (chainId: Ref<number>) => {
@@ -209,26 +210,7 @@ const addToken = async () => {
   }
 };
 
-const faucetUsedForChain: Record<string, boolean> = reactive({});
-const faucetUsed = computed(() =>
-  Boolean(faucetUsedForChain[(fromChainId.value as SelectorOption).value]),
-);
-const faucetButtonDisabled = computed(() => faucetUsed.value || !ethereumProvider.signer);
-
 const addTokenButtonDisabled = computed(() => !ethereumProvider.signer || !selectedToken.value);
-
-const executeFaucetRequest = async () => {
-  if (!ethereumProvider.signerAddress) {
-    throw new Error('Signer address missing!');
-  }
-  const chainId = (fromChainId.value as SelectorOption).value;
-  const isSuccessfulFaucetRequest = await requestFaucet(chainId, ethereumProvider.signerAddress);
-  if (isSuccessfulFaucetRequest) {
-    faucetUsedForChain[chainId] = true;
-  }
-};
-const { active: faucetRequestActive, run: runFaucetRequest } =
-  createAsyncProcess(executeFaucetRequest);
 
 const gasFeesTooltipText = `The fee amount is composed of three parts:
   • the gas reimbursement fee
@@ -254,6 +236,15 @@ const { show: showTokenBalance, formattedBalance: formattedTokenBalance } = useT
   provider,
   signer,
   selectedTokenAddress,
+);
+
+const {
+  available: faucetAvailable,
+  active: faucetRequestActive,
+  run: runFaucetRequest,
+} = useFaucet(
+  signer,
+  computed(() => fromChainId.value?.value),
 );
 </script>
 
