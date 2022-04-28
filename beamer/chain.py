@@ -162,15 +162,19 @@ class EventProcessor:
 
     def _process_events(self) -> None:
         iteration = 0
+        created_events: list[Event] = []
         while True:
             with self._lock:
                 events = self._events[:]
 
-            unprocessed = []
+            unprocessed: list[Event] = []
             any_state_changed = False
             for event in events:
-                state_changed = process_event(event, self._context)
+                state_changed, new_events = process_event(event, self._context)
                 any_state_changed |= state_changed
+
+                if new_events:
+                    created_events.extend(new_events)
                 if not state_changed:
                     unprocessed.append(event)
 
@@ -192,6 +196,14 @@ class EventProcessor:
             iteration += 1
             if not any_state_changed:
                 break
+
+        # New events might be created by event handlers. If they would be
+        # processed directly, there would be a chance of skipping certain states
+        # in the request/claim state machines accidentally. So instead they are
+        # collected and attached to the events list after the current batch of
+        # events has been processed.
+        with self._lock:
+            self._events.extend(created_events)
 
 
 class _TransactionFailed(Exception):
@@ -355,10 +367,9 @@ def claim_request(request: Request, context: Context) -> None:
 
 def maybe_challenge(claim: Claim, context: Context) -> bool:
     # We need to challenge if either of the following is true:
-    #
-    # 1) the claim is dishonest AND nobody challenged it yet
-    #
-    # 2) we participate in the game AND it is our turn
+    #   1) the claim is dishonest AND nobody challenged it yet
+    #   2) we participate in the game AND it is our turn
+
     request = context.requests.get(claim.request_id)
     # As per definition an invalid or expired request cannot be claimed
     # This gives us a chronological order. The agent should never garbage collect
@@ -368,6 +379,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] >= claim.termination:
         return False
+
     if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
