@@ -7,6 +7,7 @@ import structlog
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
+from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.types import BlockData
@@ -44,6 +45,7 @@ class Context:
     address: ChecksumAddress
     latest_blocks: dict[ChainId, BlockData]
     config: Config
+    web3_l1: Web3
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -169,7 +171,7 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> Hand
 
 def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
     l1_resolution_gas_cost = 1_000_000  # FIXME
-    l1_gas_price = 1e9  # FIXME
+    l1_gas_price = context.web3_l1.eth.gas_price
     l1_safety_factor = 1.25
     limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
 

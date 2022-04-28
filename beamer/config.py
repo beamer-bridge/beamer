@@ -12,6 +12,7 @@ from beamer.typing import URL
 class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
+    l1_rpc_url: URL
     l2a_rpc_url: URL
     l2b_rpc_url: URL
     token_match_file: Path
