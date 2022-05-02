@@ -17,6 +17,7 @@ class Claim(StateMachine):
     ) -> None:
         super().__init__()
         self._latest_claim_made = claim_made
+        self._challenger_stakes: dict[Address, int] = {}
         self.challenge_back_off_timestamp = challenge_back_off_timestamp
         # transaction pending indicates whether a state output (transaction)
         # is pending in the chain network. If the corresponding event has
@@ -37,7 +38,10 @@ class Claim(StateMachine):
         | ignored.to(ignored)
     )
     withdraw = (
-        claimer_winning.to(withdrawn) | challenger_winning.to(withdrawn) | ignored.to(withdrawn)
+        claimer_winning.to(withdrawn)
+        | challenger_winning.to(withdrawn)
+        | ignored.to(withdrawn)
+        | withdrawn.to(withdrawn)
     )
     ignore = claimer_winning.to(ignored) | ignored.to(ignored)
 
@@ -54,16 +58,19 @@ class Claim(StateMachine):
         return self._latest_claim_made.claimer
 
     @property
-    def challenger(self) -> Address:
-        return self._latest_claim_made.last_challenger
-
-    @property
     def termination(self) -> Termination:
         return self._latest_claim_made.termination
 
     @property
     def latest_claim_made(self) -> ClaimMade:
         return self._latest_claim_made
+
+    def get_challenger_stake(self, challenger: Address) -> int:
+        return self._challenger_stakes.get(challenger, 0)
+
+    def add_challenger_stake(self, challenger: Address, amount: int) -> None:
+        new_stake = amount + self.get_challenger_stake(challenger)
+        self._challenger_stakes[challenger] = new_stake
 
     def valid_claim_for_request(self, request: Request) -> bool:
         claim_event = self._latest_claim_made
@@ -75,10 +82,10 @@ class Claim(StateMachine):
             return False
         return True
 
-    def get_winning_address(self) -> Address:
+    def get_winning_addresses(self) -> frozenset[Address]:
         if self._latest_claim_made.claimer_stake > self._latest_claim_made.challenger_stake_total:
-            return self.claimer
-        return self.challenger
+            return frozenset({self.claimer})
+        return frozenset(self._challenger_stakes.keys())
 
     def get_next_challenge_stake(self, initial_claim_stake: Wei) -> Wei:
         claimer_stake = self._latest_claim_made.claimer_stake
@@ -103,6 +110,13 @@ class Claim(StateMachine):
             self._on_new_claim_made(self._latest_claim_made)
 
     def _on_new_claim_made(self, new_claim_made: ClaimMade) -> None:
+        if new_claim_made.challenger_stake_total > new_claim_made.claimer_stake:
+            new_challenger_stake = (
+                new_claim_made.challenger_stake_total
+                - self._latest_claim_made.challenger_stake_total
+            )
+            self.add_challenger_stake(new_claim_made.last_challenger, new_challenger_stake)
+
         self._latest_claim_made = new_claim_made
         self.transaction_pending = False
 
