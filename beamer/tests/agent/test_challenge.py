@@ -39,7 +39,7 @@ def test_challenge_1(request_manager, token, config):
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
-        make_request(request_manager, token, requester, target_address, 1)
+        make_request(request_manager, token, requester, target_address, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
 
@@ -81,7 +81,7 @@ def test_challenge_2(request_manager, token, config):
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
-        make_request(request_manager, token, requester, target_address, 1)
+        make_request(request_manager, token, requester, target_address, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
 
@@ -108,8 +108,7 @@ def test_challenge_2(request_manager, token, config):
         agent.stop()
         agent.wait()
 
-    fees = request_manager.gasReimbursementFee() + request_manager.lpServiceFee()
-    assert agent_earnings() == claim.challengerStake + fees
+    assert agent_earnings() == claim.challengerStake
     assert charlie_earnings() == -claim.challengerStake
 
 
@@ -134,7 +133,9 @@ def test_challenge_3(request_manager, fill_manager, token, config):
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
-        request_id = make_request(request_manager, token, requester, target_address, amount)
+        request_id = make_request(
+            request_manager, token, requester, target_address, amount, fee_data="standard"
+        )
 
         stake = request_manager.claimStake()
         request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
@@ -184,7 +185,9 @@ def test_challenge_4(request_manager, fill_manager, token, config):
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
-        request_id = make_request(request_manager, token, requester, target_address, amount)
+        request_id = make_request(
+            request_manager, token, requester, target_address, amount, fee_data="standard"
+        )
 
         stake = request_manager.claimStake()
         request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
@@ -216,9 +219,8 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         brownie.chain.mine(timestamp=claim.termination)
         request_manager.withdraw(claim.claimId, {"from": charlie})
 
-    fees = request_manager.gasReimbursementFee() + request_manager.lpServiceFee()
     assert agent_earnings() == -claim.challengerStake
-    assert charlie_earnings() == claim.challengerStake + fees
+    assert charlie_earnings() == claim.challengerStake
 
 
 # Scenario 5:
@@ -259,7 +261,9 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
 
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1
-    request_id = make_request(request_manager, token, requester, target_address, amount)
+    request_id = make_request(
+        request_manager, token, requester, target_address, amount, fee_data="standard"
+    )
     fill_id = 0
 
     if honest_claim:
@@ -324,7 +328,9 @@ def test_withdraw_not_participant(request_manager, token, config):
 
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1
-    request_id = make_request(request_manager, token, requester, target_address, amount)
+    request_id = make_request(
+        request_manager, token, requester, target_address, amount, fee_data="standard"
+    )
 
     stake = request_manager.claimStake()
     request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})

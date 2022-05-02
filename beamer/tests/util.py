@@ -154,6 +154,22 @@ def earnings(w3, account):
     yield lambda: w3.eth.get_balance(address) + calculate_gas_spending() - balance_before
 
 
+def get_fee_data(request_manager):
+    return (
+        request_manager.protocolFeePPM(),
+        request_manager.lpFeePPM(),
+        request_manager.minLpFee(),
+    )
+
+
+@contextlib.contextmanager
+def temp_fee_data(request_manager, protocol_fee_ppm, lp_fee_ppm, min_lp_fee):
+    old_fee_data = get_fee_data(request_manager)
+    request_manager.updateFeeData(protocol_fee_ppm, lp_fee_ppm, min_lp_fee)
+    yield
+    request_manager.updateFeeData(*old_fee_data)
+
+
 def make_request(
     request_manager,
     token,
@@ -162,29 +178,33 @@ def make_request(
     amount,
     validity_period=3600,
     target_chain_id=None,
-    zero_fees=True,
+    fee_data=(0, 0, 0),
 ) -> RequestId:
-    if token.balanceOf(requester) < amount:
-        token.mint(requester, amount, {"from": requester})
+    fees_context: Any  # make mypy happy
+    if fee_data == "standard":
+        fees_context = contextlib.nullcontext()
+    else:
+        fees_context = temp_fee_data(request_manager, *fee_data)
 
-    token.approve(request_manager.address, amount, {"from": requester})
+    with fees_context:
+        total_token_amount = amount + request_manager.totalFee(amount)
+        if token.balanceOf(requester) < total_token_amount:
+            token.mint(requester, total_token_amount, {"from": requester})
 
-    if zero_fees:
-        request_manager.updateFeeData(0, 0)
+        token.approve(request_manager.address, total_token_amount, {"from": requester})
 
-    if target_chain_id is None:
-        target_chain_id = brownie.chain.id
+        if target_chain_id is None:
+            target_chain_id = brownie.chain.id
 
-    total_fee = request_manager.totalFee()
-    request_tx = request_manager.createRequest(
-        target_chain_id,
-        token.address,
-        token.address,
-        target_address,
-        amount,
-        validity_period,
-        {"from": requester, "value": total_fee},
-    )
+        request_tx = request_manager.createRequest(
+            target_chain_id,
+            token.address,
+            token.address,
+            target_address,
+            amount,
+            validity_period,
+            {"from": requester},
+        )
     return request_tx.return_value
 
 
