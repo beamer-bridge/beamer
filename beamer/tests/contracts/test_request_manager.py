@@ -3,7 +3,7 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
-from beamer.tests.util import alloc_accounts, create_fill_hash, make_request
+from beamer.tests.util import alloc_accounts, create_fill_hash, earnings, make_request
 
 
 def test_request_invalid_target_chain(request_manager, token):
@@ -307,7 +307,7 @@ def test_withdraw_with_challenge(
         request_manager.withdraw(claim_id, {"from": claimer})
 
 
-def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_period):
+def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake, claim_period):
     """Test withdraw when a request was claimed twice"""
     requester, claimer1, claimer2 = alloc_accounts(3)
     transfer_amount = 23
@@ -364,9 +364,10 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
     with brownie.reverts("Claim already withdrawn"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
-    # The other claim must be withdrawable, but the claim stakes go to the platform
-    # as it is a false claim but no challenger exists
-    withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
+    # The other claim must be withdrawable, but the claim stakes go to the
+    # contract owner as it is a false claim but no challenger exists.
+    with earnings(web3, deployer) as owner_earnings:
+        withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
     assert "DepositWithdrawn" not in withdraw2_tx.events
     assert "ClaimWithdrawn" in withdraw2_tx.events
 
@@ -374,12 +375,9 @@ def test_withdraw_with_two_claims(request_manager, token, claim_stake, claim_per
     assert token.balanceOf(claimer1) == transfer_amount
     assert token.balanceOf(claimer2) == 0
 
-    # Since there was no challenger, but claim2 was a false claim, stakes go to the platform
-    assert (
-        web3.eth.get_balance(request_manager.address)
-        == request_manager.collectedBeamerFees()
-        == claim_stake
-    )
+    # Since there was no challenger, but claim2 was a false claim,
+    # stakes go to the contract owner.
+    assert owner_earnings() == claim_stake
     assert web3.eth.get_balance(claimer1.address) == claimer1_eth_balance
     assert web3.eth.get_balance(claimer2.address) == claimer2_eth_balance - claim_stake
 
@@ -568,7 +566,7 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
         request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
 
 
-def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
+def test_second_claim_after_withdraw(deployer, request_manager, token, claim_stake, claim_period):
     """Test that one can withdraw a claim immediately after the request
     deposit has been withdrawn via another claim."""
     requester, claimer1, claimer2 = alloc_accounts(3)
@@ -606,11 +604,12 @@ def test_second_claim_after_withdraw(request_manager, token, claim_stake, claim_
 
     # Withdrawing the second claim must now succeed immediately because the
     # deposit has been withdrawn and we do not need to wait for the claim
-    # period. The stakes go to the platform fees
-    withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
+    # period. The stakes go to the contract owner.
+    with earnings(web3, deployer) as owner_earnings:
+        withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
     assert "ClaimWithdrawn" in withdraw_tx.events
     assert claimer2_eth_balance - claim_stake == web3.eth.get_balance(claimer2.address)
-    assert claim_stake == request_manager.collectedBeamerFees()
+    assert owner_earnings() == claim_stake
 
     # Withdrawing the third claim must also succeed immediately.
     # Since the claimer is also the depositReceiver stakes go back to the claimer

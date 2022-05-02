@@ -193,7 +193,7 @@ def test_expired_request_is_ignored(request_manager, token, agent):
     assert request.is_pending
 
     brownie.chain.mine(timedelta=validity_period / 2 + 1)
-    with Sleeper(1) as sleeper:
+    with Sleeper(2) as sleeper:
         while not request.is_ignored:
             sleeper.sleep(0.1)
 
