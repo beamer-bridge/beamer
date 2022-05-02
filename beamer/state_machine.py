@@ -203,10 +203,6 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     # this is at least the second ClaimMade event for this claim id
     assert event.last_challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
     try:
-        # Agent is not part of ongoing challenge
-        if context.address not in {event.claimer, event.last_challenger}:
-            claim.ignore(event)
-
         claim.challenge(event)
     except TransitionNotAllowed:
         return False, events
@@ -257,12 +253,19 @@ def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> Handler
     limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
 
     if claim.claimer == context.address:
-        if claim.latest_claim_made.challenger_stake > limit:
+        if claim.latest_claim_made.challenger_stake_total > limit:
             return True, None
-    elif claim.challenger == context.address:
-        if claim.latest_claim_made.claimer_stake > limit:
-            return True, None
+    else:
+        reward = claim.get_challenger_stake(context.address)
+        last_challenger = claim.latest_claim_made.last_challenger
+        if last_challenger == context.address:
+            reward -= (
+                claim.latest_claim_made.challenger_stake_total
+                - claim.latest_claim_made.claimer_stake
+            )
 
+        if reward > limit:
+            return True, None
     return False, None
 
 

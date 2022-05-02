@@ -367,9 +367,8 @@ def claim_request(request: Request, context: Context) -> None:
 
 def maybe_challenge(claim: Claim, context: Context) -> bool:
     # We need to challenge if either of the following is true:
-    #   1) the claim is dishonest AND nobody challenged it yet
-    #   2) we participate in the game AND it is our turn
-
+    # 1) The claim is dishonest AND claimer is winning
+    # 2) Agent is claimer AND challenger is winning
     request = context.requests.get(claim.request_id)
     # As per definition an invalid or expired request cannot be claimed
     # This gives us a chronological order. The agent should never garbage collect
@@ -383,7 +382,10 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
-    agent_winning = claim.get_winning_address() == context.address
+    if claim.is_challenger_winning and claim.claimer != context.address:
+        return False
+
+    agent_winning = context.address in claim.get_winning_addresses()
     if agent_winning:
         return False
 
@@ -418,7 +420,7 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
     block = context.latest_blocks[request.source_chain_id]
     has_l1_resolution = request.l1_resolution_filler is not None
     agent_is_claimer = claim.claimer == context.address
-    agent_is_challenger = claim.challenger == context.address
+    agent_is_challenger = claim.get_challenger_stake(context.address) > 0
 
     # When request is L1 resolved, the termination isn't important
     if has_l1_resolution:
@@ -427,14 +429,18 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
             _withdraw(claim, context)
 
         # Claimer cheated
-        if claim.claimer != request.l1_resolution_filler and agent_is_challenger:
+        if agent_is_challenger and claim.claimer != request.l1_resolution_filler:
             _withdraw(claim, context)
 
     # Otherwise check that the challenge period is over
     elif block["timestamp"] >= claim.termination:
-        claim_winner = claim.get_winning_address()
-        if claim_winner == context.address:
+        winning_addresses = claim.get_winning_addresses()
+        if context.address in winning_addresses:
             _withdraw(claim, context)
+
+    agent_winning = context.address in claim.get_winning_addresses()
+    if not agent_winning:
+        return
 
 
 def _withdraw(claim: Claim, context: Context) -> None:

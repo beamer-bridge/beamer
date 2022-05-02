@@ -69,7 +69,8 @@ def make_claim(
     challenger_stake: Wei = CHALLENGER_STAKE,
     termination: Termination = TERMINATION,
 ) -> Claim:
-    return Claim(
+    challenger = challenger or make_address()
+    claim = Claim(
         claim_made=ClaimMade(
             chain_id=request.source_chain_id,
             tx_hash=HexBytes(b""),
@@ -78,12 +79,14 @@ def make_claim(
             fill_id=FillId(456),
             claimer=claimer or make_address(),
             claimer_stake=claimer_stake,
-            last_challenger=challenger or make_address(),
+            last_challenger=challenger,
             challenger_stake_total=challenger_stake,
             termination=termination,
         ),
         challenge_back_off_timestamp=123,
     )
+    claim.add_challenger_stake(challenger, challenger_stake)
+    return claim
 
 
 def make_context() -> Tuple[Context, Config]:
