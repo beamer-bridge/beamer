@@ -27,7 +27,7 @@ contract RequestManager is Ownable {
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
-        uint256 beamerFee;
+        uint256 protocolFee;
     }
 
     struct Claim {
@@ -92,33 +92,24 @@ contract RequestManager is Ownable {
     mapping (uint256 => Request) public requests;
     mapping (uint256 => Claim) public claims;
 
-    uint256 public gasPrice = 5e9;
-    uint256 private serviceFeePPM = 45_000;  //4.5%
+    uint256 public minLpFee = 5 ether;  // 5e18
+    uint256 public lpFeePPM = 1_000;  // 0.1% of the token amount being transferred
+    uint256 public protocolFeePPM = 0; // 0% of the token amount being transferred
 
-    // beamer fee tracking
-    uint256 public collectedBeamerFees = 0;
+    // Protocol fee tracking: ERC20 token address => amount
+    mapping (address => uint256) public collectedProtocolFees;
 
-    // The optimizer should take care of eval'ing this
-    function gasReimbursementFee() public view returns (uint256) {
-        uint256 fillGas = 67105;
-        uint256 claimGas = 154634;
-        uint256 withdrawGas = 64081;
-
-        return (fillGas + claimGas + withdrawGas) * gasPrice;
+    function lpFee(uint256 amount) public view returns (uint256) {
+        return Math.max(minLpFee, amount * lpFeePPM / 1_000_000);
     }
 
-    function lpServiceFee() public view returns (uint256) {
-        return gasReimbursementFee() * serviceFeePPM / 1_000_000;
+    function protocolFee(uint256 amount) public view returns (uint256) {
+        return amount * protocolFeePPM / 1_000_000;
     }
 
-    function beamerServiceFee() public view returns (uint256) {
-        return gasReimbursementFee() * serviceFeePPM / 1_000_000;
+    function totalFee(uint256 amount) public view returns (uint256) {
+        return lpFee(amount) + protocolFee(amount);
     }
-
-    function totalFee() public view returns (uint256) {
-        return gasReimbursementFee() + lpServiceFee() + beamerServiceFee();
-    }
-
 
     // Modifiers
     modifier validRequestId(uint256 requestId) {
@@ -157,9 +148,14 @@ contract RequestManager is Ownable {
         require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
         require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
 
-        uint256 lpFee = gasReimbursementFee() + lpServiceFee();
-        uint256 beamerFee = beamerServiceFee();
-        require(lpFee + beamerFee == msg.value, "Wrong amount of fees sent");
+        IERC20 token = IERC20(sourceTokenAddress);
+
+        uint256 lpFee = lpFee(amount);
+        uint256 protocolFee = protocolFee(amount);
+        uint256 totalTokenAmount = amount + lpFee + protocolFee;
+
+        require(token.allowance(msg.sender, address(this)) >= totalTokenAmount,
+                "Insufficient allowance");
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
@@ -172,7 +168,7 @@ contract RequestManager is Ownable {
         newRequest.depositReceiver = address(0);
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
-        newRequest.beamerFee = beamerFee;
+        newRequest.protocolFee = protocolFee;
 
         emit RequestCreated(
             requestCounter,
@@ -184,8 +180,7 @@ contract RequestManager is Ownable {
             newRequest.validUntil
         );
 
-        IERC20 token = IERC20(sourceTokenAddress);
-        token.safeTransferFrom(msg.sender, address(this), amount);
+        token.safeTransferFrom(msg.sender, address(this), totalTokenAmount);
 
         return requestCounter;
     }
@@ -202,10 +197,8 @@ contract RequestManager is Ownable {
         emit DepositWithdrawn(requestId, request.sender);
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        token.safeTransfer(request.sender, request.amount);
-
-        (bool sent,) = request.sender.call{value: request.lpFee + request.beamerFee}("");
-        require(sent, "Failed to send Ether");
+        token.safeTransfer(request.sender,
+                           request.amount + request.lpFee + request.protocolFee);
     }
 
     function claimRequest(uint256 requestId, bytes32 fillId)
@@ -341,16 +334,15 @@ contract RequestManager is Ownable {
         // needs to happen afterwards to avoid reentrency problems
         uint256 ethToTransfer = claim.claimerStake + claim.challengerStake;
 
-        // The unlikely event is possible that a false claim has no challenger
-        // If it is known that the claim is false then the claim stake goes to the platform
-        if(claimReceiver != address(0)) {
-            (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
-            require(sent, "Failed to send Ether");
+        // The unlikely event is possible that a false claim has no
+        // challenger.  If it is known that the claim is false then the claim
+        // stake goes to the contract owner.
+        if(claimReceiver == address(0)) {
+            claimReceiver = owner();
         }
-        else {
-            collectedBeamerFees += ethToTransfer;
-            claimReceiver = address(this);
-        }
+
+        (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
+        require(sent, "Failed to send Ether");
 
         emit ClaimWithdrawn(
             claimId,
@@ -366,34 +358,31 @@ contract RequestManager is Ownable {
         Claim storage claim,
         address depositReceiver
     ) private {
-        collectedBeamerFees += request.beamerFee;
-
         emit DepositWithdrawn(
             claim.requestId,
             depositReceiver
         );
 
+        collectedProtocolFees[request.sourceTokenAddress] += request.protocolFee;
+
         IERC20 token = IERC20(request.sourceTokenAddress);
-        token.safeTransfer(depositReceiver, request.amount);
+        token.safeTransfer(depositReceiver, request.amount + request.lpFee);
         request.depositReceiver = depositReceiver;
-
-        (bool sent,) = depositReceiver.call{value: request.lpFee}("");
-        require(sent, "Failed to send Ether");
     }
 
-    function withdrawbeamerFees() external onlyOwner {
-        require(collectedBeamerFees > 0, "Zero fees available");
+    function withdrawProtocolFees(address tokenAddress, address recipient) external onlyOwner {
+        uint256 amount = collectedProtocolFees[tokenAddress];
+        require(amount > 0, "Protocol fee is zero");
+        collectedProtocolFees[tokenAddress] = 0;
 
-        uint256 feeAmount = collectedBeamerFees;
-        collectedBeamerFees = 0;
-
-        (bool sent,) = msg.sender.call{value: feeAmount}("");
-        require(sent, "Failed to send Ether");
+        IERC20 token = IERC20(tokenAddress);
+        token.safeTransfer(recipient, amount);
     }
 
-    function updateFeeData(uint256 newGasPrice, uint256 newServiceFeePPM) external onlyOwner {
-        gasPrice = newGasPrice;
-        serviceFeePPM = newServiceFeePPM;
+    function updateFeeData(uint256 newProtocolFeePPM, uint256 newLpFeePPM, uint256 newMinLpFee) external onlyOwner {
+        protocolFeePPM = newProtocolFeePPM;
+        lpFeePPM = newLpFeePPM;
+        minLpFee = newMinLpFee;
     }
 
     function setFinalizationTime(uint256 targetChainId, uint256 finalizationTime) external onlyOwner {
