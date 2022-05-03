@@ -31,6 +31,7 @@ class Request(StateMachine):
         self.filler: Optional[ChecksumAddress] = None
         self.fill_tx: Optional[HexBytes] = None
         self.fill_id: Optional[int] = None
+        self.l1_resolution_filler = Optional[ChecksumAddress]
 
     pending = State("Pending", initial=True)
     filled = State("Filled")

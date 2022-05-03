@@ -238,4 +238,19 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
         return False, None
 
     claim.withdraw()
-    return True
+    return True, None
+
+
+def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
+    request = context.requests.get(event.request_id)
+    if request is None:
+        return False
+
+    request.l1_resolution_filler = event.filler
+
+    return False
+
+
+def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> bool:
+    pass
+    # FIXME

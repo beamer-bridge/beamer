@@ -417,10 +417,24 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
 
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] < claim.termination:
-        # TODO: once L1 resolution is implemented, maybe withdraw before claim is terminated
-        return
+        # If the agent is the L1 filler, we can withdraw
+        # Condition is inverted, as the withdraw happens below
+        has_l1_resolution = (
+            request.l1_resolution_filler == context.address
+            and context.address
+            in {
+                claim.claimer,
+                claim.challenger,
+            }
+        )
+        if not has_l1_resolution:
+            return
 
-    agent_winning = claim.get_winning_address() == context.address
+        # TODO: what if the none of the participants is the l1 filler
+
+    # The L1 resolution has precedence over the challenge game
+    claim_winner = request.l1_resolution_filler or claim.get_winning_address()
+    agent_winning = claim_winner == context.address
     if not agent_winning:
         return
 
