@@ -138,8 +138,8 @@ const newTransfer = async () => {
 // TODO improve types
 const submitRequestTransaction = async (formResult: {
   amount: string;
-  fromChainId: SelectorOption;
-  toChainId: SelectorOption;
+  sourceChainId: SelectorOption;
+  targetChainId: SelectorOption;
   toAddress: string;
   tokenAddress: SelectorOption;
 }) => {
@@ -148,11 +148,11 @@ const submitRequestTransaction = async (formResult: {
   }
 
   const request: Request = {
-    targetChainId: Number(formResult.toChainId.value),
+    targetChainId: Number(formResult.targetChainId.value),
     sourceTokenAddress: formResult.tokenAddress.value,
-    sourceChainId: Number(formResult.fromChainId.value),
+    sourceChainId: Number(formResult.sourceChainId.value),
     targetTokenAddress: getTargetTokenAddress(
-      formResult.toChainId.value,
+      formResult.targetChainId.value,
       formResult.tokenAddress.label,
     ),
     targetAddress: formResult.toAddress,
@@ -162,16 +162,17 @@ const submitRequestTransaction = async (formResult: {
   requestMetadata.value = {
     state: requestState,
     tokenSymbol: formResult.tokenAddress.label,
-    sourceChainName: formResult.fromChainId.label,
-    targetChainName: formResult.toChainId.label,
+    sourceChainName: formResult.sourceChainId.label,
+    targetChainName: formResult.targetChainId.label,
     targetAddress: request.targetAddress,
     amount: formResult.amount,
   };
   (request.fee = requestFeeAmount.value), (transactionError.value = '');
 
-  const targetChainRpcUrl = configuration.chains[formResult.toChainId.value].rpcUrl;
+  const targetChainRpcUrl = configuration.chains[formResult.targetChainId.value].rpcUrl;
   const targetChainProvider = new JsonRpcProvider(targetChainRpcUrl);
-  const fillManagerAddress = configuration.chains[formResult.toChainId.value].fillManagerAddress;
+  const fillManagerAddress =
+    configuration.chains[formResult.targetChainId.value].fillManagerAddress;
 
   try {
     await executeRequestTransaction(
