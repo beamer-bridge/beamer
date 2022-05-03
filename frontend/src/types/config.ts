@@ -1,7 +1,9 @@
 export type BeamerConfig = {
-  chains: {
-    [chainId: string]: ChainConfig;
-  };
+  chains: ChainConfigMapping;
+};
+
+export type ChainConfigMapping = {
+  [chainId: string]: ChainConfig;
 };
 
 export type ChainConfig = {

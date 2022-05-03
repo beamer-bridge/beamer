@@ -50,11 +50,11 @@
     </div>
     <div class="mb-6">
       <FormKit
-        :value="fromChainId"
+        :value="sourceChainId"
         type="selector"
-        name="fromChainId"
+        name="sourceChainId"
         label="From"
-        :options="CHAINS"
+        :options="sourceChains"
         placeholder="Source Rollup"
         validation="required"
         messages-class="hidden"
@@ -84,9 +84,9 @@
       <FormKit
         outer-class="mb-4"
         type="selector"
-        name="toChainId"
+        name="targetChainId"
         label="To"
-        :options="TARGET_CHAINS"
+        :options="targetChains"
         placeholder="Target Rollup"
         validation="required"
         messages-class="hidden"
@@ -123,6 +123,7 @@ import { storeToRefs } from 'pinia';
 import { computed, Ref, ref } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
+import { useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useTokenBalance } from '@/composables/useTokenBalance';
@@ -135,20 +136,6 @@ import type { SelectorOption } from '@/types/form';
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 
-const getChainSelectorOption: (chainId: string) => SelectorOption | undefined = (
-  chainId: string,
-) =>
-  configuration.chains[chainId]
-    ? {
-        value: Number(chainId),
-        label: configuration.chains[chainId]?.name,
-      }
-    : undefined;
-
-const CHAINS: Array<SelectorOption | undefined> = Object.keys(configuration.chains).map(
-  (chainId) => getChainSelectorOption(chainId),
-);
-
 const getTokenSelectorOption = (token: Token) => ({
   value: token.address,
   label: token.symbol,
@@ -158,31 +145,8 @@ const TOKENS: SelectorOption[] = configuration.chains[
   String(ethereumProvider.chainId)
 ]?.tokens.map((token) => getTokenSelectorOption(token));
 
-const fromChainId = ref(getChainSelectorOption(String(ethereumProvider.chainId)));
-const selectedToken = ref();
+const selectedToken: Ref<SelectorOption | undefined> = ref();
 const selectedTokenAddress = computed(() => selectedToken.value?.value);
-
-const TARGET_CHAINS: Array<SelectorOption | undefined> = CHAINS.filter(
-  (chain: SelectorOption | undefined) =>
-    (chain as SelectorOption).value !== fromChainId.value?.value,
-);
-
-const switchChain = async (chainId: Ref<number>) => {
-  if (ethereumProvider.provider && chainId.value !== ethereumProvider.chainId) {
-    try {
-      const isSuccessfulSwitch = await ethereumProvider.provider.switchChain(chainId.value);
-      if (isSuccessfulSwitch === null) {
-        await ethereumProvider.provider.addChain({
-          chainId: chainId.value,
-          name: configuration.chains[chainId.value].name,
-          rpcUrl: configuration.chains[chainId.value].rpcUrl,
-        });
-      }
-    } catch (error) {
-      location.reload();
-    }
-  }
-};
 
 const switchToken = (token: SelectorOption) => {
   selectedToken.value = token;
@@ -212,19 +176,14 @@ const addToken = async () => {
 
 const addTokenButtonDisabled = computed(() => !ethereumProvider.signer || !selectedToken.value);
 
-const gasFeesTooltipText = `The fee amount is composed of three parts:
-  • the gas reimbursement fee
-  • the liquidity provider fee
-  • the Beamer service fee
-
-The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity provider servicing the request, while the Beamer service fee stays with the contract and supports the Beamer platform development.
-
-Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
-
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
+const { chains } = storeToRefs(configuration);
 
-const requestManagerAddress = computed(
-  () => configuration.chains[chainId.value]?.requestManagerAddress,
+const requestManagerAddress = computed(() => chains.value[chainId.value]?.requestManagerAddress);
+
+const { sourceChains, targetChains, sourceChainId, switchChain } = useChainSelection(
+  provider,
+  chains,
 );
 
 const { show: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
@@ -244,8 +203,17 @@ const {
   run: runFaucetRequest,
 } = useFaucet(
   signer,
-  computed(() => fromChainId.value?.value),
+  computed(() => sourceChainId.value?.value),
 );
+
+const gasFeesTooltipText = `The fee amount is composed of three parts:
+  • the gas reimbursement fee
+  • the liquidity provider fee
+  • the Beamer service fee
+
+The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity provider servicing the request, while the Beamer service fee stays with the contract and supports the Beamer platform development.
+
+Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
 </script>
 
 <style lang="css">
