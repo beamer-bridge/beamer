@@ -79,7 +79,7 @@ import { useWaitForRequestFulfilment } from '@/composables/useWaitForRequestFulf
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
-import type { SelectorOption } from '@/types/form';
+import type { RequestFormResult } from '@/types/form';
 
 import RequestProcessing from './RequestProcessing.vue';
 
@@ -135,14 +135,7 @@ const newTransfer = async () => {
   emit('reload');
 };
 
-// TODO improve types
-const submitRequestTransaction = async (formResult: {
-  amount: string;
-  sourceChainId: SelectorOption;
-  targetChainId: SelectorOption;
-  toAddress: string;
-  tokenAddress: SelectorOption;
-}) => {
+const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
