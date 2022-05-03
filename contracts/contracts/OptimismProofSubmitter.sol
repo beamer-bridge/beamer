@@ -19,7 +19,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function submitProof(address l1Resolver, bytes32 requestHash, uint256 sourceChainId, address filler)
+    function submitProof(address l1Resolver, uint256 sourceChainId, uint256 requestId, bytes32 requestHash, address filler)
         external restricted(block.chainid, msg.sender) returns (ProofReceipt memory)
     {
         bytes32 fillId = keccak256(abi.encode(block.number));
@@ -30,6 +30,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             abi.encodeCall(
                 Resolver.resolve,
                 (
+                    requestId,
                     fillHash,
                     block.chainid,
                     sourceChainId,
@@ -42,12 +43,13 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         return ProofReceipt(fillId, fillHash);
     }
 
-    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, bytes32 fillHash) external {
+    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, uint256 requestId, bytes32 fillHash) external {
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolveNonFill,
                     (
+                        requestId,
                         fillHash,
                         block.chainid,
                         sourceChainId

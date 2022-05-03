@@ -657,7 +657,7 @@ def test_withdraw_without_challenge_with_resolution(
     # Register a L1 resolution
     contracts.messenger2.setLastSender(contracts.resolver.address)
     resolution_registry.resolveRequest(
-        fill_hash, web3.eth.chain_id, claimer.address, {"from": contracts.messenger2}
+        request_id, fill_hash, web3.eth.chain_id, claimer.address, {"from": contracts.messenger2}
     )
 
     # The claim period is not over, but the resolution must allow withdrawal now

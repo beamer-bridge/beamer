@@ -50,12 +50,13 @@ def test_l1_resolution_correct_hash(
 
 
 @pytest.mark.parametrize("forward_state", [True])
-def test_l1_non_fil_proof(fill_manager, resolution_registry):
+def test_l1_non_fill_proof(fill_manager, resolution_registry):
+    request_id = 123
     request_hash = "1234" + "00" * 30
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
 
-    fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+    fill_manager.invalidateFillHash(request_id, request_hash, fill_id, chain_id)
 
     fill_hash = keccak(
         encode_abi_packed(
@@ -73,22 +74,27 @@ def test_l1_non_fil_proof(fill_manager, resolution_registry):
 def test_restricted_calls(contracts, resolver):
     """Test that important contract calls cannot be invoked by a random caller."""
     (caller,) = alloc_accounts(1)
+    req_id = 123
 
     # fill_manager -> proof_submitter -> messenger1 -> L1 resolver ->
     # messenger2 -> resolution registry
     with brownie.reverts("RestrictedCalls: unknown caller"):
         contracts.proof_submitter.submitProof(
-            resolver, 0, brownie.chain.id, caller, {"from": caller}
+            resolver, brownie.chain.id, req_id, 0, caller, {"from": caller}
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolve(0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
+        contracts.resolver.resolve(
+            req_id, 0, brownie.chain.id, brownie.chain.id, caller, {"from": caller}
+        )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolveNonFill(0, brownie.chain.id, brownie.chain.id, {"from": caller})
+        contracts.resolver.resolveNonFill(
+            req_id, 0, brownie.chain.id, brownie.chain.id, {"from": caller}
+        )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.resolveRequest(0, 0, caller, {"from": caller})
+        contracts.resolution_registry.resolveRequest(req_id, 0, 0, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.invalidateFillHash(0, 0, {"from": caller})
+        contracts.resolution_registry.invalidateFillHash(req_id, 0, 0, {"from": caller})

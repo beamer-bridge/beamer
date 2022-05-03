@@ -90,12 +90,14 @@ class ClaimWithdrawn(ClaimEvent):
 
 @dataclass(frozen=True)
 class RequestResolved(TxEvent):
+    request_id: RequestId
     fill_hash: str
     filler: ChecksumAddress
 
 
 @dataclass(frozen=True)
 class FillHashInvalidated(TxEvent):
+    request_id: RequestId
     fill_hash: str
 
 
