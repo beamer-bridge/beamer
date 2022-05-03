@@ -18,7 +18,7 @@
     <template
       v-for="slotName in ['option', 'selected-option']"
       :key="slotName"
-      #[slotName]="option: SelectorOption"
+      #[slotName]="option: SelectorOption<unknown>"
     >
       <img v-if="option.imageUrl" class="vs__option-image" :src="option.imageUrl" />
       <span>{{ option.label }}</span>
@@ -39,7 +39,7 @@ import vSelect from 'vue-select';
 import type { SelectorOption } from '@/types/form';
 
 interface SelectorContext extends FormKitFrameworkContext {
-  options: Array<SelectorOption>;
+  options: Array<SelectorOption<unknown>>;
 }
 
 interface Props {

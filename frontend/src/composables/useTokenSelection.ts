@@ -15,10 +15,10 @@ export function useTokenSelection(
     ),
   );
 
-  const selectedToken: Ref<SelectorOption | undefined> = ref();
+  const selectedToken: Ref<SelectorOption<string> | undefined> = ref();
   const selectedTokenAddress = computed(() => selectedToken.value?.value);
 
-  const switchToken = (token: SelectorOption) => {
+  const switchToken = (token: SelectorOption<string>) => {
     selectedToken.value = token;
   };
 
@@ -51,7 +51,7 @@ export function useTokenSelection(
   };
 }
 
-function getTokenSelectorOption(token: Token): SelectorOption {
+function getTokenSelectorOption(token: Token): SelectorOption<string> {
   return {
     value: token.address,
     label: token.symbol,

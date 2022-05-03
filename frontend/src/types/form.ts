@@ -1,16 +1,13 @@
-import { BigNumber } from 'ethers';
-
 export type RequestFormResult = {
-  targetChainId: BigNumber;
-  sourceTokenAddress: string;
-  targetTokenAddress: string;
-  targetAddress: string;
-  amount: BigNumber;
+  amount: string;
+  sourceChainId: SelectorOption<number>;
+  targetChainId: SelectorOption<number>;
+  toAddress: string;
+  tokenAddress: SelectorOption<string>;
 };
 
-export type SelectorOption = {
+export type SelectorOption<T> = {
   label: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
+  value: T;
   imageUrl?: string;
 };
