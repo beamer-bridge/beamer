@@ -1,4 +1,5 @@
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import structlog
 import web3
@@ -34,6 +35,10 @@ class Agent:
         self._config = config
         self._stopped = threading.Event()
         self._stopped.set()
+        # Just add one worker, as this effectively serializes the work
+        # This is necessary as we use the account for all resolutions and
+        # would otherwise run into nonce problems
+        self._resolution_pool = ThreadPoolExecutor(max_workers=1)
 
         w3_l1 = _make_web3(config.l1_rpc_url, config.account)
         w3_l2a = _make_web3(config.l2a_rpc_url, config.account)
@@ -65,6 +70,7 @@ class Agent:
             latest_blocks={},
             config=config,
             web3_l1=w3_l1,
+            resolution_pool=self._resolution_pool,
         )
         self._event_processor = EventProcessor(self.context)
 
@@ -100,6 +106,7 @@ class Agent:
         self._event_processor.stop()
         self._event_monitor_l2a.stop()
         self._event_monitor_l2b.stop()
+        self._resolution_pool.shutdown(wait=True, cancel_futures=False)
         self._stopped.set()
 
     @property

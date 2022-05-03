@@ -94,6 +94,7 @@ def make_context(config: Config, request_manager: Contract = None):
         },
         config=config,
         web3_l1=MagicMock(),
+        resolution_pool=MagicMock(),
     )
 
 

@@ -1,5 +1,6 @@
 import os
 import time
+from concurrent.futures import Executor
 from dataclasses import dataclass
 from typing import Optional
 
@@ -26,6 +27,7 @@ from beamer.events import (
     RequestFilled,
     RequestResolved,
 )
+from beamer.l1_resolution import run_relayer
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
@@ -46,6 +48,7 @@ class Context:
     latest_blocks: dict[ChainId, BlockData]
     config: Config
     web3_l1: Web3
+    resolution_pool: Executor
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -213,17 +216,22 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         # Agent is not part of ongoing challenge
         if context.address not in {event.claimer, event.challenger}:
             claim.ignore(event)
-        claim.challenge(event)
 
-        if _l1_resolution_criteria_fulfilled(claim, context):
-            events = [
-                InitiateL1ResolutionEvent(
-                    chain_id=request.target_chain_id,
-                    request_id=request.id,
-                )
-            ]
+        claim.challenge(event)
     except TransitionNotAllowed:
         return False, events
+
+    if request.l1_resolution_tx_handle is None and _l1_resolution_criteria_fulfilled(
+        claim, context
+    ):
+        request.l1_resolution_tx_handle = context.resolution_pool.submit(
+            run_relayer,
+            context.config.l1_rpc_url,
+            context.config.l2b_rpc_url,
+            context.config.account.privateKey,
+            request.fill_tx,
+        )
+        log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
 
     log.info("Request claimed", request=request, claim_id=event.claim_id)
     return True, events
@@ -244,13 +252,13 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     if request is None:
-        return False
+        return False, None
 
     request.l1_resolution_filler = event.filler
 
     return False
 
 
-def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> bool:
+def _handle_fill_hash_invalidated(_event: FillHashInvalidated, _context: Context) -> HandlerResult:
+    # TODO: implement once contract is finished
     pass
-    # FIXME
