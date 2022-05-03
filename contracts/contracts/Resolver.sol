@@ -22,7 +22,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
 
     mapping (uint256 => ResolutionInfos) public resolutionInfos;
 
-    function resolve(bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId, address filler)
+    function resolve(uint256 requestId, bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId, address filler)
         external restricted(fillChainId, msg.sender) {
 
         ResolutionInfos storage info = resolutionInfos[sourceChainId];
@@ -35,6 +35,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             abi.encodeCall(
                 ResolutionRegistry.resolveRequest,
                 (
+                    requestId,
                     fillHash,
                     block.chainid,
                     filler
@@ -46,7 +47,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         emit Resolution(sourceChainId, fillChainId, fillHash, filler);
     }
 
-    function resolveNonFill(bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId)
+    function resolveNonFill(uint256 requestId, bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId)
         external restricted(fillChainId, msg.sender) {
 
         ResolutionInfos storage info = resolutionInfos[sourceChainId];
@@ -59,6 +60,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             abi.encodeCall(
                 ResolutionRegistry.invalidateFillHash,
                 (
+                    requestId,
                     fillHash,
                     block.chainid
                 )
