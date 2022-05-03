@@ -29,7 +29,7 @@ on-boarding in advance. **We want to focus on the best possible UX**. This appli
 
 - Fast execution for the end user
 - One transaction (send and receive directly)
-- Fees are paid in the rollup's native coin and all funds are moved to the target rollup
+- Fees are paid in the token being moved to the target rollup
 
 The service provider (market maker, liquidity provider) needs to have predictability over the costs and gains.
 Additionally, there has to be a guarantee of a refund for the service provided.
@@ -69,9 +69,6 @@ The parameters that need to be specified by the users are:
 A liquidity provider, later called Bob, provides the service by directly filling the request on target rollup (B).
 He now pays Alice upfront through a contract called ``FillManager`` and Alice receives the tokens without having to
 send any subsequent transactions.
-
-Alice will pay a fee for bridging her tokens. This fee needs to cover the expense of the liquidity provider and reward
-them. The fee also includes the Beamer service fee, which is used for further development of the protocol.
 
 Security for Alice
 ++++++++++++++++++
@@ -390,19 +387,20 @@ stake in the challenge against Charles.
 Fees
 ~~~~
 
-Users will pay a fee for bridging their tokens. This fee needs to cover the expense of the liquidity provider and reward
-them. The fees also include a Beamer service fee, which is used for further development of the protocol.
+There are two fees that users need to pay to bridge their tokens:
 
-In theory, the fee should follow the formula:
+agent fee
+    The fee paid in token being moved, covering the gas costs and rewarding
+    the liquidity provider. Variable and currently set to ``max(5e18, 0.1% of
+    token amount transferred)``. Collected by the agent.
 
-::
+protocol fee
+    The fee paid in token being moved, intended to support further development
+    of the Beamer protocol. Variable and currently set to 0% of token amount
+    transferred. Collected by the smart contract.
 
-    fee = tx fee fill +
-          tx fee claim +
-          tx fee withdraw funds / number of cumulative withdraws +
-          opportunity cost(requested tokens, claim period) +
-          opportunity cost(claim stake, claim period) +
-          margin
+In theory, the agent fee should cover the gas costs, the opportunity costs of
+the funds being locked and include a reward for providing the service.
 
 In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
 Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the liquidity provider, the
@@ -410,9 +408,10 @@ user would have to register the maximum fee they are willing to pay for their tr
 a fee market where different liquidity providers would compete and accept different fees. Users would then need to query the
 market for which fee they should use.
 
-However, as the protocol intends to be as easy to use as possible, and transactions fees are mostly stable
-on rollups, the protocol implements a fixed fee for every transfer. This fixed fee uses a fixed estimation of the gas
-price of the rollup as well as a fixed margin for liquidity providers.
+However, as the protocol intends to be as easy to use as possible, and
+transactions fees are mostly stable on rollups, the gas reimbursement fee is
+included in the agent fee as the minimum value, below which no agent fee can
+be set.
 
 
 Agent strategy

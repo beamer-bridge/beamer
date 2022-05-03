@@ -16,13 +16,14 @@ Glossary
 
         An agent only communicates with the Beamer smart contracts, never with other agents.
 
+    agent fee
+        The fee paid in token being moved, rewarding the :term:`liquidity
+        provider`. Variable and currently set to ``max(5e18, 0.1% of token amount
+        transferred)``. Collected by the agent.
+
     Beamer App
         The web application that one can use to transfer tokens between supported
         L2 chains.
-
-    Beamer service fee
-        The amount of native L2 token, typically ETH, that goes to the Beamer
-        service.
 
     challenge game
         The part of the Beamer protocol that is concerned with making sure only
@@ -82,12 +83,13 @@ Glossary
         used to fulfill incoming requests. Liquidity providers earn a fee for
         each fulfilled request.
 
-    liquidity provider fee
-        The amount of native L2 token, typically ETH, that the :term:`liquidity
-        provider` gets for fulfilling a request.
-
     LP
         See :term:`liquidity provider`.
+
+    protocol fee
+        The fee paid in token being moved, intended to support further
+        development of the Beamer protocol. Variable and currently set to 0%
+        of token amount transferred. Collected by the smart contract.
 
     request
         An action performed by a user wishing to transfer tokens from the
