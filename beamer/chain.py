@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import traceback
+from concurrent.futures import Future
 from typing import Any, Callable, Optional, cast
 
 import requests.exceptions
@@ -233,6 +234,15 @@ def process_requests(context: Context) -> None:
     to_remove = []
     for request in context.requests:
         log.debug("Processing request", request=request)
+
+        if request.l1_resolution_tx_handle is not None:
+            handle: Future = request.l1_resolution_tx_handle
+
+            if handle.done():
+                try:
+                    handle.result()
+                except Exception as ex:
+                    log.warning("L1 Resolution failed", ex=ex)
 
         if request.is_pending:
             fill_request(request, context)

@@ -1,3 +1,4 @@
+from concurrent.futures import Future
 from typing import Optional
 
 from eth_typing import ChecksumAddress
@@ -31,7 +32,8 @@ class Request(StateMachine):
         self.filler: Optional[ChecksumAddress] = None
         self.fill_tx: Optional[HexBytes] = None
         self.fill_id: Optional[int] = None
-        self.l1_resolution_filler = Optional[ChecksumAddress]
+        self.l1_resolution_filler: Optional[ChecksumAddress] = None
+        self.l1_resolution_tx_handle: Optional[Future] = None
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
