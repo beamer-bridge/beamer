@@ -8,8 +8,8 @@ from hexbytes import HexBytes
 from web3.contract import Contract
 from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
-from beamer.agent import Config
 from beamer.chain import Context, claim_request, process_claims, process_requests
+from beamer.config import Config
 from beamer.events import ClaimMade
 from beamer.models.claim import Claim
 from beamer.models.request import Request
@@ -83,7 +83,6 @@ def make_context(config: Config, request_manager: Contract = None):
         request_manager=request_manager,
         fill_manager=MagicMock(),
         match_checker=checker,
-        fill_wait_time=5,
         address=config.account.address,
         latest_blocks={
             SOURCE_CHAIN_ID: BlockData(
@@ -93,6 +92,7 @@ def make_context(config: Config, request_manager: Contract = None):
                 }
             )
         },
+        config=config,
     )
 
 

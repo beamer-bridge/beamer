@@ -12,6 +12,7 @@ from web3.contract import Contract
 from web3.types import BlockData
 
 import beamer.metrics
+from beamer.config import Config
 from beamer.events import (
     ClaimMade,
     ClaimWithdrawn,
@@ -39,9 +40,9 @@ class Context:
     request_manager: Contract
     fill_manager: Contract
     match_checker: TokenMatchChecker
-    fill_wait_time: int
     address: ChecksumAddress
     latest_blocks: Dict[ChainId, BlockData]
+    config: Config
 
 
 def process_event(event: Event, context: Context) -> bool:
@@ -174,7 +175,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> bool:
         # to give the target chain time to sync before challenging
         # additionally, if we are already in the challenge game, no need to back off
         if request.filler is None and event.challenger_stake == 0:
-            challenge_back_off_timestamp += context.fill_wait_time
+            challenge_back_off_timestamp += context.config.fill_wait_time
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
 

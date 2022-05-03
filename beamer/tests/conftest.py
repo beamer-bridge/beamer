@@ -16,7 +16,8 @@ from brownie import (
 )
 
 import beamer.metrics
-from beamer.agent import Agent, Config
+from beamer.agent import Agent
+from beamer.config import Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
 from beamer.typing import BlockNumber

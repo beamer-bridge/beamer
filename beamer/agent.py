@@ -1,7 +1,4 @@
 import threading
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
 
 import structlog
 import web3
@@ -12,24 +9,14 @@ from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_mid
 
 import beamer.metrics
 from beamer.chain import EventMonitor, EventProcessor
-from beamer.contracts import DeploymentInfo, make_contracts
+from beamer.config import Config
+from beamer.contracts import make_contracts
 from beamer.state_machine import Context
 from beamer.tracker import Tracker
 from beamer.typing import URL, ChainId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
-
-
-@dataclass
-class Config:
-    account: LocalAccount
-    deployment_info: DeploymentInfo
-    l2a_rpc_url: URL
-    l2b_rpc_url: URL
-    token_match_file: Path
-    fill_wait_time: int
-    prometheus_metrics_port: Optional[int]
 
 
 def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
@@ -73,9 +60,9 @@ class Agent:
             request_manager=request_manager,
             fill_manager=fill_manager,
             match_checker=match_checker,
-            fill_wait_time=config.fill_wait_time,
             address=config.account.address,
             latest_blocks={},
+            config=config,
         )
         self._event_processor = EventProcessor(self.context)
 
