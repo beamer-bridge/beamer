@@ -10,7 +10,8 @@ from eth_account.signers.local import LocalAccount
 
 import beamer.contracts
 import beamer.util
-from beamer.agent import Agent, Config
+from beamer.agent import Agent
+from beamer.config import Config
 from beamer.typing import URL
 
 log = structlog.get_logger(__name__)
