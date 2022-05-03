@@ -25,7 +25,7 @@
             :value="selectedToken"
             type="selector"
             name="tokenAddress"
-            :options="TOKENS"
+            :options="tokens"
             placeholder="Token"
             validation="required"
             messages-class="hidden"
@@ -39,8 +39,8 @@
             <button
               class="btn btn-ghost btn-sm text-orange m-2"
               type="button"
-              :disabled="addTokenButtonDisabled"
-              @click="addToken"
+              :disabled="!addTokenAvailable"
+              @click="addTokenToProvider"
             >
               Add to Metamask
             </button>
@@ -120,61 +120,19 @@
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
-import { computed, Ref, ref } from 'vue';
+import { computed } from 'vue';
 
 import Spinner from '@/components/Spinner.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useTokenBalance } from '@/composables/useTokenBalance';
-import { getTokenDecimals } from '@/services/transactions/token';
+import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
-import type { Token } from '@/types/config';
-import type { SelectorOption } from '@/types/form';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
-
-const getTokenSelectorOption = (token: Token) => ({
-  value: token.address,
-  label: token.symbol,
-});
-
-const TOKENS: SelectorOption[] = configuration.chains[
-  String(ethereumProvider.chainId)
-]?.tokens.map((token) => getTokenSelectorOption(token));
-
-const selectedToken: Ref<SelectorOption | undefined> = ref();
-const selectedTokenAddress = computed(() => selectedToken.value?.value);
-
-const switchToken = (token: SelectorOption) => {
-  selectedToken.value = token;
-};
-
-const addToken = async () => {
-  if (!selectedToken.value) {
-    return;
-  }
-  try {
-    if (ethereumProvider.provider && ethereumProvider.signer) {
-      const decimals = await getTokenDecimals(
-        ethereumProvider.provider,
-        selectedToken.value.value,
-      );
-
-      await ethereumProvider.provider.addToken({
-        address: selectedToken.value.value,
-        symbol: selectedToken.value.label,
-        decimals: Number(decimals),
-      });
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const addTokenButtonDisabled = computed(() => !ethereumProvider.signer || !selectedToken.value);
 
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
@@ -185,6 +143,15 @@ const { sourceChains, targetChains, sourceChainId, switchChain } = useChainSelec
   provider,
   chains,
 );
+
+const {
+  selectedToken,
+  selectedTokenAddress,
+  tokens,
+  switchToken,
+  addTokenToProvider,
+  addTokenAvailable,
+} = useTokenSelection(provider, chains);
 
 const { show: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
   provider,
