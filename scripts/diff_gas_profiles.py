@@ -116,7 +116,7 @@ def _print_profiles(contracts: dict, profiles: Sequence[Profile]) -> None:
             elif gas_old is None and gas_new is not None:
                 diff = "{0:+,}".format(gas_new)
             elif gas_old is not None and gas_new is None:
-                diff = "{0:+,}".format(gas_old)
+                diff = "{0:+,}".format(-gas_old)
             elif gas_old is not None and gas_new is not None:
                 gas_diff = gas_new - gas_old
                 diff = "{0:+,}".format(gas_diff) if gas_diff != 0 else "0"
