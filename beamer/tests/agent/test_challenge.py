@@ -37,9 +37,7 @@ def test_challenge_1(request_manager, token, config):
     agent.start()
 
     w3 = brownie.web3
-    with earnings(w3, agent, num_fills=1) as agent_earnings, earnings(
-        w3, charlie, num_fills=0
-    ) as charlie_earnings:
+    with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
         make_request(request_manager, token, requester, target_address, 1)
 
@@ -81,9 +79,7 @@ def test_challenge_2(request_manager, token, config):
     agent.start()
 
     w3 = brownie.web3
-    with earnings(w3, agent, num_fills=1) as agent_earnings, earnings(
-        w3, charlie, num_fills=0
-    ) as charlie_earnings:
+    with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
         make_request(request_manager, token, requester, target_address, 1)
 
@@ -135,9 +131,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
     agent = beamer.agent.Agent(config)
 
     w3 = brownie.web3
-    with earnings(w3, agent, num_fills=0) as agent_earnings, earnings(
-        w3, charlie, num_fills=0
-    ) as charlie_earnings:
+    with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
         request_id = make_request(request_manager, token, requester, target_address, amount)
@@ -187,9 +181,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
     agent = beamer.agent.Agent(config)
 
     w3 = brownie.web3
-    with earnings(w3, agent, num_fills=0) as agent_earnings, earnings(
-        w3, charlie, num_fills=0
-    ) as charlie_earnings:
+    with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
         request_id = make_request(request_manager, token, requester, target_address, amount)
