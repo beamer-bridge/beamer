@@ -737,6 +737,7 @@ def test_withdraw_two_challengers(
     request_manager, token, claim_stake, finalization_time, challenge_period_extension
 ):
     claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
+
     request_id = make_request(request_manager, token, requester, requester, 1)
     claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim.return_value
@@ -752,6 +753,9 @@ def test_withdraw_two_challengers(
         claim_id, {"from": second_challenger, "value": claim_stake + 11}
     )
 
+    first_challenger_reward = claim_stake + 1
+    second_challenger_reward = claim_stake + 9
+
     # Withdraw must fail when claim period is not over
     with brownie.reverts("Claim period not finished"):
         request_manager.withdraw(claim_id, {"from": first_challenger})
@@ -765,26 +769,33 @@ def test_withdraw_two_challengers(
     # Timetravel after claim period
     chain.mine(timedelta=finalization_time + challenge_period_extension)
 
-    # Show that last challenger can withdraw first
-    request_manager.withdraw(claim_id, {"from": second_challenger})
+    # Take snapshot
+    chain.snapshot()
 
-    # Challenger cannot withdraw twice
-    with brownie.reverts("Challenger has nothing to withdraw"):
-        request_manager.withdraw(claim_id, {"from": second_challenger})
-    with brownie.reverts("Challenger has nothing to withdraw"):
-        request_manager.withdraw(claim_id, {"from": claimer})
+    def _withdraw_by_order(first_withdrawer, second_withdrawer):
+        request_manager.withdraw(claim_id, {"from": first_withdrawer})
 
-    # First challenger withdraws his partial stake
-    request_manager.withdraw(claim_id, {"from": first_challenger})
+        # Challenger cannot withdraw twice
+        with brownie.reverts("Challenger has nothing to withdraw"):
+            request_manager.withdraw(claim_id, {"from": first_withdrawer})
+        with brownie.reverts("Challenger has nothing to withdraw"):
+            request_manager.withdraw(claim_id, {"from": claimer})
 
-    assert (
-        web3.eth.get_balance(first_challenger.address)
-        == first_challenger_eth_balance + claim_stake + 1
-    )
-    assert (
-        web3.eth.get_balance(second_challenger.address)
-        == second_challenger_eth_balance + claim_stake + 9
-    )
+        request_manager.withdraw(claim_id, {"from": second_withdrawer})
+
+        assert (
+            web3.eth.get_balance(first_challenger.address)
+            == first_challenger_eth_balance + first_challenger_reward
+        )
+        assert (
+            web3.eth.get_balance(second_challenger.address)
+            == second_challenger_eth_balance + second_challenger_reward
+        )
+
+    _withdraw_by_order(first_challenger, second_challenger)
+    # revert to snapshot
+    chain.revert()
+    _withdraw_by_order(second_challenger, first_challenger)
 
     # All stakes are withdrawn already
     with brownie.reverts("Claim already withdrawn"):
