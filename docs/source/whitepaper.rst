@@ -425,7 +425,7 @@ in challenges and go through L1 resolution or open parallel claims.
 
 The current implementation of the agent follows this strategy:
 
-* Challenge a false claim with ``claim stake + 1``
+* Challenge a false claim with ``cost of L1 non-fill proof``
 * Challenge a claim with no filler with ``cost of L1 non-fill proof``
 * Join a challenged non-filled claim with ``cost of L1 non-fill proof``
 * Subsequent counter challenge should cover the cost of L1 resolution
