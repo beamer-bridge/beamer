@@ -13,7 +13,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 from web3.contract import Contract, ContractFunction
 from web3.exceptions import ContractLogicError
-from web3.types import TxParams
+from web3.types import TxParams, Wei
 
 from beamer.events import Event, EventFetcher
 from beamer.models.claim import Claim
@@ -390,7 +390,11 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
         return False
 
     initial_claim_stake = context.request_manager.functions.claimStake().call()
-    stake = claim.get_next_challenge_stake(initial_claim_stake)
+    minimum_stake = claim.get_minimum_challenge_stake(initial_claim_stake)
+    own_stake = Wei(claim.get_challenger_stake(context.address))
+    # TODO: have a central variable and proper L1 cost calculations
+    l1_cost = Wei(initial_claim_stake + 10 ** 15)
+    stake = max(minimum_stake, Wei(l1_cost - own_stake))
 
     func = context.request_manager.functions.challengeClaim(claim.id)
     try:
