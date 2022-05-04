@@ -356,3 +356,72 @@ def test_withdraw_not_participant(request_manager, token, config):
     agent.wait()
 
     assert withdraw_event is None
+
+
+# Scenario 7:
+#
+# Bob              Charlie              Dave
+# -----------------------------------------------
+#                  claim
+#                                       challenge
+#                  challenge
+# challenge
+# Winner: Bob + Dave
+#
+# Note: testing that the agent can handle multiparty bidding
+def test_challenge_7(request_manager, fill_manager, token, config):
+    target_address = accounts[8]
+    requester, charlie, dave = accounts[:3]
+
+    agent = beamer.agent.Agent(config)
+
+    w3 = brownie.web3
+    with earnings(w3, agent) as agent_earnings, earnings(w3, dave) as dave_earnings:
+        # Submit a request that Bob cannot fill.
+        amount = token.balanceOf(agent.address) + 1
+        request_id = make_request(request_manager, token, requester, target_address, amount)
+
+        stake = request_manager.claimStake()
+        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+
+        collector = EventCollector(request_manager, "ClaimMade")
+        claim = collector.next_event()
+        assert claim is not None
+
+        # Dave challenges
+        request_manager.challengeClaim(
+            claim.claimId, {"from": dave, "value": claim.claimerStake + 1}
+        )
+
+        claim = collector.next_event()
+        assert claim is not None
+
+        agent.start()
+
+        # Ensure that Bob did not fill the request.
+        assert EventCollector(fill_manager, "RequestFilled").next_event(wait_time=2) is None
+
+        request_manager.challengeClaim(claim.claimId, {"from": charlie, "value": stake + 1})
+
+        claim = collector.next_event()
+        assert claim is not None
+        assert claim.claimerStake > claim.challengerStakeTotal and claim.claimer == charlie.address
+
+        # Get Bob's challenge.
+        claim = collector.next_event()
+        assert claim is not None
+        assert (
+            claim.challengerStakeTotal > claim.claimerStake
+            and claim.lastChallenger == agent.address
+        )
+
+        brownie.chain.mine(timestamp=claim.termination)
+
+        request_manager.withdraw(claim.claimId, {"from": agent.address})
+        request_manager.withdraw(claim.claimId, {"from": dave})
+
+        agent.stop()
+        agent.wait()
+
+    assert agent_earnings() == stake
+    assert dave_earnings() == stake + 1
