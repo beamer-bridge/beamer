@@ -133,7 +133,7 @@ class EventCollector:
 
 
 @contextlib.contextmanager
-def earnings(w3, account, num_fills=0):
+def earnings(w3, account):
     address = account.address
     balance_before = w3.eth.get_balance(address)
 
@@ -145,13 +145,10 @@ def earnings(w3, account, num_fills=0):
             block = brownie.web3.eth.get_block(block_number)
             for tx_hash in block.transactions:
                 tx = brownie.web3.eth.get_transaction(tx_hash)
+                tx_receipt = brownie.web3.eth.get_transaction_receipt(tx_hash)
                 if tx["from"] == address:
-                    total += tx.gasPrice * tx.gas
+                    total += tx.gasPrice * tx_receipt.gasUsed
 
-        # We are subtracting 300k gwei here because the token.transferFrom inside
-        # FillManager.fillRequest seems to cost that much, however, ganache does
-        # not reflect that in the account's balance.
-        total -= num_fills * int(300e12)
         return total
 
     yield lambda: w3.eth.get_balance(address) + calculate_gas_spending() - balance_before
