@@ -87,13 +87,10 @@ class Claim(StateMachine):
             return frozenset({self.claimer})
         return frozenset(self._challenger_stakes.keys())
 
-    def get_next_challenge_stake(self, initial_claim_stake: Wei) -> Wei:
+    def get_minimum_challenge_stake(self, initial_claim_stake: Wei) -> Wei:
         claimer_stake = self._latest_claim_made.claimer_stake
         challenger_stake = self._latest_claim_made.challenger_stake_total
 
-        if challenger_stake == 0:
-            # we challenge with enough stake for L1 resolution
-            return Wei(initial_claim_stake + 10 ** 15)
         if challenger_stake > claimer_stake:
             return Wei(challenger_stake - claimer_stake + initial_claim_stake)
         else:
