@@ -12,6 +12,7 @@ import beamer.contracts
 import beamer.util
 from beamer.agent import Agent
 from beamer.config import Config
+from beamer.l1_resolution import relayer_executable_exists
 from beamer.typing import URL
 
 log = structlog.get_logger(__name__)
@@ -108,6 +109,9 @@ def main(
     prometheus_metrics_port: Optional[int],
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
+
+    # TODO: use return value and exit if relayer is not available
+    relayer_executable_exists()
 
     account = _account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
