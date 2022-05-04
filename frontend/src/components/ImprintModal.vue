@@ -1,7 +1,14 @@
 <template>
-  <input id="imprint-modal" type="checkbox" class="modal-toggle" />
-  <div class="modal">
-    <div class="modal-box bg-dark w-8/12 max-w-5xl p-14">
+  <span class="btn-link" data-test="open-button" @click="openModal">Imprint</span>
+
+  <div
+    v-if="modalIsVisible"
+    class="fixed top-0 left-0 w-full h-full z-10 flex justify-center items-center bg-black/40"
+  >
+    <div
+      class="imprint__box max-w-5xl max-h-[95vh] flex flex-col overflow-auto p-14 rounded-[1rem] text-left text-light text-base bg-dark"
+      data-test="content-box"
+    >
       <h2 class="font-bold">Impressum</h2>
       <div class="py-4">
         <div>
@@ -86,33 +93,53 @@
           </p>
         </div>
       </div>
-      <div class="modal-action">
-        <label for="imprint-modal" class="btn hover:bg-teal-light-35">OK</label>
-      </div>
+
+      <span
+        class="btn hover:bg-teal-light-35 place-self-end"
+        data-test="close-button"
+        @click="closeModal"
+        >OK</span
+      >
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const modalIsVisible = ref(false);
+
+function openModal() {
+  modalIsVisible.value = true;
+}
+
+function closeModal() {
+  modalIsVisible.value = false;
+}
+</script>
+
 <style lang="css">
-.modal-box::-webkit-scrollbar {
+.imprint__box::-webkit-scrollbar {
   width: 6px;
 }
-.modal-box::-webkit-scrollbar-track {
+
+.imprint__box::-webkit-scrollbar-track {
   @apply bg-teal my-4;
 }
 
-.modal-box::-webkit-scrollbar-thumb {
+.imprint__box::-webkit-scrollbar-thumb {
   @apply bg-teal-light-35;
 }
 
-.modal-box h2 {
+.imprint__box h2 {
   @apply text-2xl font-bold py-6;
 }
 
-.modal-box h3 {
+.imprint__box h3 {
   @apply text-xl font-bold pb-2;
 }
 
-.modal-box p {
+.imprint__box p {
   @apply pb-10;
 }
 </style>

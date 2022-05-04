@@ -9,10 +9,9 @@
     </div>
   </div>
   <feedback v-if="enableFeedback"></feedback>
-  <imprint-modal></imprint-modal>
   <footer class="my-8 text-lg text-center text-teal-light">
     Powered by Beamer &bull;
-    <label for="imprint-modal" class="btn-link modal-button">Imprint</label>
+    <imprint-modal />
   </footer>
 </template>
 
