@@ -1,5 +1,4 @@
 import { BigNumber } from 'ethers';
-import { Ref } from 'vue';
 
 /*
  * The explicitly defined numeric values are important for the order of the
@@ -31,7 +30,6 @@ export interface Request {
 }
 
 export interface RequestMetadata {
-  state: Ref<RequestState>;
   amount: string;
   sourceChainName: string;
   targetAddress: string;

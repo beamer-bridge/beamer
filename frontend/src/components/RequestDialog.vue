@@ -16,7 +16,7 @@
     >
       <Card class="bg-teal px-20 pt-18 pb-16 self-stretch mb-11">
         <RequestFormInputs v-if="requestState === RequestState.Init" />
-        <RequestProcessing v-else :request-metadata="requestMetadata" />
+        <RequestStatus v-else :metadata="requestMetadata!" :state="requestState" />
         <Transition name="expand">
           <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
             {{ shownError }}
@@ -71,6 +71,7 @@ import { computed, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
+import RequestStatus from '@/components/RequestStatus.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSigner } from '@/composables/useRequestSigner';
@@ -80,8 +81,6 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
 import type { RequestFormResult } from '@/types/form';
-
-import RequestProcessing from './RequestProcessing.vue';
 
 interface Emits {
   (e: 'reload'): void;
@@ -153,7 +152,6 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   };
 
   requestMetadata.value = {
-    state: requestState,
     tokenSymbol: formResult.tokenAddress.label,
     sourceChainName: formResult.sourceChainId.label,
     targetChainName: formResult.targetChainId.label,

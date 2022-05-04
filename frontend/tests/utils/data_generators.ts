@@ -1,7 +1,5 @@
-import { ref } from 'vue';
-
 import { ChainConfig, Token } from '@/types/config';
-import { RequestMetadata, RequestState } from '@/types/data';
+import { RequestMetadata } from '@/types/data';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
 const DECIMAL_CHARACTERS = '0123456789';
@@ -17,25 +15,25 @@ function getRandomString(charSet: string, length: number, prefix = ''): string {
   return output;
 }
 
-function getRandomEthereumAddress(): string {
+export function getRandomEthereumAddress(): string {
   return getRandomString(HEXADECIMAL_CHARACTERS, 32, '0x');
 }
 
-function getRandomUrl(subDomain: string): string {
+export function getRandomUrl(subDomain: string): string {
   return getRandomString(ALPHABET_CHARACTERS, 8, `https://${subDomain}.`);
 }
 
-function getRandomTokenSymbol(): string {
+export function getRandomTokenSymbol(): string {
   return getRandomString(ALPHABET_CHARACTERS, 3).toUpperCase();
 }
 
-function getRandomChainName(): string {
+export function getRandomChainName(): string {
   const name = getRandomString(ALPHABET_CHARACTERS, 5);
   const nameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
   return `${nameCapitalized} Chain`;
 }
 
-function getRandomDecimalPointNumber(): string {
+export function getRandomDecimalPointNumber(): string {
   const beforeDot = getRandomString(DECIMAL_CHARACTERS, 1);
   const afterDot = getRandomString(DECIMAL_CHARACTERS, 1);
   return `${beforeDot}.${afterDot}`;
@@ -67,7 +65,6 @@ export function generateRequestMetadata(
   partialRequestMetadata?: Partial<RequestMetadata>,
 ): RequestMetadata {
   return {
-    state: ref(RequestState.Init),
     amount: getRandomDecimalPointNumber(),
     sourceChainName: getRandomChainName(),
     targetChainName: getRandomChainName(),
