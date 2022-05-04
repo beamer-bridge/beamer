@@ -75,8 +75,14 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, ClaimWithdrawn):
         return _handle_claim_withdrawn(event, context)
 
-    elif isinstance(event, (RequestResolved, FillHashInvalidated, InitiateL1ResolutionEvent)):
-        return False, None
+    elif isinstance(event, RequestResolved):
+        return _handle_request_resolved(event, context)
+
+    elif isinstance(event, FillHashInvalidated):
+        return _handle_fill_hash_invalidated(event, context)
+
+    elif isinstance(event, InitiateL1ResolutionEvent):
+        return _handle_initiate_l1_resolution(event, context)
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -172,22 +178,6 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> Hand
     return True, None
 
 
-def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
-    l1_resolution_gas_cost = 1_000_000  # FIXME
-    l1_gas_price = context.web3_l1.eth.gas_price
-    l1_safety_factor = 1.25
-    limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
-
-    if claim.claimer == context.address:
-        if claim._latest_claim_made.challenger_stake > limit:
-            return True
-    elif claim.challenger == context.address:
-        if claim._latest_claim_made.claimer_stake > limit:
-            return True
-
-    return False
-
-
 def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
     request = context.requests.get(event.request_id)
@@ -221,17 +211,14 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if request.l1_resolution_tx_handle is None and _l1_resolution_criteria_fulfilled(
-        claim, context
-    ):
-        request.l1_resolution_tx_handle = context.resolution_pool.submit(
-            run_relayer,
-            context.config.l1_rpc_url,
-            context.config.l2b_rpc_url,
-            context.config.account.privateKey,
-            request.fill_tx,
-        )
-        log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
+    if request.l1_resolution_tx_handle is None and request.fill_tx is not None:
+        events = [
+            InitiateL1ResolutionEvent(
+                chain_id=request.target_chain_id,  # Resolution happens on the target chain
+                request_id=request.id,
+                claim_id=claim.id,
+            )
+        ]
 
     log.info("Request claimed", request=request, claim_id=event.claim_id)
     return True, events
@@ -261,4 +248,45 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 def _handle_fill_hash_invalidated(_event: FillHashInvalidated, _context: Context) -> HandlerResult:
     # TODO: implement once contract is finished
-    pass
+    return False, None
+
+
+def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> HandlerResult:
+    l1_resolution_gas_cost = 1_000_000  # TODO: Adapt to real price
+    l1_gas_price = context.web3_l1.eth.gas_price
+    l1_safety_factor = 1.25
+    limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
+
+    if claim.claimer == context.address:
+        if claim._latest_claim_made.challenger_stake > limit:
+            return True, None
+    elif claim.challenger == context.address:
+        if claim._latest_claim_made.claimer_stake > limit:
+            return True, None
+
+    return False, None
+
+
+def _handle_initiate_l1_resolution(
+    event: InitiateL1ResolutionEvent, context: Context
+) -> HandlerResult:
+    request = context.requests.get(event.request_id)
+    claim = context.claims.get(event.claim_id)
+    if claim is None:
+        return False, None
+
+    # A request should never be dropped before all claims are finalized
+    assert request is not None, "Request object missing"
+
+    assert request.fill_tx is not None, "Request not yet filled"
+    if _l1_resolution_criteria_fulfilled(claim, context):
+        request.l1_resolution_tx_handle = context.resolution_pool.submit(
+            run_relayer,
+            context.config.l1_rpc_url,
+            context.config.l2b_rpc_url,
+            context.config.account.key,
+            request.fill_tx,
+        )
+        log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
+
+    return True, None
