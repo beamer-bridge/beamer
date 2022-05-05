@@ -245,15 +245,13 @@ contract RequestManager is Ownable {
 
         address nextActor;
         uint256 minValue;
-        uint256 periodExtension;
+        uint256 periodExtension = challengePeriodExtension;
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
 
         if (claimerStake > challengerStakeTotal) {
             if (challengerStakeTotal == 0) {
-                periodExtension = finalizationTimes[request.targetChainId] + challengePeriodExtension;
-            } else {
-                periodExtension = challengePeriodExtension;
+                periodExtension += finalizationTimes[request.targetChainId];
             }
             require(claim.claimer != msg.sender, "Cannot challenge own claim");
             nextActor = msg.sender;
@@ -274,7 +272,11 @@ contract RequestManager is Ownable {
             claim.challengerStakeTotal += msg.value;
         }
 
+
+
         claim.termination = Math.max(claim.termination, block.timestamp + periodExtension);
+        uint256 minimumTermination = block.timestamp + challengePeriodExtension;
+        require(claim.termination >= minimumTermination, "Claim termination did not increase enough");
 
         emit ClaimMade(
             claim.requestId,
