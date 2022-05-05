@@ -43,10 +43,7 @@
           type="submit"
           :disabled="!valid"
         >
-          <div v-if="requestTransactionActive" class="h-8 w-8">
-            <spinner></spinner>
-          </div>
-          <template v-else>Transfer funds</template>
+          Transfer funds
         </FormKit>
 
         <FormKit
@@ -63,7 +60,6 @@
 </template>
 
 <script setup lang="ts">
-import { JsonRpcProvider } from '@ethersproject/providers';
 import { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
@@ -75,11 +71,10 @@ import RequestStatus from '@/components/RequestStatus.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSigner } from '@/composables/useRequestSigner';
-import { useRequestTransaction } from '@/composables/useRequestTransaction';
-import { useWaitForRequestFulfillment } from '@/composables/useWaitForRequestFulfillment';
+import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
-import { Request, RequestMetadata, RequestState } from '@/types/data';
+import { RequestState } from '@/types/data';
 import type { RequestFormResult } from '@/types/form';
 
 interface Emits {
@@ -92,10 +87,7 @@ const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 
-const requestMetadata = ref<RequestMetadata>();
 const requestForm = ref<FormKitFrameworkContext>();
-
-const transactionError = ref('');
 
 const requestManagerAddress = computed(
   () => configuration.chains[chainId.value]?.requestManagerAddress,
@@ -104,18 +96,18 @@ const requestManagerAddress = computed(
 const { amount: requestFeeAmount } = useRequestFee(provider, requestManagerAddress);
 
 const {
-  active: requestTransactionActive,
-  state: requestState,
-  run: executeRequestTransaction,
-} = useRequestTransaction();
-
-const { run: waitForRequestFulfillment } = useWaitForRequestFulfillment();
-
-const {
   run: requestSigner,
   active: requestSignerActive,
   error: requestSignerError,
 } = useRequestSigner();
+
+const {
+  runTransfer,
+  requestMetadata,
+  error: transferError,
+  requestState,
+  isNewTransferDisabled,
+} = useTransfer();
 
 const runRequestSigner = () => {
   // TOOD: In future we will not separate getting provider and signer which
@@ -125,80 +117,25 @@ const runRequestSigner = () => {
   }
 };
 
-const getTargetTokenAddress = (targetChainId: number, tokenSymbol: string) => {
-  return configuration.chains[targetChainId].tokens.find((token) => token.symbol === tokenSymbol)
-    ?.address as string;
-};
-
-const newTransfer = async () => {
-  emit('reload');
-};
-
 const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
 
-  const request: Request = {
-    targetChainId: Number(formResult.targetChainId.value),
-    sourceTokenAddress: formResult.tokenAddress.value,
-    sourceChainId: Number(formResult.sourceChainId.value),
-    targetTokenAddress: getTargetTokenAddress(
-      formResult.targetChainId.value,
-      formResult.tokenAddress.label,
-    ),
-    targetAddress: formResult.toAddress,
-    amount: formResult.amount,
-  };
-
-  requestMetadata.value = {
-    tokenSymbol: formResult.tokenAddress.label,
-    sourceChainName: formResult.sourceChainId.label,
-    targetChainName: formResult.targetChainId.label,
-    targetAddress: request.targetAddress,
-    amount: formResult.amount,
-  };
-  (request.fee = requestFeeAmount.value), (transactionError.value = '');
-
-  const targetChainRpcUrl = configuration.chains[formResult.targetChainId.value].rpcUrl;
-  const targetChainProvider = new JsonRpcProvider(targetChainRpcUrl);
-  const fillManagerAddress =
-    configuration.chains[formResult.targetChainId.value].fillManagerAddress;
-
-  try {
-    await executeRequestTransaction(
-      provider.value,
-      signer.value,
-      requestManagerAddress.value,
-      request,
-    );
-    await waitForRequestFulfillment(
-      targetChainProvider,
-      fillManagerAddress,
-      request,
-      requestState,
-    );
-  } catch (error) {
-    const maybeErrorMessage = (error as { message?: string }).message;
-    if (maybeErrorMessage) {
-      transactionError.value = maybeErrorMessage;
-    } else {
-      transactionError.value = 'Unknown failure!';
-    }
-  }
+  await runTransfer(
+    formResult,
+    provider.value,
+    signer.value,
+    requestManagerAddress.value,
+    requestFeeAmount.value,
+    configuration.chains,
+  );
 };
 
 watch(chainId, () => location.reload());
 
-const isNewTransferDisabled = computed(() => {
-  return (
-    requestState.value !== RequestState.RequestSuccessful &&
-    requestState.value !== RequestState.RequestFailed
-  );
-});
-
 const shownError = computed(() => {
-  return requestSignerError.value || transactionError.value;
+  return requestSignerError.value || transferError.value;
 });
 
 watch(shownError, async () => {
@@ -206,4 +143,8 @@ watch(shownError, async () => {
     requestState.value = RequestState.Init;
   }
 });
+
+const newTransfer = () => {
+  emit('reload');
+};
 </script>
