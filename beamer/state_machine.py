@@ -242,8 +242,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
         return False, None
 
     request.l1_resolution_filler = event.filler
-
-    return False
+    return True, None
 
 
 def _handle_fill_hash_invalidated(_event: FillHashInvalidated, _context: Context) -> HandlerResult:
