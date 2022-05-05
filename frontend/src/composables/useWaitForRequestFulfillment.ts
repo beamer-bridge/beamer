@@ -6,10 +6,10 @@ import { listenOnFulfillment } from '@/services/transactions/fill-manager';
 import type { Request } from '@/types/data';
 import { RequestState } from '@/types/data';
 
-export function useWaitForRequestFulfilment() {
+export function useWaitForRequestFulfillment() {
   const error = ref<string | undefined>(undefined);
 
-  const waitForRequestFulfilment = async (
+  const waitForRequestFulfillment = async (
     provider: JsonRpcProvider, // TODO: This type is an exception till refactoring.
     fillManagerAddress: string,
     request: Request,
@@ -29,5 +29,5 @@ export function useWaitForRequestFulfilment() {
     requestState.value = RequestState.RequestSuccessful;
   };
 
-  return { run: waitForRequestFulfilment };
+  return { run: waitForRequestFulfillment };
 }
