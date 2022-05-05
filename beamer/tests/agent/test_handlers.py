@@ -11,7 +11,7 @@ from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
 from beamer.chain import Context, claim_request, process_claims, process_requests
 from beamer.config import Config
-from beamer.events import ClaimMade, InitiateL1ResolutionEvent
+from beamer.events import ClaimMade, InitiateL1ResolutionEvent, RequestResolved
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.state_machine import process_event
@@ -203,4 +203,28 @@ def test_handle_initiate_l1_resolution(token: Contract, config: Config):
     context.web3_l1.eth.gas_price = 1
     request.fill(config.account.address, b"", b"")
     assert process_event(event, context) == (True, None)
-    assert context.resolution_pool.submit.called
+    assert context.resolution_pool.submit.called  # pylint:disable=no-member
+
+
+def test_handle_request_resolved(token: Contract, config: Config):
+    context = make_context(config)
+    filler = make_address()
+
+    event = RequestResolved(
+        tx_hash=HexBytes(""),
+        chain_id=TARGET_CHAIN_ID,
+        request_id=REQUEST_ID,
+        fill_hash="",
+        filler=filler,
+    )
+
+    # Without a request, this must fail
+    assert process_event(event, context) == (False, None)
+
+    # Must store the result in the request
+    request = make_request(token)
+    context.requests.add(request.id, request)
+
+    assert request.l1_resolution_filler is None
+    assert process_event(event, context) == (True, None)
+    assert request.l1_resolution_filler == filler
