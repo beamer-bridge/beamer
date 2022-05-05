@@ -2,6 +2,7 @@ import random
 import string
 from unittest.mock import MagicMock
 
+import pytest
 from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
@@ -10,14 +11,19 @@ from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
 from beamer.chain import Context, claim_request, process_claims, process_requests
 from beamer.config import Config
-from beamer.events import ClaimMade
+from beamer.events import ClaimMade, InitiateL1ResolutionEvent
 from beamer.models.claim import Claim
 from beamer.models.request import Request
+from beamer.state_machine import process_event
 from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
 
 SOURCE_CHAIN_ID = ChainId(2)
+TARGET_CHAIN_ID = ChainId(3)
+
+REQUEST_ID = RequestId(10)
+CLAIM_ID = ClaimId(200)
 
 
 class MockEth:
@@ -42,9 +48,9 @@ def make_address() -> ChecksumAddress:
 
 def make_request(token) -> Request:
     return Request(
-        request_id=RequestId(1),
+        request_id=REQUEST_ID,
         source_chain_id=SOURCE_CHAIN_ID,
-        target_chain_id=ChainId(4),
+        target_chain_id=TARGET_CHAIN_ID,
         source_token_address=token.address,
         target_token_address=token.address,
         target_address=token.address,
@@ -53,18 +59,18 @@ def make_request(token) -> Request:
     )
 
 
-def make_claim(request: Request) -> Claim:
+def make_claim(request: Request, claimer: ChecksumAddress = None) -> Claim:
     return Claim(
         claim_made=ClaimMade(
             chain_id=request.source_chain_id,
             tx_hash=HexBytes(b""),
-            claim_id=ClaimId(1),
+            claim_id=CLAIM_ID,
             request_id=request.id,
             fill_id=FillId(456),
-            claimer=request.filler or make_address(),
-            claimer_stake=Wei(0),
+            claimer=claimer or make_address(),
+            claimer_stake=Wei(1_000_000),
             challenger=make_address(),
-            challenger_stake=Wei(0),
+            challenger_stake=Wei(5_000_000),
             termination=Termination(1),
         ),
         challenge_back_off_timestamp=123,
@@ -169,3 +175,32 @@ def test_request_garbage_collection_with_claim(token, config: Config):
     process_requests(context)
     assert len(context.requests) == 0
     assert len(context.claims) == 0
+
+
+def test_handle_initiate_l1_resolution(token: Contract, config: Config):
+    request = make_request(token)
+
+    context = make_context(config)
+    context.requests.add(request.id, request)
+
+    event = InitiateL1ResolutionEvent(
+        chain_id=TARGET_CHAIN_ID,
+        request_id=REQUEST_ID,
+        claim_id=CLAIM_ID,
+    )
+
+    # Without a claim, this must fail
+    assert process_event(event, context) == (False, None)
+
+    claim = make_claim(request, claimer=config.account.address)
+    context.claims.add(claim.id, claim)
+
+    # Must only be called if request is filled
+    with pytest.raises(AssertionError, match="Request not yet filled"):
+        process_event(event, context)
+
+    # Check that task is added to resolution pool
+    context.web3_l1.eth.gas_price = 1
+    request.fill(config.account.address, b"", b"")
+    assert process_event(event, context) == (True, None)
+    assert context.resolution_pool.submit.called
