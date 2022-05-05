@@ -426,28 +426,29 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
     assert request is not None, "Active claim for non-existent request"
 
     block = context.latest_blocks[request.source_chain_id]
-    if block["timestamp"] < claim.termination:
-        # If the agent is the L1 filler, we can withdraw
-        # Condition is inverted, as the withdraw happens below
-        has_l1_resolution = (
-            request.l1_resolution_filler == context.address
-            and context.address
-            in {
-                claim.claimer,
-                claim.challenger,
-            }
-        )
-        if not has_l1_resolution:
-            return
+    has_l1_resolution = request.l1_resolution_filler is not None
+    agent_is_claimer = claim.claimer == context.address
+    agent_is_challenger = claim.challenger == context.address
 
-        # TODO: what if the none of the participants is the l1 filler
+    # When request is L1 resolved, the termination isn't important
+    if has_l1_resolution:
+        # We claimed the request
+        if agent_is_claimer:
+            assert request.l1_resolution_filler == context.address, "We cheated"
+            _withdraw(claim, context)
 
-    # The L1 resolution has precedence over the challenge game
-    claim_winner = request.l1_resolution_filler or claim.get_winning_address()
-    agent_winning = claim_winner == context.address
-    if not agent_winning:
-        return
+        # Claimer cheated
+        if claim.claimer != request.l1_resolution_filler and agent_is_challenger:
+            _withdraw(claim, context)
 
+    # Otherwise check that the challenge period is over
+    elif block["timestamp"] >= claim.termination:
+        claim_winner = claim.get_winning_address()
+        if claim_winner == context.address:
+            _withdraw(claim, context)
+
+
+def _withdraw(claim: Claim, context: Context) -> None:
     func = context.request_manager.functions.withdraw(claim.id)
     try:
         txn_hash = _transact(func)
