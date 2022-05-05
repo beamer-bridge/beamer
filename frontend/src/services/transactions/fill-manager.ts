@@ -1,15 +1,32 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from 'ethers';
+import { Ref } from 'vue';
 
 import FillManager from '@/assets/FillManager.json';
-import { Request } from '@/types/data';
+import { Request, RequestState } from '@/types/data';
 
-export async function listenOnFulfillment(
+export async function waitForRequestFulfillment(
+  provider: JsonRpcProvider, // TODO: This type is an exception till refactoring.
+  fillManagerAddress: string,
+  request: Request,
+  requestState: Ref<RequestState>,
+) {
+  requestState.value = RequestState.WaitFulfill;
+  try {
+    await listenOnFulfillment(provider, request, fillManagerAddress);
+  } catch (exception) {
+    requestState.value = RequestState.RequestFailed;
+    throw exception;
+  }
+  requestState.value = RequestState.RequestSuccessful;
+}
+
+async function listenOnFulfillment(
   targetNetworkProvider: JsonRpcProvider,
   request: Request,
   fillManagerAddress: string,
-  currentBlockNumber: number,
 ): Promise<void> {
+  const currentBlockNumber = await targetNetworkProvider.getBlockNumber();
   const fillManagerContract = new Contract(
     fillManagerAddress,
     FillManager.abi,
@@ -38,11 +55,7 @@ export async function listenOnFulfillment(
     }, eventListeningTimeout);
   });
 
-  return Promise.race([fulfillmentPromise, timeoutPromise])
-    .catch((err) => {
-      throw err;
-    })
-    .finally(() => {
-      fillManagerContract.removeAllListeners(eventFilter);
-    });
+  return Promise.race([fulfillmentPromise, timeoutPromise]).finally(() => {
+    fillManagerContract.removeAllListeners(eventFilter);
+  });
 }
