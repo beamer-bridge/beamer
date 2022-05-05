@@ -75,7 +75,7 @@ import Spinner from '@/components/Spinner.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSigner } from '@/composables/useRequestSigner';
 import { useRequestTransaction } from '@/composables/useRequestTransaction';
-import { useWaitForRequestFulfilment } from '@/composables/useWaitForRequestFulfilment';
+import { useWaitForRequestFulfillment } from '@/composables/useWaitForRequestFulfillment';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { Request, RequestMetadata, RequestState } from '@/types/data';
@@ -110,7 +110,7 @@ const {
   run: executeRequestTransaction,
 } = useRequestTransaction();
 
-const { run: waitForRequestFulfilment } = useWaitForRequestFulfilment();
+const { run: waitForRequestFulfillment } = useWaitForRequestFulfillment();
 
 const {
   run: requestSigner,
@@ -174,7 +174,12 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
       requestManagerAddress.value,
       request,
     );
-    await waitForRequestFulfilment(targetChainProvider, fillManagerAddress, request, requestState);
+    await waitForRequestFulfillment(
+      targetChainProvider,
+      fillManagerAddress,
+      request,
+      requestState,
+    );
   } catch (error) {
     const maybeErrorMessage = (error as { message?: string }).message;
     if (maybeErrorMessage) {
