@@ -1,11 +1,8 @@
 import brownie
 from brownie import chain
 
+from beamer.tests.constants import RM_R_FIELD_LP_FEE, RM_R_FIELD_PROTOCOL_FEE
 from beamer.tests.util import alloc_accounts, make_request, temp_fee_data
-
-RM_FIELD_LP_FEE = 9
-RM_FIELD_PROTOCOL_FEE = 10
-
 
 # Using this makes sure that we get nonzero fees when making requests.
 _NONZERO_FEE_DATA = 14_000, 15_000, 5e18
@@ -30,8 +27,8 @@ def test_fee_split_works(deployer, request_manager, token, claim_stake, claim_pe
 
     # The request is not claimed yet, so no beamer fee has been collected yet
     assert request_manager.collectedProtocolFees(token) == 0
-    assert request_manager.requests(request_id)[RM_FIELD_LP_FEE] == lp_fee
-    assert request_manager.requests(request_id)[RM_FIELD_PROTOCOL_FEE] == protocol_fee
+    assert request_manager.requests(request_id)[RM_R_FIELD_LP_FEE] == lp_fee
+    assert request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE] == protocol_fee
 
     claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
     claim_id = claim_tx.return_value
@@ -66,7 +63,7 @@ def test_protocol_fee_withdrawable_by_owner(
     request_id = make_request(
         request_manager, token, requester, requester, amount, fee_data=_NONZERO_FEE_DATA
     )
-    protocol_fee = request_manager.requests(request_id)[RM_FIELD_PROTOCOL_FEE]
+    protocol_fee = request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE]
 
     with brownie.reverts("Ownable: caller is not the owner"):
         request_manager.withdrawProtocolFees(token, requester, {"from": requester})

@@ -3,6 +3,7 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
+from beamer.tests.constants import RM_C_FIELD_TERMINATION
 from beamer.tests.util import alloc_accounts, create_fill_hash, earnings, make_request
 from beamer.typing import ClaimId, Termination
 
@@ -195,7 +196,7 @@ def test_claim_period_extension(
     claim_id = claim.return_value
 
     def _get_claim_termination(_claim_id: ClaimId) -> Termination:
-        return request_manager.claims(_claim_id)[6]
+        return request_manager.claims(_claim_id)[RM_C_FIELD_TERMINATION]
 
     assert claim.timestamp + claim_period == _get_claim_termination(claim_id)
 
@@ -203,12 +204,14 @@ def test_claim_period_extension(
         claim_id, {"from": challenger, "value": claim_stake + 1}
     )
     challenge_period = finalization_time + challenge_period_extension
+
     claim_termination = _get_claim_termination(claim_id)
     assert challenge.timestamp + challenge_period == claim_termination
 
     # Another challenge with big margin to the end of the termination
     # shouldn't increase the termination
     request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
+
     assert claim_termination == _get_claim_termination(claim_id)
 
     # Another challenge by challenger also shouldn't increase the end of termination
