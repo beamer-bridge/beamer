@@ -179,15 +179,14 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> Hand
 
 
 def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
-    claim = context.claims.get(event.claim_id)
-    request = context.requests.get(event.request_id)
-
-    events: Optional[List[Event]] = None
-
     # RequestCreated event must arrive before ClaimMade
     # Additionally, a request should never be dropped before all claims are finalized
+    request = context.requests.get(event.request_id)
     assert request is not None, "Request object missing upon ClaimMade event"
 
+    events: Optional[list[Event]] = None
+
+    claim = context.claims.get(event.claim_id)
     if claim is None:
         challenge_back_off_timestamp = int(time.time())
         # if fill event is not fetched yet, wait `_fill_wait_time`

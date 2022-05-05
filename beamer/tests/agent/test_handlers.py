@@ -1,5 +1,6 @@
 import random
 import string
+from copy import deepcopy
 from unittest.mock import MagicMock
 
 import pytest
@@ -211,8 +212,8 @@ def test_handle_request_resolved(token: Contract, config: Config):
     filler = make_address()
 
     event = RequestResolved(
-        tx_hash=HexBytes(""),
         chain_id=TARGET_CHAIN_ID,
+        tx_hash=HexBytes(""),
         request_id=REQUEST_ID,
         fill_hash="",
         filler=filler,
@@ -228,3 +229,26 @@ def test_handle_request_resolved(token: Contract, config: Config):
     assert request.l1_resolution_filler is None
     assert process_event(event, context) == (True, None)
     assert request.l1_resolution_filler == filler
+
+
+def test_handle_claim_made(token: Contract, config: Config):
+    context = make_context(config)
+
+    request = make_request(token)
+    request.fill(config.account.address, b"", b"")
+    context.requests.add(request.id, request)
+
+    claim = make_claim(request, claimer=config.account.address)
+    context.claims.add(claim.id, claim)
+
+    event = deepcopy(claim._latest_claim_made)
+    flag, events = process_event(event, context)
+
+    assert flag
+    assert events == [
+        InitiateL1ResolutionEvent(
+            chain_id=TARGET_CHAIN_ID,
+            request_id=REQUEST_ID,
+            claim_id=CLAIM_ID,
+        )
+    ]
