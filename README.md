@@ -28,6 +28,7 @@ Finally, still within the virtual environment, run:
 ```
     beamer-agent --keystore-file <keyfile> \
                  --password <keyfile-password> \
+                 --l1-rpc-url <l1-rpc-url> \
                  --l2a-rpc-url <source-l2-rpc-url> \
                  --l2b-rpc-url <target-l2-rpc-url> \
                  --deployment-dir <contract-deployment-dir> \
