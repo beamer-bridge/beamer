@@ -433,8 +433,7 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
     # When request is L1 resolved, the termination isn't important
     if has_l1_resolution:
         # We claimed the request
-        if agent_is_claimer:
-            assert request.l1_resolution_filler == context.address, "We cheated"
+        if agent_is_claimer and request.l1_resolution_filler == context.address:
             _withdraw(claim, context)
 
         # Claimer cheated
