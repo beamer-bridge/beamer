@@ -1,5 +1,3 @@
-import random
-import string
 from copy import deepcopy
 from pathlib import Path
 from typing import Tuple
@@ -8,7 +6,6 @@ from unittest.mock import MagicMock
 import pytest
 from eth_account import Account
 from eth_typing import BlockNumber
-from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
@@ -18,6 +15,7 @@ from beamer.events import ClaimMade, InitiateL1ResolutionEvent, RequestResolved
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.state_machine import process_event
+from beamer.tests.agent.utils import make_address
 from beamer.tracker import Tracker
 from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
@@ -31,6 +29,11 @@ CLAIM_ID = ClaimId(200)
 CLAIMER_STAKE = Wei(10_000_000)
 CHALLENGER_STAKE = Wei(5_000_000)
 TERMINATION = Termination(1)
+TIMESTAMP = Timestamp(457)
+
+ACCOUNT = Account.from_key(0xB25C7DB31FEED9122727BF0939DC769A96564B2DE4C4726D035B36ECF1E5B364)
+
+ADDRESS1 = make_address()
 
 
 class MockEth:
@@ -45,14 +48,6 @@ class MockWeb3:
         self.eth = MockEth(chain_id=chain_id)
 
 
-def make_bytes(length: int) -> bytes:
-    return bytes("".join(random.choice(string.printable) for _ in range(length)), encoding="utf-8")
-
-
-def make_address() -> ChecksumAddress:
-    return to_checksum_address(make_bytes(20))
-
-
 def make_request() -> Request:
     return Request(
         request_id=REQUEST_ID,
@@ -62,7 +57,7 @@ def make_request() -> Request:
         target_token_address=make_address(),
         target_address=make_address(),
         amount=TokenAmount(123),
-        valid_until=456,
+        valid_until=TIMESTAMP - 1,
     )
 
 
@@ -94,9 +89,7 @@ def make_claim(
 def make_context() -> Tuple[Context, Config]:
     checker = TokenMatchChecker([])
     config = Config(
-        account=Account.from_key(
-            0xB25C7DB31FEED9122727BF0939DC769A96564B2DE4C4726D035B36ECF1E5B364
-        ),
+        account=ACCOUNT,
         deployment_info={},
         l1_rpc_url=URL(""),
         l2a_rpc_url=URL(""),
@@ -117,7 +110,7 @@ def make_context() -> Tuple[Context, Config]:
             SOURCE_CHAIN_ID: BlockData(
                 {
                     "number": BlockNumber(42),
-                    "timestamp": Timestamp(457),
+                    "timestamp": TIMESTAMP,
                 }
             )
         },
@@ -328,7 +321,7 @@ def test_maybe_claim_no_l1():
         claimer=config.account.address,
         claimer_stake=Wei(100),
         challenger_stake=Wei(50),
-        termination=Termination(block["timestamp"] + 1),
+        termination=Termination(TIMESTAMP + 1),
     )
     context.claims.add(claim.id, claim)
 
@@ -337,4 +330,56 @@ def test_maybe_claim_no_l1():
 
     assert not claim.transaction_pending
     process_claims(context)
-    assert not patched_withdraw.called
+    assert not claim.transaction_pending
+
+
+@pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
+@pytest.mark.parametrize("l1_filler", [ACCOUNT.address, make_address()])
+def test_maybe_claim_l1_as_claimer(termination: Termination, l1_filler: ChecksumAddress):
+    context, config = make_context()
+
+    request = make_request()
+    request.fill(config.account.address, b"", b"")
+    request.l1_resolution_filler = l1_filler
+    context.requests.add(request.id, request)
+
+    claim = make_claim(request=request, claimer=config.account.address, termination=termination)
+    context.claims.add(claim.id, claim)
+
+    assert not claim.transaction_pending
+    process_claims(context)
+
+    # If agent is the filler, `withdraw` should be called, otherwise not
+    if l1_filler == context.address:
+        assert claim.transaction_pending
+    else:
+        assert not claim.transaction_pending
+
+
+@pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
+@pytest.mark.parametrize("l1_filler", [ADDRESS1, make_address()])
+def test_maybe_claim_l1_as_challenger(termination: Termination, l1_filler: ChecksumAddress):
+    context, config = make_context()
+
+    request = make_request()
+    request.fill(ADDRESS1, b"", b"")
+    request.l1_resolution_filler = l1_filler
+    context.requests.add(request.id, request)
+
+    claim = make_claim(
+        request=request,
+        claimer=ADDRESS1,
+        challenger=config.account.address,
+        termination=termination,
+    )
+    context.claims.add(claim.id, claim)
+
+    assert not claim.transaction_pending
+    process_claims(context)
+
+    # If agent is the challenger and the claimer cheated,
+    # `withdraw` should be called, otherwise not
+    if l1_filler != ADDRESS1:
+        assert claim.transaction_pending
+    else:
+        assert not claim.transaction_pending
