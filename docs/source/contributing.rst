@@ -60,6 +60,7 @@ Start ``beamer-agent``::
 
     beamer-agent --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                  --password '' \
+                 --l1-rpc-url http://localhost:8545 \
                  --l2a-rpc-url http://localhost:8545 \
                  --l2b-rpc-url http://localhost:8545 \
                  --deployment-dir deployments/ganache-local \
@@ -143,4 +144,3 @@ and `Graphviz <http://graphviz.org>`_ installed. Documentation can be built by r
    make docs
 
 and the resulting HTML will be available at ``docs/build/index.html``.
-

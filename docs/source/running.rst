@@ -11,6 +11,10 @@ an agent requires the following:
 
    .. :note: The same address is being used for both chains.
 
+ * URL of the L1 chain's RPC server.
+
+   Related options: ``--l1-rpc-url``
+
  * URL of the source L2 chain's RPC server.
 
    Related options: ``--l2a-rpc-url``
@@ -103,6 +107,7 @@ To run an agent container simply do::
 
     docker run ghcr.io/beamer-bridge/beamer-agent --keystore-file <keyfile> \
                                                   --password <keyfile-password> \
+                                                  --l1-rpc-url <l1-rpc-url> \
                                                   --l2a-rpc-url <source-l2-rpc-url> \
                                                   --l2b-rpc-url <target-l2-rpc-url> \
                                                   --deployment-dir <contract-deployment-dir> \
@@ -133,6 +138,7 @@ While still inside the virtual environment, run::
 
     beamer-agent --keystore-file <keyfile> \
                  --password <keyfile-password> \
+                 --l1-rpc-url <l1-rpc-url> \
                  --l2a-rpc-url <source-l2-rpc-url> \
                  --l2b-rpc-url <target-l2-rpc-url> \
                  --deployment-dir <contract-deployment-dir> \
