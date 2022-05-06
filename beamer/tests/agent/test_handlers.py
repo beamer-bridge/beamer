@@ -28,6 +28,10 @@ TARGET_CHAIN_ID = ChainId(3)
 REQUEST_ID = RequestId(10)
 CLAIM_ID = ClaimId(200)
 
+CLAIMER_STAKE = Wei(10_000_000)
+CHALLENGER_STAKE = Wei(5_000_000)
+TERMINATION = Termination(1)
+
 
 class MockEth:
     def __init__(self, chain_id):
@@ -62,7 +66,14 @@ def make_request() -> Request:
     )
 
 
-def make_claim(request: Request, claimer: ChecksumAddress = None) -> Claim:
+def make_claim(
+    request: Request,
+    claimer: ChecksumAddress = None,
+    claimer_stake: Wei = CLAIMER_STAKE,
+    challenger: ChecksumAddress = None,
+    challenger_stake: Wei = CHALLENGER_STAKE,
+    termination: Termination = TERMINATION,
+) -> Claim:
     return Claim(
         claim_made=ClaimMade(
             chain_id=request.source_chain_id,
@@ -71,10 +82,10 @@ def make_claim(request: Request, claimer: ChecksumAddress = None) -> Claim:
             request_id=request.id,
             fill_id=FillId(456),
             claimer=claimer or make_address(),
-            claimer_stake=Wei(1_000_000),
-            challenger=make_address(),
-            challenger_stake=Wei(5_000_000),
-            termination=Termination(1),
+            claimer_stake=claimer_stake,
+            challenger=challenger or make_address(),
+            challenger_stake=challenger_stake,
+            termination=termination,
         ),
         challenge_back_off_timestamp=123,
     )
@@ -267,3 +278,63 @@ def test_handle_claim_made():
             claim_id=CLAIM_ID,
         )
     ]
+
+
+def test_maybe_claim_no_l1():
+    context, config = make_context()
+
+    request = make_request()
+    request.fill(config.account.address, b"", b"")
+    context.requests.add(request.id, request)
+
+    # Claimer doesn't win challenge game, `withdraw` must not be called
+    claim = make_claim(
+        request=request,
+        claimer=config.account.address,
+        claimer_stake=Wei(10),
+        challenger_stake=Wei(50),
+    )
+    context.claims.add(claim.id, claim)
+
+    # Make sure we're outside the challenge period
+    block = context.latest_blocks[request.source_chain_id]
+    assert block["timestamp"] >= claim.termination
+
+    assert not claim.transaction_pending
+    process_claims(context)
+    assert not claim.transaction_pending
+
+    # Claimer wins challenge game, `withdraw` must be called
+    claim = make_claim(
+        request=request,
+        claimer=config.account.address,
+        claimer_stake=Wei(100),
+        challenger_stake=Wei(50),
+    )
+    context.claims.add(claim.id, claim)
+
+    # Make sure we're outside the challenge period
+    block = context.latest_blocks[request.source_chain_id]
+    assert block["timestamp"] >= claim.termination
+
+    assert not claim.transaction_pending
+    process_claims(context)
+    assert claim.transaction_pending
+
+    # Claimer leads challenge game, but challenge period is not over
+    block = context.latest_blocks[request.source_chain_id]
+    claim = make_claim(
+        request=request,
+        claimer=config.account.address,
+        claimer_stake=Wei(100),
+        challenger_stake=Wei(50),
+        termination=Termination(block["timestamp"] + 1),
+    )
+    context.claims.add(claim.id, claim)
+
+    # Make sure we're inside the challenge period
+    assert block["timestamp"] < claim.termination
+
+    assert not claim.transaction_pending
+    process_claims(context)
+    assert not patched_withdraw.called
