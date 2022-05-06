@@ -1,13 +1,15 @@
 import random
 import string
 from copy import deepcopy
+from pathlib import Path
+from typing import Tuple
 from unittest.mock import MagicMock
 
 import pytest
+from eth_account import Account
 from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
-from web3.contract import Contract
 from web3.types import BlockData, ChecksumAddress, Timestamp, Wei
 
 from beamer.chain import Context, claim_request, process_claims, process_requests
@@ -17,7 +19,7 @@ from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.state_machine import process_event
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
+from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
 
 SOURCE_CHAIN_ID = ChainId(2)
@@ -78,16 +80,25 @@ def make_claim(request: Request, claimer: ChecksumAddress = None) -> Claim:
     )
 
 
-def make_context(config: Config, request_manager: Contract = None):
-    if request_manager is None:
-        request_manager = MagicMock()
-
+def make_context() -> Tuple[Context, Config]:
     checker = TokenMatchChecker([])
+    config = Config(
+        account=Account.from_key(
+            0xB25C7DB31FEED9122727BF0939DC769A96564B2DE4C4726D035B36ECF1E5B364
+        ),
+        deployment_info={},
+        l1_rpc_url=URL(""),
+        l2a_rpc_url=URL(""),
+        l2b_rpc_url=URL(""),
+        token_match_file=Path(),
+        fill_wait_time=1,
+        prometheus_metrics_port=None,
+    )
 
-    return Context(
+    context = Context(
         requests=Tracker(),
         claims=Tracker(),
-        request_manager=request_manager,
+        request_manager=MagicMock(),
         fill_manager=MagicMock(),
         match_checker=checker,
         address=config.account.address,
@@ -104,10 +115,12 @@ def make_context(config: Config, request_manager: Contract = None):
         resolution_pool=MagicMock(),
     )
 
+    return context, config
 
-def test_skip_not_self_filled(config: Config):
+
+def test_skip_not_self_filled():
+    context, _ = make_context()
     request = make_request()
-    context = make_context(config)
 
     context.requests.add(request.id, request)
 
@@ -116,11 +129,11 @@ def test_skip_not_self_filled(config: Config):
     assert request.is_pending  # pylint:disable=no-member
 
 
-def test_ignore_expired(config: Config):
+def test_ignore_expired():
+    context, config = make_context()
+
     request = make_request()
     request.filler = config.account.address
-
-    context = make_context(config)
     context.requests.add(request.id, request)
 
     assert request.is_pending  # pylint:disable=no-member
@@ -128,12 +141,13 @@ def test_ignore_expired(config: Config):
     assert request.is_ignored  # pylint:disable=no-member
 
 
-def test_request_garbage_collection_without_claim(config: Config):
+def test_request_garbage_collection_without_claim():
+    context, config = make_context()
+
     request = make_request()
     request.fill(config.account.address, b"", b"")
     request.withdraw()
 
-    context = make_context(config)
     context.requests.add(request.id, request)
 
     assert len(context.requests) == 1
@@ -149,14 +163,15 @@ def test_request_garbage_collection_without_claim(config: Config):
     assert len(context.requests) == 0
 
 
-def test_request_garbage_collection_with_claim(config: Config):
+def test_request_garbage_collection_with_claim():
+    context, config = make_context()
+
     request = make_request()
     request.fill(config.account.address, b"", b"")
     request.withdraw()
 
     claim = make_claim(request)
 
-    context = make_context(config)
     context.requests.add(request.id, request)
     context.claims.add(claim.id, claim)
 
@@ -178,10 +193,10 @@ def test_request_garbage_collection_with_claim(config: Config):
     assert len(context.claims) == 0
 
 
-def test_handle_initiate_l1_resolution(config: Config):
-    request = make_request()
+def test_handle_initiate_l1_resolution():
+    context, config = make_context()
 
-    context = make_context(config)
+    request = make_request()
     context.requests.add(request.id, request)
 
     event = InitiateL1ResolutionEvent(
@@ -201,14 +216,14 @@ def test_handle_initiate_l1_resolution(config: Config):
         process_event(event, context)
 
     # Check that task is added to resolution pool
-    context.web3_l1.eth.gas_price = 1
+    context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
     request.fill(config.account.address, b"", b"")
     assert process_event(event, context) == (True, None)
-    assert context.resolution_pool.submit.called  # pylint:disable=no-member
+    assert context.resolution_pool.submit.called  # type: ignore  # pylint:disable=no-member
 
 
-def test_handle_request_resolved(config: Config):
-    context = make_context(config)
+def test_handle_request_resolved():
+    context, _ = make_context()
     filler = make_address()
 
     event = RequestResolved(
@@ -231,8 +246,8 @@ def test_handle_request_resolved(config: Config):
     assert request.l1_resolution_filler == filler
 
 
-def test_handle_claim_made(config: Config):
-    context = make_context(config)
+def test_handle_claim_made():
+    context, config = make_context()
 
     request = make_request()
     request.fill(config.account.address, b"", b"")
