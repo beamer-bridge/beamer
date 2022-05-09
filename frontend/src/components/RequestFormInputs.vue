@@ -33,7 +33,7 @@
           <div
             class="form-tooltip self-end"
             data-theme="default"
-            data-tip="Adds current token to Metamask"
+            data-tip="Adds current token to connected wallet"
           >
             <button
               class="btn btn-ghost btn-sm text-orange m-2"
@@ -41,7 +41,7 @@
               :disabled="!addTokenAvailable"
               @click="addTokenToProvider"
             >
-              Add to Metamask
+              Add to Wallet
             </button>
           </div>
         </div>
@@ -63,7 +63,7 @@
         <div
           class="form-tooltip"
           data-theme="default"
-          data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your Metamask account"
+          data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your connected wallet"
         >
           <button
             class="btn btn-ghost btn-sm text-orange m-2"

@@ -7,7 +7,7 @@ export interface EthereumProvider {
   signerAddress: ShallowRef<string | undefined>;
   chainId: Ref<number>;
   init(): Promise<void>;
-  requestSigner(): Promise<void>;
+  requestSigner?(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   connectContract(contract: Contract): Contract;
   switchChain(newChainId: number): Promise<boolean | null>;

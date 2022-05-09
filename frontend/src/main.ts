@@ -10,12 +10,16 @@ import {
 } from '@formkit/vue';
 import FloatingVue from 'floating-vue';
 import { createPinia } from 'pinia';
+import piniaPersist from 'pinia-plugin-persist';
 import { createApp } from 'vue';
 
 import App from './App.vue';
 import Selector from './components/inputs/Selector.vue';
 import formkitTheme from './formkitTheme';
 import router from './router';
+
+const pinia = createPinia();
+pinia.use(piniaPersist);
 
 createApp(App)
   .use(router)
@@ -31,5 +35,5 @@ createApp(App)
     }),
   )
   .use(FloatingVue)
-  .use(createPinia())
+  .use(pinia)
   .mount('#app');
