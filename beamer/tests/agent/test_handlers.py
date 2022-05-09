@@ -260,7 +260,7 @@ def test_handle_claim_made():
     claim = make_claim(request, claimer=config.account.address)
     context.claims.add(claim.id, claim)
 
-    event = deepcopy(claim._latest_claim_made)
+    event = deepcopy(claim.latest_claim_made)
     flag, events = process_event(event, context)
 
     assert flag
