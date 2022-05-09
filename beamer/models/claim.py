@@ -61,6 +61,10 @@ class Claim(StateMachine):
     def termination(self) -> Termination:
         return self._latest_claim_made.termination
 
+    @property
+    def latest_claim_made(self) -> ClaimMade:
+        return self._latest_claim_made
+
     def valid_claim_for_request(self, request: Request) -> bool:
         claim_event = self._latest_claim_made
         if claim_event.request_id != request.id:

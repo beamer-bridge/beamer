@@ -256,10 +256,10 @@ def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> Handler
     limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
 
     if claim.claimer == context.address:
-        if claim._latest_claim_made.challenger_stake > limit:
+        if claim.latest_claim_made.challenger_stake > limit:
             return True, None
     elif claim.challenger == context.address:
-        if claim._latest_claim_made.claimer_stake > limit:
+        if claim.latest_claim_made.claimer_stake > limit:
             return True, None
 
     return False, None
