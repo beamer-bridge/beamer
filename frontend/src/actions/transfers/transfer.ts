@@ -19,7 +19,7 @@ import type { RequestInformationData } from './request-information';
 import { RequestInformation } from './request-information';
 
 const STEPS_DATA = [
-  { identifier: 'sendRequestTransaction', label: 'Please confirm your request on Metamask' },
+  { identifier: 'sendRequestTransaction', label: 'Please confirm the request in your wallet' },
   { identifier: 'waitForRequestEvent', label: 'Waiting for transaction receipt' },
   { identifier: 'waitForFulfillment', label: 'Request is being fulfilled' },
 ];

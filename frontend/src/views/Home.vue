@@ -6,11 +6,10 @@
           {{ errorMessage }}
         </div>
       </div>
-
       <div class="h-14">
         <div v-if="signer" class="flex flex-row gap-4 justify-center items-center">
           <div class="h-7 w-7 rounded-50 border-4 border-solid border-teal-light bg-green"></div>
-          <span class="text-lg">You are currently connected via Metamask</span>
+          <span class="text-lg">You are currently connected</span>
         </div>
       </div>
 
@@ -19,17 +18,30 @@
       </Card>
 
       <div id="action-button-portal" class="flex justify-center">
-        <FormKit
-          v-if="!signer"
-          input-class="w-112 bg-orange flex flex-row justify-center"
-          type="button"
-          @click="runRequestSigner"
-        >
-          <div v-if="requestSignerActive" class="h-8 w-8">
-            <Spinner />
+        <div v-if="!signer" class="flex w-full gap-2">
+          <div class="flex-1 w-full">
+            <FormKit
+              class="w-full"
+              input-class="w-full bg-orange flex flex-row justify-center"
+              type="button"
+              @click="connectMetamask"
+            >
+              <div v-if="requestSignerActive" class="h-8 w-8">
+                <spinner></spinner>
+              </div>
+              <template v-else>MetaMask</template>
+            </FormKit>
           </div>
-          <template v-else>Connect MetaMask Wallet</template>
-        </FormKit>
+          <div class="flex-1 w-full">
+            <FormKit
+              input-class="w-full bg-orange flex flex-row justify-center"
+              type="button"
+              @click="connectWalletConnect"
+            >
+              WalletConnect
+            </FormKit>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -44,13 +56,21 @@ import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useRequestSigner } from '@/composables/useRequestSigner';
-import { createMetaMaskProvider } from '@/services/web3-provider';
+import { useRpcUrls } from '@/composables/useRpcUrls';
+import {
+  createMetaMaskProvider,
+  createWalletConnectProvider,
+  getConnectedWalletProvider,
+  isSupportedChain,
+} from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useSettings } from '@/stores/settings';
+import { WalletType } from '@/types/settings';
 
 const criticalErrorMessage = ref('');
-const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
+const configuration = useConfiguration();
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 
 const {
@@ -58,6 +78,7 @@ const {
   active: requestSignerActive,
   error: requestSignerError,
 } = useRequestSigner();
+const settings = useSettings();
 
 const tabs = [
   {
@@ -70,16 +91,24 @@ const tabs = [
   },
 ];
 
-const runRequestSigner = () => {
+const connectMetamask = async () => {
   // TOOD: In future we will not separate getting provider and signer which
   // resolve the undefined provider case.
+  provider.value = await createMetaMaskProvider();
   if (provider.value) {
     requestSigner(provider.value);
+    settings.setConnectedWallet(WalletType.Metamask);
   }
 };
 
+const connectWalletConnect = async () => {
+  const rpcUrlsList = useRpcUrls(configuration.chains);
+  provider.value = await createWalletConnectProvider(rpcUrlsList);
+  settings.setConnectedWallet(WalletType.WalletConnect);
+};
+
 const chainChangeHandler = () => {
-  const isSupported = ethereumProvider.chainId in configuration.chains;
+  const isSupported = isSupportedChain(ethereumProvider.chainId);
   criticalErrorMessage.value = isSupported ? '' : 'Connected chain not supported!';
 };
 
@@ -90,10 +119,6 @@ const errorMessage = computed(() => {
 watch(chainId, chainChangeHandler);
 
 onMounted(async () => {
-  provider.value = await createMetaMaskProvider();
-
-  if (!provider.value) {
-    criticalErrorMessage.value = 'Could not detect MetaMask!';
-  }
+  provider.value = await getConnectedWalletProvider();
 });
 </script>

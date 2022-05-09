@@ -9,7 +9,7 @@ export function useRequestSigner() {
   const requestSigner = async (provider: EthereumProvider) => {
     error.value = undefined;
 
-    await provider.requestSigner();
+    provider.requestSigner && (await provider.requestSigner());
 
     if (!provider.signer.value) {
       error.value = 'Accessing Wallet failed!';

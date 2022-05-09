@@ -1,28 +1,30 @@
-import {
-  Block,
-  ExternalProvider,
-  getNetwork,
-  JsonRpcSigner,
-  Web3Provider,
-} from '@ethersproject/providers';
-import detectEthereumProvider from '@metamask/detect-provider';
+import { Block, getNetwork, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
+import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
 import { BigNumber, Contract } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import { Ref, ref, ShallowRef, shallowRef } from 'vue';
 
 import { ChainData, Eip1193Provider, EthereumProvider, TokenData } from './types';
 
-export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
-  const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;
-  if (detectedProvider && detectedProvider.isMetaMask) {
-    const metaMaskProvider = new MetaMaskProvider(detectedProvider as Eip1193Provider);
-    await metaMaskProvider.init();
-    return metaMaskProvider;
+export async function createWalletConnectProvider(rpcList: {
+  [chainId: string]: string;
+}): Promise<WalletConnectProvider | undefined> {
+  const provider = new WalletConnect({
+    rpc: rpcList,
+  });
+
+  await provider.enable();
+
+  if (provider.connected) {
+    const walletConnectProvider = new WalletConnectProvider(provider);
+    await walletConnectProvider.init();
+    return walletConnectProvider;
   }
+
   return undefined;
 }
 
-export class MetaMaskProvider implements EthereumProvider {
+export class WalletConnectProvider implements EthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
@@ -31,9 +33,6 @@ export class MetaMaskProvider implements EthereumProvider {
   private externalProvider: Eip1193Provider;
 
   constructor(_provider: Eip1193Provider) {
-    if (!_provider.isMetaMask) {
-      throw new Error('Given provider is not MetaMask!');
-    }
     this.web3Provider = new Web3Provider(_provider);
     this.externalProvider = _provider;
   }
@@ -44,38 +43,23 @@ export class MetaMaskProvider implements EthereumProvider {
     this.listenToEvents();
   }
 
-  async requestSigner(): Promise<void> {
-    try {
-      const accounts: string[] = await this.web3Provider.send('eth_requestAccounts', []);
-      this.signer.value = this.web3Provider.getSigner(accounts[0]);
-      this.signerAddress.value = accounts[0];
-    } catch (error) {
-      this.signer.value = undefined;
-      this.signerAddress.value = undefined;
-    }
-  }
-
   async switchChain(newChainId: number): Promise<boolean | null> {
-    const unrecognizedChainErrorCode = 4902;
     const newChainIdHex = hexValue(newChainId);
     try {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
-    } catch (switchError) {
-      if ((switchError as { code: number })?.code === unrecognizedChainErrorCode) {
-        return null;
-      }
-      throw switchError;
+    } catch (switchError: unknown) {
+      if ((switchError as Error).message == 'User rejected the request.') throw switchError;
+      return null;
     }
-    return false;
   }
 
   async addChain(chainData: ChainData): Promise<boolean> {
     try {
       const { chainId, name, rpcUrl } = chainData;
       const chainIdHexValue = hexValue(chainId);
-      const metaMaskNetworkData = getNetwork(chainId);
-      metaMaskNetworkData?.name !== 'unknown' ? metaMaskNetworkData?.name : name;
+      const walletConnectNetworkData = getNetwork(chainId);
+      walletConnectNetworkData?.name !== 'unknown' ? walletConnectNetworkData?.name : name;
       const networkData = {
         chainId: chainIdHexValue,
         chainName: name,
@@ -102,7 +86,7 @@ export class MetaMaskProvider implements EthereumProvider {
         },
       });
       if (!wasAdded) {
-        throw new Error("Couldn't add token to Metamask");
+        throw new Error("Couldn't add token to WalletConnect");
       }
     } catch (error) {
       console.log(error);
