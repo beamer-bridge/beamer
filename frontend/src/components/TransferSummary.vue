@@ -13,7 +13,7 @@
   </div>
   <div class="flex flex-col justify-center items-center">
     <div>Recipient address</div>
-    <div>{{ targetAddress }}</div>
+    <div>{{ targetAccount }}</div>
   </div>
 </template>
 
@@ -23,7 +23,7 @@ interface Props {
   readonly tokenSymbol: string;
   readonly sourceChainName: string;
   readonly targetChainName: string;
-  readonly targetAddress: string;
+  readonly targetAccount: string;
 }
 
 defineProps<Props>();

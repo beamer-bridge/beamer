@@ -1,17 +1,16 @@
 import { mount } from '@vue/test-utils';
 
+import { Transfer } from '@/actions/transfer';
 import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
-import { RequestMetadata, RequestState } from '@/types/data';
-import { generateRequestMetadata } from '~/utils/data_generators';
+import { generateChain, generateToken, generateTransferData } from '~/utils/data_generators';
 
-function createWrapper(options?: { metadata?: RequestMetadata; state?: RequestState }) {
+function createWrapper(options?: { transfer?: Transfer }) {
   return mount(TransferStatus, {
     shallow: true,
     props: {
-      metadata: options?.metadata ?? generateRequestMetadata(),
-      state: options?.state ?? RequestState.Init,
+      transfer: options?.transfer ?? new Transfer(generateTransferData()),
     },
     global: {
       stubs: {
@@ -25,27 +24,30 @@ function createWrapper(options?: { metadata?: RequestMetadata; state?: RequestSt
 
 describe('TransferStatus.vue', () => {
   it('shows transfer summary with correct metadata', () => {
-    const metadata = generateRequestMetadata({
-      amount: '0.1',
-      tokenSymbol: 'TTT',
-      sourceChainName: 'Foo',
-      targetChainName: 'Bar',
-      targetAddress: '0xAddress',
+    const data = generateTransferData({
+      amount: 1,
+      sourceToken: generateToken({ symbol: 'TTT' }),
+      sourceChain: generateChain({ name: 'Source Chain' }),
+      targetChain: generateChain({ name: 'Target Chain' }),
+      targetAccount: '0xTargetAccount',
     });
-    const wrapper = createWrapper({ metadata });
+    const transfer = new Transfer(data);
+    const wrapper = createWrapper({ transfer });
     const summary = wrapper.findComponent(TransferSummary);
 
     expect(summary.exists()).toBeTruthy();
     expect(summary.isVisible()).toBeTruthy();
-    expect(summary.props()).toContain({ amount: '0.1' });
+    expect(summary.props()).toContain({ amount: '1' });
     expect(summary.props()).toContain({ tokenSymbol: 'TTT' });
-    expect(summary.props()).toContain({ sourceChainName: 'Foo' });
-    expect(summary.props()).toContain({ targetChainName: 'Bar' });
-    expect(summary.props()).toContain({ targetAddress: '0xAddress' });
+    expect(summary.props()).toContain({ sourceChainName: 'Source Chain' });
+    expect(summary.props()).toContain({ targetChainName: 'Target Chain' });
+    expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
   });
 
   it('shows transfer progress with steps', () => {
-    const wrapper = createWrapper({ state: RequestState.WaitFulfill });
+    const data = generateTransferData();
+    const transfer = new Transfer(data);
+    const wrapper = createWrapper({ transfer });
     const process = wrapper.findComponent(Progress);
 
     expect(process.exists()).toBeTruthy();
