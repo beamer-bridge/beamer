@@ -5,7 +5,7 @@ import type {
   TransferData,
 } from '@/actions/transfer';
 import type { ChainWithTokens } from '@/types/config';
-import type { Chain, RequestMetadata, Token } from '@/types/data';
+import type { Chain, Token } from '@/types/data';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
 const DECIMAL_CHARACTERS = '0123456789';
@@ -118,19 +118,5 @@ export function generateTransferData(partialTransferData?: Partial<TransferData>
     validityPeriod: getRandomNumber(),
     fees: getRandomNumber(),
     ...partialTransferData,
-  };
-}
-
-export function generateRequestMetadata(
-  partialRequestMetadata?: Partial<RequestMetadata>,
-): RequestMetadata {
-  return {
-    amount: getRandomDecimalPointNumber(),
-    sourceChainName: getRandomChainName(),
-    targetChainName: getRandomChainName(),
-    targetAddress: getRandomEthereumAddress(),
-    tokenSymbol: getRandomTokenSymbol(),
-    fee: getRandomDecimalPointNumber(),
-    ...partialRequestMetadata,
   };
 }

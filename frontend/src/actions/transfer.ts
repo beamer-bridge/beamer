@@ -5,13 +5,13 @@ import { MultiStepAction, Step, StepData } from '@/actions/steps';
 import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   getRequestIdentifier,
-  makeRequestTransaction,
+  sendRequestTransaction,
 } from '@/services/transactions/request-manager';
 import type { Chain, EthereumAddress, Token } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 
 const STEPS_DATA = [
-  { identifier: 'makeRequestTransaction', label: 'Please confirm your request on Metamask' },
+  { identifier: 'sendRequestTransaction', label: 'Please confirm your request on Metamask' },
   { identifier: 'waitForRequestEvent', label: 'Waiting for transaction receipt' },
   { identifier: 'waitForFulfillment', label: 'Request is being fulfilled' },
 ];
@@ -57,7 +57,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   ): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
-      makeRequestTransaction: () => this.makeRequestTransaction(signer, signerAddress),
+      sendRequestTransaction: () => this.sendRequestTransaction(signer, signerAddress),
       waitForRequestEvent: () => this.waitForRequestEvent(),
       waitForFulfillment: () => this.waitForFulfillment(),
     };
@@ -84,11 +84,11 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  protected async makeRequestTransaction(
+  protected async sendRequestTransaction(
     signer: JsonRpcSigner,
     signerAddress: EthereumAddress,
   ): Promise<void> {
-    const transactionHash = await makeRequestTransaction(
+    const transactionHash = await sendRequestTransaction(
       signer,
       this.amount,
       this.targetChain.identifier,

@@ -22,8 +22,8 @@ class TestTransfer extends Transfer {
     return super.getStepMethods(signer, signerAddress);
   }
 
-  public makeRequestTransaction(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
-    return super.makeRequestTransaction(signer, signerAddress);
+  public sendRequestTransaction(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
+    return super.sendRequestTransaction(signer, signerAddress);
   }
 
   public waitForRequestEvent() {
@@ -41,7 +41,7 @@ const SIGNER_ADDRESS = '0xSigner';
 
 describe('transfer', () => {
   beforeEach(() => {
-    requestManager!.makeRequestTransaction = vi.fn().mockResolvedValue('0xHash');
+    requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
     requestManager!.getRequestIdentifier = vi.fn().mockResolvedValue(1);
     fillManager!.waitForFulfillment = vi.fn().mockResolvedValue(undefined);
   });
@@ -62,13 +62,13 @@ describe('transfer', () => {
 
       await transfer.execute(SIGNER, SIGNER_ADDRESS);
 
-      expect(requestManager.makeRequestTransaction).toHaveBeenCalledTimes(1);
+      expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
       expect(fillManager!.waitForFulfillment).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('makeRequestTransaction()', () => {
+  describe('sendRequestTransaction()', () => {
     it('calls the transfer function on the request manager contract', async () => {
       const data = generateTransferData({
         amount: 1,
@@ -83,10 +83,10 @@ describe('transfer', () => {
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
 
-      await transfer.makeRequestTransaction(signer, SIGNER_ADDRESS);
+      await transfer.sendRequestTransaction(signer, SIGNER_ADDRESS);
 
-      expect(requestManager.makeRequestTransaction).toHaveBeenCalledTimes(1);
-      expect(requestManager.makeRequestTransaction).toHaveBeenLastCalledWith(
+      expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
+      expect(requestManager.sendRequestTransaction).toHaveBeenLastCalledWith(
         signer,
         1,
         2,
@@ -101,12 +101,12 @@ describe('transfer', () => {
 
     it('sets the request account and transaction hash', async () => {
       const transfer = new TestTransfer(DATA);
-      requestManager!.makeRequestTransaction = vi.fn().mockResolvedValue('0xHash');
+      requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
 
       expect(transfer.requestTransactionMetadata?.requestAccount).toBeUndefined();
       expect(transfer.requestTransactionMetadata?.transactionHash).toBeUndefined();
 
-      await transfer.makeRequestTransaction(SIGNER, '0xSigner');
+      await transfer.sendRequestTransaction(SIGNER, '0xSigner');
 
       expect(transfer.requestTransactionMetadata?.requestAccount).toBe('0xSigner');
       expect(transfer.requestTransactionMetadata?.transactionHash).toBe('0xHash');
