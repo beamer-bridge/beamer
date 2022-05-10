@@ -1,4 +1,9 @@
 import type { StepData } from '@/actions/steps';
+import type {
+  RequestFillTransactionMetadata,
+  RequestTransactionMetadata,
+  TransferData,
+} from '@/actions/transfer';
 import type { ChainWithTokens } from '@/types/config';
 import type { Chain, RequestMetadata, Token } from '@/types/data';
 
@@ -79,6 +84,40 @@ export function generateChainWithTokens(
     ...generateChain(),
     tokens: [generateToken()],
     ...partialChainWithTokens,
+  };
+}
+
+export function generateRequestTransactionMetadata(
+  partialRequestTransactionMetadata?: Partial<RequestTransactionMetadata>,
+): RequestTransactionMetadata {
+  return {
+    requestAccount: getRandomEthereumAddress(),
+    transactionHash: getRandomString(HEXADECIMAL_CHARACTERS, 40),
+    ...partialRequestTransactionMetadata,
+  };
+}
+
+export function generateRequestFillTransactionMetadata(
+  partialRequestFillTransactionMetadata?: Partial<RequestFillTransactionMetadata>,
+): RequestFillTransactionMetadata {
+  return {
+    fillerAccount: getRandomEthereumAddress(),
+    transactionHash: getRandomString(HEXADECIMAL_CHARACTERS, 40),
+    ...partialRequestFillTransactionMetadata,
+  };
+}
+
+export function generateTransferData(partialTransferData?: Partial<TransferData>): TransferData {
+  return {
+    amount: getRandomNumber(),
+    sourceChain: generateChain(),
+    sourceToken: generateToken(),
+    targetChain: generateChain(),
+    targetToken: generateToken(),
+    targetAccount: getRandomEthereumAddress(),
+    validityPeriod: getRandomNumber(),
+    fees: getRandomNumber(),
+    ...partialTransferData,
   };
 }
 
