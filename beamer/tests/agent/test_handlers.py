@@ -223,12 +223,13 @@ def test_handle_initiate_l1_resolution():
     # Check that task is added to resolution pool
     context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
     request.fill(config.account.address, b"", b"")
+    request.try_to_claim()
     assert process_event(event, context) == (True, None)
     assert context.resolution_pool.submit.called  # type: ignore  # pylint:disable=no-member
 
 
 def test_handle_request_resolved():
-    context, _ = make_context()
+    context, config = make_context()
     filler = make_address()
 
     event = RequestResolved(
@@ -244,6 +245,8 @@ def test_handle_request_resolved():
 
     # Must store the result in the request
     request = make_request()
+    request.fill(config.account.address, b"", b"")
+    request.try_to_claim()
     context.requests.add(request.id, request)
 
     assert request.l1_resolution_filler is None

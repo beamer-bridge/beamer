@@ -211,7 +211,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if not request.l1_resolution_started and request.fill_tx is not None:
+    if not request.is_l1_resolved and request.fill_tx is not None:
         events = [
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -241,7 +241,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     if request is None:
         return False, None
 
-    request.l1_resolution_filler = event.filler
+    request.l1_resolve(event.filler)
     return True, None
 
 
@@ -287,7 +287,7 @@ def _handle_initiate_l1_resolution(
             request.fill_tx,
         )
         context.l1_resolutions[request.id] = future
-        request.l1_resolution_started = True
+        request.l1_resolve()
 
         log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
 
