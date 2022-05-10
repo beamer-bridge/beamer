@@ -229,7 +229,7 @@ def _transact(func: ContractFunction, **kwargs: Any) -> HexBytes:
 
 
 def process_l1_resolutions(context: Context) -> None:
-    log.info("Processing L1 resolutions", num_tasks=len(context.l1_resolutions))
+    log.debug("Processing L1 resolutions", num_tasks=len(context.l1_resolutions))
 
     to_remove = []
     for request_id, future in context.l1_resolutions.items():
@@ -245,7 +245,7 @@ def process_l1_resolutions(context: Context) -> None:
 
 
 def process_requests(context: Context) -> None:
-    log.info("Processing requests", num_requests=len(context.requests))
+    log.debug("Processing requests", num_requests=len(context.requests))
 
     to_remove = []
     for request in context.requests:
@@ -268,7 +268,7 @@ def process_requests(context: Context) -> None:
 
 
 def process_claims(context: Context) -> None:
-    log.info("Processing claims", num_claims=len(context.claims))
+    log.debug("Processing claims", num_claims=len(context.claims))
 
     to_remove = []
     for claim in context.claims:
