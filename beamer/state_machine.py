@@ -286,6 +286,16 @@ def _handle_initiate_l1_resolution(
             context.config.account.key,
             request.fill_tx,
         )
+
+        def on_future_done(f: Future) -> None:
+            try:
+                f.result()
+                assert request is not None, "Request object missing"
+                del context.l1_resolutions[request.id]
+            except Exception as ex:
+                log.error("L1 Resolution failed", ex=ex)
+
+        future.add_done_callback(on_future_done)
         context.l1_resolutions[request.id] = future
         request.l1_resolve()
 
