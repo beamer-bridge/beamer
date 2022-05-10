@@ -19,7 +19,7 @@ export default defineConfig({
     globals: true,
     reporters: ['default', 'junit'],
     outputFile: path.resolve(test_output_directory, 'junit.xml'),
-    mockClear: true,
+    mockReset: true,
     environment: 'jsdom',
     coverage: {
       all: true,
