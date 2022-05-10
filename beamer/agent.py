@@ -71,6 +71,7 @@ class Agent:
             config=config,
             web3_l1=w3_l1,
             resolution_pool=self._resolution_pool,
+            l1_resolutions={},
         )
         self._event_processor = EventProcessor(self.context)
 

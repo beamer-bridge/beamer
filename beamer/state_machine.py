@@ -1,6 +1,6 @@
 import os
 import time
-from concurrent.futures import Executor
+from concurrent.futures import Executor, Future
 from dataclasses import dataclass
 from typing import Optional
 
@@ -49,6 +49,7 @@ class Context:
     config: Config
     web3_l1: Web3
     resolution_pool: Executor
+    l1_resolutions: dict[RequestId, Future]
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -210,7 +211,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if request.l1_resolution_tx_handle is None and request.fill_tx is not None:
+    if not request.l1_resolution_started and request.fill_tx is not None:
         events = [
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -278,13 +279,16 @@ def _handle_initiate_l1_resolution(
 
     assert request.fill_tx is not None, "Request not yet filled"
     if _l1_resolution_criteria_fulfilled(claim, context):
-        request.l1_resolution_tx_handle = context.resolution_pool.submit(
+        future = context.resolution_pool.submit(
             run_relayer,
             context.config.l1_rpc_url,
             context.config.l2b_rpc_url,
             context.config.account.key,
             request.fill_tx,
         )
+        context.l1_resolutions[request.id] = future
+        request.l1_resolution_started = True
+
         log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
 
     return True, None
