@@ -1,5 +1,22 @@
 import { BigNumber } from 'ethers';
 
+export type EthereumAddress = string; // TODO: to improve
+
+export type Chain = {
+  identifier: number;
+  name: string;
+  rpcUrl: string; // TODO: restrict more
+  requestManagerAddress: EthereumAddress;
+  fillManagerAddress: EthereumAddress;
+  explorerTransactionUrl: string; // TODO: restrict more
+};
+
+export type Token = {
+  address: EthereumAddress;
+  symbol: string;
+  decimals: number;
+};
+
 /*
  * The explicitly defined numeric values are important for the order of the
  * state progression and comparison between them.
