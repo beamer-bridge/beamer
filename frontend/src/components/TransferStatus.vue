@@ -14,35 +14,34 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import type { Transfer } from '@/actions/transfer';
 import Card from '@/components/layout/Card.vue';
 import Progress from '@/components/layout/Progress.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
-import { RequestMetadata, RequestState } from '@/types/data';
 
 interface Props {
-  metadata: RequestMetadata;
-  state: RequestState;
+  transfer: Transfer;
 }
 
 const props = defineProps<Props>();
 
-const progressSteps = computed(() => [
-  {
-    label: 'Please confirm your request on Metamask',
-    completed: props.state >= RequestState.WaitConfirm,
-  },
-  {
-    label: 'Waiting for transaction receipt',
-    completed: props.state >= RequestState.WaitTransaction,
-  },
-  {
-    label: 'Request is being fulfilled',
-    completed: props.state >= RequestState.WaitFulfill,
-  },
-  {
-    label: 'Transfer completed',
-    completed: props.state >= RequestState.RequestSuccessful,
-    failed: props.state == RequestState.RequestFailed,
-  },
-]);
+const metadata = computed(() => {
+  const { transfer } = props;
+
+  return {
+    amount: `${transfer.amount}`, // TODO: format!
+    tokenSymbol: transfer.sourceToken.symbol,
+    sourceChainName: transfer.sourceChain.name,
+    targetChainName: transfer.targetChain.name,
+    targetAccount: transfer.targetAccount,
+  };
+});
+
+const progressSteps = computed(() =>
+  props.transfer.steps.map((step) => ({
+    label: step.label,
+    completed: step.completed,
+    failed: step.failed,
+  })),
+);
 </script>
