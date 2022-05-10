@@ -1,6 +1,7 @@
 {
   "chains": {
     "28": {
+      "identifier": 28,
       "requestManagerAddress": "0x4009bAA4799D0f9cF7cE8D1d42f85C928bec79b2",
       "fillManagerAddress": "0xc17f81Ee3EdB5481917e33d76bED27079bdB2982",
       "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
@@ -9,11 +10,13 @@
       "tokens": [
         {
           "address": "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6",
-          "symbol": "TST"
+          "symbol": "TST",
+          "decimals": 18
         }
       ]
     },
     "588": {
+      "identifier": 588,
       "requestManagerAddress": "0x2468568e200e555665694f1A938D11205409F710",
       "fillManagerAddress": "0x64B436d1059663B4D017e584f1ae5d792bdecD2c",
       "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
@@ -22,7 +25,8 @@
       "tokens": [
         {
           "address": "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D",
-          "symbol": "TST"
+          "symbol": "TST",
+          "decimals": 18
         }
       ]
     }

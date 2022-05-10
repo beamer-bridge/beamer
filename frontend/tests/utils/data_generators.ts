@@ -1,6 +1,6 @@
 import type { StepData } from '@/actions/steps';
-import { ChainConfig, Token } from '@/types/config';
-import { RequestMetadata } from '@/types/data';
+import type { ChainWithTokens } from '@/types/config';
+import type { Chain, RequestMetadata, Token } from '@/types/data';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
 const DECIMAL_CHARACTERS = '0123456789';
@@ -40,6 +40,10 @@ export function getRandomDecimalPointNumber(): string {
   return `${beforeDot}.${afterDot}`;
 }
 
+export function getRandomNumber(minimum = 1, maximum = 100): number {
+  return Math.floor(Math.random() * maximum + minimum);
+}
+
 export function generateStepData(partialStepData?: Partial<StepData>): StepData {
   return {
     identifier: getRandomString(ALPHABET_CHARACTERS, 10),
@@ -56,17 +60,25 @@ export function generateToken(partialToken?: Partial<Token>): Token {
   } as Token;
 }
 
-export function generateChainConfiguration(
-  partialConfiguration?: Partial<ChainConfig>,
-): ChainConfig {
+export function generateChain(partialChain?: Partial<Chain>): Chain {
   return {
+    identifier: getRandomNumber(), // TODO
+    name: getRandomChainName(),
+    rpcUrl: getRandomUrl('rpc'),
     requestManagerAddress: getRandomEthereumAddress(),
     fillManagerAddress: getRandomEthereumAddress(),
     explorerTransactionUrl: getRandomUrl('explorer'),
-    rpcUrl: getRandomUrl('rpc'),
-    name: getRandomChainName(),
+    ...partialChain,
+  };
+}
+
+export function generateChainWithTokens(
+  partialChainWithTokens?: Partial<ChainWithTokens>,
+): ChainWithTokens {
+  return {
+    ...generateChain(),
     tokens: [generateToken()],
-    ...partialConfiguration,
+    ...partialChainWithTokens,
   };
 }
 

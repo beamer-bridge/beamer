@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia';
 
-import { BeamerConfig, ChainConfig } from '@/types/config';
+import { BeamerConfig, ChainWithTokens } from '@/types/config';
 
 export const useConfiguration = defineStore('configuration', {
   state: () => ({
     chains: {} as BeamerConfig['chains'],
   }),
   actions: {
-    setChainConfiguration(id: string, configuration: ChainConfig) {
+    setChainConfiguration(id: string, configuration: ChainWithTokens) {
       this.chains = { ...this.chains, [id]: configuration };
     },
   },
