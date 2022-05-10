@@ -32,24 +32,33 @@ class Request(StateMachine):
         self.fill_tx: Optional[HexBytes] = None
         self.fill_id: Optional[int] = None
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
-        self.l1_resolution_started = False
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
     claimed = State("Claimed")
+    l1_resolved = State("L1Resolved")
     withdrawn = State("Withdrawn")
     ignored = State("Ignored")
 
     fill = pending.to(filled) | filled.to(filled) | ignored.to(filled)
     try_to_fill = pending.to(filled)
     try_to_claim = filled.to(claimed)
-    withdraw = claimed.to(withdrawn) | filled.to(withdrawn) | ignored.to(withdrawn)
+    l1_resolve = claimed.to(l1_resolved) | l1_resolved.to(l1_resolved)
+    withdraw = (
+        claimed.to(withdrawn)
+        | filled.to(withdrawn)
+        | l1_resolved.to(withdrawn)
+        | ignored.to(withdrawn)
+    )
     ignore = pending.to(ignored) | filled.to(ignored)
 
     def on_fill(self, filler: ChecksumAddress, fill_tx: HexBytes, fill_id: FillId) -> None:
         self.filler = filler
         self.fill_tx = fill_tx
         self.fill_id = fill_id
+
+    def on_l1_resolve(self, l1_filler: Optional[ChecksumAddress] = None) -> None:
+        self.l1_resolution_filler = l1_filler
 
     def __repr__(self) -> str:
         state = self.current_state.identifier
