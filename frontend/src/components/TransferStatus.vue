@@ -6,14 +6,16 @@
   </Card>
   <div class="flex flex-col justify-center items-center text-xl">
     <div>
-      <TransferProcessing :state="state" />
+      <Progress :steps="progressSteps" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import Card from '@/components/layout/Card.vue';
-import TransferProcessing from '@/components/TransferProcessing.vue';
+import Progress from '@/components/layout/Progress.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import { RequestMetadata, RequestState } from '@/types/data';
 
@@ -22,5 +24,25 @@ interface Props {
   state: RequestState;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const progressSteps = computed(() => [
+  {
+    label: 'Please confirm your request on Metamask',
+    completed: props.state >= RequestState.WaitConfirm,
+  },
+  {
+    label: 'Waiting for transaction receipt',
+    completed: props.state >= RequestState.WaitTransaction,
+  },
+  {
+    label: 'Request is being fulfilled',
+    completed: props.state >= RequestState.WaitFulfill,
+  },
+  {
+    label: 'Transfer completed',
+    completed: props.state >= RequestState.RequestSuccessful,
+    failed: props.state == RequestState.RequestFailed,
+  },
+]);
 </script>

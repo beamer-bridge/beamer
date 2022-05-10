@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 
-import TransferProcessing from '@/components/TransferProcessing.vue';
+import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import { RequestMetadata, RequestState } from '@/types/data';
@@ -44,12 +44,12 @@ describe('TransferStatus.vue', () => {
     expect(summary.props()).toContain({ targetAddress: '0xAddress' });
   });
 
-  it('shows transfer processing with correct state', () => {
+  it('shows transfer progress with steps', () => {
     const wrapper = createWrapper({ state: RequestState.WaitFulfill });
-    const process = wrapper.findComponent(TransferProcessing);
+    const process = wrapper.findComponent(Progress);
 
     expect(process.exists()).toBeTruthy();
     expect(process.isVisible()).toBeTruthy();
-    expect(process.props()).toContain({ state: RequestState.WaitFulfill });
+    expect(process.props('steps').length).toBeGreaterThanOrEqual(1);
   });
 });
