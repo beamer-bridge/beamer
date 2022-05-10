@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 
-import RequestSummary from '@/components/RequestSummary.vue';
+import TransferSummary from '@/components/TransferSummary.vue';
 import {
   getRandomChainName,
   getRandomDecimalPointNumber,
@@ -15,7 +15,7 @@ function createWrapper(options?: {
   targetChainName?: string;
   targetAddress?: string;
 }) {
-  return mount(RequestSummary, {
+  return mount(TransferSummary, {
     shallow: true,
     props: {
       amount: options?.amount ?? getRandomDecimalPointNumber(),
@@ -27,7 +27,7 @@ function createWrapper(options?: {
   });
 }
 
-describe('RequestSummary.vue', () => {
+describe('TransferSummary.vue', () => {
   it('shows the amount', () => {
     const wrapper = createWrapper({ amount: '1.0' });
 

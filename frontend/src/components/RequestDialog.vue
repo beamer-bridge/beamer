@@ -1,15 +1,9 @@
 <template>
   <div class="request-dialog">
-    <FormKit
-      ref="requestForm"
-      v-slot="{ state: { valid } }"
-      form-class="flex flex-col items-center"
-      type="form"
-      :actions="false"
-      @submit="submitRequestTransaction"
-    >
+    <FormKit ref="requestForm" v-slot="{ state: { valid } }" form-class="flex flex-col items-center" type="form"
+      :actions="false" @submit="submitRequestTransaction">
       <RequestFormInputs v-if="requestState === RequestState.Init" />
-      <RequestStatus v-else :metadata="requestMetadata!" :state="requestState" />
+      <TransferStatus v-else :metadata="requestMetadata!" :state="requestState" />
       <Transition name="expand">
         <div v-if="transferError" class="mt-7 text-right text-lg text-orange-dark">
           {{ transferError }}
@@ -17,24 +11,13 @@
       </Transition>
 
       <Teleport v-if="signer" to="#action-button-portal">
-        <FormKit
-          v-if="requestState === RequestState.Init"
-          class="w-72 flex flex-row justify-center bg-green"
-          type="submit"
-          :disabled="!valid"
-          @click="submitForm"
-        >
+        <FormKit v-if="requestState === RequestState.Init" class="w-72 flex flex-row justify-center bg-green"
+          type="submit" :disabled="!valid" @click="submitForm">
           Transfer funds
         </FormKit>
 
-        <FormKit
-          v-if="requestState !== RequestState.Init"
-          input-class="w-72 flex flex-row justify-center bg-green"
-          type="button"
-          :disabled="isNewTransferDisabled"
-          @click="newTransfer"
-          >New Transfer</FormKit
-        >
+        <FormKit v-if="requestState !== RequestState.Init" input-class="w-72 flex flex-row justify-center bg-green"
+          type="button" :disabled="isNewTransferDisabled" @click="newTransfer">New Transfer</FormKit>
       </Teleport>
     </FormKit>
   </div>
@@ -47,7 +30,7 @@ import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
-import RequestStatus from '@/components/RequestStatus.vue';
+import TransferStatus from '@/components/TransferStatus.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
