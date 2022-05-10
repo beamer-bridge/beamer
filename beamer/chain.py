@@ -5,7 +5,6 @@ import sys
 import threading
 import time
 import traceback
-from concurrent.futures import Future
 from typing import Any, Callable, Optional, cast
 
 import requests.exceptions
@@ -158,6 +157,7 @@ class EventProcessor:
             if self._synced:
                 process_requests(self._context)
                 process_claims(self._context)
+                process_l1_resolutions(self._context)
 
         self._log.info("EventProcessor stopped")
 
@@ -228,21 +228,28 @@ def _transact(func: ContractFunction, **kwargs: Any) -> HexBytes:
     return txn_hash
 
 
+def process_l1_resolutions(context: Context) -> None:
+    log.info("Processing L1 resolutions", num_tasks=len(context.l1_resolutions))
+
+    to_remove = []
+    for request_id, future in context.l1_resolutions.items():
+        if future.done():
+            try:
+                future.result()
+                to_remove.append(request_id)
+            except Exception as ex:
+                log.error("L1 Resolution failed", ex=ex)
+
+    for request_id in to_remove:
+        del context.l1_resolutions[request_id]
+
+
 def process_requests(context: Context) -> None:
     log.info("Processing requests", num_requests=len(context.requests))
 
     to_remove = []
     for request in context.requests:
         log.debug("Processing request", request=request)
-
-        if request.l1_resolution_tx_handle is not None:
-            handle: Future = request.l1_resolution_tx_handle
-
-            if handle.done():
-                try:
-                    handle.result()
-                except Exception as ex:
-                    log.warning("L1 Resolution failed", ex=ex)
 
         if request.is_pending:
             fill_request(request, context)

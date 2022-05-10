@@ -117,6 +117,7 @@ def make_context() -> Tuple[Context, Config]:
         config=config,
         web3_l1=MagicMock(),
         resolution_pool=MagicMock(),
+        l1_resolutions={},
     )
 
     return context, config
