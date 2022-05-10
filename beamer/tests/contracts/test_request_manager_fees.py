@@ -1,7 +1,7 @@
 import brownie
 from brownie import chain
 
-from beamer.tests.util import alloc_accounts, make_request
+from beamer.tests.util import alloc_accounts, make_request, temp_fee_data
 
 RM_FIELD_LP_FEE = 9
 RM_FIELD_PROTOCOL_FEE = 10
@@ -157,3 +157,56 @@ def test_insufficient_lp_fee(request_manager, token):
             validity_period,
             {"from": requester},
         )
+
+
+def test_different_fees(request_manager, token, claim_period, claim_stake):
+    (requester, claimer) = alloc_accounts(2)
+    amount = 9e18
+    fee_data_1 = 7_000, 8_000, 6e18
+    fee_data_2 = 31_000, 4_000, 1
+
+    token.mint(requester, amount * 10, {"from": requester})
+    token.approve(request_manager.address, 2 ** 256 - 1, {"from": requester})
+
+    with temp_fee_data(request_manager, *fee_data_1):
+        request_id_1 = make_request(
+            request_manager, token, requester, requester, amount, fee_data="standard"
+        )
+        lp_fee_1 = request_manager.lpFee(amount)
+        protocol_fee_1 = request_manager.protocolFee(amount)
+        assert lp_fee_1 == 6e18
+        assert protocol_fee_1 == 63e15
+
+    with temp_fee_data(request_manager, *fee_data_2):
+        request_id_2 = make_request(
+            request_manager, token, requester, requester, amount, fee_data="standard"
+        )
+        lp_fee_2 = request_manager.lpFee(amount)
+        protocol_fee_2 = request_manager.protocolFee(amount)
+        assert lp_fee_2 == 36e15
+        assert protocol_fee_2 == 279e15
+
+    assert (
+        token.balanceOf(request_manager)
+        == amount * 2 + protocol_fee_1 + protocol_fee_2 + lp_fee_1 + lp_fee_2
+    )
+    claim_id_1 = request_manager.claimRequest(
+        request_id_1, 0, {"from": claimer, "value": claim_stake}
+    ).return_value
+    claim_id_2 = request_manager.claimRequest(
+        request_id_2, 0, {"from": claimer, "value": claim_stake}
+    ).return_value
+
+    chain.mine(timedelta=claim_period)
+
+    withdraw_tx = request_manager.withdraw(claim_id_1, {"from": claimer})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert request_manager.collectedProtocolFees(token) == protocol_fee_1
+    assert token.balanceOf(request_manager) == amount + protocol_fee_1 + protocol_fee_2 + lp_fee_2
+    assert token.balanceOf(claimer) == amount + lp_fee_1
+
+    withdraw_tx = request_manager.withdraw(claim_id_2, {"from": claimer})
+    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert request_manager.collectedProtocolFees(token) == protocol_fee_1 + protocol_fee_2
+    assert token.balanceOf(request_manager) == protocol_fee_1 + protocol_fee_2
+    assert token.balanceOf(claimer) == amount * 2 + lp_fee_1 + lp_fee_2
