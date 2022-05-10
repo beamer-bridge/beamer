@@ -1,18 +1,18 @@
 import { mount } from '@vue/test-utils';
 
 import ProgressStep from '@/components/layout/ProgressStep.vue';
-import RequestProcessing from '@/components/RequestProcessing.vue';
+import TransferProgressing from '@/components/TransferProcessing.vue';
 import { RequestState } from '@/types/data';
 
 function createWrapper(options?: { state?: RequestState }) {
-  return mount(RequestProcessing, {
+  return mount(TransferProgressing, {
     shallow: true,
     props: {
       state: options?.state ?? RequestState.Init,
     },
   });
 }
-describe('RequestProcessing.vue', () => {
+describe('TransferProcessing.vue', () => {
   it('shows all four steps', () => {
     const wrapper = createWrapper();
     const progressSteps = wrapper.findAllComponents(ProgressStep);
