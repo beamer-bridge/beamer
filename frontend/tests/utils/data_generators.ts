@@ -1,3 +1,4 @@
+import type { StepData } from '@/actions/steps';
 import { ChainConfig, Token } from '@/types/config';
 import { RequestMetadata } from '@/types/data';
 
@@ -37,6 +38,14 @@ export function getRandomDecimalPointNumber(): string {
   const beforeDot = getRandomString(DECIMAL_CHARACTERS, 1);
   const afterDot = getRandomString(DECIMAL_CHARACTERS, 1);
   return `${beforeDot}.${afterDot}`;
+}
+
+export function generateStepData(partialStepData?: Partial<StepData>): StepData {
+  return {
+    identifier: getRandomString(ALPHABET_CHARACTERS, 10),
+    label: getRandomString(ALPHABET_CHARACTERS, 15, 'label '),
+    ...partialStepData,
+  };
 }
 
 export function generateToken(partialToken?: Partial<Token>): Token {
