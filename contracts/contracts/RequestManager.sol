@@ -34,7 +34,7 @@ contract RequestManager is Ownable {
         uint256 requestId;
         address claimer;
         uint256 claimerStake;
-        mapping (address => uint256) challengersStakes;
+        mapping(address => uint256) challengersStakes;
         address lastChallenger;
         uint256 challengerStakeTotal;
         uint256 withdrawnAmount;
@@ -53,10 +53,7 @@ contract RequestManager is Ownable {
         uint256 validUntil
     );
 
-    event DepositWithdrawn(
-        uint256 requestId,
-        address receiver
-    );
+    event DepositWithdrawn(uint256 requestId, address receiver);
 
     event ClaimMade(
         uint256 indexed requestId,
@@ -88,24 +85,24 @@ contract RequestManager is Ownable {
     uint256 public claimCounter;
     ResolutionRegistry public resolutionRegistry;
 
-    mapping (uint256 => uint256) public finalizationTimes; // target rollup chain id => finalization time
+    mapping(uint256 => uint256) public finalizationTimes; // target rollup chain id => finalization time
 
-    mapping (uint256 => Request) public requests;
-    mapping (uint256 => Claim) public claims;
+    mapping(uint256 => Request) public requests;
+    mapping(uint256 => Claim) public claims;
 
-    uint256 public minLpFee = 5 ether;  // 5e18
-    uint256 public lpFeePPM = 1_000;  // 0.1% of the token amount being transferred
+    uint256 public minLpFee = 5 ether; // 5e18
+    uint256 public lpFeePPM = 1_000; // 0.1% of the token amount being transferred
     uint256 public protocolFeePPM = 0; // 0% of the token amount being transferred
 
     // Protocol fee tracking: ERC20 token address => amount
-    mapping (address => uint256) public collectedProtocolFees;
+    mapping(address => uint256) public collectedProtocolFees;
 
     function lpFee(uint256 amount) public view returns (uint256) {
-        return Math.max(minLpFee, amount * lpFeePPM / 1_000_000);
+        return Math.max(minLpFee, (amount * lpFeePPM) / 1_000_000);
     }
 
     function protocolFee(uint256 amount) public view returns (uint256) {
-        return amount * protocolFeePPM / 1_000_000;
+        return (amount * protocolFeePPM) / 1_000_000;
     }
 
     function totalFee(uint256 amount) public view returns (uint256) {
@@ -114,7 +111,10 @@ contract RequestManager is Ownable {
 
     // Modifiers
     modifier validRequestId(uint256 requestId) {
-        require(requestId <= requestCounter && requestId > 0, "requestId not valid");
+        require(
+            requestId <= requestCounter && requestId > 0,
+            "requestId not valid"
+        );
         _;
     }
 
@@ -142,12 +142,19 @@ contract RequestManager is Ownable {
         address targetAddress,
         uint256 amount,
         uint256 validityPeriod
-    )
-    external payable returns (uint256)
-    {
-        require(finalizationTimes[targetChainId] != 0, "Target rollup not supported");
-        require(validityPeriod >= MIN_VALIDITY_PERIOD, "Validity period too short");
-        require(validityPeriod <= MAX_VALIDITY_PERIOD, "Validity period too long");
+    ) external payable returns (uint256) {
+        require(
+            finalizationTimes[targetChainId] != 0,
+            "Target rollup not supported"
+        );
+        require(
+            validityPeriod >= MIN_VALIDITY_PERIOD,
+            "Validity period too short"
+        );
+        require(
+            validityPeriod <= MAX_VALIDITY_PERIOD,
+            "Validity period too long"
+        );
 
         IERC20 token = IERC20(sourceTokenAddress);
 
@@ -155,8 +162,10 @@ contract RequestManager is Ownable {
         uint256 protocolFee = protocolFee(amount);
         uint256 totalTokenAmount = amount + lpFee + protocolFee;
 
-        require(token.allowance(msg.sender, address(this)) >= totalTokenAmount,
-                "Insufficient allowance");
+        require(
+            token.allowance(msg.sender, address(this)) >= totalTokenAmount,
+            "Insufficient allowance"
+        );
 
         requestCounter += 1;
         Request storage newRequest = requests[requestCounter];
@@ -186,11 +195,20 @@ contract RequestManager is Ownable {
         return requestCounter;
     }
 
-    function withdrawExpiredRequest(uint256 requestId) external validRequestId(requestId) {
+    function withdrawExpiredRequest(uint256 requestId)
+        external
+        validRequestId(requestId)
+    {
         Request storage request = requests[requestId];
 
-        require(request.depositReceiver == address(0), "Deposit already withdrawn");
-        require(block.timestamp >= request.validUntil, "Request not expired yet");
+        require(
+            request.depositReceiver == address(0),
+            "Deposit already withdrawn"
+        );
+        require(
+            block.timestamp >= request.validUntil,
+            "Request not expired yet"
+        );
         require(request.activeClaims == 0, "Active claims running");
 
         request.depositReceiver = request.sender;
@@ -198,17 +216,25 @@ contract RequestManager is Ownable {
         emit DepositWithdrawn(requestId, request.sender);
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        token.safeTransfer(request.sender,
-                           request.amount + request.lpFee + request.protocolFee);
+        token.safeTransfer(
+            request.sender,
+            request.amount + request.lpFee + request.protocolFee
+        );
     }
 
     function claimRequest(uint256 requestId, bytes32 fillId)
-        external validRequestId(requestId) payable returns (uint256)
+        external
+        payable
+        validRequestId(requestId)
+        returns (uint256)
     {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");
-        require(request.depositReceiver == address(0), "Deposit already withdrawn");
+        require(
+            request.depositReceiver == address(0),
+            "Deposit already withdrawn"
+        );
         require(msg.value == claimStake, "Invalid stake amount");
 
         request.activeClaims += 1;
@@ -238,7 +264,11 @@ contract RequestManager is Ownable {
         return claimCounter;
     }
 
-    function challengeClaim(uint256 claimId) external validClaimId(claimId) payable {
+    function challengeClaim(uint256 claimId)
+        external
+        payable
+        validClaimId(claimId)
+    {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         require(block.timestamp < claim.termination, "Claim expired");
@@ -272,11 +302,15 @@ contract RequestManager is Ownable {
             claim.challengerStakeTotal += msg.value;
         }
 
-
-
-        claim.termination = Math.max(claim.termination, block.timestamp + periodExtension);
+        claim.termination = Math.max(
+            claim.termination,
+            block.timestamp + periodExtension
+        );
         uint256 minimumTermination = block.timestamp + challengePeriodExtension;
-        require(claim.termination >= minimumTermination, "Claim termination did not increase enough");
+        require(
+            claim.termination >= minimumTermination,
+            "Claim termination did not increase enough"
+        );
 
         emit ClaimMade(
             claim.requestId,
@@ -290,22 +324,29 @@ contract RequestManager is Ownable {
         );
     }
 
-    function withdraw(uint256 claimId) external validClaimId(claimId) returns (address) {
+    function withdraw(uint256 claimId)
+        external
+        validClaimId(claimId)
+        returns (address)
+    {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
-        require(claim.withdrawnAmount < claimerStake + challengerStakeTotal, "Claim already withdrawn");
+        require(
+            claim.withdrawnAmount < claimerStake + challengerStakeTotal,
+            "Claim already withdrawn"
+        );
 
         bytes32 fillHash = BeamerUtils.createFillHash(
-                claim.requestId,
-                block.chainid,
-                request.targetChainId,
-                request.targetTokenAddress,
-                request.targetAddress,
-                request.amount,
-                claim.fillId
-            );
+            claim.requestId,
+            block.chainid,
+            request.targetChainId,
+            request.targetTokenAddress,
+            request.targetAddress,
+            request.amount,
+            claim.fillId
+        );
 
         bool claimValid = false;
         address depositReceiver = request.depositReceiver;
@@ -316,15 +357,17 @@ contract RequestManager is Ownable {
         // 2) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
         // 3) Claim properties, claim terminated and claimer has the highest stake
         address filler = resolutionRegistry.fillers(fillHash);
-        if(filler == address(0)) {
+        if (filler == address(0)) {
             filler = depositReceiver;
         }
         if (filler == address(0)) {
             // Claim resolution via 3)
-            require(block.timestamp >= claim.termination, "Claim period not finished");
+            require(
+                block.timestamp >= claim.termination,
+                "Claim period not finished"
+            );
             claimValid = claimerStake > challengerStakeTotal;
-        }
-        else {
+        } else {
             // Claim resolution via 1) or 2)
             claimValid = filler == claim.claimer;
         }
@@ -337,8 +380,7 @@ contract RequestManager is Ownable {
             // If claim is valid, all stakes go to the claimer
             ethToTransfer = claimerStake + challengerStakeTotal;
             claimReceiver = claim.claimer;
-        }
-        else if (challengerStakeTotal > 0) {
+        } else if (challengerStakeTotal > 0) {
             // If claim is invalid, partial withdrawal by the sender
             ethToTransfer = 2 * claim.challengersStakes[msg.sender];
             claimReceiver = msg.sender;
@@ -346,8 +388,7 @@ contract RequestManager is Ownable {
             require(ethToTransfer > 0, "Challenger has nothing to withdraw");
             //Re-entrancy protection
             claim.challengersStakes[msg.sender] = 0;
-        }
-        else {
+        } else {
             // The unlikely event is possible that a false claim has no challenger
             // If it is known that the claim is false then the claim stake goes to the platform
             ethToTransfer = claimerStake;
@@ -360,8 +401,7 @@ contract RequestManager is Ownable {
         if (msg.sender == claim.lastChallenger) {
             if (claimerStake > challengerStakeTotal) {
                 ethToTransfer += (claimerStake - challengerStakeTotal);
-            }
-            else {
+            } else {
                 ethToTransfer -= (challengerStakeTotal - claimerStake);
             }
         }
@@ -371,20 +411,19 @@ contract RequestManager is Ownable {
             request.activeClaims -= 1;
         }
         claim.withdrawnAmount += ethToTransfer;
-        require(claim.withdrawnAmount <= claimerStake + challengerStakeTotal, "Amount to withdraw too large");
+        require(
+            claim.withdrawnAmount <= claimerStake + challengerStakeTotal,
+            "Amount to withdraw too large"
+        );
 
         if (depositReceiver == address(0) && claimReceiver == claim.claimer) {
             withdrawDeposit(request, claim, claimReceiver);
         }
 
-        (bool sent,) = claimReceiver.call{value: ethToTransfer}("");
+        (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
-        emit ClaimWithdrawn(
-            claimId,
-            claim.requestId,
-            claimReceiver
-        );
+        emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
 
         return claimReceiver;
     }
@@ -394,19 +433,20 @@ contract RequestManager is Ownable {
         Claim storage claim,
         address depositReceiver
     ) private {
-        emit DepositWithdrawn(
-            claim.requestId,
-            depositReceiver
-        );
+        emit DepositWithdrawn(claim.requestId, depositReceiver);
 
-        collectedProtocolFees[request.sourceTokenAddress] += request.protocolFee;
+        collectedProtocolFees[request.sourceTokenAddress] += request
+            .protocolFee;
 
         IERC20 token = IERC20(request.sourceTokenAddress);
         token.safeTransfer(depositReceiver, request.amount + request.lpFee);
         request.depositReceiver = depositReceiver;
     }
 
-    function withdrawProtocolFees(address tokenAddress, address recipient) external onlyOwner {
+    function withdrawProtocolFees(address tokenAddress, address recipient)
+        external
+        onlyOwner
+    {
         uint256 amount = collectedProtocolFees[tokenAddress];
         require(amount > 0, "Protocol fee is zero");
         collectedProtocolFees[tokenAddress] = 0;
@@ -415,14 +455,24 @@ contract RequestManager is Ownable {
         token.safeTransfer(recipient, amount);
     }
 
-    function updateFeeData(uint256 newProtocolFeePPM, uint256 newLpFeePPM, uint256 newMinLpFee) external onlyOwner {
+    function updateFeeData(
+        uint256 newProtocolFeePPM,
+        uint256 newLpFeePPM,
+        uint256 newMinLpFee
+    ) external onlyOwner {
         protocolFeePPM = newProtocolFeePPM;
         lpFeePPM = newLpFeePPM;
         minLpFee = newMinLpFee;
     }
 
-    function setFinalizationTime(uint256 targetChainId, uint256 finalizationTime) external onlyOwner {
-        require(finalizationTime > 0, "Finalization time must be greater than 0");
+    function setFinalizationTime(
+        uint256 targetChainId,
+        uint256 finalizationTime
+    ) external onlyOwner {
+        require(
+            finalizationTime > 0,
+            "Finalization time must be greater than 0"
+        );
         finalizationTimes[targetChainId] = finalizationTime;
     }
 }
