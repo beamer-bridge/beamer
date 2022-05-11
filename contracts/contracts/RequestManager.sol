@@ -331,6 +331,44 @@ contract RequestManager is Ownable {
     {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
+
+        (address claimReceiver, uint256 ethToTransfer) = resolveClaim(claimId);
+
+        if (claim.challengersStakes[claimReceiver] > 0) {
+            //Re-entrancy protection
+            claim.challengersStakes[claimReceiver] = 0;
+        }
+
+        // First time withdraw is called, remove it from active claims
+        if (claim.withdrawnAmount == 0) {
+            request.activeClaims -= 1;
+        }
+        claim.withdrawnAmount += ethToTransfer;
+        require(
+            claim.withdrawnAmount <=
+                claim.claimerStake + claim.challengerStakeTotal,
+            "Amount to withdraw too large"
+        );
+
+        (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
+        require(sent, "Failed to send Ether");
+
+        emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
+
+        if (request.depositReceiver == address(0) && claimReceiver == claim.claimer) {
+            withdrawDeposit(request, claim, claimReceiver);
+        }
+
+        return claimReceiver;
+    }
+
+    function resolveClaim(uint256 claimId)
+        private
+        view
+        returns (address, uint256)
+    {
+        Claim storage claim = claims[claimId];
+        Request storage request = requests[claim.requestId];
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
         require(
@@ -353,23 +391,22 @@ contract RequestManager is Ownable {
 
         // Priority list for validity check of claim
         // Claim is valid if either
-        // 1) ResolutionRegistry entry, claimer is the filler
+        // 1) ResolutionRegistry entry in fillers, claimer is the filler
         // 2) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
         // 3) Claim properties, claim terminated and claimer has the highest stake
         address filler = resolutionRegistry.fillers(fillHash);
+
         if (filler == address(0)) {
             filler = depositReceiver;
         }
-        if (filler == address(0)) {
-            // Claim resolution via 3)
-            require(
-                block.timestamp >= claim.termination,
-                "Claim period not finished"
-            );
-            claimValid = claimerStake > challengerStakeTotal;
-        } else {
-            // Claim resolution via 1) or 2)
+        if (filler != address(0)) {
+            // Claim resolution via 1) or 3)
             claimValid = filler == claim.claimer;
+        }
+        else {
+            // Claim resolution via 4)
+            require(block.timestamp >= claim.termination, "Claim period not finished");
+            claimValid = claimerStake > challengerStakeTotal;
         }
 
         // Calculate withdraw scheme for claim stakes
@@ -386,8 +423,6 @@ contract RequestManager is Ownable {
             claimReceiver = msg.sender;
 
             require(ethToTransfer > 0, "Challenger has nothing to withdraw");
-            //Re-entrancy protection
-            claim.challengersStakes[msg.sender] = 0;
         } else {
             // The unlikely event is possible that a false claim has no challenger
             // If it is known that the claim is false then the claim stake goes to the platform
@@ -406,26 +441,7 @@ contract RequestManager is Ownable {
             }
         }
 
-        // First time withdraw is called, remove it from active claim
-        if (claim.withdrawnAmount == 0) {
-            request.activeClaims -= 1;
-        }
-        claim.withdrawnAmount += ethToTransfer;
-        require(
-            claim.withdrawnAmount <= claimerStake + challengerStakeTotal,
-            "Amount to withdraw too large"
-        );
-
-        if (depositReceiver == address(0) && claimReceiver == claim.claimer) {
-            withdrawDeposit(request, claim, claimReceiver);
-        }
-
-        (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
-        require(sent, "Failed to send Ether");
-
-        emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
-
-        return claimReceiver;
+        return (claimReceiver, ethToTransfer);
     }
 
     function withdrawDeposit(
