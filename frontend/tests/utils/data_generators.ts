@@ -6,6 +6,7 @@ import type {
 } from '@/actions/transfer';
 import type { ChainWithTokens } from '@/types/config';
 import type { Chain, Token } from '@/types/data';
+import type { UInt256Data } from '@/types/uint-256';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
 const DECIMAL_CHARACTERS = '0123456789';
@@ -87,12 +88,16 @@ export function generateChainWithTokens(
   };
 }
 
+export function generateUInt256Data(value?: string): UInt256Data {
+  return value ?? getRandomNumber(100000000000, 100000000000000).toString();
+}
+
 export function generateRequestTransactionMetadata(
   partialRequestTransactionMetadata?: Partial<RequestTransactionMetadata>,
 ): RequestTransactionMetadata {
   return {
-    requestAccount: getRandomEthereumAddress(),
     transactionHash: getRandomString(HEXADECIMAL_CHARACTERS, 40),
+    requestAccount: getRandomEthereumAddress(),
     ...partialRequestTransactionMetadata,
   };
 }
