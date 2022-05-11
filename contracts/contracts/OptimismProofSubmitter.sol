@@ -9,18 +9,24 @@ import "./Resolver.sol";
 import "./RestrictedCalls.sol";
 
 contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
-
     uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
 
     ICrossDomainMessenger public messenger;
 
-    constructor(address _messenger)
-    {
+    constructor(address _messenger) {
         messenger = ICrossDomainMessenger(_messenger);
     }
 
-    function submitProof(address l1Resolver, uint256 sourceChainId, uint256 requestId, bytes32 requestHash, address filler)
-        external restricted(block.chainid, msg.sender) returns (ProofReceipt memory)
+    function submitProof(
+        address l1Resolver,
+        uint256 sourceChainId,
+        uint256 requestId,
+        bytes32 requestHash,
+        address filler
+    )
+        external
+        restricted(block.chainid, msg.sender)
+        returns (ProofReceipt memory)
     {
         bytes32 fillId = keccak256(abi.encode(block.number));
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
@@ -29,13 +35,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
-                (
-                    requestId,
-                    fillHash,
-                    block.chainid,
-                    sourceChainId,
-                    filler
-                )
+                (requestId, fillHash, block.chainid, sourceChainId, filler)
             ),
             MESSAGE_GAS_LIMIT
         );
@@ -43,18 +43,18 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         return ProofReceipt(fillId, fillHash);
     }
 
-    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, uint256 requestId, bytes32 fillHash) external {
+    function submitNonFillProof(
+        address l1Resolver,
+        uint256 sourceChainId,
+        uint256 requestId,
+        bytes32 fillHash
+    ) external {
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolveNonFill,
-                    (
-                        requestId,
-                        fillHash,
-                        block.chainid,
-                        sourceChainId
-                    )
-                ),
+                (requestId, fillHash, block.chainid, sourceChainId)
+            ),
             MESSAGE_GAS_LIMIT
         );
     }

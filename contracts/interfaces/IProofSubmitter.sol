@@ -2,8 +2,7 @@
 pragma solidity ^0.8.12;
 
 interface IProofSubmitter {
-
-    struct ProofReceipt{
+    struct ProofReceipt {
         bytes32 fillId;
         bytes32 fillHash;
     }
@@ -16,5 +15,10 @@ interface IProofSubmitter {
         address eligibleClaimer
     ) external returns (ProofReceipt memory);
 
-    function submitNonFillProof(address l1Resolver, uint256 sourceChainId, uint256 requestId, bytes32 fillHash) external;
+    function submitNonFillProof(
+        address l1Resolver,
+        uint256 sourceChainId,
+        uint256 requestId,
+        bytes32 fillHash
+    ) external;
 }

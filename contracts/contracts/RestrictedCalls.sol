@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
 
 contract RestrictedCalls is Ownable {
-    mapping (bytes32 => bool) public callers;
+    mapping(bytes32 => bool) public callers;
 
     function addCaller(uint256 chainId, address caller) external onlyOwner {
         bytes32 key = keccak256(abi.encodePacked(chainId, caller));

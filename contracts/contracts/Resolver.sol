@@ -6,7 +6,6 @@ import "../interfaces/ICrossDomainMessenger.sol";
 import "./ResolutionRegistry.sol";
 import "./CrossDomainRestrictedCalls.sol";
 
-
 contract Resolver is Ownable, CrossDomainRestrictedCalls {
     struct ResolutionInfos {
         address resolutionRegistry;
@@ -20,26 +19,31 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         address filler
     );
 
-    mapping (uint256 => ResolutionInfos) public resolutionInfos;
+    mapping(uint256 => ResolutionInfos) public resolutionInfos;
 
-    function resolve(uint256 requestId, bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId, address filler)
-        external restricted(fillChainId, msg.sender) {
-
+    function resolve(
+        uint256 requestId,
+        bytes32 fillHash,
+        uint256 fillChainId,
+        uint256 sourceChainId,
+        address filler
+    ) external restricted(fillChainId, msg.sender) {
         ResolutionInfos storage info = resolutionInfos[sourceChainId];
-        require(info.resolutionRegistry != address(0), "No registry available for source chain");
-        require(info.messenger != address(0), "No messenger available for source chain");
+        require(
+            info.resolutionRegistry != address(0),
+            "No registry available for source chain"
+        );
+        require(
+            info.messenger != address(0),
+            "No messenger available for source chain"
+        );
 
         ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
         messenger.sendMessage(
             info.resolutionRegistry,
             abi.encodeCall(
                 ResolutionRegistry.resolveRequest,
-                (
-                    requestId,
-                    fillHash,
-                    block.chainid,
-                    filler
-                )
+                (requestId, fillHash, block.chainid, filler)
             ),
             1_000_000
         );
@@ -47,23 +51,28 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         emit Resolution(sourceChainId, fillChainId, fillHash, filler);
     }
 
-    function resolveNonFill(uint256 requestId, bytes32 fillHash, uint256 fillChainId, uint256 sourceChainId)
-        external restricted(fillChainId, msg.sender) {
-
+    function resolveNonFill(
+        uint256 requestId,
+        bytes32 fillHash,
+        uint256 fillChainId,
+        uint256 sourceChainId
+    ) external restricted(fillChainId, msg.sender) {
         ResolutionInfos storage info = resolutionInfos[sourceChainId];
-        require(info.resolutionRegistry != address(0), "No registry available for source chain");
-        require(info.messenger != address(0), "No messenger available for source chain");
+        require(
+            info.resolutionRegistry != address(0),
+            "No registry available for source chain"
+        );
+        require(
+            info.messenger != address(0),
+            "No messenger available for source chain"
+        );
 
         ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
         messenger.sendMessage(
             info.resolutionRegistry,
             abi.encodeCall(
                 ResolutionRegistry.invalidateFillHash,
-                (
-                    requestId,
-                    fillHash,
-                    block.chainid
-                )
+                (requestId, fillHash, block.chainid)
             ),
             1_000_000
         );
@@ -71,7 +80,14 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         emit Resolution(sourceChainId, fillChainId, fillHash, address(0));
     }
 
-    function addRegistry(uint256 chainId, address resolutionRegistry, address messenger) external onlyOwner {
-        resolutionInfos[chainId] = ResolutionInfos(resolutionRegistry, messenger);
+    function addRegistry(
+        uint256 chainId,
+        address resolutionRegistry,
+        address messenger
+    ) external onlyOwner {
+        resolutionInfos[chainId] = ResolutionInfos(
+            resolutionRegistry,
+            messenger
+        );
     }
 }
