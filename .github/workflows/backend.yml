@@ -80,6 +80,12 @@ jobs:
           external_repository: beamer-bridge/docs
           cname: docs.beamerbridge.com
 
+      - name: Install prettier for solidity
+        run: npm install prettier prettier-plugin-solidity --global
+
+      - name: Check formatting of contracts
+        run: prettier --list-different 'contracts/**/*.sol'
+
       - name: Install solhint
         run: npm install solhint --global
 
