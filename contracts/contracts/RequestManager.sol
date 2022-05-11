@@ -355,7 +355,10 @@ contract RequestManager is Ownable {
 
         emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
 
-        if (request.depositReceiver == address(0) && claimReceiver == claim.claimer) {
+        if (
+            request.depositReceiver == address(0) &&
+            claimReceiver == claim.claimer
+        ) {
             withdrawDeposit(request, claim, claimReceiver);
         }
 
@@ -392,20 +395,27 @@ contract RequestManager is Ownable {
         // Priority list for validity check of claim
         // Claim is valid if either
         // 1) ResolutionRegistry entry in fillers, claimer is the filler
-        // 2) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
-        // 3) Claim properties, claim terminated and claimer has the highest stake
+        // 2) ResolutionRegistry entry in invalidFillHashes, claim is invalid
+        // 3) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
+        // 4) Claim properties, claim terminated and claimer has the highest stake
         address filler = resolutionRegistry.fillers(fillHash);
 
         if (filler == address(0)) {
             filler = depositReceiver;
         }
-        if (filler != address(0)) {
+
+        if (resolutionRegistry.invalidFillHashes(fillHash)) {
+            // Claim resolution via 2)
+            claimValid = false;
+        } else if (filler != address(0)) {
             // Claim resolution via 1) or 3)
             claimValid = filler == claim.claimer;
-        }
-        else {
+        } else {
             // Claim resolution via 4)
-            require(block.timestamp >= claim.termination, "Claim period not finished");
+            require(
+                block.timestamp >= claim.termination,
+                "Claim period not finished"
+            );
             claimValid = claimerStake > challengerStakeTotal;
         }
 
