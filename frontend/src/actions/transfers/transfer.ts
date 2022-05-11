@@ -7,12 +7,16 @@ import {
   getRequestIdentifier,
   sendRequestTransaction,
 } from '@/services/transactions/request-manager';
-import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
+import type { Chain, EthereumAddress, Token } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { TokenAmountData } from '@/types/token-amount';
 import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
+
+import type { RequestFillMetadata } from './request-fill-metadata';
+import type { RequestMetadataData } from './request-metadata';
+import { RequestMetadata } from './request-metadata';
 
 const STEPS_DATA = [
   { identifier: 'sendRequestTransaction', label: 'Please confirm your request on Metamask' },
@@ -178,43 +182,4 @@ export type TransferData = {
   steps?: Array<StepData>;
   requestMetadata?: RequestMetadataData;
   requestFillMetadata?: RequestFillMetadata;
-};
-
-class RequestMetadata implements Encodable<RequestMetadataData> {
-  readonly transactionHash: TransactionHash;
-  readonly requestAccount: EthereumAddress;
-  private _identifier?: UInt256;
-
-  constructor(data: RequestMetadataData) {
-    this.transactionHash = data.transactionHash;
-    this.requestAccount = data.requestAccount;
-    this._identifier = data.identifier ? new UInt256(data.identifier) : undefined;
-  }
-
-  get identifier(): UInt256 | undefined {
-    return this._identifier;
-  }
-
-  public setIdentifier(value: UInt256): void {
-    this._identifier = value;
-  }
-
-  public encode(): RequestMetadataData {
-    return {
-      transactionHash: this.transactionHash,
-      requestAccount: this.requestAccount,
-      identifier: this.identifier?.encode(),
-    };
-  }
-}
-
-export type RequestMetadataData = {
-  transactionHash: TransactionHash;
-  requestAccount: EthereumAddress;
-  identifier?: UInt256Data;
-};
-
-export type RequestFillMetadata = {
-  transactionHash: TransactionHash;
-  fillerAccount: EthereumAddress;
 };

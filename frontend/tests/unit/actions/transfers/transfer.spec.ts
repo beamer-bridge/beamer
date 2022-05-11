@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 
-import { Transfer } from '@/actions/transfer';
+import { Transfer } from '@/actions/transfers/transfer';
 import * as fillManager from '@/services/transactions/fill-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import type { EthereumAddress } from '@/types/data';

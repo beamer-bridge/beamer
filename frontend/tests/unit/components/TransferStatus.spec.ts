@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 
-import { Transfer } from '@/actions/transfer';
+import { Transfer } from '@/actions/transfers';
 import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
