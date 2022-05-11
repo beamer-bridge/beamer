@@ -53,6 +53,8 @@ import { useRequestFee } from '@/composables/useRequestFee';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { RequestFormResult } from '@/types/form';
+import { TokenAmount } from '@/types/token-amount';
+import { UInt256 } from '@/types/uint-256';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
@@ -104,16 +106,20 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
     (token) => token.symbol === formResult.tokenAddress.label,
   )!;
 
-  transfer.value = new Transfer({
-    amount: Number(formResult.amount),
+  const amount = TokenAmount.parse(formResult.amount, sourceToken);
+  const validityPeriod = new UInt256('600');
+  const fees = new UInt256(requestFeeAmount.value.toString());
+
+  transfer.value = Transfer.new(
+    amount,
     sourceChain,
     sourceToken,
     targetChain,
     targetToken,
-    targetAccount: formResult.toAddress,
-    validityPeriod: 600,
-    fees: requestFeeAmount.value,
-  });
+    formResult.toAddress,
+    validityPeriod,
+    fees,
+  );
 
   try {
     await transfer.value.execute(signer.value, signerAddress.value);

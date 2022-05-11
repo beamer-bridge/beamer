@@ -1,5 +1,7 @@
 export type EthereumAddress = string; // TODO: to improve
 
+export type TransactionHash = string; // TODO: to improve
+
 export type Chain = {
   identifier: number;
   name: string;

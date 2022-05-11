@@ -4,7 +4,12 @@ import { Transfer } from '@/actions/transfer';
 import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
-import { generateChain, generateToken, generateTransferData } from '~/utils/data_generators';
+import {
+  generateChain,
+  generateToken,
+  generateTokenAmountData,
+  generateTransferData,
+} from '~/utils/data_generators';
 
 function createWrapper(options?: { transfer?: Transfer }) {
   return mount(TransferStatus, {
@@ -25,7 +30,10 @@ function createWrapper(options?: { transfer?: Transfer }) {
 describe('TransferStatus.vue', () => {
   it('shows transfer summary with correct metadata', () => {
     const data = generateTransferData({
-      amount: 1,
+      amount: generateTokenAmountData({
+        amount: '1',
+        token: generateToken({ decimals: 0 }),
+      }),
       sourceToken: generateToken({ symbol: 'TTT' }),
       sourceChain: generateChain({ name: 'Source Chain' }),
       targetChain: generateChain({ name: 'Target Chain' }),

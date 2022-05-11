@@ -1,11 +1,7 @@
 import type { StepData } from '@/actions/steps';
-import type {
-  RequestFillTransactionMetadata,
-  RequestTransactionMetadata,
-  TransferData,
-} from '@/actions/transfer';
+import type { RequestFillMetadata, RequestMetadataData, TransferData } from '@/actions/transfer';
 import type { ChainWithTokens } from '@/types/config';
-import type { Chain, Token } from '@/types/data';
+import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { TokenAmountData } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 
@@ -23,8 +19,12 @@ export function getRandomString(charSet = ALPHABET_CHARACTERS, length = 5, prefi
   return output;
 }
 
-export function getRandomEthereumAddress(): string {
+export function getRandomEthereumAddress(): EthereumAddress {
   return getRandomString(HEXADECIMAL_CHARACTERS, 32, '0x');
+}
+
+export function getRandomTransactionHash(): TransactionHash {
+  return getRandomString(HEXADECIMAL_CHARACTERS, 66, '0x');
 }
 
 export function getRandomUrl(subDomain: string): string {
@@ -103,36 +103,37 @@ export function generateTokenAmountData(
   };
 }
 
-export function generateRequestTransactionMetadata(
-  partialRequestTransactionMetadata?: Partial<RequestTransactionMetadata>,
-): RequestTransactionMetadata {
+export function generateRequestMetadataData(
+  partialRequestMetadataData?: Partial<RequestMetadataData>,
+): RequestMetadataData {
   return {
+    transactionHash: getRandomTransactionHash(),
     requestAccount: getRandomEthereumAddress(),
-    transactionHash: getRandomString(HEXADECIMAL_CHARACTERS, 40),
-    ...partialRequestTransactionMetadata,
+    ...partialRequestMetadataData,
   };
 }
 
-export function generateRequestFillTransactionMetadata(
-  partialRequestFillTransactionMetadata?: Partial<RequestFillTransactionMetadata>,
-): RequestFillTransactionMetadata {
+export function generateRequestFillMetadata(
+  partialRequestFillMetadata?: Partial<RequestFillMetadata>,
+): RequestFillMetadata {
   return {
+    transactionHash: getRandomTransactionHash(),
     fillerAccount: getRandomEthereumAddress(),
-    transactionHash: getRandomString(HEXADECIMAL_CHARACTERS, 40),
-    ...partialRequestFillTransactionMetadata,
+    ...partialRequestFillMetadata,
   };
 }
 
 export function generateTransferData(partialTransferData?: Partial<TransferData>): TransferData {
+  const sourceToken = generateToken();
   return {
-    amount: getRandomNumber(),
+    amount: generateTokenAmountData({ token: sourceToken }),
     sourceChain: generateChain(),
-    sourceToken: generateToken(),
+    sourceToken,
     targetChain: generateChain(),
     targetToken: generateToken(),
     targetAccount: getRandomEthereumAddress(),
-    validityPeriod: getRandomNumber(),
-    fees: getRandomNumber(),
+    validityPeriod: generateUInt256Data(),
+    fees: generateUInt256Data(),
     ...partialTransferData,
   };
 }
