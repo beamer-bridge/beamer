@@ -7,8 +7,12 @@ import {
   getRequestIdentifier,
   sendRequestTransaction,
 } from '@/services/transactions/request-manager';
-import type { Chain, EthereumAddress, Token } from '@/types/data';
+import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
+import type { TokenAmountData } from '@/types/token-amount';
+import { TokenAmount } from '@/types/token-amount';
+import type { UInt256Data } from '@/types/uint-256';
+import { UInt256 } from '@/types/uint-256';
 
 const STEPS_DATA = [
   { identifier: 'sendRequestTransaction', label: 'Please confirm your request on Metamask' },
@@ -17,38 +21,62 @@ const STEPS_DATA = [
 ];
 
 export class Transfer extends MultiStepAction implements Encodable<TransferData> {
-  readonly amount: number; // in Wei
+  readonly amount: TokenAmount;
   readonly sourceChain: Chain;
   readonly sourceToken: Token;
   readonly targetChain: Chain;
   readonly targetToken: Token;
   readonly targetAccount: EthereumAddress;
-  readonly validityPeriod: number;
-  readonly fees: number;
-  private _requestTransactionMetadata?: RequestTransactionMetadata;
-  private _requestFillTransactionMetadata?: RequestFillTransactionMetadata;
+  readonly validityPeriod: UInt256;
+  readonly fees: UInt256;
+  private _requestMetadata?: RequestMetadata;
+  private _requestFillMetadata?: RequestFillMetadata;
 
   constructor(data: TransferData) {
     super((data.steps ?? STEPS_DATA).map((data) => new Step(data)));
 
-    this.amount = data.amount;
+    this.amount = new TokenAmount(data.amount);
     this.sourceChain = data.sourceChain;
     this.sourceToken = data.sourceToken;
     this.targetChain = data.targetChain;
     this.targetToken = data.targetToken;
     this.targetAccount = data.targetAccount;
-    this.validityPeriod = data.validityPeriod;
-    this.fees = data.fees;
-    this._requestTransactionMetadata = data.requestTransactionMetadata;
-    this._requestFillTransactionMetadata = data.requestFillTransactionMetadata;
+    this.validityPeriod = new UInt256(data.validityPeriod);
+    this.fees = new UInt256(data.fees);
+    this._requestMetadata = data.requestMetadata
+      ? new RequestMetadata(data.requestMetadata)
+      : undefined;
+    this._requestFillMetadata = data.requestFillMetadata;
   }
 
-  get requestTransactionMetadata(): RequestTransactionMetadata | undefined {
-    return this._requestTransactionMetadata;
+  static new(
+    amount: TokenAmount,
+    sourceChain: Chain,
+    sourceToken: Token,
+    targetChain: Chain,
+    targetToken: Token,
+    targetAccount: EthereumAddress,
+    validityPeriod: UInt256,
+    fees: UInt256,
+  ): Transfer {
+    return new this({
+      amount: amount.encode(),
+      sourceChain,
+      sourceToken,
+      targetChain,
+      targetToken,
+      targetAccount,
+      validityPeriod: validityPeriod.encode(),
+      fees: fees.encode(),
+    });
   }
 
-  get requestFillTransactionMetadata(): RequestFillTransactionMetadata | undefined {
-    return this._requestFillTransactionMetadata;
+  get requestMetadata(): RequestMetadata | undefined {
+    return this._requestMetadata;
+  }
+
+  get requestFillMetadata(): RequestFillMetadata | undefined {
+    return this._requestFillMetadata;
   }
 
   protected getStepMethods(
@@ -70,17 +98,17 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
   public encode(): TransferData {
     return {
-      amount: this.amount,
+      amount: this.amount.encode(),
       sourceChain: this.sourceChain,
       sourceToken: this.sourceToken,
       targetChain: this.targetChain,
       targetToken: this.targetToken,
       targetAccount: this.targetAccount,
-      validityPeriod: this.validityPeriod,
-      fees: this.fees,
+      validityPeriod: this.validityPeriod.encode(),
+      fees: this.fees.encode(),
       steps: this.steps.map((step) => step.encode()),
-      requestTransactionMetadata: this.requestTransactionMetadata,
-      requestFillTransactionMetadata: this.requestFillTransactionMetadata,
+      requestMetadata: this._requestMetadata?.encode(),
+      requestFillMetadata: this.requestFillMetadata,
     };
   }
 
@@ -90,7 +118,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   ): Promise<void> {
     const transactionHash = await sendRequestTransaction(
       signer,
-      this.amount,
+      this.amount.uint256,
       this.targetChain.identifier,
       this.sourceChain.requestManagerAddress,
       this.sourceToken.address,
@@ -100,11 +128,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.fees,
     );
 
-    this._requestTransactionMetadata = { transactionHash, requestAccount: signerAddress };
+    this._requestMetadata = new RequestMetadata({
+      transactionHash,
+      requestAccount: signerAddress,
+    });
   }
 
   protected async waitForRequestEvent(): Promise<void> {
-    if (!this.requestTransactionMetadata?.transactionHash) {
+    if (!this._requestMetadata?.transactionHash) {
       throw new Error('Attempt to get request event before sending transaction!');
     }
 
@@ -112,14 +143,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     const identifier = await getRequestIdentifier(
       provider,
       this.sourceChain.requestManagerAddress,
-      this.requestTransactionMetadata.transactionHash,
+      this._requestMetadata.transactionHash,
     );
 
-    this._requestTransactionMetadata = { ...this.requestTransactionMetadata, identifier };
+    this._requestMetadata.setIdentifier(identifier);
   }
 
   protected async waitForFulfillment(): Promise<void> {
-    if (!this.requestTransactionMetadata?.identifier) {
+    if (!this._requestMetadata?.identifier) {
       throw new Error('Attempting to wait for fulfillment without request identifier!');
     }
 
@@ -127,7 +158,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
     await waitForFulfillment(
       provider,
-      this.requestTransactionMetadata.identifier,
+      this._requestMetadata.identifier,
       this.targetChain.fillManagerAddress,
     );
 
@@ -135,27 +166,55 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 }
 
-export type RequestTransactionMetadata = {
-  identifier?: number;
-  requestAccount: EthereumAddress;
-  transactionHash: string;
-};
-
-export type RequestFillTransactionMetadata = {
-  fillerAccount: EthereumAddress;
-  transactionHash: string;
-};
-
 export type TransferData = {
-  amount: number; // in Wei
+  amount: TokenAmountData;
   sourceChain: Chain;
   sourceToken: Token;
   targetChain: Chain;
   targetToken: Token;
   targetAccount: EthereumAddress;
-  validityPeriod: number; // TODO: maybe make this a date? Timezone issue...
-  fees: number;
+  validityPeriod: UInt256Data;
+  fees: UInt256Data;
   steps?: Array<StepData>;
-  requestTransactionMetadata?: RequestTransactionMetadata;
-  requestFillTransactionMetadata?: RequestFillTransactionMetadata;
+  requestMetadata?: RequestMetadataData;
+  requestFillMetadata?: RequestFillMetadata;
+};
+
+class RequestMetadata implements Encodable<RequestMetadataData> {
+  readonly transactionHash: TransactionHash;
+  readonly requestAccount: EthereumAddress;
+  private _identifier?: UInt256;
+
+  constructor(data: RequestMetadataData) {
+    this.transactionHash = data.transactionHash;
+    this.requestAccount = data.requestAccount;
+    this._identifier = data.identifier ? new UInt256(data.identifier) : undefined;
+  }
+
+  get identifier(): UInt256 | undefined {
+    return this._identifier;
+  }
+
+  public setIdentifier(value: UInt256): void {
+    this._identifier = value;
+  }
+
+  public encode(): RequestMetadataData {
+    return {
+      transactionHash: this.transactionHash,
+      requestAccount: this.requestAccount,
+      identifier: this.identifier?.encode(),
+    };
+  }
+}
+
+export type RequestMetadataData = {
+  transactionHash: TransactionHash;
+  requestAccount: EthereumAddress;
+  identifier?: UInt256Data;
+};
+
+export type RequestFillMetadata = {
+  transactionHash: TransactionHash;
+  fillerAccount: EthereumAddress;
 };

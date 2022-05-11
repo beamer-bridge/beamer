@@ -3,11 +3,12 @@ import type {
   JsonRpcSigner,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
 import type { EthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress } from '@/types/data';
+import { UInt256 } from '@/types/uint-256';
 
 export async function getRequestFee(
   provider: EthereumProvider,
@@ -20,14 +21,14 @@ export async function getRequestFee(
 
 export async function sendRequestTransaction(
   signer: JsonRpcSigner,
-  amount: number,
+  amount: UInt256,
   targetChainIdentifier: number,
   requestManagerAddress: EthereumAddress,
   sourceTokenAddress: EthereumAddress,
   targetTokenAddress: EthereumAddress,
   targetAccount: EthereumAddress,
-  validityPeriod: number,
-  fees: number, // TODO: BigNumber ?
+  validityPeriod: UInt256,
+  fees: UInt256,
 ): Promise<string> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
 
@@ -36,19 +37,19 @@ export async function sendRequestTransaction(
     sourceTokenAddress,
     targetTokenAddress,
     targetAccount,
-    amount, // TODO: BigNumber ?
-    validityPeriod, // TODO: BigNumber ?
+    BigNumber.from(amount.asString),
+    BigNumber.from(validityPeriod.asString),
   ];
 
   const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
     ...requestParameter,
-    { value: fees },
+    { value: BigNumber.from(fees.asString) },
   );
 
   try {
     const transaction: TransactionResponse = await requestManagerContract.createRequest(
       ...requestParameter,
-      { value: fees, gasLimit: estimatedGasLimit },
+      { value: BigNumber.from(fees.asString), gasLimit: estimatedGasLimit },
     );
 
     return transaction.hash;
@@ -62,14 +63,14 @@ export async function getRequestIdentifier(
   provider: JsonRpcProvider,
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
-): Promise<number> {
+): Promise<UInt256> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, provider);
   const transaction = await provider.getTransaction(transactionHash);
   const receipt = await transaction.wait();
   const event = requestManagerContract.interface.parseLog(receipt.logs[0]);
 
   if (event) {
-    return event.args.requestId.toNumber(); // TODO: check this typing
+    return new UInt256(event.args.requestId);
   } else {
     throw new Error("Request Failed. Couldn't retrieve Request ID");
   }

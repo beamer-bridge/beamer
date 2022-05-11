@@ -29,7 +29,7 @@ const metadata = computed(() => {
   const { transfer } = props;
 
   return {
-    amount: `${transfer.amount}`, // TODO: format!
+    amount: transfer.amount.decimalAmount,
     tokenSymbol: transfer.sourceToken.symbol,
     sourceChainName: transfer.sourceChain.name,
     targetChainName: transfer.targetChain.name,

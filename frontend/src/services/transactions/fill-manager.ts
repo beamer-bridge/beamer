@@ -2,10 +2,11 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import FillManager from '@/assets/FillManager.json';
+import type { UInt256 } from '@/types/uint-256';
 
 export async function waitForFulfillment(
   targetNetworkProvider: JsonRpcProvider,
-  requestIdentifier: number,
+  requestIdentifier: UInt256,
   fillManagerAddress: string,
 ): Promise<void> {
   const fillManagerContract = new Contract(
@@ -15,7 +16,9 @@ export async function waitForFulfillment(
   );
 
   const currentBlockNumber = await targetNetworkProvider.getBlockNumber();
-  const eventFilter = fillManagerContract.filters.RequestFilled(BigNumber.from(requestIdentifier));
+  const eventFilter = fillManagerContract.filters.RequestFilled(
+    BigNumber.from(requestIdentifier.asString),
+  );
   const events = await fillManagerContract.queryFilter(eventFilter, currentBlockNumber - 500);
   if (events.length > 0) return;
 

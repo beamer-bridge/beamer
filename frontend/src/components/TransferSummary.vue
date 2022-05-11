@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col justify-center items-center">
     <div>
-      Sending <span>{{ Number(amount).toFixed(2) }}&nbsp;</span>
+      Sending <span>{{ amount }}&nbsp;</span>
       <span>{{ tokenSymbol }}</span>
     </div>
     <div>
