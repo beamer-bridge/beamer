@@ -46,7 +46,7 @@ import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-import { Transfer } from '@/actions/transfer';
+import { Transfer } from '@/actions/transfers';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import { useRequestFee } from '@/composables/useRequestFee';

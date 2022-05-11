@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import type { Transfer } from '@/actions/transfer';
+import type { Transfer } from '@/actions/transfers';
 import Card from '@/components/layout/Card.vue';
 import Progress from '@/components/layout/Progress.vue';
 import TransferSummary from '@/components/TransferSummary.vue';

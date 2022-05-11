@@ -1,5 +1,5 @@
 import type { StepData } from '@/actions/steps';
-import type { RequestFillMetadata, RequestMetadataData, TransferData } from '@/actions/transfer';
+import type { RequestFillMetadata, RequestMetadataData, TransferData } from '@/actions/transfers';
 import type { ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { TokenAmountData } from '@/types/token-amount';
