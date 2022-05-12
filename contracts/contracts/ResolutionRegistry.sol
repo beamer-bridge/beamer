@@ -21,6 +21,8 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
     ) external restricted(resolutionChainId, msg.sender) {
         require(fillers[fillHash] == address(0), "Resolution already recorded");
         fillers[fillHash] = filler;
+        // Revert fill hash invalidation, fill proofs outweigh an invalidation
+        invalidFillHashes[fillHash] = false;
 
         emit RequestResolved(requestId, fillHash, filler);
     }
@@ -31,9 +33,14 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
         uint256 resolutionChainId
     ) external restricted(resolutionChainId, msg.sender) {
         require(
+            fillers[fillHash] == address(0),
+            "Cannot invalidate resolved fillHashes"
+        );
+        require(
             invalidFillHashes[fillHash] == false,
             "FillHash already invalidated"
         );
+
         invalidFillHashes[fillHash] = true;
 
         emit FillHashInvalidated(requestId, fillHash);
