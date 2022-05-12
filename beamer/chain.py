@@ -393,7 +393,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     minimum_stake = claim.get_minimum_challenge_stake(initial_claim_stake)
     own_stake = Wei(claim.get_challenger_stake(context.address))
     # TODO: have a central variable and proper L1 cost calculations
-    l1_cost = Wei(initial_claim_stake + 10 ** 15)
+    l1_cost = Wei(initial_claim_stake + 10**15)
     stake = max(minimum_stake, Wei(l1_cost - own_stake))
 
     func = context.request_manager.functions.challengeClaim(claim.id)

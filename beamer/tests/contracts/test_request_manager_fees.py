@@ -163,7 +163,7 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     fee_data_2 = 31_000, 4_000, 1
 
     token.mint(requester, amount * 10, {"from": requester})
-    token.approve(request_manager.address, 2 ** 256 - 1, {"from": requester})
+    token.approve(request_manager.address, 2**256 - 1, {"from": requester})
 
     with temp_fee_data(request_manager, *fee_data_1):
         request_id_1 = make_request(
