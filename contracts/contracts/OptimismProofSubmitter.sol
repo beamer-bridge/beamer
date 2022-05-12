@@ -28,7 +28,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
         restricted(block.chainid, msg.sender)
         returns (ProofReceipt memory)
     {
-        bytes32 fillId = keccak256(abi.encode(block.number));
+        bytes32 fillId = blockhash(block.number - 1);
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
 
         messenger.sendMessage(
