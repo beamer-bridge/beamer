@@ -11,44 +11,30 @@
       <RequestFormInputs v-if="requestState === RequestState.Init" />
       <RequestStatus v-else :metadata="requestMetadata!" :state="requestState" />
       <Transition name="expand">
-        <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
-          {{ shownError }}
+        <div v-if="transferError" class="mt-7 text-right text-lg text-orange-dark">
+          {{ transferError }}
         </div>
       </Transition>
 
-      <Teleport to="#action-button-portal">
-        <div v-if="!signer">
-          <FormKit
-            input-class="w-112 bg-orange flex flex-row justify-center"
-            type="button"
-            @click="runRequestSigner"
-          >
-            <div v-if="requestSignerActive" class="h-8 w-8">
-              <spinner></spinner>
-            </div>
-            <template v-else>Connect MetaMask Wallet</template>
-          </FormKit>
-        </div>
-        <div v-else>
-          <FormKit
-            v-if="requestState === RequestState.Init"
-            class="w-72 flex flex-row justify-center bg-green"
-            type="submit"
-            :disabled="!valid"
-            @click="submitForm"
-          >
-            Transfer funds
-          </FormKit>
+      <Teleport v-if="signer" to="#action-button-portal">
+        <FormKit
+          v-if="requestState === RequestState.Init"
+          class="w-72 flex flex-row justify-center bg-green"
+          type="submit"
+          :disabled="!valid"
+          @click="submitForm"
+        >
+          Transfer funds
+        </FormKit>
 
-          <FormKit
-            v-if="requestState !== RequestState.Init"
-            input-class="w-72 flex flex-row justify-center bg-green"
-            type="button"
-            :disabled="isNewTransferDisabled"
-            @click="newTransfer"
-            >New Transfer</FormKit
-          >
-        </div>
+        <FormKit
+          v-if="requestState !== RequestState.Init"
+          input-class="w-72 flex flex-row justify-center bg-green"
+          type="button"
+          :disabled="isNewTransferDisabled"
+          @click="newTransfer"
+          >New Transfer</FormKit
+        >
       </Teleport>
     </FormKit>
   </div>
@@ -62,9 +48,7 @@ import { computed, ref, watch } from 'vue';
 
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import RequestStatus from '@/components/RequestStatus.vue';
-import Spinner from '@/components/Spinner.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
-import { useRequestSigner } from '@/composables/useRequestSigner';
 import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -90,26 +74,12 @@ const requestManagerAddress = computed(
 const { amount: requestFeeAmount } = useRequestFee(provider, requestManagerAddress);
 
 const {
-  run: requestSigner,
-  active: requestSignerActive,
-  error: requestSignerError,
-} = useRequestSigner();
-
-const {
   runTransfer,
   requestMetadata,
   error: transferError,
   requestState,
   isNewTransferDisabled,
 } = useTransfer();
-
-const runRequestSigner = () => {
-  // TOOD: In future we will not separate getting provider and signer which
-  // resolve the undefined provider case.
-  if (provider.value) {
-    requestSigner(provider.value);
-  }
-};
 
 const submitForm = () => {
   requestForm.value?.node.submit();
@@ -132,12 +102,8 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
 
 watch(chainId, () => location.reload());
 
-const shownError = computed(() => {
-  return requestSignerError.value || transferError.value;
-});
-
-watch(shownError, async () => {
-  if (shownError.value && requestState.value !== RequestState.RequestFailed) {
+watch(transferError, async () => {
+  if (transferError.value && requestState.value !== RequestState.RequestFailed) {
     requestState.value = RequestState.Init;
   }
 });

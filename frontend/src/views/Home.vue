@@ -2,8 +2,8 @@
   <div class="home flex justify-center">
     <div class="max-w-2xl flex flex-col xl:justify-center xl:items-center">
       <div class="text-center text-orange-dark p-2 text-lg h-12">
-        <div v-if="criticalErrorMessage">
-          {{ criticalErrorMessage }}
+        <div v-if="errorMessage">
+          {{ errorMessage }}
         </div>
       </div>
 
@@ -22,17 +22,31 @@
         />
       </Card>
 
-      <div id="action-button-portal" />
+      <div id="action-button-portal" class="flex justify-center">
+        <FormKit
+          v-if="!signer"
+          input-class="w-112 bg-orange flex flex-row justify-center"
+          type="button"
+          @click="runRequestSigner"
+        >
+          <div v-if="requestSignerActive" class="h-8 w-8">
+            <Spinner />
+          </div>
+          <template v-else>Connect MetaMask Wallet</template>
+        </FormKit>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
+import Spinner from '@/components/Spinner.vue';
+import { useRequestSigner } from '@/composables/useRequestSigner';
 import { createMetaMaskProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -43,6 +57,20 @@ const ethereumProvider = useEthereumProvider();
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 const requestDialogReloadKey = ref(0);
 
+const {
+  run: requestSigner,
+  active: requestSignerActive,
+  error: requestSignerError,
+} = useRequestSigner();
+
+const runRequestSigner = () => {
+  // TOOD: In future we will not separate getting provider and signer which
+  // resolve the undefined provider case.
+  if (provider.value) {
+    requestSigner(provider.value);
+  }
+};
+
 const chainChangeHandler = () => {
   const isSupported = ethereumProvider.chainId in configuration.chains;
   criticalErrorMessage.value = isSupported ? '' : 'Connected chain not supported!';
@@ -51,6 +79,10 @@ const chainChangeHandler = () => {
 const resetRequestDialog = () => {
   requestDialogReloadKey.value += 1;
 };
+
+const errorMessage = computed(() => {
+  return criticalErrorMessage.value || requestSignerError.value;
+});
 
 watch(chainId, chainChangeHandler);
 
