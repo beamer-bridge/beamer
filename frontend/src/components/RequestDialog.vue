@@ -1,11 +1,5 @@
 <template>
-  <div class="request-dialog">
-    <div class="h-14">
-      <div v-if="ethereumProvider.signer" class="flex flex-row gap-4 justify-center items-center">
-        <div class="h-7 w-7 rounded-50 border-4 border-solid border-teal-light bg-green"></div>
-        <span class="text-lg">You are currently connected via Metamask</span>
-      </div>
-    </div>
+  <div class="request-dialog px-20 pt-18 pb-16">
     <FormKit
       ref="requestForm"
       v-slot="{ state: { valid } }"
@@ -14,47 +8,48 @@
       :actions="false"
       @submit="submitRequestTransaction"
     >
-      <Card class="bg-teal px-20 pt-18 pb-16 self-stretch mb-11">
-        <RequestFormInputs v-if="requestState === RequestState.Init" />
-        <RequestStatus v-else :metadata="requestMetadata!" :state="requestState" />
-        <Transition name="expand">
-          <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
-            {{ shownError }}
-          </div>
-        </Transition>
-      </Card>
+      <RequestFormInputs v-if="requestState === RequestState.Init" />
+      <RequestStatus v-else :metadata="requestMetadata!" :state="requestState" />
+      <Transition name="expand">
+        <div v-if="shownError" class="mt-7 text-right text-lg text-orange-dark">
+          {{ shownError }}
+        </div>
+      </Transition>
 
-      <div v-if="!ethereumProvider.signer">
-        <FormKit
-          input-class="w-112 bg-orange flex flex-row justify-center"
-          type="button"
-          @click="runRequestSigner"
-        >
-          <div v-if="requestSignerActive" class="h-8 w-8">
-            <spinner></spinner>
-          </div>
-          <template v-else>Connect MetaMask Wallet</template>
-        </FormKit>
-      </div>
-      <div v-else>
-        <FormKit
-          v-if="requestState === RequestState.Init"
-          class="w-72 flex flex-row justify-center bg-green"
-          type="submit"
-          :disabled="!valid"
-        >
-          Transfer funds
-        </FormKit>
+      <Teleport to="#action-button-portal">
+        <div v-if="!signer">
+          <FormKit
+            input-class="w-112 bg-orange flex flex-row justify-center"
+            type="button"
+            @click="runRequestSigner"
+          >
+            <div v-if="requestSignerActive" class="h-8 w-8">
+              <spinner></spinner>
+            </div>
+            <template v-else>Connect MetaMask Wallet</template>
+          </FormKit>
+        </div>
+        <div v-else>
+          <FormKit
+            v-if="requestState === RequestState.Init"
+            class="w-72 flex flex-row justify-center bg-green"
+            type="submit"
+            :disabled="!valid"
+            @click="submitForm"
+          >
+            Transfer funds
+          </FormKit>
 
-        <FormKit
-          v-if="requestState !== RequestState.Init"
-          input-class="w-72 flex flex-row justify-center bg-green"
-          type="button"
-          :disabled="isNewTransferDisabled"
-          @click="newTransfer"
-          >New Transfer</FormKit
-        >
-      </div>
+          <FormKit
+            v-if="requestState !== RequestState.Init"
+            input-class="w-72 flex flex-row justify-center bg-green"
+            type="button"
+            :disabled="isNewTransferDisabled"
+            @click="newTransfer"
+            >New Transfer</FormKit
+          >
+        </div>
+      </Teleport>
     </FormKit>
   </div>
 </template>
@@ -65,7 +60,6 @@ import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-import Card from '@/components/layout/Card.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import RequestStatus from '@/components/RequestStatus.vue';
 import Spinner from '@/components/Spinner.vue';
@@ -115,6 +109,10 @@ const runRequestSigner = () => {
   if (provider.value) {
     requestSigner(provider.value);
   }
+};
+
+const submitForm = () => {
+  requestForm.value?.node.submit();
 };
 
 const submitRequestTransaction = async (formResult: RequestFormResult) => {
