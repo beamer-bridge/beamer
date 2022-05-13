@@ -1,5 +1,5 @@
 <template>
-  <div class="request-dialog px-20 pt-18 pb-16">
+  <div class="request-dialog">
     <FormKit
       ref="requestForm"
       v-slot="{ state: { valid } }"
@@ -55,12 +55,6 @@ import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { RequestState } from '@/types/data';
 import type { RequestFormResult } from '@/types/form';
 
-interface Emits {
-  (e: 'reload'): void;
-}
-
-const emit = defineEmits<Emits>();
-
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
@@ -100,7 +94,11 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   );
 };
 
-watch(chainId, () => location.reload());
+watch(chainId, (_, oldChainId) => {
+  if (oldChainId !== -1) {
+    location.reload();
+  }
+});
 
 watch(transferError, async () => {
   if (transferError.value && requestState.value !== RequestState.RequestFailed) {
@@ -109,6 +107,6 @@ watch(transferError, async () => {
 });
 
 const newTransfer = () => {
-  emit('reload');
+  requestState.value = RequestState.Init;
 };
 </script>

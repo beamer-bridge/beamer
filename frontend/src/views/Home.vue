@@ -1,6 +1,6 @@
 <template>
   <div class="home flex justify-center">
-    <div class="max-w-2xl flex flex-col xl:justify-center xl:items-center">
+    <div class="w-[40rem] flex flex-col xl:justify-center xl:items-center">
       <div class="text-center text-orange-dark p-2 text-lg h-12">
         <div v-if="errorMessage">
           {{ errorMessage }}
@@ -14,11 +14,12 @@
         </div>
       </div>
 
-      <Card class="bg-teal mb-11">
-        <RequestDialog
-          v-if="ethereumProvider.provider"
-          :key="requestDialogReloadKey"
-          @reload="resetRequestDialog"
+      <Card class="bg-teal mb-11 w-full min-h-[50rem]">
+        <Tabs
+          left-label="Transfer"
+          right-label="Activity"
+          :left-content-component="RequestDialog"
+          :right-content-component="null!"
         />
       </Card>
 
@@ -44,6 +45,7 @@ import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
+import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useRequestSigner } from '@/composables/useRequestSigner';
@@ -55,7 +57,6 @@ const criticalErrorMessage = ref('');
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
-const requestDialogReloadKey = ref(0);
 
 const {
   run: requestSigner,
@@ -74,10 +75,6 @@ const runRequestSigner = () => {
 const chainChangeHandler = () => {
   const isSupported = ethereumProvider.chainId in configuration.chains;
   criticalErrorMessage.value = isSupported ? '' : 'Connected chain not supported!';
-};
-
-const resetRequestDialog = () => {
-  requestDialogReloadKey.value += 1;
 };
 
 const errorMessage = computed(() => {
