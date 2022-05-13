@@ -14,8 +14,3 @@ compiler:
     version: 0.8.13
 
 dev_deployment_artifacts: true
-
-networks:
-  development:
-    cmd_settings:
-      chain_id: 1337
