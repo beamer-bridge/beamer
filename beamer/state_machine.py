@@ -6,7 +6,6 @@ from typing import Optional
 
 import structlog
 from eth_typing import ChecksumAddress
-from eth_utils import encode_hex
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3 import Web3
@@ -253,7 +252,7 @@ def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) 
             continue
 
         fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
-        if encode_hex(fill_hash_of_claim) == event.fill_hash:
+        if fill_hash_of_claim == event.fill_hash:
             claim.invalidate()
 
     return True, None

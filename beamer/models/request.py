@@ -6,7 +6,7 @@ from eth_utils import keccak, to_canonical_address
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
 
-from beamer.typing import ChainId, FillId, RequestId, TokenAmount
+from beamer.typing import ChainId, FillHash, FillId, RequestHash, RequestId, TokenAmount
 
 
 class Request(StateMachine):
@@ -63,29 +63,33 @@ class Request(StateMachine):
         self.l1_resolution_filler = l1_filler
 
     @property
-    def request_hash(self) -> bytes:
-        return keccak(
-            encode_abi_packed(
-                ["uint256", "uint256", "uint256", "address", "address", "uint256"],
-                [
-                    self.id,
-                    self.source_chain_id,
-                    self.target_chain_id,
-                    to_canonical_address(self.target_token_address),
-                    to_canonical_address(self.target_address),
-                    self.amount,
-                ],
+    def request_hash(self) -> RequestHash:
+        return RequestHash(
+            keccak(
+                encode_abi_packed(
+                    ["uint256", "uint256", "uint256", "address", "address", "uint256"],
+                    [
+                        self.id,
+                        self.source_chain_id,
+                        self.target_chain_id,
+                        to_canonical_address(self.target_token_address),
+                        to_canonical_address(self.target_address),
+                        self.amount,
+                    ],
+                )
             )
         )
 
-    def fill_hash_with_fill_id(self, fill_id: FillId) -> bytes:
-        return keccak(
-            encode_abi_packed(
-                ["bytes32", "bytes32"],
-                [
-                    self.request_hash,
-                    fill_id,
-                ],
+    def fill_hash_with_fill_id(self, fill_id: FillId) -> FillHash:
+        return FillHash(
+            keccak(
+                encode_abi_packed(
+                    ["bytes32", "bytes32"],
+                    [
+                        self.request_hash,
+                        fill_id,
+                    ],
+                )
             )
         )
 

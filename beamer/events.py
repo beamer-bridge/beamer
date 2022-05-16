@@ -15,7 +15,9 @@ from beamer.typing import (
     BlockNumber,
     ChainId,
     ClaimId,
+    FillHash,
     FillId,
+    RequestHash,
     RequestId,
     Termination,
     TokenAmount,
@@ -97,14 +99,21 @@ class ClaimWithdrawn(ClaimEvent):
 @dataclass(frozen=True)
 class RequestResolved(TxEvent):
     request_id: RequestId
-    fill_hash: str
+    fill_hash: FillHash
     filler: ChecksumAddress
 
 
 @dataclass(frozen=True)
 class FillHashInvalidated(TxEvent):
     request_id: RequestId
-    fill_hash: str
+    fill_hash: FillHash
+
+
+@dataclass(frozen=True)
+class HashInvalidated(TxEvent):
+    request_hash: RequestHash
+    fill_id: FillId
+    fill_hash: FillHash
 
 
 def _camel_to_snake(s: str) -> str:
@@ -119,6 +128,7 @@ _EVENT_TYPES = dict(
     ClaimWithdrawn=ClaimWithdrawn,
     RequestResolved=RequestResolved,
     FillHashInvalidated=FillHashInvalidated,
+    HashInvalidated=HashInvalidated,
 )
 
 

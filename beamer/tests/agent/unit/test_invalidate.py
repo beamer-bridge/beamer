@@ -1,4 +1,3 @@
-from eth_utils import encode_hex
 from hexbytes import HexBytes
 
 from beamer.events import FillHashInvalidated
@@ -30,7 +29,7 @@ def test_handle_fill_hash_invalidated():
         chain_id=request.target_chain_id,
         tx_hash=HexBytes(""),
         request_id=request.id,
-        fill_hash=encode_hex(fill_hash),
+        fill_hash=fill_hash,
     )
     assert process_event(event, context) == (True, None)
 

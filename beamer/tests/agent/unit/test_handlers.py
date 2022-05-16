@@ -19,7 +19,7 @@ from beamer.tests.agent.unit.utils import (
     make_request,
 )
 from beamer.tests.agent.utils import make_address
-from beamer.typing import Termination
+from beamer.typing import FillHash, Termination
 
 
 def test_skip_not_self_filled():
@@ -135,7 +135,7 @@ def test_handle_request_resolved():
         chain_id=TARGET_CHAIN_ID,
         tx_hash=HexBytes(""),
         request_id=REQUEST_ID,
-        fill_hash="",
+        fill_hash=FillHash(b""),
         filler=filler,
     )
 
