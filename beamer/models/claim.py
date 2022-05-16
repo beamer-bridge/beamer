@@ -29,6 +29,7 @@ class Claim(StateMachine):
     claimer_winning = State("ClaimerWinning", initial=True)
     # Challenger is winning
     challenger_winning = State("ChallengerWinning")
+    invalidated = State("Invalidated")
     ignored = State("Ignored")
     withdrawn = State("Withdrawn")
 
@@ -37,6 +38,7 @@ class Claim(StateMachine):
         | challenger_winning.to(claimer_winning)
         | ignored.to(ignored)
     )
+    invalidate = claimer_winning.to(invalidated) | challenger_winning.to(invalidated)
     withdraw = (
         claimer_winning.to(withdrawn)
         | challenger_winning.to(withdrawn)
@@ -107,6 +109,9 @@ class Claim(StateMachine):
             self._on_new_claim_made(self._latest_claim_made)
 
     def _on_new_claim_made(self, new_claim_made: ClaimMade) -> None:
+        assert self._latest_claim_made.claim_id == new_claim_made.claim_id
+        assert self._latest_claim_made.fill_id == new_claim_made.fill_id
+
         if new_claim_made.challenger_stake_total > new_claim_made.claimer_stake:
             new_challenger_stake = (
                 new_claim_made.challenger_stake_total
