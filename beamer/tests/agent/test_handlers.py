@@ -25,6 +25,7 @@ TARGET_CHAIN_ID = ChainId(3)
 
 REQUEST_ID = RequestId(10)
 CLAIM_ID = ClaimId(200)
+FILL_ID = FillId(b"abc")
 
 CLAIMER_STAKE = Wei(10_000_000)
 CHALLENGER_STAKE = Wei(5_000_000)
@@ -68,6 +69,7 @@ def make_claim(
     challenger: ChecksumAddress = None,
     challenger_stake: Wei = CHALLENGER_STAKE,
     termination: Termination = TERMINATION,
+    fill_id: FillId = FILL_ID,
 ) -> Claim:
     challenger = challenger or make_address()
     claim = Claim(
@@ -76,7 +78,7 @@ def make_claim(
             tx_hash=HexBytes(b""),
             claim_id=CLAIM_ID,
             request_id=request.id,
-            fill_id=FillId(456),
+            fill_id=fill_id,
             claimer=claimer or make_address(),
             claimer_stake=claimer_stake,
             last_challenger=challenger,

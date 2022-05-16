@@ -30,7 +30,7 @@ class Request(StateMachine):
         self.valid_until = valid_until
         self.filler: Optional[ChecksumAddress] = None
         self.fill_tx: Optional[HexBytes] = None
-        self.fill_id: Optional[int] = None
+        self.fill_id: Optional[FillId] = None
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
 
     pending = State("Pending", initial=True)
