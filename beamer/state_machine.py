@@ -21,6 +21,7 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
+    HashInvalidated,
     InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
     RequestCreated,
@@ -78,6 +79,9 @@ def process_event(event: Event, context: Context) -> HandlerResult:
 
     elif isinstance(event, RequestResolved):
         return _handle_request_resolved(event, context)
+
+    elif isinstance(event, HashInvalidated):
+        return _handle_hash_invalidated(event, context)
 
     elif isinstance(event, FillHashInvalidated):
         return _handle_fill_hash_invalidated(event, context)
@@ -241,6 +245,31 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     return True, None
 
 
+def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
+    request: Optional[Request] = None
+    # TODO: replace this with something more efficient, see #644
+    for candidate in context.requests:
+        if candidate.request_hash == event.request_hash:
+            request = candidate
+            break
+
+    if request is None:
+        return False, None
+
+    # Mark the claims with that fill_id as invalidated
+    found_claim = False
+    for claim in context.claims:
+        if claim.request_id != request.id:
+            continue
+
+        fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
+        if fill_hash_of_claim == event.fill_hash:
+            found_claim = True
+            claim.invalidate()
+
+    return found_claim, None
+
+
 def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     if request is None:
@@ -253,7 +282,7 @@ def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) 
 
         fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
         if fill_hash_of_claim == event.fill_hash:
-            claim.invalidate()
+            claim.l1_invalidate()
 
     return True, None
 
