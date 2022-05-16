@@ -6,6 +6,7 @@ from typing import Optional
 
 import structlog
 from eth_typing import ChecksumAddress
+from eth_utils import encode_hex
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
 from web3 import Web3
@@ -241,9 +242,21 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     return True, None
 
 
-def _handle_fill_hash_invalidated(_event: FillHashInvalidated, _context: Context) -> HandlerResult:
-    # TODO: implement once contract is finished
-    return False, None
+def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
+    request = context.requests.get(event.request_id)
+    if request is None:
+        return False, None
+
+    # Mark the claims with that fill_id as invalidated
+    for claim in context.claims:
+        if claim.request_id != request.id:
+            continue
+
+        fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
+        if encode_hex(fill_hash_of_claim) == event.fill_hash:
+            claim.invalidate()
+
+    return True, None
 
 
 def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> HandlerResult:
