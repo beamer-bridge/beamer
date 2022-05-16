@@ -15,12 +15,7 @@
       </div>
 
       <Card class="bg-teal mb-11 w-full min-h-[50rem]">
-        <Tabs
-          left-label="Transfer"
-          right-label="Activity"
-          :left-content-component="RequestDialog"
-          :right-content-component="null!"
-        />
+        <Tabs :tabs="tabs" />
       </Card>
 
       <div id="action-button-portal" class="flex justify-center">
@@ -63,6 +58,17 @@ const {
   active: requestSignerActive,
   error: requestSignerError,
 } = useRequestSigner();
+
+const tabs = [
+  {
+    label: 'Transfer',
+    content: RequestDialog,
+  },
+  {
+    label: 'Activity',
+    content: null,
+  },
+];
 
 const runRequestSigner = () => {
   // TOOD: In future we will not separate getting provider and signer which
