@@ -5,7 +5,7 @@ const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
 const DECIMAL_CHARACTERS = '0123456789';
 const ALPHABET_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz';
 
-function getRandomString(charSet: string, length: number, prefix = ''): string {
+export function getRandomString(charSet = ALPHABET_CHARACTERS, length = 5, prefix = ''): string {
   let output = prefix;
 
   for (let i = 0; i < length; i++) {

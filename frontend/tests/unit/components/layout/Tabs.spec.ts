@@ -1,23 +1,18 @@
 import { mount } from '@vue/test-utils';
-import type { Component } from 'vue';
 import { markRaw } from 'vue';
 
 import Tabs from '@/components/layout/Tabs.vue';
+import { getRandomString } from '~/utils/data_generators';
 
-async function createWrapper(options?: {
-  leftLabel?: string;
-  rightLabel?: string;
-  leftContentComponent?: Component;
-  rightContentComponent?: Component;
-}) {
+async function createWrapper(options?: { tabs: Array<{ label?: string; template?: string }> }) {
+  const tabs = (options?.tabs ?? []).map((tab) => ({
+    label: tab.label ?? getRandomString(),
+    content: markRaw({ template: tab.template ?? '<div />' }),
+  }));
+
   const wrapper = mount(Tabs, {
     shallow: false,
-    props: {
-      leftLabel: options?.leftLabel ?? 'left',
-      rightLabel: options?.rightLabel ?? 'right',
-      leftContentComponent: options?.leftContentComponent ?? markRaw({ template: 'left' }),
-      rightContentComponent: options?.rightContentComponent ?? markRaw({ template: 'right' }),
-    },
+    props: { tabs },
   });
 
   // Because the tab content gets set in the `mount` hook, we need to await the
@@ -28,59 +23,55 @@ async function createWrapper(options?: {
 }
 
 describe('Tabs.vue', () => {
-  it('show left and right label', async () => {
-    const wrapper = await createWrapper({ leftLabel: 'left label', rightLabel: 'right label' });
+  it('renders the label of each tab', async () => {
+    const tabs = [{ label: 'foo' }, { label: 'bar' }, { label: 'baz' }];
+    const wrapper = await createWrapper({ tabs });
+    const tabHeaders = wrapper.findAll('[data-test="tab-header"]');
 
-    expect(wrapper.text()).toContain('left label');
-    expect(wrapper.text()).toContain('right label');
+    expect(tabHeaders.length).toBe(3);
+    expect(tabHeaders[0].text()).toContain('foo');
+    expect(tabHeaders[1].text()).toContain('bar');
+    expect(tabHeaders[2].text()).toContain('baz');
   });
 
-  it('shows left tab content per default', async () => {
-    const leftContentComponent = markRaw({ template: '<span>left content</span>' });
-    const wrapper = await createWrapper({ leftContentComponent });
+  it('shows first tab content per default', async () => {
+    const tabs = [{ template: 'foo' }, { template: 'bar' }, { template: 'baz' }];
+    const wrapper = await createWrapper({ tabs });
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('<span>left content</span>');
+    expect(tabContent.html()).toContain('foo');
   });
 
   it('can switch tab content via clicks on the headers', async () => {
-    const leftContentComponent = markRaw({ template: '<span>left content</span>' });
-    const rightContentComponent = markRaw({ template: '<span>right content</span>' });
-    const wrapper = await createWrapper({ leftContentComponent, rightContentComponent });
-    const leftTabHeader = wrapper.get('[data-test="left-tab-header"]');
-    const rightTabHeader = wrapper.get('[data-test="right-tab-header"]');
+    const tabs = [{ template: 'foo' }, { template: 'bar' }, { template: 'baz' }];
+    const wrapper = await createWrapper({ tabs });
+    const tabHeaders = wrapper.findAll('[data-test="tab-header"]');
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('<span>left content</span>');
-
-    await rightTabHeader.trigger('click');
-
-    expect(tabContent.html()).toContain('<span>right content</span>');
-
-    await leftTabHeader.trigger('click');
-
-    expect(tabContent.html()).toContain('<span>left content</span>');
+    expect(tabContent.html()).toContain('foo');
+    await tabHeaders[1].trigger('click');
+    expect(tabContent.html()).toContain('bar');
+    await tabHeaders[2].trigger('click');
+    expect(tabContent.html()).toContain('baz');
+    await tabHeaders[1].trigger('click');
+    expect(tabContent.html()).toContain('bar');
+    await tabHeaders[0].trigger('click');
+    expect(tabContent.html()).toContain('foo');
   });
 
   it('does not unload content component when tab changes', async () => {
-    const leftContentComponent = markRaw({ template: '<input id="test-input" />' });
-    const wrapper = await createWrapper({ leftContentComponent });
-    const leftTabHeader = wrapper.get('[data-test="left-tab-header"]');
-    const rightTabHeader = wrapper.get('[data-test="right-tab-header"]');
+    const tabs = [{ template: '<input id="test-input" />' }, { template: 'bar' }];
+    const wrapper = await createWrapper({ tabs });
+    const tabHeaders = wrapper.findAll('[data-test="tab-header"]');
 
     // Just a stupid helper to get around typing issues.
     const getInputValue = () => (wrapper.find('#test-input').element as HTMLInputElement).value;
 
     await wrapper.get('#test-input').setValue('test value');
-
     expect(getInputValue()).toBe('test value');
-
-    await rightTabHeader.trigger('click');
-
+    await tabHeaders[1].trigger('click');
     expect(wrapper.find('#test-input').exists()).toBeFalsy();
-
-    await leftTabHeader.trigger('click');
-
+    await tabHeaders[0].trigger('click');
     expect(getInputValue()).toBe('test value');
   });
 });
