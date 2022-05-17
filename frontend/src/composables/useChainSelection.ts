@@ -8,14 +8,24 @@ export function useChainSelection(
   provider: Ref<EthereumProvider | undefined>,
   chains: Ref<ChainConfigMapping>,
 ) {
-  const sourceChainId = ref(
-    getChainSelectorOption(String(provider.value?.chainId.value), chains.value),
-  );
+  const _selectedSourceChain = ref<SelectorOption<number> | null>(null);
+  const selectedSourceChain = computed({
+    get() {
+      return (
+        _selectedSourceChain.value ??
+        getChainSelectorOption(String(provider.value?.chainId.value), chains.value)
+      );
+    },
+    set(chain: SelectorOption<number> | null) {
+      _selectedSourceChain.value = chain;
+    },
+  });
+
   const sourceChains = computed(() =>
     Object.keys(chains.value).map((chainId) => getChainSelectorOption(chainId, chains.value)),
   );
   const targetChains = computed(() =>
-    sourceChains.value.filter((chain) => chain?.value !== sourceChainId.value?.value),
+    sourceChains.value.filter((chain) => chain?.value !== selectedSourceChain.value?.value),
   );
 
   const switchChain = async (chainId: Ref<number>) => {
@@ -35,17 +45,17 @@ export function useChainSelection(
     }
   };
 
-  return { sourceChainId, sourceChains, targetChains, switchChain };
+  return { selectedSourceChain, sourceChains, targetChains, switchChain };
 }
 
 function getChainSelectorOption(
   chainId: string,
   chains: ChainConfigMapping,
-): SelectorOption<number> | undefined {
+): SelectorOption<number> | null {
   return chains[chainId]
     ? {
         value: Number(chainId),
         label: chains[chainId]?.name,
       }
-    : undefined;
+    : null;
 }
