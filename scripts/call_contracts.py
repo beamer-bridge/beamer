@@ -163,9 +163,9 @@ def submit_request(
 
     request_manager = contracts["RequestManager"]
     token = contracts["MintableToken"]
-    tx_hash = token.functions.approve(request_manager.address, amount).transact()
+    total = amount + request_manager.functions.totalFee(amount).call()
+    tx_hash = token.functions.approve(request_manager.address, total).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
-    fee = request_manager.functions.totalFee().call()
 
     tx_hash = request_manager.functions.createRequest(
         target_chain_id,
@@ -174,7 +174,7 @@ def submit_request(
         target_address,
         amount,
         validity_period,
-    ).transact({"value": fee})
+    ).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
     print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
