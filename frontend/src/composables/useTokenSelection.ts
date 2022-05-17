@@ -15,12 +15,16 @@ export function useTokenSelection(
     ),
   );
 
-  const selectedToken: Ref<SelectorOption<string> | undefined> = ref();
+  const _selectedToken = ref<SelectorOption<string> | null>(null);
+  const selectedToken = computed({
+    get() {
+      return _selectedToken.value;
+    },
+    set(token: SelectorOption<string> | null) {
+      _selectedToken.value = token;
+    },
+  });
   const selectedTokenAddress = computed(() => selectedToken.value?.value);
-
-  const switchToken = (token: SelectorOption<string>) => {
-    selectedToken.value = token;
-  };
 
   const addTokenToProvider = async () => {
     if (!provider.value || !selectedToken.value) {
@@ -45,7 +49,6 @@ export function useTokenSelection(
     selectedToken,
     selectedTokenAddress,
     tokens,
-    switchToken,
     addTokenToProvider,
     addTokenAvailable,
   };

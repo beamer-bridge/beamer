@@ -22,14 +22,13 @@
         <div class="flex-1 flex flex-col">
           <FormKit
             id="tokenAddress"
-            :value="selectedToken"
+            v-model="selectedToken"
             type="selector"
             name="tokenAddress"
             :options="tokens"
             placeholder="Token"
             validation="required"
             messages-class="hidden"
-            @input="switchToken"
           />
           <div
             class="form-tooltip self-end"
@@ -50,7 +49,7 @@
     </div>
     <div class="mb-6">
       <FormKit
-        :value="sourceChainId"
+        v-model="selectedSourceChain"
         type="selector"
         name="sourceChainId"
         label="From"
@@ -139,19 +138,13 @@ const { chains } = storeToRefs(configuration);
 
 const requestManagerAddress = computed(() => chains.value[chainId.value]?.requestManagerAddress);
 
-const { sourceChains, targetChains, sourceChainId, switchChain } = useChainSelection(
+const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChainSelection(
   provider,
   chains,
 );
 
-const {
-  selectedToken,
-  selectedTokenAddress,
-  tokens,
-  switchToken,
-  addTokenToProvider,
-  addTokenAvailable,
-} = useTokenSelection(provider, chains);
+const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
+  useTokenSelection(provider, chains);
 
 const { show: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
   provider,
@@ -170,7 +163,7 @@ const {
   run: runFaucetRequest,
 } = useFaucet(
   signer,
-  computed(() => sourceChainId.value?.value),
+  computed(() => selectedSourceChain.value?.value),
 );
 
 const gasFeesTooltipText = `The fee amount is composed of three parts:
