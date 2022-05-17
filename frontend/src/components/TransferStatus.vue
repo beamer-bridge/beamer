@@ -1,7 +1,7 @@
 <template>
   <Card class="bg-teal-light p-10 mb-14 mt-2">
     <div class="flex flex-col justify-center items-center gap-4 text-black text-lg">
-      <TransferSummary v-bind="metadata" />
+      <TransferSummary v-bind="summary" />
     </div>
   </Card>
   <div class="flex flex-col justify-center items-center text-xl">
@@ -25,7 +25,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const metadata = computed(() => {
+const summary = computed(() => {
   const { transfer } = props;
 
   return {

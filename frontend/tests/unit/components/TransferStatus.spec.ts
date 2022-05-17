@@ -28,7 +28,7 @@ function createWrapper(options?: { transfer?: Transfer }) {
 }
 
 describe('TransferStatus.vue', () => {
-  it('shows transfer summary with correct metadata', () => {
+  it('shows transfer summary with correct data', () => {
     const data = generateTransferData({
       amount: generateTokenAmountData({
         amount: '1',

@@ -1,28 +1,28 @@
-import { RequestMetadata } from '@/actions/transfers/request-metadata';
+import { RequestInformation } from '@/actions/transfers/request-information';
 import { UInt256 } from '@/types/uint-256';
 import {
-  generateRequestMetadataData,
+  generateRequestInformationData,
   generateUInt256Data,
   getRandomEthereumAddress,
   getRandomTransactionHash,
 } from '~/utils/data_generators';
 
-describe('RequestMetadata', () => {
+describe('RequestInformation', () => {
   describe('setIdentifier()', () => {
     it('is possible when identifier is not already defined', () => {
-      const data = generateRequestMetadataData({ identifier: undefined });
-      const metadata = new RequestMetadata(data);
+      const data = generateRequestInformationData({ identifier: undefined });
+      const information = new RequestInformation(data);
 
-      metadata.setIdentifier(new UInt256('1'));
+      information.setIdentifier(new UInt256('1'));
 
-      expect(metadata.identifier).toMatchObject(new UInt256('1'));
+      expect(information.identifier).toMatchObject(new UInt256('1'));
     });
 
     it('fails if identifier is alrady defined', () => {
-      const data = generateRequestMetadataData({ identifier: '1' });
-      const metadata = new RequestMetadata(data);
+      const data = generateRequestInformationData({ identifier: '1' });
+      const information = new RequestInformation(data);
 
-      return expect(() => metadata.setIdentifier(new UInt256('2'))).toThrow(
+      return expect(() => information.setIdentifier(new UInt256('2'))).toThrow(
         'Attempt to overwrite already existing identifier of a request!',
       );
     });
@@ -34,9 +34,9 @@ describe('RequestMetadata', () => {
       const requestAccount = getRandomEthereumAddress();
       const identifier = generateUInt256Data();
       const data = { transactionHash, requestAccount, identifier };
-      const metadata = new RequestMetadata(data);
+      const information = new RequestInformation(data);
 
-      const encodedData = metadata.encode();
+      const encodedData = information.encode();
 
       expect(encodedData.transactionHash).toMatchObject(transactionHash);
       expect(encodedData.requestAccount).toMatchObject(requestAccount);
@@ -44,12 +44,12 @@ describe('RequestMetadata', () => {
     });
 
     it('can be used to re-instantiate token amount again', () => {
-      const data = generateRequestMetadataData();
-      const metadata = new RequestMetadata(data);
+      const data = generateRequestInformationData();
+      const information = new RequestInformation(data);
 
-      const encodedData = metadata.encode();
-      const newRequestMetadata = new RequestMetadata(encodedData);
-      const newEncodedData = newRequestMetadata.encode();
+      const encodedData = information.encode();
+      const newInformation = new RequestInformation(encodedData);
+      const newEncodedData = newInformation.encode();
 
       expect(encodedData).toMatchObject(newEncodedData);
     });
