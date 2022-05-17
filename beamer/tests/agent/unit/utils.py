@@ -49,7 +49,7 @@ class MockWeb3:
         self.eth = MockEth(chain_id=chain_id)
 
 
-def make_request() -> Request:
+def make_request(valid_until: int = TIMESTAMP - 1) -> Request:
     return Request(
         request_id=REQUEST_ID,
         source_chain_id=SOURCE_CHAIN_ID,
@@ -58,7 +58,7 @@ def make_request() -> Request:
         target_token_address=make_address(),
         target_address=make_address(),
         amount=TokenAmount(123),
-        valid_until=TIMESTAMP - 1,
+        valid_until=valid_until,
     )
 
 
