@@ -14,9 +14,9 @@ import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
-import type { RequestFillMetadata } from './request-fill-metadata';
-import type { RequestMetadataData } from './request-metadata';
-import { RequestMetadata } from './request-metadata';
+import type { FulfillmentInformation } from './fulfillment-information';
+import type { RequestInformationData } from './request-information';
+import { RequestInformation } from './request-information';
 
 const STEPS_DATA = [
   { identifier: 'sendRequestTransaction', label: 'Please confirm your request on Metamask' },
@@ -33,8 +33,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly targetAccount: EthereumAddress;
   readonly validityPeriod: UInt256;
   readonly fees: UInt256;
-  private _requestMetadata?: RequestMetadata;
-  private _requestFillMetadata?: RequestFillMetadata;
+  private _requestInformation?: RequestInformation;
+  private _fulfillmentInformation?: FulfillmentInformation;
 
   constructor(data: TransferData) {
     super((data.steps ?? STEPS_DATA).map((data) => new Step(data)));
@@ -47,10 +47,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this.targetAccount = data.targetAccount;
     this.validityPeriod = new UInt256(data.validityPeriod);
     this.fees = new UInt256(data.fees);
-    this._requestMetadata = data.requestMetadata
-      ? new RequestMetadata(data.requestMetadata)
+    this._requestInformation = data.requestInformation
+      ? new RequestInformation(data.requestInformation)
       : undefined;
-    this._requestFillMetadata = data.requestFillMetadata;
+    this._fulfillmentInformation = data.fulfillmentInformation;
   }
 
   static new(
@@ -75,12 +75,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     });
   }
 
-  get requestMetadata(): RequestMetadata | undefined {
-    return this._requestMetadata;
+  get requestInformation(): RequestInformation | undefined {
+    return this._requestInformation;
   }
 
-  get requestFillMetadata(): RequestFillMetadata | undefined {
-    return this._requestFillMetadata;
+  get fulfillmentInformation(): FulfillmentInformation | undefined {
+    return this._fulfillmentInformation;
   }
 
   protected getStepMethods(
@@ -111,8 +111,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       validityPeriod: this.validityPeriod.encode(),
       fees: this.fees.encode(),
       steps: this.steps.map((step) => step.encode()),
-      requestMetadata: this._requestMetadata?.encode(),
-      requestFillMetadata: this.requestFillMetadata,
+      requestInformation: this._requestInformation?.encode(),
+      fulfillmentInformation: this.fulfillmentInformation,
     };
   }
 
@@ -132,14 +132,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.fees,
     );
 
-    this._requestMetadata = new RequestMetadata({
+    this._requestInformation = new RequestInformation({
       transactionHash,
       requestAccount: signerAddress,
     });
   }
 
   protected async waitForRequestEvent(): Promise<void> {
-    if (!this._requestMetadata?.transactionHash) {
+    if (!this._requestInformation?.transactionHash) {
       throw new Error('Attempt to get request event before sending transaction!');
     }
 
@@ -147,14 +147,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     const identifier = await getRequestIdentifier(
       provider,
       this.sourceChain.requestManagerAddress,
-      this._requestMetadata.transactionHash,
+      this._requestInformation.transactionHash,
     );
 
-    this._requestMetadata.setIdentifier(identifier);
+    this._requestInformation.setIdentifier(identifier);
   }
 
   protected async waitForFulfillment(): Promise<void> {
-    if (!this._requestMetadata?.identifier) {
+    if (!this._requestInformation?.identifier) {
       throw new Error('Attempting to wait for fulfillment without request identifier!');
     }
 
@@ -162,11 +162,11 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
     await waitForFulfillment(
       provider,
-      this._requestMetadata.identifier,
+      this._requestInformation.identifier,
       this.targetChain.fillManagerAddress,
     );
 
-    // TODO: set this.requestFillMetadata
+    // TODO: set this.fulfillmentInformation
   }
 }
 
@@ -180,6 +180,6 @@ export type TransferData = {
   validityPeriod: UInt256Data;
   fees: UInt256Data;
   steps?: Array<StepData>;
-  requestMetadata?: RequestMetadataData;
-  requestFillMetadata?: RequestFillMetadata;
+  requestInformation?: RequestInformationData;
+  fulfillmentInformation?: FulfillmentInformation;
 };

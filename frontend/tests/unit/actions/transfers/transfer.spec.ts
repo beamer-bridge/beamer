@@ -8,8 +8,8 @@ import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 import {
   generateChain,
-  generateRequestFillMetadata,
-  generateRequestMetadataData,
+  generateFulfillmentInformation,
+  generateRequestInformationData,
   generateStepData,
   generateToken,
   generateTokenAmountData,
@@ -108,20 +108,20 @@ describe('transfer', () => {
       const transfer = new TestTransfer(DATA);
       requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
 
-      expect(transfer.requestMetadata?.requestAccount).toBeUndefined();
-      expect(transfer.requestMetadata?.transactionHash).toBeUndefined();
+      expect(transfer.requestInformation?.requestAccount).toBeUndefined();
+      expect(transfer.requestInformation?.transactionHash).toBeUndefined();
 
       await transfer.sendRequestTransaction(SIGNER, '0xSigner');
 
-      expect(transfer.requestMetadata?.requestAccount).toBe('0xSigner');
-      expect(transfer.requestMetadata?.transactionHash).toBe('0xHash');
+      expect(transfer.requestInformation?.requestAccount).toBe('0xSigner');
+      expect(transfer.requestInformation?.transactionHash).toBe('0xHash');
     });
   });
 
   describe('waitForRequestEvent()', () => {
     it('fails when transaction hash has not been set', async () => {
       const data = generateTransferData({
-        requestMetadata: generateRequestMetadataData({ transactionHash: '' }),
+        requestInformation: generateRequestInformationData({ transactionHash: '' }),
       });
       const transfer = new TestTransfer(data);
 
@@ -133,7 +133,7 @@ describe('transfer', () => {
     it('connects to the source chain', async () => {
       const data = generateTransferData({
         sourceChain: generateChain({ rpcUrl: 'https://source.rpc' }),
-        requestMetadata: generateRequestMetadataData(),
+        requestInformation: generateRequestInformationData(),
       });
       const transfer = new TestTransfer(data);
 
@@ -146,7 +146,7 @@ describe('transfer', () => {
     it('uses the stored request transaction hash', async () => {
       const data = generateTransferData({
         sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
-        requestMetadata: generateRequestMetadataData({
+        requestInformation: generateRequestInformationData({
           transactionHash: '0xHash',
         }),
       });
@@ -166,7 +166,7 @@ describe('transfer', () => {
   describe('waitForFulfillment()', () => {
     it('fails when request identifier has not been set', async () => {
       const data = generateTransferData({
-        requestMetadata: generateRequestMetadataData({
+        requestInformation: generateRequestInformationData({
           identifier: undefined,
         }),
       });
@@ -180,7 +180,7 @@ describe('transfer', () => {
     it('connects to the target chain', async () => {
       const data = generateTransferData({
         targetChain: generateChain({ rpcUrl: 'https://target.rpc' }),
-        requestMetadata: generateRequestMetadataData({
+        requestInformation: generateRequestInformationData({
           identifier: generateUInt256Data('1'),
         }),
       });
@@ -195,7 +195,7 @@ describe('transfer', () => {
     it('uses the correct parameters to wait for the request fill', async () => {
       const data = generateTransferData({
         targetChain: generateChain({ fillManagerAddress: '0xFillManager' }),
-        requestMetadata: generateRequestMetadataData({
+        requestInformation: generateRequestInformationData({
           identifier: generateUInt256Data('1'),
         }),
       });
@@ -222,8 +222,8 @@ describe('transfer', () => {
       const targetAccount = getRandomEthereumAddress();
       const validityPeriod = generateUInt256Data();
       const fees = generateUInt256Data();
-      const requestMetadata = generateRequestMetadataData();
-      const requestFillMetadata = generateRequestFillMetadata();
+      const requestInformation = generateRequestInformationData();
+      const fulfillmentInformation = generateFulfillmentInformation();
       const steps = [generateStepData()];
       const data = {
         amount,
@@ -234,8 +234,8 @@ describe('transfer', () => {
         targetAccount,
         validityPeriod,
         fees,
-        requestMetadata,
-        requestFillMetadata,
+        requestInformation,
+        fulfillmentInformation,
         steps,
       };
       const transfer = new TestTransfer(data);
@@ -250,8 +250,8 @@ describe('transfer', () => {
       expect(encodedData.targetAccount).toMatchObject(targetAccount);
       expect(encodedData.validityPeriod).toMatchObject(validityPeriod);
       expect(encodedData.fees).toMatchObject(fees);
-      expect(encodedData.requestMetadata).toMatchObject(requestMetadata);
-      expect(encodedData.requestFillMetadata).toMatchObject(requestFillMetadata);
+      expect(encodedData.requestInformation).toMatchObject(requestInformation);
+      expect(encodedData.fulfillmentInformation).toMatchObject(fulfillmentInformation);
       expect(encodedData.steps).toMatchObject(steps);
     });
 

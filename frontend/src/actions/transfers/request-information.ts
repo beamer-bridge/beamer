@@ -3,12 +3,12 @@ import type { Encodable } from '@/types/encoding';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
-export class RequestMetadata implements Encodable<RequestMetadataData> {
+export class RequestInformation implements Encodable<RequestInformationData> {
   readonly transactionHash: TransactionHash;
   readonly requestAccount: EthereumAddress;
   private _identifier?: UInt256;
 
-  constructor(data: RequestMetadataData) {
+  constructor(data: RequestInformationData) {
     this.transactionHash = data.transactionHash;
     this.requestAccount = data.requestAccount;
     this._identifier = data.identifier ? new UInt256(data.identifier) : undefined;
@@ -26,7 +26,7 @@ export class RequestMetadata implements Encodable<RequestMetadataData> {
     }
   }
 
-  public encode(): RequestMetadataData {
+  public encode(): RequestInformationData {
     return {
       transactionHash: this.transactionHash,
       requestAccount: this.requestAccount,
@@ -35,7 +35,7 @@ export class RequestMetadata implements Encodable<RequestMetadataData> {
   }
 }
 
-export type RequestMetadataData = {
+export type RequestInformationData = {
   transactionHash: TransactionHash;
   requestAccount: EthereumAddress;
   identifier?: UInt256Data;

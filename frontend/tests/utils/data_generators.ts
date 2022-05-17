@@ -1,5 +1,9 @@
 import type { StepData } from '@/actions/steps';
-import type { RequestFillMetadata, RequestMetadataData, TransferData } from '@/actions/transfers';
+import type {
+  FulfillmentInformation,
+  RequestInformationData,
+  TransferData,
+} from '@/actions/transfers';
 import type { ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { TokenAmountData } from '@/types/token-amount';
@@ -103,23 +107,23 @@ export function generateTokenAmountData(
   };
 }
 
-export function generateRequestMetadataData(
-  partialRequestMetadataData?: Partial<RequestMetadataData>,
-): RequestMetadataData {
+export function generateRequestInformationData(
+  partialRequestInformationData?: Partial<RequestInformationData>,
+): RequestInformationData {
   return {
     transactionHash: getRandomTransactionHash(),
     requestAccount: getRandomEthereumAddress(),
-    ...partialRequestMetadataData,
+    ...partialRequestInformationData,
   };
 }
 
-export function generateRequestFillMetadata(
-  partialRequestFillMetadata?: Partial<RequestFillMetadata>,
-): RequestFillMetadata {
+export function generateFulfillmentInformation(
+  partialFulfillmentInformation?: Partial<FulfillmentInformation>,
+): FulfillmentInformation {
   return {
     transactionHash: getRandomTransactionHash(),
     fillerAccount: getRandomEthereumAddress(),
-    ...partialRequestFillMetadata,
+    ...partialFulfillmentInformation,
   };
 }
 
