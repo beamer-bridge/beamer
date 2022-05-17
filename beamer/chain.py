@@ -265,15 +265,29 @@ def process_claims(context: Context) -> None:
             to_remove.append(claim.id)
             continue
 
+        if claim.is_invalidated_l1_resolved:
+            # TODO: See https://github.com/beamer-bridge/beamer/issues/674
+            continue
+
+        if claim.is_invalidated:
+            # TODO: Maybe trigger L1 forwarding
+            #  See https://github.com/beamer-bridge/beamer/issues/669
+            continue
+
         request = context.requests.get(claim.request_id)
         # As per definition an invalid or expired request cannot be claimed
         # This gives us a chronological order. The agent should never garbage collect
         # a request which has active claims
         assert request is not None, "Active claim for non-existent request"
 
-        # check if claim is an honest claim. Honest claims can be ignored.
+        # If the claim is not valid, we might need to send a non-fill-proof
+        if not claim.valid_claim_for_request(request):
+            maybe_invalidate(claim, context)
+            continue
+
+        # Check if claim is an honest claim. Honest claims can be ignored.
         # This only counts for claims, where the agent is not the filler
-        if claim.valid_claim_for_request(request) and request.filler != context.address:
+        if request.filler != context.address:
             claim.ignore()
             continue
 
@@ -424,6 +438,24 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     return True
 
 
+def maybe_invalidate(claim: Claim, context: Context) -> None:
+    request = context.requests.get(claim.request_id)
+    # As per definition an invalid or expired request cannot be claimed
+    # This gives us a chronological order. The agent should never garbage collect
+    # a request which has active claims
+    assert request is not None, "Active claim for non-existent request"
+
+    timestamp = int(time.time())
+    if timestamp < claim.challenge_back_off_timestamp:
+        return
+
+    if timestamp > request.valid_until:
+        return
+
+    _invalidate(request, claim, context)
+    claim.invalidate()
+
+
 def maybe_withdraw(claim: Claim, context: Context) -> None:
     request = context.requests.get(claim.request_id)
     # As per definition an invalid or expired request cannot be claimed
@@ -473,3 +505,17 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
     claim.transaction_pending = True
     log.debug("Withdrew", claim=claim.id, txn_hash=txn_hash.hex())
+
+
+def _invalidate(request: Request, claim: Claim, context: Context) -> None:
+    func = context.fill_manager.functions.invalidateFillHash(
+        request.id, request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
+    )
+    try:
+        txn_hash = _transact(func)
+    except _TransactionFailed as exc:
+        log.error("invalidateFillHash failed", claim=claim, cause=exc.cause())
+        return
+
+    claim.transaction_pending = True
+    log.debug("invalidated fill hash", claim=claim.id, txn_hash=txn_hash.hex())

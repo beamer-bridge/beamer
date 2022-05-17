@@ -1,5 +1,9 @@
+import time
+
+import pytest
 from hexbytes import HexBytes
 
+from beamer.chain import process_claims
 from beamer.events import FillHashInvalidated, HashInvalidated
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
@@ -81,3 +85,71 @@ def test_handle_hash_invalidated():
 
     # Check that a non-matching event does not invalidate the claim
     assert claim_2.is_claimer_winning  # pylint:disable=no-member
+
+
+def test_maybe_invalidate_claim_wrong_fill_id():
+    context, config = make_context()
+
+    request = make_request(valid_until=int(time.time() * 2))
+    request.fill(config.account.address, b"", FILL_ID)
+    context.requests.add(request.id, request)
+
+    claim_event = make_claim(
+        request=request, claimer=config.account.address, fill_id=FillId(b"c0ffee")
+    ).latest_claim_made
+    process_event(claim_event, context)
+
+    claim = context.claims.get(claim_event.claim_id)
+    assert claim is not None
+
+    assert not claim.is_invalidated
+    process_claims(context)
+    assert claim.is_invalidated
+    assert claim.transaction_pending
+
+
+def test_maybe_invalidate_claim_wrong_fill_id_but_in_back_off():
+    context, config = make_context()
+
+    request = make_request()
+    request.fill(config.account.address, b"", FILL_ID)
+    context.requests.add(request.id, request)
+
+    claim_event = make_claim(
+        request=request,
+        claimer=config.account.address,
+        fill_id=FillId(b"c0ffee"),
+    ).latest_claim_made
+    assert request.fill_id != claim_event.fill_id
+    process_event(claim_event, context)
+
+    claim = context.claims.get(claim_event.claim_id)
+    assert claim is not None
+    claim.challenge_back_off_timestamp = int(time.time() + 100)
+
+    assert not claim.is_invalidated
+    process_claims(context)
+    assert not claim.is_invalidated
+    assert not claim.transaction_pending
+
+
+def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out():
+    context, config = make_context()
+
+    request = make_request(valid_until=int(time.time() / 2))
+    request.fill(config.account.address, b"", FILL_ID)
+    context.requests.add(request.id, request)
+
+    claim_event = make_claim(
+        request=request, claimer=config.account.address, fill_id=FillId(b"c0ffee")
+    ).latest_claim_made
+    assert request.fill_id != claim_event.fill_id
+    process_event(claim_event, context)
+
+    claim = context.claims.get(claim_event.claim_id)
+    assert claim is not None
+
+    assert not claim.is_invalidated
+    process_claims(context)
+    assert not claim.is_invalidated
+    assert not claim.transaction_pending
