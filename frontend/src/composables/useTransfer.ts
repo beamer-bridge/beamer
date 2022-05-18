@@ -58,7 +58,7 @@ export function useTransfer() {
 
     try {
       await transfer.value.execute(signer, signerAddress);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       console.log(transfer.value);
     }
