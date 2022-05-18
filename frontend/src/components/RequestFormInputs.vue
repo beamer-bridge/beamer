@@ -33,7 +33,7 @@
           <div
             class="form-tooltip self-end"
             data-theme="default"
-            data-tip="Adds current token to connected wallet"
+            data-tip="Adds current token to the connected wallet"
           >
             <button
               class="btn btn-ghost btn-sm text-orange m-2"
