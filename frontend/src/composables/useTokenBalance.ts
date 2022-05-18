@@ -41,8 +41,9 @@ export function useTokenBalance(
         tokenAddress.value,
         signerAddress.value,
       );
-    } catch (exception) {
-      error.value = exception.message ?? exception;
+    } catch (exception: unknown) {
+      const errorMessage = (exception as { message?: string }).message;
+      error.value = errorMessage ?? 'Unknown Failure!';
     }
 
     if (tokenContract) {

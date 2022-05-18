@@ -31,9 +31,9 @@ export function useRequestFee(
 
     try {
       amount.value = await getRequestFee(provider.value, requestManagerAddress.value);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (exception: any) {
-      error.value = exception.message ?? 'Unknown failure.';
+    } catch (exception: unknown) {
+      const errorMessage = (exception as { message?: string }).message;
+      error.value = errorMessage ?? 'Unknown failure.';
     }
   };
 
