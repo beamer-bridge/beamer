@@ -24,8 +24,3 @@ export async function getConnectedWalletProvider(): Promise<EthereumProvider | u
 
   return provider;
 }
-
-export function isSupportedChain(chainId: number): boolean {
-  const configuration = useConfiguration();
-  return chainId in configuration.chains;
-}

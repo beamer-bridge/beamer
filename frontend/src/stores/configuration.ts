@@ -11,4 +11,9 @@ export const useConfiguration = defineStore('configuration', {
       this.chains = { ...this.chains, [id]: configuration };
     },
   },
+  getters: {
+    isSupportedChain: (state) => {
+      return (chainId: number): boolean => chainId in state.chains;
+    },
+  },
 });
