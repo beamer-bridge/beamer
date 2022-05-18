@@ -514,8 +514,8 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     try:
         txn_hash = _transact(func)
     except _TransactionFailed as exc:
-        log.error("invalidateFillHash failed", claim=claim, cause=exc.cause())
+        log.error("Calling invalidateFillHash failed", claim=claim, cause=exc.cause())
         return
 
     claim.transaction_pending = True
-    log.debug("invalidated fill hash", claim=claim.id, txn_hash=txn_hash.hex())
+    log.debug("Invalidated fill hash", claim=claim.id, txn_hash=txn_hash.hex())
