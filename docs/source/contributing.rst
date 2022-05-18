@@ -32,10 +32,8 @@ Start ganache::
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
 
-    python -c "import eth_account, json;
-      acc = eth_account.Account.from_key('0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa');
-      obj = eth_account.account.create_keyfile_json(acc.key, b'');
-      print(json.dumps(obj))" > 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json
+    python scripts/generate_account.py --key 0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa \
+                                       0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json
 
 Deploy the contracts on the local ganache test chain::
 
