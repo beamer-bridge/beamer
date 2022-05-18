@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import brownie
 import pytest
-from brownie import ZERO_ADDRESS, accounts
+from brownie import ZERO_ADDRESS
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3.types import Timestamp, Wei
@@ -13,7 +13,7 @@ from beamer.chain import maybe_challenge
 from beamer.events import ClaimMade, RequestFilled
 from beamer.models.claim import Claim
 from beamer.models.request import Request
-from beamer.tests.util import HTTPProxy, Sleeper, Timeout, make_request
+from beamer.tests.util import HTTPProxy, Sleeper, Timeout, alloc_accounts, make_request
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
 
@@ -71,7 +71,8 @@ def test_read_timeout_send_transaction(request_manager, token, config):
         proxy_l2a.server_address[1],
     )
 
-    make_request(request_manager, token, accounts[0], accounts[2], 1, validity_period=3600)
+    requester, target = alloc_accounts(2)
+    make_request(request_manager, token, requester, target, 1, validity_period=3600)
 
     agent = Agent(config)
     agent.start()
@@ -119,8 +120,8 @@ def test_challenge_own_claim(config, request_manager, token):
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
 def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
-    target_address = accounts[1]
-    request_id = make_request(request_manager, token, accounts[0], target_address, 1)
+    requester, target = alloc_accounts(2)
+    request_id = make_request(request_manager, token, requester, target, 1)
 
     try:
         with Sleeper(5) as sleeper:
@@ -153,8 +154,8 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
 
 
 def test_withdraw(request_manager, token, agent):
-    target_address = accounts[1]
-    request_id = make_request(request_manager, token, accounts[0], target_address, 1)
+    requester, target = alloc_accounts(2)
+    request_id = make_request(request_manager, token, requester, target, 1)
 
     with Sleeper(10) as sleeper:
         while (request := agent.context.requests.get(request_id)) is None:
@@ -172,15 +173,15 @@ def test_withdraw(request_manager, token, agent):
 
 
 def test_expired_request_is_ignored(request_manager, token, agent):
-    target_address = accounts[1]
+    requester, target = alloc_accounts(2)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
     # make the request amount high enough that the agent cannot fill it
     amount = token.balanceOf(agent.address) + 1
     request_id = make_request(
         request_manager,
         token,
-        accounts[0],
-        target_address,
+        requester,
+        target,
         amount,
         validity_period=validity_period,
     )
@@ -202,7 +203,7 @@ def test_expired_request_is_ignored(request_manager, token, agent):
 # TODO: Find a better way to do this
 @patch("beamer.chain.fill_request")
 def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
-    target, filler = accounts[1:3]
+    requester, target, filler = alloc_accounts(3)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
     chain_id = ChainId(brownie.chain.id)
     amount = token.balanceOf(agent.address)
@@ -210,7 +211,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
     request_id = make_request(
         request_manager,
         token,
-        accounts[0],
+        requester,
         target,
         amount,
         validity_period=validity_period,

@@ -3,11 +3,10 @@ import time
 
 import brownie
 import pytest
-from brownie import accounts
 from eth_utils import to_checksum_address
 
 import beamer.agent
-from beamer.tests.util import EventCollector, HTTPProxy, earnings, make_request
+from beamer.tests.util import EventCollector, HTTPProxy, alloc_accounts, earnings, make_request
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -30,8 +29,7 @@ def _allow_unlisted_pairs():
 #
 # Winner: Charlie
 def test_challenge_1(request_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie = accounts[:2]
+    requester, charlie, target = alloc_accounts(3)
 
     agent = beamer.agent.Agent(config)
     agent.start()
@@ -39,7 +37,7 @@ def test_challenge_1(request_manager, token, config):
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
-        make_request(request_manager, token, requester, target_address, 1, fee_data="standard")
+        make_request(request_manager, token, requester, target, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
 
@@ -72,8 +70,7 @@ def test_challenge_1(request_manager, token, config):
 #
 # Winner: Bob
 def test_challenge_2(request_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie = accounts[:2]
+    requester, charlie, target = alloc_accounts(3)
 
     agent = beamer.agent.Agent(config)
     agent.start()
@@ -81,7 +78,7 @@ def test_challenge_2(request_manager, token, config):
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         token.approve(request_manager.address, 1, {"from": agent.address})
-        make_request(request_manager, token, requester, target_address, 1, fee_data="standard")
+        make_request(request_manager, token, requester, target, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
 
@@ -124,8 +121,7 @@ def test_challenge_2(request_manager, token, config):
 # Note: Bob is not filling the request here, merely noticing the dishonest
 # claim and challenging it.
 def test_challenge_3(request_manager, fill_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie = accounts[:2]
+    requester, charlie, target = alloc_accounts(3)
 
     agent = beamer.agent.Agent(config)
 
@@ -134,7 +130,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
         request_id = make_request(
-            request_manager, token, requester, target_address, amount, fee_data="standard"
+            request_manager, token, requester, target, amount, fee_data="standard"
         )
 
         stake = request_manager.claimStake()
@@ -179,8 +175,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
 # Note: Bob is not filling the request here, merely noticing the dishonest
 # claim and challenging it.
 def test_challenge_4(request_manager, fill_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie = accounts[:2]
+    requester, charlie, target = alloc_accounts(3)
 
     agent = beamer.agent.Agent(config)
 
@@ -189,7 +184,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
         request_id = make_request(
-            request_manager, token, requester, target_address, amount, fee_data="standard"
+            request_manager, token, requester, target, amount, fee_data="standard"
         )
 
         stake = request_manager.claimStake()
@@ -245,8 +240,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 # a dishonest claim
 @pytest.mark.parametrize("honest_claim", [True, False])
 def test_challenge_5(request_manager, fill_manager, token, config, honest_claim):
-    target_address = accounts[8]
-    requester, charlie = accounts[:2]
+    requester, charlie, target = alloc_accounts(3)
 
     proxy_l2b = HTTPProxy(config.l2b_rpc_url)
     proxy_l2b.delay_rpc({"eth_getLogs": 3})
@@ -268,7 +262,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1
     request_id = make_request(
-        request_manager, token, requester, target_address, amount, fee_data="standard"
+        request_manager, token, requester, target, amount, fee_data="standard"
     )
     fill_id = 0
 
@@ -280,7 +274,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
             request_id,
             brownie.chain.id,
             token.address,
-            target_address,
+            target,
             amount,
             {"from": charlie.address},
         )
@@ -327,15 +321,14 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
 # Note: Bob is not participating in the challenge here. We test whether Bob
 # will attempt to withdraw the stakes in place of Dave.
 def test_withdraw_not_participant(request_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie, dave = accounts[:3]
+    requester, charlie, dave, target = alloc_accounts(4)
 
     agent = beamer.agent.Agent(config)
 
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1
     request_id = make_request(
-        request_manager, token, requester, target_address, amount, fee_data="standard"
+        request_manager, token, requester, target, amount, fee_data="standard"
     )
 
     stake = request_manager.claimStake()
@@ -370,8 +363,7 @@ def test_withdraw_not_participant(request_manager, token, config):
 #
 # Note: testing that the agent can handle multiparty bidding
 def test_challenge_7(request_manager, fill_manager, token, config):
-    target_address = accounts[8]
-    requester, charlie, dave = accounts[:3]
+    requester, charlie, dave, target = alloc_accounts(4)
 
     agent = beamer.agent.Agent(config)
 
@@ -379,7 +371,7 @@ def test_challenge_7(request_manager, fill_manager, token, config):
     with earnings(w3, agent) as agent_earnings, earnings(w3, dave) as dave_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
-        request_id = make_request(request_manager, token, requester, target_address, amount)
+        request_id = make_request(request_manager, token, requester, target, amount)
 
         stake = request_manager.claimStake()
         request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})

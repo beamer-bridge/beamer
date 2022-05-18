@@ -52,10 +52,9 @@ def test_fill_request(fill_manager, token, deployer):
 
 
 def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
-    request_id = 123
     chain_id = brownie.web3.eth.chain_id
     amount = 100
-    receiver = alloc_accounts(1)[0]
+    (receiver,) = alloc_accounts(1)
 
     fill_manager.addAllowedLP(deployer, {"from": deployer})
 
