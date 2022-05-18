@@ -79,12 +79,11 @@ def test_claim_with_different_stakes(token, request_manager, claim_stake):
 
 def test_claim_challenge(request_manager, token, claim_stake):
     """Test challenging a claim"""
-    (requester,) = alloc_accounts(1)
+    requester, challenger = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
 
-    (challenger,) = alloc_accounts(1)
     with brownie.reverts("Not enough stake provided"):
         request_manager.challengeClaim(
             claim.return_value, {"from": challenger, "value": claim_stake}
