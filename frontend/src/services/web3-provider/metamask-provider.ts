@@ -102,7 +102,7 @@ export class MetaMaskProvider implements EthereumProvider {
         },
       });
       if (!wasAdded) {
-        throw new Error("Couldn't add token to Metamask");
+        throw new Error("Couldn't add token to MetaMask");
       }
     } catch (error) {
       console.log(error);

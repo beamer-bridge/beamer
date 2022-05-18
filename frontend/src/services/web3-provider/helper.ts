@@ -14,7 +14,7 @@ export async function getConnectedWalletProvider(): Promise<EthereumProvider | u
   let provider = undefined;
 
   switch (connectedWallet) {
-    case WalletType.Metamask:
+    case WalletType.MetaMask:
       provider = await createMetaMaskProvider();
       break;
     case WalletType.WalletConnect:

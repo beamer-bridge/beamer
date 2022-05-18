@@ -24,7 +24,7 @@
               class="w-full"
               input-class="w-full bg-orange flex flex-row justify-center"
               type="button"
-              @click="connectMetamask"
+              @click="connectMetaMask"
             >
               <div v-if="requestSignerActive" class="h-8 w-8">
                 <spinner></spinner>
@@ -91,13 +91,13 @@ const tabs = [
   },
 ];
 
-const connectMetamask = async () => {
+const connectMetaMask = async () => {
   // TOOD: In future we will not separate getting provider and signer which
   // resolve the undefined provider case.
   provider.value = await createMetaMaskProvider();
   if (provider.value) {
     requestSigner(provider.value);
-    settings.setConnectedWallet(WalletType.Metamask);
+    settings.setConnectedWallet(WalletType.MetaMask);
   }
 };
 
@@ -109,7 +109,7 @@ const connectWalletConnect = async () => {
 
 const chainChangeHandler = () => {
   const isSupported = isSupportedChain(ethereumProvider.chainId);
-  criticalErrorMessage.value = isSupported ? '' : 'Connected chain not supported!';
+  criticalErrorMessage.value = isSupported ? '' : 'Connected chain is not supported!';
 };
 
 const errorMessage = computed(() => {

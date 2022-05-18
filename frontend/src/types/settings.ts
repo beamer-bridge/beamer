@@ -6,6 +6,6 @@ export type Settings =
 
 // Values must not be changed for backward compatibility
 export enum WalletType {
-  Metamask = 'metamask',
+  MetaMask = 'metamask',
   WalletConnect = 'wallet_connect',
 }
