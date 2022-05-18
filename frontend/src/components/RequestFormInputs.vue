@@ -146,12 +146,12 @@ const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChai
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(provider, chains);
 
-const { show: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
+const { available: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
   provider,
   requestManagerAddress,
 );
 
-const { show: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
+const { available: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
   provider,
   signer,
   selectedTokenAddress,

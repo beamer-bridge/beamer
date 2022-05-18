@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue';
 
 import { getRequestFee } from '@/services/transactions/request-manager';
 import type { EthereumProvider } from '@/services/web3-provider';
-import { isSupportedChain } from '@/services/web3-provider';
 import { EthereumAmount } from '@/types/token-amount';
 
 export function useRequestFee(
@@ -13,13 +12,8 @@ export function useRequestFee(
   const error = ref<string | undefined>(undefined);
   const amount = ref<EthereumAmount>(new EthereumAmount('0'));
 
+  const available = computed(() => !!provider.value && !!requestManagerAddress.value);
   const formattedAmount = computed(() => amount.value.formattedAmount);
-  const show = computed(
-    () =>
-      !!provider.value &&
-      isSupportedChain(provider.value.chainId.value) &&
-      !!requestManagerAddress,
-  );
 
   const updateRequestFeeAmount = async () => {
     error.value = '';
@@ -39,5 +33,5 @@ export function useRequestFee(
 
   watch([provider, requestManagerAddress], updateRequestFeeAmount, { immediate: true });
 
-  return { show, amount, formattedAmount, error };
+  return { available, amount, formattedAmount, error };
 }

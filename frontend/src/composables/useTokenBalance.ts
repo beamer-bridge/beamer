@@ -17,7 +17,8 @@ export function useTokenBalance(
   const balance = ref(BigNumber.from(0));
   const decimals = ref(BigNumber.from(0));
 
-  const show = computed(() => !!signerAddress.value && !!tokenAddress.value);
+  const available = computed(() => !!signerAddress.value && !!tokenAddress.value);
+
   const formattedBalance = computed(() => {
     const cutoff = balance.value.mod(1e14);
     return ethers.utils.formatUnits(balance.value.sub(cutoff), decimals.value);
@@ -72,5 +73,5 @@ export function useTokenBalance(
 
   watch([tokenAddress, provider, signer], listenToTokenBalance, { immediate: true });
 
-  return { show, balance, formattedBalance, error };
+  return { available, balance, formattedBalance, error };
 }

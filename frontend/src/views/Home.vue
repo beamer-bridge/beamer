@@ -61,7 +61,6 @@ import {
   createMetaMaskProvider,
   createWalletConnectProvider,
   getConnectedWalletProvider,
-  isSupportedChain,
 } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -107,9 +106,10 @@ const connectWalletConnect = async () => {
   settings.setConnectedWallet(WalletType.WalletConnect);
 };
 
+const isSupportedChain = computed(() => configuration.isSupportedChain(ethereumProvider.chainId));
+
 const chainChangeHandler = () => {
-  const isSupported = isSupportedChain(ethereumProvider.chainId);
-  criticalErrorMessage.value = isSupported ? '' : 'Connected chain is not supported!';
+  criticalErrorMessage.value = isSupportedChain.value ? '' : 'Connected chain is not supported!';
 };
 
 const errorMessage = computed(() => {

@@ -34,4 +34,22 @@ describe('configuration store', () => {
       expect(configuration.chains['5']).toMatchObject(newChainConfiguration);
     });
   });
+
+  describe('isSupportedChain getter', () => {
+    it('returns false if unsupported chain', () => {
+      const configuration = useConfiguration();
+      const chainConfiguration = generateChainWithTokens();
+      const unSupportedChainId = 10;
+      configuration.$state = { chains: { ['5']: chainConfiguration } };
+      expect(configuration.isSupportedChain(unSupportedChainId)).toBe(false);
+    });
+
+    it('returns true if chain is supported', () => {
+      const configuration = useConfiguration();
+      const chainConfiguration = generateChainWithTokens();
+      const supportedChainId = 5;
+      configuration.$state = { chains: { [`${supportedChainId}`]: chainConfiguration } };
+      expect(configuration.isSupportedChain(supportedChainId)).toBe(true);
+    });
+  });
 });
