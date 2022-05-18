@@ -1,0 +1,16 @@
+{
+    "L1": {
+        "name": "L1",
+        "rpc": "http://localhost:8545",
+        "chain_id": 1337
+    },
+    "L2": [
+        {
+            "name": "Arbitrum",
+            "rpc": "http://localhost:8547",
+            "chain_id": 421612,
+            "finalization_time": 3600
+        }
+    ]
+}
+
