@@ -185,8 +185,19 @@ def update_l1(
     show_default=True,
     help="Whether to use TestCrossDomainMessenger. Only useful for local testing.",
 )
+@click.option(
+    "--allow-same-chain/--disallow-same-chain",
+    default=False,
+    show_default=True,
+    help="Whether to allow source and target chains to be the same.",
+)
 def main(
-    keystore_file: Path, password: str, output_dir: Path, config_file: Path, test_messenger: bool
+    keystore_file: Path,
+    password: str,
+    output_dir: Path,
+    config_file: Path,
+    test_messenger: bool,
+    allow_same_chain: bool,
 ) -> None:
     commit_id = get_commit_id()
     account = account_from_keyfile(keystore_file, password)
@@ -218,7 +229,7 @@ def main(
         supported_target_chains = {
             l2["chain_id"]: l2["finalization_time"]
             for l2 in config["L2"]
-            if l2["chain_id"] != chain_id or chain_id == GANACHE_CHAIN_ID
+            if allow_same_chain or (l2["chain_id"] != chain_id or chain_id == GANACHE_CHAIN_ID)
         }
 
         l2_data = deploy_l2(web3_l2, resolver, supported_target_chains, test_messenger)
