@@ -16,3 +16,9 @@ export type Token = {
   symbol: string;
   decimals: number;
 };
+
+export const ETH: Token = {
+  address: '',
+  symbol: 'ETH',
+  decimals: 18,
+};

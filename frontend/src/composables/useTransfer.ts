@@ -5,7 +5,7 @@ import { Transfer } from '@/actions/transfers';
 import type { ChainConfigMapping, ChainWithTokens } from '@/types/config';
 import type { Chain, Token } from '@/types/data';
 import type { RequestFormResult } from '@/types/form';
-import { TokenAmount } from '@/types/token-amount';
+import { EthereumAmount, TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export function useTransfer() {
@@ -23,7 +23,7 @@ export function useTransfer() {
     formResult: RequestFormResult,
     signer: JsonRpcSigner,
     signerAddress: string,
-    fees: UInt256,
+    fees: EthereumAmount,
     chains: ChainConfigMapping,
   ) => {
     const sourceConfiguration = chains[formResult.sourceChainId.value];
@@ -33,6 +33,7 @@ export function useTransfer() {
       sourceConfiguration,
       formResult.tokenAddress.label,
     )!;
+    const sourceAmount = TokenAmount.parse(formResult.amount, sourceToken);
 
     const targetConfiguration = chains[formResult.targetChainId.value];
     const targetChain = parseChainFromConfiguration(targetConfiguration);
@@ -41,16 +42,15 @@ export function useTransfer() {
       targetConfiguration,
       formResult.tokenAddress.label,
     )!;
+    const targetAmount = TokenAmount.parse(formResult.amount, targetToken);
 
-    const amount = TokenAmount.parse(formResult.amount, sourceToken);
     const validityPeriod = new UInt256('600');
 
     transfer.value = Transfer.new(
-      amount,
       sourceChain,
-      sourceToken,
+      sourceAmount,
       targetChain,
-      targetToken,
+      targetAmount,
       formResult.toAddress,
       validityPeriod,
       fees,

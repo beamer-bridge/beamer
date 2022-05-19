@@ -7,9 +7,9 @@ import {
   getRequestIdentifier,
   sendRequestTransaction,
 } from '@/services/transactions/request-manager';
-import type { Chain, EthereumAddress, Token } from '@/types/data';
+import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
-import type { TokenAmountData } from '@/types/token-amount';
+import type { EthereumAmount, TokenAmountData } from '@/types/token-amount';
 import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
@@ -25,28 +25,26 @@ const STEPS_DATA = [
 ];
 
 export class Transfer extends MultiStepAction implements Encodable<TransferData> {
-  readonly amount: TokenAmount;
   readonly sourceChain: Chain;
-  readonly sourceToken: Token;
+  readonly sourceAmount: TokenAmount;
   readonly targetChain: Chain;
-  readonly targetToken: Token;
+  readonly targetAmount: TokenAmount;
   readonly targetAccount: EthereumAddress;
   readonly validityPeriod: UInt256;
-  readonly fees: UInt256;
+  readonly fees: TokenAmount;
   private _requestInformation?: RequestInformation;
   private _fulfillmentInformation?: FulfillmentInformation;
 
   constructor(data: TransferData) {
     super((data.steps ?? STEPS_DATA).map((data) => new Step(data)));
 
-    this.amount = new TokenAmount(data.amount);
     this.sourceChain = data.sourceChain;
-    this.sourceToken = data.sourceToken;
+    this.sourceAmount = new TokenAmount(data.sourceAmount);
     this.targetChain = data.targetChain;
-    this.targetToken = data.targetToken;
+    this.targetAmount = new TokenAmount(data.targetAmount);
     this.targetAccount = data.targetAccount;
     this.validityPeriod = new UInt256(data.validityPeriod);
-    this.fees = new UInt256(data.fees);
+    this.fees = new TokenAmount(data.fees);
     this._requestInformation = data.requestInformation
       ? new RequestInformation(data.requestInformation)
       : undefined;
@@ -54,21 +52,19 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   static new(
-    amount: TokenAmount,
     sourceChain: Chain,
-    sourceToken: Token,
+    sourceAmount: TokenAmount,
     targetChain: Chain,
-    targetToken: Token,
+    targetAmount: TokenAmount,
     targetAccount: EthereumAddress,
     validityPeriod: UInt256,
-    fees: UInt256,
+    fees: EthereumAmount,
   ): Transfer {
     return new this({
-      amount: amount.encode(),
       sourceChain,
-      sourceToken,
+      sourceAmount: sourceAmount.encode(),
       targetChain,
-      targetToken,
+      targetAmount: targetAmount.encode(),
       targetAccount,
       validityPeriod: validityPeriod.encode(),
       fees: fees.encode(),
@@ -102,11 +98,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
   public encode(): TransferData {
     return {
-      amount: this.amount.encode(),
       sourceChain: this.sourceChain,
-      sourceToken: this.sourceToken,
+      sourceAmount: this.sourceAmount.encode(),
       targetChain: this.targetChain,
-      targetToken: this.targetToken,
+      targetAmount: this.targetAmount.encode(),
       targetAccount: this.targetAccount,
       validityPeriod: this.validityPeriod.encode(),
       fees: this.fees.encode(),
@@ -122,14 +117,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   ): Promise<void> {
     const transactionHash = await sendRequestTransaction(
       signer,
-      this.amount.uint256,
+      this.sourceAmount.uint256,
       this.targetChain.identifier,
       this.sourceChain.requestManagerAddress,
-      this.sourceToken.address,
-      this.targetToken.address,
+      this.sourceAmount.token.address,
+      this.targetAmount.token.address,
       this.targetAccount,
       this.validityPeriod,
-      this.fees,
+      this.fees.uint256,
     );
 
     this._requestInformation = new RequestInformation({
@@ -171,14 +166,13 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 }
 
 export type TransferData = {
-  amount: TokenAmountData;
   sourceChain: Chain;
-  sourceToken: Token;
+  sourceAmount: TokenAmountData;
   targetChain: Chain;
-  targetToken: Token;
+  targetAmount: TokenAmountData;
   targetAccount: EthereumAddress;
   validityPeriod: UInt256Data;
-  fees: UInt256Data;
+  fees: TokenAmountData;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
   fulfillmentInformation?: FulfillmentInformation;

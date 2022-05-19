@@ -1,4 +1,4 @@
-import { TokenAmount } from '@/types/token-amount';
+import { EthereumAmount, TokenAmount } from '@/types/token-amount';
 import {
   generateToken,
   generateTokenAmountData,
@@ -70,6 +70,17 @@ describe('TokenAmount', () => {
       const newEncodedData = newTokenAmount.encode();
 
       expect(encodedData).toMatchObject(newEncodedData);
+    });
+  });
+});
+
+describe('EthereumAmount', () => {
+  describe('parse()', () => {
+    it('can parse integer based on 18 decimals', () => {
+      const amount = EthereumAmount.parse('0.123456789123456789');
+
+      expect(amount.decimalAmount).toBe('0.123456789123456789');
+      expect(amount.uint256.asString).toBe('123456789123456789');
     });
   });
 });

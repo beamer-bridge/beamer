@@ -128,16 +128,14 @@ export function generateFulfillmentInformation(
 }
 
 export function generateTransferData(partialTransferData?: Partial<TransferData>): TransferData {
-  const sourceToken = generateToken();
   return {
-    amount: generateTokenAmountData({ token: sourceToken }),
     sourceChain: generateChain(),
-    sourceToken,
+    sourceAmount: generateTokenAmountData(),
     targetChain: generateChain(),
-    targetToken: generateToken(),
+    targetAmount: generateTokenAmountData(),
     targetAccount: getRandomEthereumAddress(),
     validityPeriod: generateUInt256Data(),
-    fees: generateUInt256Data(),
+    fees: generateTokenAmountData(),
     ...partialTransferData,
   };
 }

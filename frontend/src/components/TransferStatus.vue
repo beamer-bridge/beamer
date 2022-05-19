@@ -29,8 +29,8 @@ const summary = computed(() => {
   const { transfer } = props;
 
   return {
-    amount: transfer.amount.decimalAmount,
-    tokenSymbol: transfer.sourceToken.symbol,
+    amount: transfer.sourceAmount.decimalAmount,
+    tokenSymbol: transfer.sourceAmount.token.symbol,
     sourceChainName: transfer.sourceChain.name,
     targetChainName: transfer.targetChain.name,
     targetAccount: transfer.targetAccount,
