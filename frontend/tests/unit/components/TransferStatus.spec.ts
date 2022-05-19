@@ -30,11 +30,10 @@ function createWrapper(options?: { transfer?: Transfer }) {
 describe('TransferStatus.vue', () => {
   it('shows transfer summary with correct data', () => {
     const data = generateTransferData({
-      amount: generateTokenAmountData({
+      sourceAmount: generateTokenAmountData({
         amount: '1',
-        token: generateToken({ decimals: 0 }),
+        token: generateToken({ symbol: 'TTT', decimals: 0 }),
       }),
-      sourceToken: generateToken({ symbol: 'TTT' }),
       sourceChain: generateChain({ name: 'Source Chain' }),
       targetChain: generateChain({ name: 'Target Chain' }),
       targetAccount: '0xTargetAccount',

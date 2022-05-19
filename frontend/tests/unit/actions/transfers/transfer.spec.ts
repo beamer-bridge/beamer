@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 
-import { Transfer } from '@/actions/transfers/transfer';
+import { Transfer, TransferData } from '@/actions/transfers/transfer';
 import * as fillManager from '@/services/transactions/fill-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import type { EthereumAddress } from '@/types/data';
@@ -76,14 +76,19 @@ describe('transfer', () => {
   describe('sendRequestTransaction()', () => {
     it('calls the transfer function on the request manager contract', async () => {
       const data = generateTransferData({
-        amount: generateTokenAmountData({ amount: '1' }),
         sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
-        sourceToken: generateToken({ address: '0xSourceToken' }),
+        sourceAmount: generateTokenAmountData({
+          token: generateToken({ address: '0xSourceToken' }),
+          amount: '1',
+        }),
         targetChain: generateChain({ identifier: 2 }),
-        targetToken: generateToken({ address: '0xTargetToken' }),
+        targetAmount: generateTokenAmountData({
+          token: generateToken({ address: '0xTargetToken' }),
+          amount: '1',
+        }),
         targetAccount: '0xTargetAccount',
         validityPeriod: generateUInt256Data('3'),
-        fees: generateUInt256Data('4'),
+        fees: generateTokenAmountData({ amount: '4' }),
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
@@ -214,23 +219,21 @@ describe('transfer', () => {
 
   describe('encode()', () => {
     it('serializes all data to persist the whole transfer', () => {
-      const amount = generateTokenAmountData();
       const sourceChain = generateChain();
-      const sourceToken = generateToken();
+      const sourceAmount = generateTokenAmountData();
       const targetChain = generateChain();
-      const targetToken = generateToken();
+      const targetAmount = generateTokenAmountData();
       const targetAccount = getRandomEthereumAddress();
       const validityPeriod = generateUInt256Data();
-      const fees = generateUInt256Data();
+      const fees = generateTokenAmountData();
       const requestInformation = generateRequestInformationData();
       const fulfillmentInformation = generateFulfillmentInformation();
       const steps = [generateStepData()];
-      const data = {
-        amount,
+      const data: TransferData = {
         sourceChain,
-        sourceToken,
+        sourceAmount,
         targetChain,
-        targetToken,
+        targetAmount,
         targetAccount,
         validityPeriod,
         fees,
@@ -242,11 +245,10 @@ describe('transfer', () => {
 
       const encodedData = transfer.encode();
 
-      expect(encodedData.amount).toMatchObject(amount);
       expect(encodedData.sourceChain).toMatchObject(sourceChain);
-      expect(encodedData.sourceToken).toMatchObject(sourceToken);
+      expect(encodedData.sourceAmount).toMatchObject(sourceAmount);
       expect(encodedData.targetChain).toMatchObject(targetChain);
-      expect(encodedData.targetToken).toMatchObject(targetToken);
+      expect(encodedData.targetAmount).toMatchObject(targetAmount);
       expect(encodedData.targetAccount).toMatchObject(targetAccount);
       expect(encodedData.validityPeriod).toMatchObject(validityPeriod);
       expect(encodedData.fees).toMatchObject(fees);

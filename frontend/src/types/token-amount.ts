@@ -1,10 +1,10 @@
-import type { Token } from '@/types/data';
+import { ETH, Token } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
 export class TokenAmount implements Encodable<TokenAmountData> {
-  private token: Token;
+  readonly token: Token;
   private amount: UInt256;
 
   constructor(data: TokenAmountData) {
@@ -41,3 +41,13 @@ export type TokenAmountData = {
   token: Token;
   amount: UInt256Data;
 };
+
+export class EthereumAmount extends TokenAmount {
+  constructor(amount: UInt256Data) {
+    super({ token: ETH, amount });
+  }
+
+  static parse(value: string) {
+    return TokenAmount.parse(value, ETH);
+  }
+}

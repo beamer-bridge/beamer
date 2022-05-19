@@ -53,7 +53,6 @@ import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { RequestFormResult } from '@/types/form';
-import { UInt256 } from '@/types/uint-256';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
@@ -65,7 +64,7 @@ const requestManagerAddress = computed(
   () => configuration.chains[chainId.value]?.requestManagerAddress,
 );
 
-const { amount: requestFeeAmount } = useRequestFee(provider, requestManagerAddress);
+const { amount: fees } = useRequestFee(provider, requestManagerAddress);
 
 const submitForm = () => {
   requestForm.value?.node.submit();
@@ -77,11 +76,13 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
-
-  // TODO: Resolve by make useRequestFee using an UInt256.
-  const fees = new UInt256(requestFeeAmount.value.toString());
-
-  await runTransfer(formResult, signer.value, signerAddress.value, fees, configuration.chains);
+  await runTransfer(
+    formResult,
+    signer.value,
+    signerAddress.value,
+    fees.value,
+    configuration.chains,
+  );
 };
 
 watch(chainId, (_, oldChainId) => {

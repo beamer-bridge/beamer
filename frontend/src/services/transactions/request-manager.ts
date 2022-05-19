@@ -3,20 +3,22 @@ import type {
   JsonRpcSigner,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
+import { BigNumber, BigNumberish, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
 import type { EthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress } from '@/types/data';
+import { EthereumAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export async function getRequestFee(
   provider: EthereumProvider,
   requestManagerAddress: string,
-): Promise<number> {
+): Promise<EthereumAmount> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi);
   const connectedContract = provider.connectContract(requestManagerContract);
-  return await connectedContract.totalFee();
+  const fetchedAmount: BigNumberish = await connectedContract.totalFee();
+  return new EthereumAmount(fetchedAmount.toString());
 }
 
 export async function sendRequestTransaction(
