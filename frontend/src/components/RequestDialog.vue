@@ -9,7 +9,7 @@
       @submit="submitRequestTransaction"
     >
       <RequestFormInputs v-if="!isTransferInProgress" />
-      <TransferStatus v-else :transfer="transfer!" />
+      <TransferStatus v-else-if="transfer" :transfer="transfer" />
       <Transition name="expand">
         <div v-if="transferError" class="mt-7 text-right text-lg text-orange-dark">
           {{ transferError }}
@@ -46,21 +46,19 @@ import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-import { Transfer } from '@/actions/transfers';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
+import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { RequestFormResult } from '@/types/form';
-import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { provider, signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
 
-const transfer = ref<Transfer | undefined>(undefined);
 const requestForm = ref<FormKitFrameworkContext>();
 
 const requestManagerAddress = computed(
@@ -73,60 +71,17 @@ const submitForm = () => {
   requestForm.value?.node.submit();
 };
 
+const { transfer, runTransfer, isTransferInProgress, isNewTransferDisabled } = useTransfer();
+
 const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
 
-  const sourceChainConfiguration = configuration.chains[formResult.sourceChainId.value];
-  const sourceChain = {
-    identifier: sourceChainConfiguration.identifier,
-    name: sourceChainConfiguration.name,
-    rpcUrl: sourceChainConfiguration.rpcUrl,
-    requestManagerAddress: sourceChainConfiguration.requestManagerAddress,
-    fillManagerAddress: sourceChainConfiguration.fillManagerAddress,
-    explorerTransactionUrl: sourceChainConfiguration.explorerTransactionUrl,
-  };
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const sourceToken = sourceChainConfiguration.tokens.find(
-    (token) => token.symbol === formResult.tokenAddress.label,
-  )!;
-
-  const targetChainConfiguration = configuration.chains[formResult.targetChainId.value];
-  const targetChain = {
-    identifier: targetChainConfiguration.identifier,
-    name: targetChainConfiguration.name,
-    rpcUrl: targetChainConfiguration.rpcUrl,
-    requestManagerAddress: targetChainConfiguration.requestManagerAddress,
-    fillManagerAddress: targetChainConfiguration.fillManagerAddress,
-    explorerTransactionUrl: targetChainConfiguration.explorerTransactionUrl,
-  };
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const targetToken = targetChainConfiguration.tokens.find(
-    (token) => token.symbol === formResult.tokenAddress.label,
-  )!;
-
-  const amount = TokenAmount.parse(formResult.amount, sourceToken);
-  const validityPeriod = new UInt256('600');
+  // TODO: Resolve by make useRequestFee using an UInt256.
   const fees = new UInt256(requestFeeAmount.value.toString());
 
-  transfer.value = Transfer.new(
-    amount,
-    sourceChain,
-    sourceToken,
-    targetChain,
-    targetToken,
-    formResult.toAddress,
-    validityPeriod,
-    fees,
-  );
-
-  try {
-    await transfer.value.execute(signer.value, signerAddress.value);
-  } catch (error) {
-    console.error(error);
-    console.log(transfer.value);
-  }
+  await runTransfer(formResult, signer.value, signerAddress.value, fees, configuration.chains);
 };
 
 watch(chainId, (_, oldChainId) => {
@@ -136,14 +91,6 @@ watch(chainId, (_, oldChainId) => {
 });
 
 const transferError = computed(() => transfer.value?.errorMessage);
-
-const isTransferInProgress = computed(() => {
-  return transfer.value && (transfer.value.active || transfer.value.done);
-});
-
-const isNewTransferDisabled = computed(() => {
-  return transfer.value !== undefined && !transfer.value.done;
-});
 
 const newTransfer = () => {
   transfer.value = undefined;
