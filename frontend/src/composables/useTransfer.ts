@@ -8,7 +8,7 @@ import type { RequestFormResult } from '@/types/form';
 import { EthereumAmount, TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
-export function useTransfer() {
+export function useTransfer(addTransferToHistory: (transfer: Transfer) => void) {
   const transfer = ref<Transfer | undefined>(undefined);
 
   const isTransferInProgress = computed(() => {
@@ -46,7 +46,7 @@ export function useTransfer() {
 
     const validityPeriod = new UInt256('600');
 
-    transfer.value = Transfer.new(
+    const newTransfer = Transfer.new(
       sourceChain,
       sourceAmount,
       targetChain,
@@ -55,6 +55,9 @@ export function useTransfer() {
       validityPeriod,
       fees,
     );
+
+    transfer.value = newTransfer;
+    addTransferToHistory(newTransfer);
 
     try {
       await transfer.value.execute(signer, signerAddress);
