@@ -4,7 +4,7 @@
 
 
 html {
-    @apply text-[60%] xl:text-[65%] 2xl:text-[80%];
+    @apply text-[50%] 2xl:text-[65%]
 }
 
 /* Global transitions */

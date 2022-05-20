@@ -37,6 +37,7 @@ import { computed, onMounted, ref } from 'vue';
 import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
+import TransferHistory from '@/components/TransferHistory.vue';
 import WalletMenu from '@/components/WalletMenu.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
@@ -59,7 +60,7 @@ function closeWalletMenu(): void {
 
 const tabs = [
   { label: 'Transfer', content: RequestDialog },
-  { label: 'Activity', content: null },
+  { label: 'Activity', content: TransferHistory },
 ];
 
 /*
