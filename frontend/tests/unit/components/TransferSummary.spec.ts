@@ -15,6 +15,7 @@ function createWrapper(options?: {
   sourceChainName?: string;
   targetChainName?: string;
   targetAccount?: string;
+  requestTransactionUrl?: string;
 }) {
   return mount(TransferSummary, {
     shallow: true,
@@ -25,6 +26,7 @@ function createWrapper(options?: {
       sourceChainName: options?.sourceChainName ?? getRandomChainName(),
       targetChainName: options?.targetChainName ?? getRandomChainName(),
       targetAccount: options?.targetAccount ?? getRandomEthereumAddress(),
+      requestTransactionUrl: options?.requestTransactionUrl,
     },
   });
 }
@@ -65,5 +67,13 @@ describe('TransferSummary.vue', () => {
     const wrapper = createWrapper({ targetAccount: '0xTargetAccount' });
 
     expect(wrapper.text()).toContain('0xTargetAccount');
+  });
+
+  it('shows no explorer URL when given', () => {
+    const wrapper = createWrapper({ requestTransactionUrl: 'https://test.explorer/tx/0xabc' });
+    const explorerLink = wrapper.find('[data-test="explorer-link"]');
+
+    expect(explorerLink.isVisible()).toBeTruthy();
+    expect(explorerLink.attributes()).toContain({ href: 'https://test.explorer/tx/0xabc' });
   });
 });

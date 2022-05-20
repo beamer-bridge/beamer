@@ -1,5 +1,5 @@
 <template>
-  <ul class="steps steps-vertical">
+  <ul class="steps steps-vertical text-left">
     <ProgressStep
       v-for="(step, index) in steps"
       :key="index"
@@ -23,3 +23,9 @@ interface Props {
 
 defineProps<Props>();
 </script>
+
+<style>
+.steps-vertical .step {
+  min-height: 3rem !important;
+}
+</style>
