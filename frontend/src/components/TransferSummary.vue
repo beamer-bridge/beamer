@@ -1,20 +1,24 @@
 <template>
-  <div class="flex flex-col justify-center items-center">
+  <div class="flex flex-col gap-5 text-center">
     <div>
       {{ date.toLocaleString() }}<br />
       You sent {{ amount }}&nbsp;{{ tokenSymbol }}<br />
       from {{ sourceChainName }} to {{ targetChainName }}<br />
     </div>
+
     <div>
-      from <span>{{ sourceChainName }}</span>
+      Target address:<br />
+      {{ targetAccount }}
     </div>
-    <div>
-      to <span>{{ targetChainName }}</span>
-    </div>
-  </div>
-  <div class="flex flex-col justify-center items-center">
-    <div>Recipient address</div>
-    <div>{{ targetAccount }}</div>
+
+    <a
+      v-if="requestTransactionUrl"
+      class="underline"
+      :href="requestTransactionUrl"
+      data-test="explorer-link"
+    >
+      See transfer on the Explorer
+    </a>
   </div>
 </template>
 
@@ -26,6 +30,7 @@ interface Props {
   readonly sourceChainName: string;
   readonly targetChainName: string;
   readonly targetAccount: string;
+  readonly requestTransactionUrl?: string;
 }
 
 defineProps<Props>();

@@ -6,9 +6,11 @@ import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import {
   generateChain,
+  generateRequestInformationData,
   generateToken,
   generateTokenAmountData,
   generateTransferData,
+  generateUInt256Data,
 } from '~/utils/data_generators';
 
 function createWrapper(options?: { transfer?: Transfer }) {
@@ -19,8 +21,8 @@ function createWrapper(options?: { transfer?: Transfer }) {
     },
     global: {
       stubs: {
-        Card: {
-          template: '<div><slot></slot></div>',
+        Expandable: {
+          template: '<div><slot name="header" /><slot name="body" /></div>',
         },
       },
     },
@@ -28,16 +30,74 @@ function createWrapper(options?: { transfer?: Transfer }) {
 }
 
 describe('TransferStatus.vue', () => {
-  it('shows transfer summary with correct data', () => {
+  describe('header content', () => {
+    it('shows the source token symbol', () => {
+      const data = generateTransferData({
+        sourceAmount: generateTokenAmountData({
+          token: generateToken({ symbol: 'TTT' }),
+        }),
+      });
+      const transfer = new Transfer(data);
+      const wrapper = createWrapper({ transfer });
+      const header = wrapper.find('[data-test="header"]');
+
+      expect(header.text()).toContain('TTT');
+    });
+
+    it('shows the target chain name', () => {
+      const data = generateTransferData({
+        targetChain: generateChain({ name: 'Test Chain' }),
+      });
+      const transfer = new Transfer(data);
+      const wrapper = createWrapper({ transfer });
+      const header = wrapper.find('[data-test="header"]');
+
+      expect(header.text()).toContain('Test Chain');
+    });
+
+    it('shows the source amount with digits after dot cut to two', () => {
+      const data = generateTransferData({
+        sourceAmount: generateTokenAmountData({
+          amount: generateUInt256Data('12345'),
+          token: generateToken({ decimals: 4 }),
+        }),
+      });
+      const transfer = new Transfer(data);
+      const wrapper = createWrapper({ transfer });
+      const header = wrapper.find('[data-test="header"]');
+
+      expect(header.text()).toContain('1.23');
+    });
+
+    it('shows the source token amount with final zeros if even value', () => {
+      const data = generateTransferData({
+        sourceAmount: generateTokenAmountData({
+          amount: generateUInt256Data('1'),
+          token: generateToken({ decimals: 0 }),
+        }),
+      });
+      const transfer = new Transfer(data);
+      const wrapper = createWrapper({ transfer });
+      const header = wrapper.find('[data-test="header"]');
+
+      expect(header.text()).toContain('1.00');
+    });
+  });
+
+  it('shows transfer summary with correct data in the body', () => {
     const data = generateTransferData({
       date: 1234,
       sourceAmount: generateTokenAmountData({
         amount: '1',
         token: generateToken({ symbol: 'TTT', decimals: 0 }),
       }),
-      sourceChain: generateChain({ name: 'Source Chain' }),
+      sourceChain: generateChain({
+        name: 'Source Chain',
+        explorerTransactionUrl: 'https://test.explorer/tx/',
+      }),
       targetChain: generateChain({ name: 'Target Chain' }),
       targetAccount: '0xTargetAccount',
+      requestInformation: generateRequestInformationData({ transactionHash: '0xHash' }),
     });
     const transfer = new Transfer(data);
     const wrapper = createWrapper({ transfer });
@@ -51,6 +111,10 @@ describe('TransferStatus.vue', () => {
     expect(summary.props()).toContain({ sourceChainName: 'Source Chain' });
     expect(summary.props()).toContain({ targetChainName: 'Target Chain' });
     expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
+    expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
+    expect(summary.props()).toContain({
+      requestTransactionUrl: 'https://test.explorer/tx/0xHash',
+    });
   });
 
   it('shows transfer progress with steps', () => {
