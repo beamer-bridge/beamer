@@ -52,6 +52,7 @@ import { useRequestFee } from '@/composables/useRequestFee';
 import { useTransfer } from '@/composables/useTransfer';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useTransferHistory } from '@/stores/transfer-history';
 import type { RequestFormResult } from '@/types/form';
 
 const configuration = useConfiguration();
@@ -70,7 +71,10 @@ const submitForm = () => {
   requestForm.value?.node.submit();
 };
 
-const { transfer, runTransfer, isTransferInProgress, isNewTransferDisabled } = useTransfer();
+const transferHistory = useTransferHistory();
+const { transfer, runTransfer, isTransferInProgress, isNewTransferDisabled } = useTransfer(
+  transferHistory.addTransfer,
+);
 
 const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
