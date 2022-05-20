@@ -4,6 +4,7 @@ import type {
   RequestInformationData,
   TransferData,
 } from '@/actions/transfers';
+import { Transfer } from '@/actions/transfers';
 import type { ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { TokenAmountData } from '@/types/token-amount';
@@ -94,7 +95,7 @@ export function generateChainWithTokens(
 }
 
 export function generateUInt256Data(value?: string): UInt256Data {
-  return value ?? getRandomNumber(100000000000, 100000000000000).toString();
+  return value ?? getRandomNumber(100000000000000000, 50000000000000000000).toString();
 }
 
 export function generateTokenAmountData(
@@ -139,4 +140,39 @@ export function generateTransferData(partialTransferData?: Partial<TransferData>
     date: Date.now(),
     ...partialTransferData,
   };
+}
+
+export function generateTransfer(options?: {
+  transferData?: Partial<TransferData>;
+  active?: boolean;
+  completed?: boolean;
+  failed?: boolean;
+}): Transfer {
+  const temporaryTransfer = new Transfer(generateTransferData());
+  const steps = [...temporaryTransfer.steps];
+  let transferData = options?.transferData ?? {};
+
+  if (options?.active) {
+    steps[0].complete();
+    steps[1].activate();
+  }
+
+  if (options?.completed) {
+    steps.forEach((step) => step.complete());
+    transferData = {
+      requestInformation: generateRequestInformationData({
+        transactionHash: getRandomTransactionHash(),
+      }),
+      ...transferData,
+    };
+  }
+
+  if (options?.failed) {
+    steps[0].complete();
+    steps[1].setErrorMessage('error message');
+  }
+
+  const data = generateTransferData({ steps, ...transferData });
+
+  return new Transfer(data);
 }
