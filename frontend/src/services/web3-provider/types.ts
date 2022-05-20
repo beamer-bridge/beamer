@@ -2,18 +2,21 @@ import { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/providers
 import { Contract } from 'ethers';
 import { Ref, ShallowRef } from 'vue';
 
-export interface EthereumProvider {
+export interface IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
   signerAddress: ShallowRef<string | undefined>;
   chainId: Ref<number>;
   init(): Promise<void>;
-  requestSigner?(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   connectContract(contract: Contract): Contract;
   switchChain(newChainId: number): Promise<boolean | null>;
   addChain(chainData: ChainData): Promise<boolean>;
   getChainId(): Promise<number>;
   addToken(tokenData: TokenData): Promise<void>;
+}
+
+export interface ISigner {
+  requestSigner(): Promise<void>;
 }
 
 export type ChainData = {

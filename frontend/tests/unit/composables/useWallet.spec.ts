@@ -4,7 +4,10 @@ import { ref } from 'vue';
 import { useWallet } from '@/composables/useWallet';
 import * as web3ProviderService from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import {
+  MockedMetMaskProvider,
+  MockedWalletConnectProvider,
+} from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/web3-provider');
 
@@ -25,7 +28,7 @@ describe('useWallets', () => {
 
     it('should call createMetaMaskProvider and return a provider', async () => {
       const wallet = useWallet(ref(undefined), ref(WalletType.MetaMask));
-      const metaMask = new MockedEthereumProvider();
+      const metaMask = new MockedMetMaskProvider();
       web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(metaMask);
 
       const provider = await wallet.getConnectedWalletProvider();
@@ -38,7 +41,7 @@ describe('useWallets', () => {
     it('should call createWalletConnectProvider and return a provider', async () => {
       const rpcUrls = { 5: 'fakeRpc.url' };
       const wallet = useWallet(ref(undefined), ref(WalletType.WalletConnect), rpcUrls);
-      const walletConnect = new MockedEthereumProvider();
+      const walletConnect = new MockedWalletConnectProvider();
       web3ProviderService!.createWalletConnectProvider = vi.fn().mockResolvedValue(walletConnect);
 
       const provider = await wallet.getConnectedWalletProvider();
@@ -74,7 +77,7 @@ describe('useWallets', () => {
 
       await wallet.connectMetaMask();
 
-      expect(connectedWallet).toBe(WalletType.MetaMask);
+      expect(connectedWallet.value).toBe(WalletType.MetaMask);
     });
   });
 
@@ -85,7 +88,7 @@ describe('useWallets', () => {
 
       await wallet.connectWalletConnect();
 
-      expect(connectedWallet).toBeUndefined();
+      expect(connectedWallet.value).toBeUndefined();
     });
 
     it('should set connected wallet type in settings to WalletConnect', async () => {
@@ -98,7 +101,7 @@ describe('useWallets', () => {
 
       await wallet.connectWalletConnect();
 
-      expect(connectedWallet).toBe(WalletType.WalletConnect);
+      expect(connectedWallet.value).toBe(WalletType.WalletConnect);
     });
   });
 });

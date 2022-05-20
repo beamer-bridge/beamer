@@ -1,12 +1,12 @@
 import { ref } from 'vue';
 
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { MetaMaskProvider } from '@/services/web3-provider';
 import createAsyncProcess from '@/utils/create-async-process';
 
 export function useRequestSigner() {
   const error = ref<string | undefined>(undefined);
 
-  const requestSigner = async (provider: EthereumProvider) => {
+  const requestSigner = async (provider: MetaMaskProvider) => {
     error.value = undefined;
 
     provider.requestSigner && (await provider.requestSigner());
