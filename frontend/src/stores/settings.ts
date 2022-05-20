@@ -1,19 +1,11 @@
 import { defineStore } from 'pinia';
 
-import { Settings, WalletType } from '@/types/settings';
+import { WalletType } from '@/types/settings';
 
 export const useSettings = defineStore('settings', {
   state: () => ({
-    settings: undefined as Settings,
+    connectedWallet: undefined as WalletType | undefined,
   }),
-  actions: {
-    setConnectedWallet(connectedWallet: WalletType) {
-      this.settings = { ...this.settings, connectedWallet };
-    },
-  },
-  getters: {
-    connectedWallet: (state): WalletType | undefined => state.settings?.connectedWallet,
-  },
   persist: {
     enabled: true,
     strategies: [

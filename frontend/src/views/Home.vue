@@ -78,7 +78,6 @@ const {
 const { connectMetaMask, connectWalletConnect, getConnectedWalletProvider } = useWallet(
   provider,
   connectedWallet,
-  settings.setConnectedWallet,
   configuration.rpcUrls,
   requestSigner,
 );

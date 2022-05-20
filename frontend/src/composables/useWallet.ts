@@ -7,7 +7,6 @@ import { WalletType } from '@/types/settings';
 export function useWallet(
   provider: Ref<EthereumProvider | undefined>,
   connectedWallet: Ref<WalletType | undefined>,
-  setConnectedWallet: (wallet: WalletType) => void,
   rpcUrls?: { [chainId: number]: string },
   requestSigner?: (provider: EthereumProvider) => void,
 ) {
@@ -30,14 +29,17 @@ export function useWallet(
     provider.value = await createMetaMaskProvider();
     if (provider.value && requestSigner) {
       requestSigner(provider.value);
-      setConnectedWallet(WalletType.MetaMask);
+      connectedWallet.value = WalletType.MetaMask;
     }
   }
 
   async function connectWalletConnect() {
     if (rpcUrls) {
       provider.value = await createWalletConnectProvider(rpcUrls);
-      setConnectedWallet(WalletType.WalletConnect);
+
+      if (provider.value) {
+        connectedWallet.value = WalletType.WalletConnect;
+      }
     }
   }
 

@@ -11,26 +11,17 @@ describe('settings store', () => {
     setActivePinia(pinia);
   });
   describe('Settings initial value', () => {
-    it('initialize settings store with undefined', () => {
+    it('initialize settings store with undefined values', () => {
       const settings = useSettings();
-      expect(settings.$state.settings).toBeUndefined();
+      expect(settings.$state.connectedWallet).toBeUndefined();
     });
   });
 
-  describe('setConnectedWallet', () => {
+  describe('set connected wallet', () => {
     it('can set a connected wallet', () => {
       const settings = useSettings();
-      settings.setConnectedWallet(WalletType.MetaMask);
-      expect(settings.$state.settings?.connectedWallet).toBe(WalletType.MetaMask);
-    });
-  });
-
-  describe('connectedWallet getter', () => {
-    it('can get connected wallet value', () => {
-      const settings = useSettings();
-      settings.$state.settings = { connectedWallet: WalletType.MetaMask };
-      const connectedWallet = settings.connectedWallet;
-      expect(connectedWallet).toBe(WalletType.MetaMask);
+      settings.connectedWallet = WalletType.MetaMask;
+      expect(settings.$state.connectedWallet).toBe(WalletType.MetaMask);
     });
   });
 });
