@@ -16,8 +16,7 @@ describe('useWallets', () => {
 
   describe('getConnectedWalletProvider', () => {
     it('should return undefined if no providers are connected', async () => {
-      const connectedWallet = ref(undefined);
-      const { getConnectedWalletProvider } = useWallet(ref(undefined), connectedWallet, vi.fn());
+      const { getConnectedWalletProvider } = useWallet(ref(undefined), ref(undefined));
 
       const provider = await getConnectedWalletProvider();
 
@@ -25,8 +24,7 @@ describe('useWallets', () => {
     });
 
     it('should call createMetaMaskProvider and return a provider', async () => {
-      const connectedWallet = ref(WalletType.MetaMask);
-      const wallet = useWallet(ref(undefined), connectedWallet, vi.fn());
+      const wallet = useWallet(ref(undefined), ref(WalletType.MetaMask));
       const metaMask = new MockedEthereumProvider();
       web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(metaMask);
 
@@ -38,9 +36,8 @@ describe('useWallets', () => {
     });
 
     it('should call createWalletConnectProvider and return a provider', async () => {
-      const connectedWallet = ref(WalletType.WalletConnect);
       const rpcUrls = { 5: 'fakeRpc.url' };
-      const wallet = useWallet(ref(undefined), connectedWallet, vi.fn(), rpcUrls);
+      const wallet = useWallet(ref(undefined), ref(WalletType.WalletConnect), rpcUrls);
       const walletConnect = new MockedEthereumProvider();
       web3ProviderService!.createWalletConnectProvider = vi.fn().mockResolvedValue(walletConnect);
 
@@ -52,9 +49,7 @@ describe('useWallets', () => {
     });
 
     it('should return undefined if no rpc urls are passed for WalletConnect type', async () => {
-      const connectedWallet = ref(WalletType.WalletConnect);
-      const rpcUrls = undefined;
-      const wallet = useWallet(ref(undefined), connectedWallet, vi.fn(), rpcUrls);
+      const wallet = useWallet(ref(undefined), ref(undefined), undefined);
 
       const provider = await wallet.getConnectedWalletProvider();
 
@@ -64,63 +59,46 @@ describe('useWallets', () => {
 
   describe('connectMetaMask', () => {
     it('should not set provider in settings if no requestSigner has been passed', async () => {
-      const setConnectedWallet = vi.fn();
-      const requestSigner = undefined;
-      const wallet = useWallet(
-        ref(undefined),
-        ref(undefined),
-        setConnectedWallet,
-        undefined,
-        requestSigner,
-      );
+      const connectedWallet = ref(undefined);
+      const wallet = useWallet(ref(undefined), connectedWallet, undefined, undefined);
 
       await wallet.connectMetaMask();
 
-      expect(setConnectedWallet).not.toHaveBeenCalled();
+      expect(connectedWallet.value).toBeUndefined();
     });
 
     it('should set connected wallet type in settings to MetaMask', async () => {
-      const setConnectedWallet = vi.fn();
-      const requestSigner = vi.fn();
-      const wallet = useWallet(
-        ref(undefined),
-        ref(undefined),
-        setConnectedWallet,
-        undefined,
-        requestSigner,
-      );
+      const connectedWallet = ref(undefined);
+      const wallet = useWallet(ref(undefined), connectedWallet, undefined, vi.fn());
       web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue('fake-provider');
 
       await wallet.connectMetaMask();
 
-      expect(setConnectedWallet).toHaveBeenCalledOnce();
-      expect(setConnectedWallet).toHaveBeenLastCalledWith(WalletType.MetaMask);
+      expect(connectedWallet).toBe(WalletType.MetaMask);
     });
   });
 
   describe('connectWalletConnect', () => {
     it('should not set provider in settings if no RPC URLs are passed', async () => {
-      const setConnectedWallet = vi.fn();
-      const rpcUrls = undefined;
-      const wallet = useWallet(ref(undefined), ref(undefined), setConnectedWallet, rpcUrls);
+      const connectedWallet = ref(undefined);
+      const wallet = useWallet(ref(undefined), connectedWallet, undefined);
 
       await wallet.connectWalletConnect();
 
-      expect(web3ProviderService.createWalletConnectProvider).not.toHaveBeenCalled();
-      expect(setConnectedWallet).not.toHaveBeenCalled();
+      expect(connectedWallet).toBeUndefined();
     });
 
     it('should set connected wallet type in settings to WalletConnect', async () => {
-      const setConnectedWallet = vi.fn();
+      const connectedWallet = ref(undefined);
       const rpcUrls = { 5: 'fakeRpc.url' };
-      const wallet = useWallet(ref(undefined), ref(undefined), setConnectedWallet, rpcUrls);
+      const wallet = useWallet(ref(undefined), connectedWallet, rpcUrls);
+      web3ProviderService!.createWalletConnectProvider = vi
+        .fn()
+        .mockResolvedValue('fake-provider');
 
       await wallet.connectWalletConnect();
 
-      expect(web3ProviderService.createWalletConnectProvider).toHaveBeenCalledOnce();
-      expect(web3ProviderService.createWalletConnectProvider).toHaveBeenLastCalledWith(rpcUrls);
-      expect(setConnectedWallet).toHaveBeenCalledOnce();
-      expect(setConnectedWallet).toHaveBeenLastCalledWith(WalletType.WalletConnect);
+      expect(connectedWallet).toBe(WalletType.WalletConnect);
     });
   });
 });
