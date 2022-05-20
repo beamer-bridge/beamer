@@ -18,6 +18,7 @@
     "@formkit/vue": "^1.0.0-beta.6",
     "@metamask/detect-provider": "^1.2.0",
     "@walletconnect/web3-provider": "^1.7.8",
+    "@pinia/testing": "^0.0.12",
     "autoprefixer": "^10",
     "daisyui": "^2.11.0",
     "ethers": "^5.5.1",
