@@ -10,7 +10,7 @@ import {
 } from '@formkit/vue';
 import FloatingVue from 'floating-vue';
 import { createPinia } from 'pinia';
-import piniaPersist from 'pinia-plugin-persist';
+import piniaPersistState from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
 
 import App from './App.vue';
@@ -19,7 +19,7 @@ import formkitTheme from './formkitTheme';
 import router from './router';
 
 const pinia = createPinia();
-pinia.use(piniaPersist);
+pinia.use(piniaPersistState);
 
 createApp(App)
   .use(router)
