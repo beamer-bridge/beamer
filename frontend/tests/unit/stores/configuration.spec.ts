@@ -52,4 +52,27 @@ describe('configuration store', () => {
       expect(configuration.isSupportedChain(supportedChainId)).toBe(true);
     });
   });
+
+  describe('rpcUrls getter', () => {
+    it('returns empty object if no configuration has been loaded', () => {
+      const configuration = useConfiguration();
+      expect(configuration.rpcUrls).toEqual({});
+    });
+
+    it('returns all rpc urls for all chains in configuration', () => {
+      const configuration = useConfiguration();
+      const chain1Configuration = generateChainWithTokens();
+      const chain2Configuration = generateChainWithTokens();
+      configuration.$state = {
+        chains: {
+          ['1']: chain1Configuration,
+          ['2']: chain2Configuration,
+        },
+      };
+      expect(configuration.rpcUrls).toEqual({
+        1: chain1Configuration.rpcUrl,
+        2: chain2Configuration.rpcUrl,
+      });
+    });
+  });
 });

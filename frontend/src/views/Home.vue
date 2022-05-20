@@ -56,20 +56,17 @@ import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useRequestSigner } from '@/composables/useRequestSigner';
-import { useRpcUrls } from '@/composables/useRpcUrls';
-import {
-  createMetaMaskProvider,
-  createWalletConnectProvider,
-  getConnectedWalletProvider,
-} from '@/services/web3-provider';
+import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
-import { WalletType } from '@/types/settings';
 
-const criticalErrorMessage = ref('');
 const ethereumProvider = useEthereumProvider();
 const configuration = useConfiguration();
+const settings = useSettings();
+const { connectedWallet } = storeToRefs(settings);
+
+const criticalErrorMessage = ref('');
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 
 const {
@@ -77,7 +74,14 @@ const {
   active: requestSignerActive,
   error: requestSignerError,
 } = useRequestSigner();
-const settings = useSettings();
+
+const { connectMetaMask, connectWalletConnect, getConnectedWalletProvider } = useWallet(
+  provider,
+  connectedWallet,
+  settings.setConnectedWallet,
+  configuration.rpcUrls,
+  requestSigner,
+);
 
 const tabs = [
   {
@@ -89,22 +93,6 @@ const tabs = [
     content: null,
   },
 ];
-
-const connectMetaMask = async () => {
-  // TOOD: In future we will not separate getting provider and signer which
-  // resolve the undefined provider case.
-  provider.value = await createMetaMaskProvider();
-  if (provider.value) {
-    requestSigner(provider.value);
-    settings.setConnectedWallet(WalletType.MetaMask);
-  }
-};
-
-const connectWalletConnect = async () => {
-  const rpcUrlsList = useRpcUrls(configuration.chains);
-  provider.value = await createWalletConnectProvider(rpcUrlsList);
-  settings.setConnectedWallet(WalletType.WalletConnect);
-};
 
 const isSupportedChain = computed(() => configuration.isSupportedChain(ethereumProvider.chainId));
 

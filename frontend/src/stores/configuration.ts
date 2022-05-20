@@ -15,5 +15,11 @@ export const useConfiguration = defineStore('configuration', {
     isSupportedChain: (state) => {
       return (chainId: number): boolean => chainId in state.chains;
     },
+    rpcUrls: (state) => {
+      const rpcUrls = Object.keys(state.chains).reduce((prev, curr) => {
+        return { ...prev, [curr]: state.chains[curr].rpcUrl };
+      }, {});
+      return rpcUrls;
+    },
   },
 });
