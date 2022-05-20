@@ -6,12 +6,5 @@ export const useSettings = defineStore('settings', {
   state: () => ({
     connectedWallet: undefined as WalletType | undefined,
   }),
-  persist: {
-    enabled: true,
-    strategies: [
-      {
-        storage: localStorage,
-      },
-    ],
-  },
+  persist: true,
 });

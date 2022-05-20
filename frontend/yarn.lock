@@ -4249,12 +4249,10 @@ pify@^5.0.0:
   resolved "https://registry.yarnpkg.com/pify/-/pify-5.0.0.tgz#1f5eca3f5e87ebec28cc6d54a0e4aaf00acc127f"
   integrity sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==
 
-pinia-plugin-persist@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/pinia-plugin-persist/-/pinia-plugin-persist-1.0.0.tgz#fc696f225527f30bd5955109fafadd43c725e888"
-  integrity sha512-M4hBBd8fz/GgNmUPaaUsC29y1M09lqbXrMAHcusVoU8xlQi1TqgkWnnhvMikZwr7Le/hVyMx8KUcumGGrR6GVw==
-  dependencies:
-    vue-demi "^0.12.1"
+pinia-plugin-persistedstate@^1.5.2:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/pinia-plugin-persistedstate/-/pinia-plugin-persistedstate-1.6.0.tgz#925b8863b805fd826be3752921c09127bef954bb"
+  integrity sha512-J7BRqjSZuZ436RflNqudSHx85nk/86IUmAVeFNq3KQbSL7w63ABEf8k2Z8Zo1RBHfVTyam0hxtK19WxGE70M7A==
 
 pinia@^2.0.13:
   version "2.0.13"
@@ -5171,7 +5169,7 @@ vitest@^0.9.3:
     tinyspy "^0.3.2"
     vite "^2.9.1"
 
-vue-demi@*, vue-demi@^0.12.1:
+vue-demi@*:
   version "0.12.5"
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.12.5.tgz#8eeed566a7d86eb090209a11723f887d28aeb2d1"
   integrity sha512-BREuTgTYlUr0zw0EZn3hnhC3I6gPWv+Kwh4MCih6QcAeaTlaIX0DwOVN0wHej7hSvDPecz4jygy/idsgKfW58Q==
