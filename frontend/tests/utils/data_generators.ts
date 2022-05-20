@@ -136,6 +136,7 @@ export function generateTransferData(partialTransferData?: Partial<TransferData>
     targetAccount: getRandomEthereumAddress(),
     validityPeriod: generateUInt256Data(),
     fees: generateTokenAmountData(),
+    date: Date.now(),
     ...partialTransferData,
   };
 }

@@ -19,7 +19,7 @@ import type { RequestInformationData } from './request-information';
 import { RequestInformation } from './request-information';
 
 const STEPS_DATA = [
-  { identifier: 'sendRequestTransaction', label: 'Please confirm the request in your wallet' },
+  { identifier: 'sendRequestTransaction', label: 'Please confirm the transaction' },
   { identifier: 'waitForRequestEvent', label: 'Waiting for transaction receipt' },
   { identifier: 'waitForFulfillment', label: 'Request is being fulfilled' },
 ];
@@ -32,6 +32,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly targetAccount: EthereumAddress;
   readonly validityPeriod: UInt256;
   readonly fees: TokenAmount;
+  readonly date: Date;
   private _requestInformation?: RequestInformation;
   private _fulfillmentInformation?: FulfillmentInformation;
 
@@ -45,6 +46,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this.targetAccount = data.targetAccount;
     this.validityPeriod = new UInt256(data.validityPeriod);
     this.fees = new TokenAmount(data.fees);
+    this.date = new Date(data.date);
     this._requestInformation = data.requestInformation
       ? new RequestInformation(data.requestInformation)
       : undefined;
@@ -68,6 +70,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       targetAccount,
       validityPeriod: validityPeriod.encode(),
       fees: fees.encode(),
+      date: Date.now(),
     });
   }
 
@@ -105,6 +108,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       targetAccount: this.targetAccount,
       validityPeriod: this.validityPeriod.encode(),
       fees: this.fees.encode(),
+      date: this.date.getTime(),
       steps: this.steps.map((step) => step.encode()),
       requestInformation: this._requestInformation?.encode(),
       fulfillmentInformation: this.fulfillmentInformation,
@@ -173,6 +177,7 @@ export type TransferData = {
   targetAccount: EthereumAddress;
   validityPeriod: UInt256Data;
   fees: TokenAmountData;
+  date: number;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
   fulfillmentInformation?: FulfillmentInformation;

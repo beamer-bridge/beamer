@@ -30,6 +30,7 @@ function createWrapper(options?: { transfer?: Transfer }) {
 describe('TransferStatus.vue', () => {
   it('shows transfer summary with correct data', () => {
     const data = generateTransferData({
+      date: 1234,
       sourceAmount: generateTokenAmountData({
         amount: '1',
         token: generateToken({ symbol: 'TTT', decimals: 0 }),
@@ -44,6 +45,7 @@ describe('TransferStatus.vue', () => {
 
     expect(summary.exists()).toBeTruthy();
     expect(summary.isVisible()).toBeTruthy();
+    expect(summary.props()).toEqual(expect.objectContaining({ date: new Date(1234) }));
     expect(summary.props()).toContain({ amount: '1' });
     expect(summary.props()).toContain({ tokenSymbol: 'TTT' });
     expect(summary.props()).toContain({ sourceChainName: 'Source Chain' });

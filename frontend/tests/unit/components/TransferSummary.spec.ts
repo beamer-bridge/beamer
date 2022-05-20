@@ -9,6 +9,7 @@ import {
 } from '~/utils/data_generators';
 
 function createWrapper(options?: {
+  date?: Date;
   amount?: string;
   tokenSymbol?: string;
   sourceChainName?: string;
@@ -18,6 +19,7 @@ function createWrapper(options?: {
   return mount(TransferSummary, {
     shallow: true,
     props: {
+      date: options?.date ?? new Date(Date.now()),
       amount: options?.amount ?? getRandomDecimalPointNumber(),
       tokenSymbol: options?.tokenSymbol ?? getRandomTokenSymbol(),
       sourceChainName: options?.sourceChainName ?? getRandomChainName(),
@@ -28,6 +30,13 @@ function createWrapper(options?: {
 }
 
 describe('TransferSummary.vue', () => {
+  it('shows the date as locale string', () => {
+    const date = new Date(10000);
+    const wrapper = createWrapper({ date });
+
+    expect(wrapper.text()).toContain(date.toLocaleString());
+  });
+
   it('shows the amount', () => {
     const wrapper = createWrapper({ amount: '1.0' });
 
