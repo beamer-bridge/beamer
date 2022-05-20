@@ -1,8 +1,9 @@
 <template>
   <div class="flex flex-col justify-center items-center">
     <div>
-      Sending <span>{{ amount }}&nbsp;</span>
-      <span>{{ tokenSymbol }}</span>
+      {{ date.toLocaleString() }}<br />
+      You sent {{ amount }}&nbsp;{{ tokenSymbol }}<br />
+      from {{ sourceChainName }} to {{ targetChainName }}<br />
     </div>
     <div>
       from <span>{{ sourceChainName }}</span>
@@ -19,6 +20,7 @@
 
 <script setup lang="ts">
 interface Props {
+  readonly date: Date;
   readonly amount: string;
   readonly tokenSymbol: string;
   readonly sourceChainName: string;

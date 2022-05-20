@@ -226,6 +226,7 @@ describe('transfer', () => {
       const targetAccount = getRandomEthereumAddress();
       const validityPeriod = generateUInt256Data();
       const fees = generateTokenAmountData();
+      const date = 1652688517448;
       const requestInformation = generateRequestInformationData();
       const fulfillmentInformation = generateFulfillmentInformation();
       const steps = [generateStepData()];
@@ -237,6 +238,7 @@ describe('transfer', () => {
         targetAccount,
         validityPeriod,
         fees,
+        date,
         requestInformation,
         fulfillmentInformation,
         steps,
@@ -252,6 +254,7 @@ describe('transfer', () => {
       expect(encodedData.targetAccount).toMatchObject(targetAccount);
       expect(encodedData.validityPeriod).toMatchObject(validityPeriod);
       expect(encodedData.fees).toMatchObject(fees);
+      expect(encodedData.date).toMatchObject(date);
       expect(encodedData.requestInformation).toMatchObject(requestInformation);
       expect(encodedData.fulfillmentInformation).toMatchObject(fulfillmentInformation);
       expect(encodedData.steps).toMatchObject(steps);
