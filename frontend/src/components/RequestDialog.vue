@@ -33,6 +33,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { Transfer } from '@/actions/transfers';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
+import { switchToActivities } from '@/router/navigation';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
@@ -95,6 +96,7 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   ) as Transfer;
 
   transferHistory.addTransfer(transfer);
+  switchToActivities();
   requestForm.value?.node.reset();
 
   try {
