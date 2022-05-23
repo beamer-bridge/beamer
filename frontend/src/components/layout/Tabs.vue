@@ -23,31 +23,46 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue';
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 
 interface Props {
   tabs: Array<{
     label: string;
     content: Component;
   }>;
+  activeTabLabel?: string;
+}
+
+interface Emits {
+  (e: 'tabChanged', value: string): void;
 }
 
 const props = defineProps<Props>();
-
+const emits = defineEmits<Emits>();
 const activeTab = shallowRef(props.tabs[0]);
-
 const headers = computed(() =>
   props.tabs.map((tab) => ({
     label: tab.label,
     click: () => (activeTab.value = tab),
     classes: {
-      'cursor-pointer': tab != activeTab.value,
-      'bg-teal-dark/40': tab != activeTab.value,
-      'text-teal-light': tab == activeTab.value,
-      'text-teal-light/40': tab != activeTab.value,
+      'cursor-pointer': tab.label != activeTab.value.label,
+      'bg-teal-dark/40': tab.label != activeTab.value.label,
+      'text-teal-light': tab.label == activeTab.value.label,
+      'text-teal-light/40': tab.label != activeTab.value.label,
     },
   })),
 );
+
+watch(
+  () => props.activeTabLabel,
+  () => {
+    const targetTab = props.tabs.find((tab) => tab.label === props.activeTabLabel);
+    activeTab.value = targetTab ?? activeTab.value;
+  },
+  { immediate: true },
+);
+
+watch(activeTab, () => emits('tabChanged', activeTab.value.label));
 </script>
 
 <style lang="scss">
