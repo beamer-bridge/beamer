@@ -9,6 +9,13 @@
       ref="listElement"
       class="w-full h-full overflow-y-auto overflow-hidden pb-20 no-scrollbar"
     >
+      <div
+        v-if="transfers.length === 0"
+        class="text-2xl w-full h-full flex justify-center items-center text-teal-light/40"
+      >
+        <span>Nothing here yet.</span>
+      </div>
+
       <LazyWrapper
         v-for="group of groupedAndSortedTransfers"
         :key="group.label"
