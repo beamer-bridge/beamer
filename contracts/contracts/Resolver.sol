@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
-import "../interfaces/ICrossDomainMessenger.sol";
+import "../interfaces/IMessenger.sol";
 import "./ResolutionRegistry.sol";
 import "./CrossDomainRestrictedCalls.sol";
 
@@ -37,7 +37,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             "No messenger available for source chain"
         );
 
-        ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
+        IMessenger messenger = IMessenger(info.messenger);
         messenger.sendMessage(
             info.resolutionRegistry,
             abi.encodeCall(
@@ -65,7 +65,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             "No messenger available for source chain"
         );
 
-        ICrossDomainMessenger messenger = ICrossDomainMessenger(info.messenger);
+        IMessenger messenger = IMessenger(info.messenger);
         messenger.sendMessage(
             info.resolutionRegistry,
             abi.encodeCall(
