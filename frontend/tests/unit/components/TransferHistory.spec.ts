@@ -86,4 +86,13 @@ describe('TransferHistory.vue', () => {
       expect.objectContaining({ transfer: transferThree }),
     );
   });
+
+  it('shows a placeholder if there are no transfers', () => {
+    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
+      groupedAndSortedTransfers: ref([]),
+    });
+    const wrapper = createWrapper({ transfers: [] });
+
+    expect(wrapper.text()).toContain('Nothing here yet.');
+  });
 });
