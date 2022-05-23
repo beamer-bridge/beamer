@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "../interfaces/IProofSubmitter.sol";
-import "../interfaces/ICrossDomainMessenger.sol";
+import "../../../interfaces/IProofSubmitter.sol";
 
-import "./BeamerUtils.sol";
-import "./Resolver.sol";
-import "./RestrictedCalls.sol";
+import "../../BeamerUtils.sol";
+import "../../Resolver.sol";
+import "../../RestrictedCalls.sol";
 
 contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
+    IMessenger private messenger;
     uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
 
-    ICrossDomainMessenger public messenger;
-
-    constructor(address _messenger) {
-        messenger = ICrossDomainMessenger(_messenger);
+    constructor(address messenger_) {
+        messenger = IMessenger(messenger_);
     }
 
     function submitProof(
