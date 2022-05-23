@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Expandable from '@/components/layout/Expandable.vue';
@@ -36,13 +36,10 @@ import TransferSummary from '@/components/TransferSummary.vue';
 
 interface Props {
   transfer: Transfer;
-  isExpanded?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  isExpanded: false,
-});
-
+const props = defineProps<Props>();
+const isExpanded = ref(props.transfer.active);
 const shortenAmountDecimals = computed(() => {
   const { decimalAmount } = props.transfer.sourceAmount;
   const [beforeDot, afterDot] = decimalAmount.split('.');
@@ -77,4 +74,13 @@ const statusBackgroundColorClass = computed(() => {
   const { active, completed, failed } = props.transfer;
   return failed ? 'bg-orange-dark' : completed ? 'bg-green' : active ? 'bg-green-lime' : 'bg-grey';
 });
+
+watch(
+  () => props.transfer.active,
+  () => {
+    // Use a timeout for both cases to avoid timer management.
+    const timeout = props.transfer.active ? 0 : 7000;
+    setTimeout(() => (isExpanded.value = props.transfer.active), timeout);
+  },
+);
 </script>

@@ -172,7 +172,7 @@ export function generateTransfer(options?: {
     steps[1].setErrorMessage('error message');
   }
 
-  const data = generateTransferData({ steps, ...transferData });
+  const data = generateTransferData({ ...transferData, steps });
 
   return new Transfer(data);
 }

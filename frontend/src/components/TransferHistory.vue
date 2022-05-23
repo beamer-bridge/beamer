@@ -10,7 +10,7 @@
       class="w-full h-full overflow-y-auto overflow-hidden pb-20 no-scrollbar"
     >
       <LazyWrapper
-        v-for="(group, groupIndex) of groupedAndSortedTransfers"
+        v-for="group of groupedAndSortedTransfers"
         :key="group.label"
         :root-element="listElement"
         :threshold="0.0"
@@ -26,7 +26,6 @@
             v-for="(transfer, groupTransferIndex) of group.transfers"
             :key="transfer.requestInformation?.identifier?.asString ?? groupTransferIndex"
             :transfer="transfer"
-            :is-expanded="groupIndex === 0 && groupTransferIndex == 0 && transfer.active"
             class="my-3"
           />
         </LazyWrapper>
