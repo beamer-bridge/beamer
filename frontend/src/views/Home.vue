@@ -12,18 +12,14 @@
         </div>
       </div>
 
-      <Card class="relative bg-teal mb-11 w-full min-h-[50rem]">
+      <Card class="relative bg-teal mb-11 w-full h-[50rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
-        <Tabs :tabs="tabs" :class="tabsClasses" />
+        <Tabs :tabs="tabs" :class="tabsClasses" :active-tab-label="activeTabLabel" @tab-changed="onTabChanged" />
       </Card>
 
       <div id="action-button-portal" class="flex justify-center h-28">
-        <FormKit
-          v-if="!signer && !walletMenuIsOpen"
-          input-class="bg-orange flex flex-row justify-center"
-          type="button"
-          @click="openWalletMenu"
-          >Connect to Wallet
+        <FormKit v-if="!signer && !walletMenuIsOpen" input-class="bg-orange flex flex-row justify-center" type="button"
+          @click="openWalletMenu">Connect to Wallet
         </FormKit>
       </div>
     </div>
@@ -32,7 +28,8 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { computed, markRaw, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
@@ -59,8 +56,8 @@ function closeWalletMenu(): void {
 }
 
 const tabs = [
-  { label: 'Transfer', content: RequestDialog },
-  { label: 'Activity', content: TransferHistory },
+  { label: 'Transfer', content: markRaw(RequestDialog) },
+  { label: 'Activity', content: markRaw(TransferHistory) },
 ];
 
 /*
@@ -73,6 +70,28 @@ const tabs = [
 const tabsClasses = computed(() => ({
   'blur-xl': walletMenuIsOpen.value,
 }));
+
+const route = useRoute();
+const router = useRouter();
+const activeTabLabel = ref(tabs[0].label);
+
+function onTabChanged(newActiveTabLabel: string): void {
+  activeTabLabel.value = newActiveTabLabel;
+}
+
+watch(
+  () => route.query?.activeTabLabel,
+  () => (activeTabLabel.value = route.query.activeTabLabel as string),
+  { immediate: true },
+);
+
+watch(
+  activeTabLabel,
+  () => {
+    router.replace({ path: route.path, query: { activeTabLabel: activeTabLabel.value } });
+  },
+  { immediate: true },
+);
 
 const { chainId } = storeToRefs(ethereumProvider);
 const errorMessage = computed(() => {
