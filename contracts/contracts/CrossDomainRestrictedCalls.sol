@@ -2,11 +2,11 @@
 pragma solidity ^0.8.12;
 
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
-import "../interfaces/ICrossDomainMessenger.sol";
+import "../interfaces/IMessenger.sol";
 
 contract CrossDomainRestrictedCalls is Ownable {
     struct MessengerSource {
-        ICrossDomainMessenger crossDomainMessenger;
+        IMessenger messenger;
         address sender;
     }
 
@@ -17,20 +17,22 @@ contract CrossDomainRestrictedCalls is Ownable {
         address messenger,
         address caller
     ) external onlyOwner {
-        messengers[chainId] = MessengerSource(
-            ICrossDomainMessenger(messenger),
-            caller
-        );
+        require(messenger != address(0), "XRestrictedCalls: invalid messenger");
+        messengers[chainId] = MessengerSource(IMessenger(messenger), caller);
     }
 
     modifier restricted(uint256 chainId, address caller) {
         MessengerSource storage s = messengers[chainId];
         require(
-            caller == address(s.crossDomainMessenger),
+            address(s.messenger) != address(0),
             "XRestrictedCalls: unknown caller"
         );
         require(
-            s.crossDomainMessenger.xDomainMessageSender() == s.sender,
+            caller == s.messenger.nativeMessenger(),
+            "XRestrictedCalls: unknown caller"
+        );
+        require(
+            s.messenger.originalSender() == s.sender,
             "XRestrictedCalls: unknown caller"
         );
         _;
