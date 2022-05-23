@@ -86,17 +86,4 @@ describe('TransferHistory.vue', () => {
       expect.objectContaining({ transfer: transferThree }),
     );
   });
-
-  it('sets first overall transfer to be expanded if being active', () => {
-    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
-      groupedAndSortedTransfers: ref([
-        { label: 'window one', transfers: [generateTransfer({ active: true })] },
-        { label: 'window two', transfers: [generateTransfer()] },
-      ]),
-    });
-    const wrapper = createWrapper();
-    const firstTransferStatus = wrapper.findComponent(TransferStatus);
-
-    expect(firstTransferStatus.props()).toContain({ isExpanded: true });
-  });
 });

@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 
 import { Transfer } from '@/actions/transfers';
+import Expandable from '@/components/layout/Expandable.vue';
 import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
@@ -9,6 +10,7 @@ import {
   generateRequestInformationData,
   generateToken,
   generateTokenAmountData,
+  generateTransfer,
   generateTransferData,
   generateUInt256Data,
 } from '~/utils/data_generators';
@@ -22,6 +24,7 @@ function createWrapper(options?: { transfer?: Transfer }) {
     global: {
       stubs: {
         Expandable: {
+          props: { isExpanded: Boolean },
           template: '<div><slot name="header" /><slot name="body" /></div>',
         },
       },
@@ -30,6 +33,10 @@ function createWrapper(options?: { transfer?: Transfer }) {
 }
 
 describe('TransferStatus.vue', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   describe('header content', () => {
     it('shows the source token symbol', () => {
       const data = generateTransferData({
@@ -126,5 +133,39 @@ describe('TransferStatus.vue', () => {
     expect(process.exists()).toBeTruthy();
     expect(process.isVisible()).toBeTruthy();
     expect(process.props('steps').length).toBeGreaterThanOrEqual(1);
+  });
+
+  describe('auto expansion', () => {
+    it('sets itself to being expanded if becoming active', async () => {
+      let transfer = generateTransfer({ active: false });
+      const wrapper = createWrapper({ transfer });
+      const expandable = wrapper.findComponent(Expandable);
+      expect(expandable.props()).toContain({ isExpanded: false });
+
+      transfer = generateTransfer({ active: true, transferData: transfer.encode() });
+      await wrapper.setProps({ ...wrapper.props, transfer });
+      vi.advanceTimersByTime(0);
+      await wrapper.vm.$nextTick();
+
+      expect(expandable.props()).toContain({ isExpanded: true });
+    });
+
+    it('sets itself to being collapsed after becoming inactive with a delay', async () => {
+      let transfer = generateTransfer({ active: true });
+      const wrapper = createWrapper({ transfer });
+      const expandable = wrapper.findComponent(Expandable);
+      expect(expandable.props()).toContain({ isExpanded: true });
+
+      transfer = generateTransfer({ active: false, transferData: transfer.encode() });
+      await wrapper.setProps({ ...wrapper.props, transfer });
+
+      vi.advanceTimersByTime(2000);
+      await wrapper.vm.$nextTick();
+      expect(expandable.props()).toContain({ isExpanded: true });
+
+      vi.advanceTimersByTime(10000);
+      await wrapper.vm.$nextTick();
+      expect(expandable.props()).toContain({ isExpanded: false });
+    });
   });
 });
