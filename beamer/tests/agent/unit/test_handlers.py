@@ -11,10 +11,11 @@ from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
     CLAIM_ID,
+    CLAIMER_STAKE,
     REQUEST_ID,
     TARGET_CHAIN_ID,
     TIMESTAMP,
-    make_claim,
+    make_claim_challenged,
     make_context,
     make_request,
 )
@@ -74,7 +75,7 @@ def test_request_garbage_collection_with_claim():
     request.fill(config.account.address, b"", b"")
     request.withdraw()
 
-    claim = make_claim(request)
+    claim = make_claim_challenged(request)
 
     context.requests.add(request.id, request)
     context.claims.add(claim.id, claim)
@@ -112,7 +113,7 @@ def test_handle_initiate_l1_resolution():
     # Without a claim, this must fail
     assert process_event(event, context) == (False, None)
 
-    claim = make_claim(request, claimer=config.account.address)
+    claim = make_claim_challenged(request, claimer=config.account.address)
     context.claims.add(claim.id, claim)
 
     # Must only be called if request is filled
@@ -153,14 +154,19 @@ def test_handle_request_resolved():
     assert request.l1_resolution_filler == filler
 
 
-def test_handle_claim_made():
+def test_handle_generate_l1_resolution_event():
     context, config = make_context()
 
     request = make_request()
     request.fill(config.account.address, b"", b"")
     context.requests.add(request.id, request)
 
-    claim = make_claim(request, claimer=config.account.address)
+    claim = make_claim_challenged(
+        request,
+        claimer=config.account.address,
+        challenger=make_address(),
+        challenger_stake=Wei(CLAIMER_STAKE + 1),
+    )
     context.claims.add(claim.id, claim)
 
     event = deepcopy(claim.latest_claim_made)
@@ -184,7 +190,7 @@ def test_maybe_claim_no_l1():
     context.requests.add(request.id, request)
 
     # Claimer doesn't win challenge game, `withdraw` must not be called
-    claim = make_claim(
+    claim = make_claim_challenged(
         request=request,
         claimer=config.account.address,
         claimer_stake=Wei(10),
@@ -201,7 +207,7 @@ def test_maybe_claim_no_l1():
     assert not claim.transaction_pending
 
     # Claimer wins challenge game, `withdraw` must be called
-    claim = make_claim(
+    claim = make_claim_challenged(
         request=request,
         claimer=config.account.address,
         claimer_stake=Wei(100),
@@ -219,7 +225,7 @@ def test_maybe_claim_no_l1():
 
     # Claimer leads challenge game, but challenge period is not over
     block = context.latest_blocks[request.source_chain_id]
-    claim = make_claim(
+    claim = make_claim_challenged(
         request=request,
         claimer=config.account.address,
         claimer_stake=Wei(100),
@@ -246,7 +252,9 @@ def test_maybe_claim_l1_as_claimer(termination: Termination, l1_filler: Checksum
     request.l1_resolution_filler = l1_filler
     context.requests.add(request.id, request)
 
-    claim = make_claim(request=request, claimer=config.account.address, termination=termination)
+    claim = make_claim_challenged(
+        request=request, claimer=config.account.address, termination=termination
+    )
     context.claims.add(claim.id, claim)
 
     assert not claim.transaction_pending
@@ -269,7 +277,7 @@ def test_maybe_claim_l1_as_challenger(termination: Termination, l1_filler: Check
     request.l1_resolution_filler = l1_filler
     context.requests.add(request.id, request)
 
-    claim = make_claim(
+    claim = make_claim_challenged(
         request=request,
         claimer=ADDRESS1,
         challenger=config.account.address,
