@@ -382,19 +382,27 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
-    if claim.is_challenger_winning and claim.claimer != context.address:
-        return False
-
     agent_winning = context.address in claim.get_winning_addresses()
     if agent_winning:
         return False
 
+    own_challenge_stake = Wei(claim.get_challenger_stake(context.address))
+    # With the condition above this means that the agent is currently losing
+    agent_participating = claim.claimer == context.address or own_challenge_stake > 0
+
+    if not agent_participating:
+        if claim.is_challenger_winning:
+            return False
+        # Already challenged and has a filler, the agent won't challenge
+        if request.filler is not None and claim.latest_claim_made.challenger_stake_total > 0:
+            return False
+
     initial_claim_stake = context.request_manager.functions.claimStake().call()
     minimum_stake = claim.get_minimum_challenge_stake(initial_claim_stake)
-    own_stake = Wei(claim.get_challenger_stake(context.address))
+
     # TODO: have a central variable and proper L1 cost calculations
     l1_cost = Wei(initial_claim_stake + 10**15)
-    stake = max(minimum_stake, Wei(l1_cost - own_stake))
+    stake = max(minimum_stake, Wei(l1_cost - own_challenge_stake))
 
     func = context.request_manager.functions.challengeClaim(claim.id)
     try:
