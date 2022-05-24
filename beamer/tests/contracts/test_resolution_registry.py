@@ -8,7 +8,7 @@ from beamer.tests.util import create_fill_hash
 
 
 def test_invalidation_before_and_after_resolution(contracts, token, resolution_registry):
-    contracts.messenger2.setLastSender(contracts.resolver.address)
+    contracts.l1_messenger.setLastSender(contracts.resolver.address)
 
     address = make_address()
     request_id = 1
@@ -26,14 +26,14 @@ def test_invalidation_before_and_after_resolution(contracts, token, resolution_r
     )
 
     assert not resolution_registry.invalidFillHashes(fill_hash)
-    resolution_registry.invalidateFillHash(fill_hash, chain_id, {"from": contracts.messenger2})
+    resolution_registry.invalidateFillHash(fill_hash, chain_id, {"from": contracts.l1_messenger})
     # Fill hash must be invalidated
     assert resolution_registry.invalidFillHashes(fill_hash)
 
     assert resolution_registry.fillers(fill_hash) == ADDRESS_ZERO
 
     resolution_registry.resolveRequest(
-        fill_hash, chain_id, address, {"from": contracts.messenger2}
+        fill_hash, chain_id, address, {"from": contracts.l1_messenger}
     )
 
     # Resolution validates fill hash again
@@ -42,4 +42,6 @@ def test_invalidation_before_and_after_resolution(contracts, token, resolution_r
 
     # Invalidation of a resolved request should fail
     with brownie.reverts("Cannot invalidate resolved fillHashes"):
-        resolution_registry.invalidateFillHash(fill_hash, chain_id, {"from": contracts.messenger2})
+        resolution_registry.invalidateFillHash(
+            fill_hash, chain_id, {"from": contracts.l1_messenger}
+        )
