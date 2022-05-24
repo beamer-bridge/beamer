@@ -7,11 +7,12 @@ import eth_account
 import pytest
 from brownie import (
     FillManager,
-    OptimismProofSubmitter,
     RequestManager,
     ResolutionRegistry,
     Resolver,
-    TestCrossDomainMessenger,
+    TestL1Messenger,
+    TestL2Messenger,
+    TestProofSubmitter,
     accounts,
 )
 
@@ -28,9 +29,9 @@ class Contracts:
     resolver: Resolver
     fill_manager: FillManager
     request_manager: RequestManager
-    messenger1: TestCrossDomainMessenger
-    messenger2: TestCrossDomainMessenger
-    proof_submitter: OptimismProofSubmitter
+    l1_messenger: TestL1Messenger
+    l2_messenger: TestL2Messenger
+    proof_submitter: TestProofSubmitter
     resolution_registry: ResolutionRegistry
 
 
@@ -87,17 +88,15 @@ def contracts(
     finalization_time,
     challenge_period_extension,
 ):
-    # L2b contracts
-    messenger1 = deployer.deploy(TestCrossDomainMessenger)
-    messenger1.setForwardState(forward_state)
-
     # L1 contracts
-    messenger2 = deployer.deploy(TestCrossDomainMessenger)
-    messenger2.setForwardState(forward_state)
+    l1_messenger = deployer.deploy(TestL1Messenger)
+    l1_messenger.setForwardState(forward_state)
     resolver = deployer.deploy(Resolver)
 
-    # L2b contracts, again
-    proof_submitter = deployer.deploy(OptimismProofSubmitter, messenger1.address)
+    # L2b contracts
+    l2_messenger = deployer.deploy(TestL2Messenger)
+    l2_messenger.setForwardState(forward_state)
+    proof_submitter = deployer.deploy(TestProofSubmitter, l2_messenger.address)
     fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
     fill_manager.addAllowedLP(_LOCAL_ACCOUNT)
 
@@ -113,20 +112,21 @@ def contracts(
 
     # Explicitly allow calls between contracts. The chain of trust:
     #
-    # fill_manager -> proof_submitter -> messenger1 -> L1 resolver ->
-    # messenger2 -> resolution registry
+    # fill_manager -> proof_submitter -> L2 messenger -> L1 resolver ->
+    # L1 messenger -> resolution registry
     l1_chain_id = l2_chain_id = brownie.chain.id
 
     proof_submitter.addCaller(l2_chain_id, fill_manager.address)
-    resolver.addCaller(l2_chain_id, messenger1.address, proof_submitter.address)
-    resolution_registry.addCaller(l1_chain_id, messenger2.address, resolver.address)
+    l2_messenger.addCaller(l2_chain_id, proof_submitter.address)
+    resolver.addCaller(l2_chain_id, l2_messenger.address, proof_submitter.address)
+    l1_messenger.addCaller(l1_chain_id, resolver.address)
+    resolution_registry.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
+    resolver.addRegistry(l2_chain_id, resolution_registry.address, l1_messenger.address)
 
-    resolver.addRegistry(l2_chain_id, resolution_registry.address, messenger2.address)
     request_manager.setFinalizationTime(l2_chain_id, finalization_time)
-
     return Contracts(
-        messenger1=messenger1,
-        messenger2=messenger2,
+        l1_messenger=l1_messenger,
+        l2_messenger=l2_messenger,
         resolver=resolver,
         proof_submitter=proof_submitter,
         fill_manager=fill_manager,
