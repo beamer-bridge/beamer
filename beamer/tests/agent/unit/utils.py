@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 
 from eth_account import Account
 from eth_typing import BlockNumber, ChecksumAddress
+from eth_utils import to_checksum_address
 from hexbytes import HexBytes
+from web3.constants import ADDRESS_ZERO
 from web3.types import BlockData, Timestamp, Wei
 
 from beamer.config import Config
@@ -26,6 +28,7 @@ FILL_ID = FillId(b"abc")
 
 CLAIMER_STAKE = Wei(10_000_000)
 CHALLENGER_STAKE = Wei(5_000_000)
+ZERO_STAKE = Wei(0)
 
 TERMINATION = Termination(1)
 TIMESTAMP = Timestamp(457)
@@ -59,7 +62,27 @@ def make_request() -> Request:
     )
 
 
-def make_claim(
+def make_claim_unchallenged(
+    request: Request,
+    claim_id: ClaimId = CLAIM_ID,
+    claimer: ChecksumAddress = None,
+    claimer_stake: Wei = CLAIMER_STAKE,
+    fill_id: FillId = FILL_ID,
+    termination: Termination = TERMINATION,
+) -> Claim:
+    return make_claim_challenged(
+        request,
+        claim_id,
+        claimer,
+        claimer_stake,
+        to_checksum_address(ADDRESS_ZERO),
+        Wei(0),
+        fill_id,
+        termination,
+    )
+
+
+def make_claim_challenged(
     request: Request,
     claim_id: ClaimId = CLAIM_ID,
     claimer: ChecksumAddress = None,
@@ -70,6 +93,7 @@ def make_claim(
     termination: Termination = TERMINATION,
 ) -> Claim:
     challenger = challenger or make_address()
+
     claim = Claim(
         claim_made=ClaimMade(
             chain_id=request.source_chain_id,
@@ -122,5 +146,5 @@ def make_context() -> Tuple[Context, Config]:
         resolution_pool=MagicMock(),
         l1_resolutions={},
     )
-
+    context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore
     return context, config

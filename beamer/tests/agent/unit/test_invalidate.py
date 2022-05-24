@@ -2,7 +2,12 @@ from hexbytes import HexBytes
 
 from beamer.events import FillHashInvalidated, HashInvalidated
 from beamer.state_machine import process_event
-from beamer.tests.agent.unit.utils import FILL_ID, make_claim, make_context, make_request
+from beamer.tests.agent.unit.utils import (
+    FILL_ID,
+    make_claim_challenged,
+    make_context,
+    make_request,
+)
 from beamer.typing import ClaimId, FillId
 
 
@@ -14,8 +19,10 @@ def test_handle_fill_hash_invalidated():
     context.requests.add(request.id, request)
     assert request.fill_id is not None
 
-    claim_1 = make_claim(request=request, claimer=config.account.address, fill_id=request.fill_id)
-    claim_2 = make_claim(
+    claim_1 = make_claim_challenged(
+        request=request, claimer=config.account.address, fill_id=request.fill_id
+    )
+    claim_2 = make_claim_challenged(
         request=request,
         claim_id=ClaimId(claim_1.id + 1),
         claimer=config.account.address,
@@ -48,8 +55,10 @@ def test_handle_hash_invalidated():
     context.requests.add(request.id, request)
     assert request.fill_id is not None
 
-    claim_1 = make_claim(request=request, claimer=config.account.address, fill_id=request.fill_id)
-    claim_2 = make_claim(
+    claim_1 = make_claim_challenged(
+        request=request, claimer=config.account.address, fill_id=request.fill_id
+    )
+    claim_2 = make_claim_challenged(
         request=request,
         claim_id=ClaimId(claim_1.id + 1),
         claimer=config.account.address,
