@@ -14,7 +14,7 @@
     </template>
 
     <div v-else class="text-green">Tokens Withdrawn</div>
-    <span v-if="errorMessage" class="text-red">{{ errorMessage }}</span>
+    <span v-if="errorMessage" class="text-red"><br />{{ errorMessage }}</span>
   </div>
 </template>
 

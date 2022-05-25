@@ -2,7 +2,7 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import StandardToken from '@/assets/StandardToken.json';
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { IEthereumProvider } from '@/services/web3-provider';
 import type { UInt256 } from '@/types/uint-256';
 
 export async function ensureTokenAllowance(
@@ -22,7 +22,7 @@ export async function ensureTokenAllowance(
 }
 
 export async function getTokenDecimals(
-  provider: EthereumProvider,
+  provider: IEthereumProvider,
   tokenAddress: string,
 ): Promise<BigNumber> {
   const tokenContract = new Contract(tokenAddress, StandardToken.abi);
@@ -31,7 +31,7 @@ export async function getTokenDecimals(
 }
 
 export async function getTokenBalance(
-  provider: EthereumProvider,
+  provider: IEthereumProvider,
   tokenAddress: string,
   accountAddress: string,
 ): Promise<BigNumber> {

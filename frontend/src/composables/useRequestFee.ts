@@ -2,35 +2,46 @@ import type { Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import { getRequestFee } from '@/services/transactions/request-manager';
-import { EthereumAmount } from '@/types/token-amount';
+import { TokenAmount } from '@/types/token-amount';
 
 export function useRequestFee(
   rpcUrl: Ref<string | undefined>,
   requestManagerAddress: Ref<string | undefined>,
+  requestAmount: Ref<TokenAmount | undefined>,
 ) {
   const error = ref<string | undefined>(undefined);
-  const amount = ref<EthereumAmount>(new EthereumAmount('0'));
+  const amount = ref<TokenAmount | undefined>(undefined);
 
-  const available = computed(() => !!rpcUrl.value && !!requestManagerAddress.value);
-  const formattedAmount = computed(() => amount.value.format());
+  const available = computed(
+    () => !!rpcUrl.value && !!requestManagerAddress.value && !!requestAmount.value,
+  );
+  const formattedAmount = computed(() => amount.value?.format() ?? '');
 
   const updateRequestFeeAmount = async () => {
     error.value = '';
 
-    if (!rpcUrl.value || !requestManagerAddress.value) {
-      amount.value = new EthereumAmount('0');
+    if (!rpcUrl.value || !requestManagerAddress.value || !requestAmount.value) {
+      amount.value = undefined;
       return;
     }
 
     try {
-      amount.value = await getRequestFee(rpcUrl.value, requestManagerAddress.value);
+      const requestFee = await getRequestFee(
+        rpcUrl.value,
+        requestManagerAddress.value,
+        requestAmount.value.uint256,
+      );
+      amount.value = TokenAmount.new(requestFee, requestAmount.value.token);
     } catch (exception: unknown) {
       const errorMessage = (exception as { message?: string }).message;
+      console.error(errorMessage);
       error.value = errorMessage ?? 'Unknown failure.';
     }
   };
 
-  watch([rpcUrl, requestManagerAddress], updateRequestFeeAmount, { immediate: true });
+  watch([rpcUrl, requestManagerAddress, requestAmount], updateRequestFeeAmount, {
+    immediate: true,
+  });
 
   return { available, amount, formattedAmount, error };
 }

@@ -1,18 +1,18 @@
 import type { Ref } from 'vue';
 import { computed, ref } from 'vue';
 
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { IEthereumProvider } from '@/services/web3-provider';
 import type { ChainConfigMapping } from '@/types/config';
 import type { Token } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
 export function useTokenSelection(
   chains: Ref<ChainConfigMapping>,
-  connectedChainIdentifier: Ref<number>,
-  provider: Ref<EthereumProvider | undefined>,
+  connectedChainIdentifier: Ref<number | undefined>,
+  provider: Ref<IEthereumProvider | undefined>,
 ) {
   const tokens = computed(() =>
-    chains.value[connectedChainIdentifier.value]?.tokens.map((token) =>
+    chains.value[connectedChainIdentifier.value ?? -1]?.tokens.map((token) =>
       getTokenSelectorOption(token),
     ),
   );
