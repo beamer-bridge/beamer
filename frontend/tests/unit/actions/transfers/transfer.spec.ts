@@ -221,7 +221,6 @@ describe('transfer', () => {
         '0xTargetToken',
         '0xTargetAccount',
         new UInt256('3'),
-        new UInt256('4'),
       );
     });
 

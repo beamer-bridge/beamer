@@ -5,10 +5,10 @@ import { computed, ref, watch } from 'vue';
 
 import StandardToken from '@/assets/StandardToken.json';
 import { getTokenBalance, getTokenDecimals } from '@/services/transactions/token';
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { IEthereumProvider } from '@/services/web3-provider';
 
 export function useTokenBalance(
-  provider: Ref<EthereumProvider | undefined>,
+  provider: Ref<IEthereumProvider | undefined>,
   signer: Ref<JsonRpcSigner | undefined>,
   tokenAddress: Ref<string | undefined>,
 ) {

@@ -7,6 +7,7 @@
       type="form"
       :actions="false"
       @submit="submitRequestTransaction"
+      @input="updateRequestAmount"
     >
       <RequestFormInputs />
 
@@ -23,6 +24,7 @@
 import type { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
+import type { Ref } from 'vue';
 import { reactive, ref, watch } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
@@ -47,6 +49,17 @@ const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 
 const requestForm = ref<FormKitFrameworkContext>();
+const requestAmount: Ref<TokenAmount | undefined> = ref(undefined);
+
+const updateRequestAmount = (formValues: RequestFormResult) => {
+  requestAmount.value =
+    formValues.token && formValues.amount
+      ? new TokenAmount({
+          token: formValues.token.value,
+          amount: formValues.amount,
+        })
+      : undefined;
+};
 
 const submitForm = () => {
   requestForm.value?.node.submit();
@@ -66,7 +79,9 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   )!;
   const targetAmount = TokenAmount.parse(formResult.amount, targetToken);
   const validityPeriod = new UInt256('600');
-  const fees = await getRequestFee(sourceChain.rpcUrl, sourceChain.requestManagerAddress);
+  const { rpcUrl, requestManagerAddress } = formResult.sourceChain.value;
+  const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, targetAmount.uint256);
+  const fees = TokenAmount.new(requestFee, sourceAmount.token);
 
   const transfer = reactive(
     Transfer.new(

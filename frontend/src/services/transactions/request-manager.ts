@@ -6,7 +6,6 @@ import { BigNumber, Contract } from 'ethers';
 import RequestManager from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
-import { EthereumAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 function getContract(rpcUrl: string, address: EthereumAddress): Contract {
@@ -17,10 +16,13 @@ function getContract(rpcUrl: string, address: EthereumAddress): Contract {
 export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
-): Promise<EthereumAmount> {
+  transferAmount: UInt256,
+): Promise<UInt256> {
   const contract = getContract(rpcUrl, requestManagerAddress);
-  const fetchedAmount: BigNumberish = await contract.totalFee();
-  return new EthereumAmount(fetchedAmount.toString());
+  const fetchedAmount: BigNumberish = await contract.totalFee(
+    BigNumber.from(transferAmount.asString),
+  );
+  return new UInt256(fetchedAmount.toString());
 }
 
 export async function sendRequestTransaction(
@@ -32,7 +34,6 @@ export async function sendRequestTransaction(
   targetTokenAddress: EthereumAddress,
   targetAccount: EthereumAddress,
   validityPeriod: UInt256,
-  fees: UInt256,
 ): Promise<string> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
 
@@ -48,12 +49,11 @@ export async function sendRequestTransaction(
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
       ...requestParameter,
-      { value: BigNumber.from(fees.asString) },
     );
 
     const transaction: TransactionResponse = await requestManagerContract.createRequest(
       ...requestParameter,
-      { value: BigNumber.from(fees.asString), gasLimit: estimatedGasLimit },
+      { gasLimit: estimatedGasLimit },
     );
 
     return transaction.hash;

@@ -15,7 +15,7 @@ import { ensureTokenAllowance } from '@/services/transactions/token';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
-import type { EthereumAmount, TokenAmountData } from '@/types/token-amount';
+import type { TokenAmountData } from '@/types/token-amount';
 import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
@@ -71,7 +71,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     targetAmount: TokenAmount,
     targetAccount: EthereumAddress,
     validityPeriod: UInt256,
-    fees: EthereumAmount,
+    fees: TokenAmount,
   ): Transfer {
     return new this({
       sourceChain,
@@ -209,7 +209,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.targetAmount.token.address,
       this.targetAccount,
       this.validityPeriod,
-      this.fees.uint256,
     );
 
     this._requestInformation = new RequestInformation({

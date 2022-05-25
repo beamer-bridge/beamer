@@ -7,6 +7,7 @@
         </div>
         <div class="flex-1 flex flex-col items-end">
           <FormKit
+            v-model="selectedAmount"
             type="text"
             name="amount"
             placeholder="0.00"
@@ -104,16 +105,15 @@
       <Tooltip class="-mr-3" show-outside-of-closest-reference-element>
         <img class="h-6 w-6 mr-5 cursor-help" src="@/assets/images/help.svg" />
         <template #hint>
-          The fee amount is composed of three parts:<br />
+          The fee amount is composed of two parts:<br />
           <ul class="pl-5">
-            <li>• the gas reimbursement fee</li>
             <li>• the liquidity provider fee</li>
-            <li>• the Beamer service fee</li>
+            <li>• the protocol fee</li>
           </ul>
           <br />
-          The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity
-          provider servicing the request, while the Beamer service fee stays with the contract and
-          supports the Beamer platform development.<br />
+          The liquidity provider fee is paid out to the liquidity provider servicing the request,
+          while the protocol fee stays with the contract and supports the Beamer platform
+          development.<br />
           Note that the fee is paid on top of the token amount being transferred,so that the token
           amount received on the target rollup is exactly the same as the token amount sent from
           the source rollup.
@@ -137,6 +137,7 @@ import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { TokenAmount } from '@/types/token-amount';
 
 const formElement = ref<HTMLElement>();
 const configuration = useConfiguration();
@@ -145,29 +146,28 @@ const ethereumProvider = useEthereumProvider();
 const { provider, signer } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
+const selectedAmount = ref('');
+
 const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChainSelection(
   provider,
   chains,
 );
 
-const selectedSourceChainIdentifier = computed(() => selectedSourceChain.value?.value ?? -1);
+const selectedSourceChainIdentifier = computed(
+  () => selectedSourceChain.value?.value.identifier ?? -1,
+);
 
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
-const sourceChainRpcUrl = computed(() =>
-  selectedSourceChain.value ? chains.value[selectedSourceChain.value.value].rpcUrl : undefined,
-);
-
-const sourceChainRequestManagerAddress = computed(() =>
-  selectedSourceChain.value
-    ? chains.value[selectedSourceChain.value.value].requestManagerAddress
-    : undefined,
-);
-
 const { available: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
-  sourceChainRpcUrl,
-  sourceChainRequestManagerAddress,
+  computed(() => selectedSourceChain.value?.value.rpcUrl),
+  computed(() => selectedSourceChain.value?.value.requestManagerAddress),
+  computed(() =>
+    selectedAmount.value && selectedToken.value
+      ? TokenAmount.parse(selectedAmount.value, selectedToken.value.value)
+      : undefined,
+  ),
 );
 
 const { available: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
