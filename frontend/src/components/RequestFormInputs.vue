@@ -178,7 +178,7 @@ Note that the fee is paid on top of the token amount being transferred,so that t
 
 <style lang="css">
 .form-tooltip {
-  @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-50;
+  @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-40;
 }
 
 .tooltip:before {
