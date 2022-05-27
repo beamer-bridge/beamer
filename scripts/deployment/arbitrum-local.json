@@ -9,7 +9,10 @@
             "name": "Arbitrum",
             "rpc": "http://localhost:8547",
             "chain_id": 421612,
-            "finalization_time": 3600
+            "finalization_time": 3600,
+            "proof_submitter": "ArbitrumProofSubmitter",
+            "l1_messenger": "ArbitrumL1Messenger",
+            "l2_messenger": "ArbitrumL2Messenger"
         }
     ]
 }
