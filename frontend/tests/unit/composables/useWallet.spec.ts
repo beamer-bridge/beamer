@@ -5,7 +5,7 @@ import { useWallet } from '@/composables/useWallet';
 import * as web3ProviderService from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
 import {
-  MockedMetMaskProvider,
+  MockedMetaMaskProvider,
   MockedWalletConnectProvider,
 } from '~/utils/mocks/ethereum-provider';
 
@@ -13,73 +13,105 @@ vi.mock('@/services/web3-provider');
 
 describe('useWallets', () => {
   beforeEach(() => {
-    web3ProviderService!.createMetaMaskProvider = vi.fn();
-    web3ProviderService!.createWalletConnectProvider = vi.fn();
+    web3ProviderService!.createMetaMaskProvider = vi
+      .fn()
+      .mockResolvedValue(new MockedMetaMaskProvider());
+    web3ProviderService!.createWalletConnectProvider = vi
+      .fn()
+      .mockResolvedValue(new MockedWalletConnectProvider());
   });
 
-  describe('getConnectedWalletProvider()', () => {
-    it('should return undefined if no providers are connected', async () => {
-      const { getConnectedWalletProvider } = useWallet(ref(undefined), ref(undefined), ref({}));
+  describe('connectMetaMask()', () => {
+    it('creates a MetaMask provider instance', async () => {
+      const { connectMetaMask } = useWallet(ref(undefined), ref(undefined), ref({}));
 
-      const provider = await getConnectedWalletProvider();
-
-      expect(provider).toBeUndefined();
-    });
-
-    it('should call createMetaMaskProvider and return a provider', async () => {
-      const wallet = useWallet(ref(undefined), ref(WalletType.MetaMask), ref({}));
-      const metaMask = new MockedMetMaskProvider();
-      web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(metaMask);
-
-      const provider = await wallet.getConnectedWalletProvider();
+      await connectMetaMask();
 
       expect(web3ProviderService.createMetaMaskProvider).toHaveBeenCalledOnce();
-      expect(web3ProviderService.createMetaMaskProvider).toHaveBeenLastCalledWith();
-      expect(provider).toEqual(metaMask);
     });
 
-    it('should call createWalletConnectProvider and return a provider', async () => {
-      const rpcUrls = ref({ 5: 'fakeRpc.url' });
-      const wallet = useWallet(ref(undefined), ref(WalletType.WalletConnect), rpcUrls);
-      const walletConnect = new MockedWalletConnectProvider();
-      web3ProviderService!.createWalletConnectProvider = vi.fn().mockResolvedValue(walletConnect);
+    it('requests the signer from the provider', async () => {
+      const wallet = new MockedMetaMaskProvider();
+      web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(wallet);
+      const { connectMetaMask } = useWallet(ref(undefined), ref(undefined), ref({}));
 
-      const provider = await wallet.getConnectedWalletProvider();
+      await connectMetaMask();
+
+      expect(wallet.requestSigner).toHaveBeenCalledOnce();
+    });
+
+    it('sets the provider instance', async () => {
+      const wallet = { requestSigner: vi.fn() }; // TODO: work-around for horrible mock typing issues.
+      web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(wallet);
+      const provider = ref(undefined);
+      const { connectMetaMask } = useWallet(provider, ref(undefined), ref({}));
+
+      await connectMetaMask();
+
+      expect(provider.value).toEqual(wallet);
+    });
+
+    it('sets the connected wallet type', async () => {
+      const connectedWallet = ref(undefined);
+      const { connectMetaMask } = useWallet(ref(undefined), connectedWallet, ref({}));
+
+      await connectMetaMask();
+
+      expect(connectedWallet.value).toBe('metamask');
+    });
+  });
+
+  describe('connectWalletConnect()', () => {
+    it('creates WalletConnect provider instance', async () => {
+      const rpcUrls = ref({ 5: 'fakeRpc.url' });
+      const { connectWalletConnect } = useWallet(ref(undefined), ref(undefined), rpcUrls);
+
+      await connectWalletConnect();
 
       expect(web3ProviderService.createWalletConnectProvider).toHaveBeenCalledOnce();
       expect(web3ProviderService.createWalletConnectProvider).toHaveBeenLastCalledWith(
         rpcUrls.value,
       );
-      expect(provider).toEqual(walletConnect);
+    });
+
+    it('sets the provider instance', async () => {
+      const wallet = 'fake-provider'; // TODO: work-around for horrible mock typing issues.
+      web3ProviderService!.createWalletConnectProvider = vi.fn().mockResolvedValue(wallet);
+      const provider = ref(undefined);
+      const { connectWalletConnect } = useWallet(provider, ref(undefined), ref({}));
+
+      await connectWalletConnect();
+
+      expect(provider.value).toBe(wallet);
+    });
+
+    it('sets the connected wallet type', async () => {
+      const connectedWallet = ref(undefined);
+      const { connectWalletConnect } = useWallet(ref(undefined), connectedWallet, ref({}));
+
+      await connectWalletConnect();
+
+      expect(connectedWallet.value).toBe('wallet_connect');
     });
   });
 
-  describe('connectMetaMask()', () => {
-    it('should set connected wallet type in settings to MetaMask', async () => {
-      const connectedWallet = ref(undefined);
-      const wallet = useWallet(ref(undefined), connectedWallet, ref({}));
-      web3ProviderService!.createMetaMaskProvider = vi
-        .fn()
-        .mockResolvedValue(new MockedMetMaskProvider());
+  describe('reconnectToWallet()', () => {
+    it('can reconnect to MetaMask', async () => {
+      const provider = ref(undefined);
+      const { reconnectToWallet } = useWallet(provider, ref(WalletType.MetaMask), ref({}));
 
-      await wallet.connectMetaMask();
+      await reconnectToWallet();
 
-      expect(connectedWallet.value).toBe(WalletType.MetaMask);
+      expect(provider.value).toBeInstanceOf(MockedMetaMaskProvider);
     });
-  });
 
-  describe('connectWalletConnect', () => {
-    it('should set connected wallet type in settings to WalletConnect', async () => {
-      const connectedWallet = ref(undefined);
-      const rpcUrls = ref({ 5: 'fakeRpc.url' });
-      const wallet = useWallet(ref(undefined), connectedWallet, rpcUrls);
-      web3ProviderService!.createWalletConnectProvider = vi
-        .fn()
-        .mockResolvedValue(new MockedWalletConnectProvider());
+    it('can reconnect to WalletConnect', async () => {
+      const provider = ref(undefined);
+      const { reconnectToWallet } = useWallet(provider, ref(WalletType.WalletConnect), ref({}));
 
-      await wallet.connectWalletConnect();
+      await reconnectToWallet();
 
-      expect(connectedWallet.value).toBe(WalletType.WalletConnect);
+      expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
     });
   });
 });

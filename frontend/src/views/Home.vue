@@ -43,12 +43,9 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
 
-const ethereumProvider = useEthereumProvider();
-const { provider, signer } = storeToRefs(ethereumProvider);
 const configuration = useConfiguration();
-const { rpcUrls } = storeToRefs(configuration);
-const { connectedWallet } = storeToRefs(useSettings());
-const { getConnectedWalletProvider } = useWallet(provider, connectedWallet, rpcUrls);
+const ethereumProvider = useEthereumProvider();
+const { signer } = storeToRefs(ethereumProvider);
 
 const walletMenuIsOpen = ref(false);
 
@@ -61,14 +58,8 @@ function closeWalletMenu(): void {
 }
 
 const tabs = [
-  {
-    label: 'Transfer',
-    content: RequestDialog,
-  },
-  {
-    label: 'Activity',
-    content: null,
-  },
+  { label: 'Transfer', content: RequestDialog },
+  { label: 'Activity', content: null },
 ];
 
 /*
@@ -82,15 +73,19 @@ const tabsClasses = computed(() => ({
   'blur-xl': walletMenuIsOpen.value,
 }));
 
+const { chainId } = storeToRefs(ethereumProvider);
 const errorMessage = computed(() => {
-  if (ethereumProvider.chainId > 0 && !configuration.isSupportedChain(ethereumProvider.chainId)) {
+  if (chainId.value > 0 && !configuration.isSupportedChain(chainId.value)) {
     return 'Connected chain is not supported';
   } else {
     return undefined;
   }
 });
 
-onMounted(async () => {
-  provider.value = await getConnectedWalletProvider();
-});
+const { provider } = storeToRefs(ethereumProvider);
+const { rpcUrls } = storeToRefs(configuration);
+const { connectedWallet } = storeToRefs(useSettings());
+const { reconnectToWallet } = useWallet(provider, connectedWallet, rpcUrls);
+
+onMounted(reconnectToWallet);
 </script>

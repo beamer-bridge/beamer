@@ -24,7 +24,7 @@ export abstract class MockedEthereumProvider implements IEthereumProvider {
   addToken = vi.fn();
 }
 
-export class MockedMetMaskProvider extends MockedEthereumProvider implements ISigner {
+export class MockedMetaMaskProvider extends MockedEthereumProvider implements ISigner {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }

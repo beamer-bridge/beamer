@@ -1,6 +1,6 @@
 import { Ref } from 'vue';
 
-import type { EthereumProvider, MetaMaskProvider } from '@/services/web3-provider';
+import type { EthereumProvider } from '@/services/web3-provider';
 import { createMetaMaskProvider, createWalletConnectProvider } from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
 
@@ -9,35 +9,34 @@ export function useWallet(
   connectedWallet: Ref<WalletType | undefined>,
   rpcUrls: Ref<{ [chainId: number]: string }>,
 ) {
-  async function getConnectedWalletProvider(): Promise<EthereumProvider | undefined> {
-    let connectedProvider = undefined;
-    switch (connectedWallet.value) {
-      case WalletType.MetaMask:
-        connectedProvider = await createMetaMaskProvider();
-        break;
-      case WalletType.WalletConnect:
-        connectedProvider = await createWalletConnectProvider(rpcUrls.value);
-        break;
-    }
-    return connectedProvider;
-  }
-
   async function connectMetaMask() {
-    provider.value = await createMetaMaskProvider();
+    const metaMaskProvider = await createMetaMaskProvider();
 
-    if (provider.value) {
-      (provider.value as MetaMaskProvider).requestSigner();
+    if (metaMaskProvider) {
+      metaMaskProvider.requestSigner();
+      provider.value = metaMaskProvider;
       connectedWallet.value = WalletType.MetaMask;
     }
   }
 
   async function connectWalletConnect() {
-    provider.value = await createWalletConnectProvider(rpcUrls.value);
+    const walletConnectProvider = await createWalletConnectProvider(rpcUrls.value);
 
-    if (provider.value) {
+    if (walletConnectProvider) {
+      provider.value = walletConnectProvider;
       connectedWallet.value = WalletType.WalletConnect;
     }
   }
 
-  return { getConnectedWalletProvider, connectMetaMask, connectWalletConnect };
+  async function reconnectToWallet(): Promise<void> {
+    switch (connectedWallet.value) {
+      case WalletType.MetaMask:
+        return connectMetaMask();
+
+      case WalletType.WalletConnect:
+        return connectWalletConnect();
+    }
+  }
+
+  return { connectMetaMask, connectWalletConnect, reconnectToWallet };
 }
