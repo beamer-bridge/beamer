@@ -13,35 +13,19 @@
         </div>
       </div>
 
-      <Card class="bg-teal mb-11 w-full min-h-[50rem]">
-        <Tabs :tabs="tabs" />
+      <Card class="relative bg-teal mb-11 w-full min-h-[50rem]">
+        <WalletMenu v-if="walletMenuIsOpen" class="absolute z-30" @close="closeWalletMenu()" />
+        <Tabs :tabs="tabs" :class="tabsClasses" />
       </Card>
 
-      <div id="action-button-portal" class="flex justify-center">
-        <div v-if="!signer" class="flex w-full gap-2">
-          <div class="flex-1 w-full">
-            <FormKit
-              class="w-full"
-              input-class="w-full bg-orange flex flex-row justify-center"
-              type="button"
-              @click="connectMetaMask"
-            >
-              <div v-if="requestSignerActive" class="h-8 w-8">
-                <spinner></spinner>
-              </div>
-              <template v-else>MetaMask</template>
-            </FormKit>
-          </div>
-          <div class="flex-1 w-full">
-            <FormKit
-              input-class="w-full bg-orange flex flex-row justify-center"
-              type="button"
-              @click="connectWalletConnect"
-            >
-              WalletConnect
-            </FormKit>
-          </div>
-        </div>
+      <div id="action-button-portal" class="flex justify-center h-28">
+        <FormKit
+          v-if="!signer && !walletMenuIsOpen"
+          input-class="bg-orange flex flex-row justify-center"
+          type="button"
+          @click="openWalletMenu"
+          >Connect to Wallet
+        </FormKit>
       </div>
     </div>
   </div>
@@ -54,7 +38,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
-import Spinner from '@/components/Spinner.vue';
+import WalletMenu from '@/components/WalletMenu.vue';
 import { useRequestSigner } from '@/composables/useRequestSigner';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
@@ -69,18 +53,24 @@ const { connectedWallet } = storeToRefs(settings);
 const criticalErrorMessage = ref('');
 const { provider, signer, chainId } = storeToRefs(ethereumProvider);
 
-const {
-  run: requestSigner,
-  active: requestSignerActive,
-  error: requestSignerError,
-} = useRequestSigner();
+const { run: requestSigner, error: requestSignerError } = useRequestSigner();
 
-const { connectMetaMask, connectWalletConnect, getConnectedWalletProvider } = useWallet(
+const { getConnectedWalletProvider } = useWallet(
   provider,
   connectedWallet,
   configuration.rpcUrls,
   requestSigner,
 );
+
+const walletMenuIsOpen = ref(false);
+
+const openWalletMenu = () => {
+  walletMenuIsOpen.value = true;
+};
+
+const closeWalletMenu = () => {
+  walletMenuIsOpen.value = false;
+};
 
 const tabs = [
   {
@@ -92,6 +82,17 @@ const tabs = [
     content: null,
   },
 ];
+
+/*
+ * Please note that we must apply the blur effect on the background element,
+ * because the backdrop blur property is not yet fully supported by all
+ * web-browsers. As this UI doesn't work without the effect, we need to ensure it
+ * always works. This is the current workaround in contrast to having a blurred
+ * backdrop on the WalletMenu component itself.
+ */
+const tabsClasses = computed(() => ({
+  'blur-xl': walletMenuIsOpen.value,
+}));
 
 const isSupportedChain = computed(() => configuration.isSupportedChain(ethereumProvider.chainId));
 
