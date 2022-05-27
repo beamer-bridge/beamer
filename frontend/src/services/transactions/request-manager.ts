@@ -43,12 +43,12 @@ export async function sendRequestTransaction(
     BigNumber.from(validityPeriod.asString),
   ];
 
-  const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
-    ...requestParameter,
-    { value: BigNumber.from(fees.asString) },
-  );
-
   try {
+    const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
+      ...requestParameter,
+      { value: BigNumber.from(fees.asString) },
+    );
+
     const transaction: TransactionResponse = await requestManagerContract.createRequest(
       ...requestParameter,
       { value: BigNumber.from(fees.asString), gasLimit: estimatedGasLimit },
@@ -57,6 +57,7 @@ export async function sendRequestTransaction(
     return transaction.hash;
   } catch (error: unknown) {
     const parseErrorMessage = getTransactionErrorMessage(error);
+    console.log(parseErrorMessage);
     throw new Error(parseErrorMessage);
   }
 }
@@ -85,9 +86,9 @@ function getTransactionErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   } else if (maybeErrorCode && maybeErrorCode === 4001) {
-    return 'Error: User rejected the transaction!';
+    return 'Transaction got rejected!';
   } else if (maybeErrorCode && maybeErrorCode === -32603) {
-    return 'Error: Insufficient balance!';
+    return 'Insufficient balance!';
   } else {
     return 'Unknown failure!';
   }
