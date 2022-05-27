@@ -20,7 +20,6 @@
 import { storeToRefs } from 'pinia';
 import { watch } from 'vue';
 
-import { useRequestSigner } from '@/composables/useRequestSigner';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -29,13 +28,7 @@ import { useSettings } from '@/stores/settings';
 const { provider, signer } = storeToRefs(useEthereumProvider());
 const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
-const { run: requestSigner } = useRequestSigner();
-const { connectMetaMask, connectWalletConnect } = useWallet(
-  provider,
-  connectedWallet,
-  rpcUrls.value,
-  requestSigner,
-);
+const { connectMetaMask, connectWalletConnect } = useWallet(provider, connectedWallet, rpcUrls);
 
 const walletOptions = [
   {
