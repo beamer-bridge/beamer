@@ -2,10 +2,9 @@
   <div class="home flex justify-center">
     <div class="w-[40rem] flex flex-col xl:justify-center xl:items-center">
       <div class="text-center text-orange-dark p-2 text-lg h-12">
-        <div v-if="errorMessage">
-          {{ errorMessage }}
-        </div>
+        {{ errorMessage }}
       </div>
+
       <div class="h-14">
         <div v-if="signer" class="flex flex-row gap-4 justify-center items-center">
           <div class="h-7 w-7 rounded-50 border-4 border-solid border-teal-light bg-green"></div>
@@ -14,7 +13,7 @@
       </div>
 
       <Card class="relative bg-teal mb-11 w-full min-h-[50rem]">
-        <WalletMenu v-if="walletMenuIsOpen" class="absolute z-30" @close="closeWalletMenu()" />
+        <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs :tabs="tabs" :class="tabsClasses" />
       </Card>
 
@@ -33,44 +32,33 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import WalletMenu from '@/components/WalletMenu.vue';
-import { useRequestSigner } from '@/composables/useRequestSigner';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
 
 const ethereumProvider = useEthereumProvider();
+const { provider, signer } = storeToRefs(ethereumProvider);
 const configuration = useConfiguration();
-const settings = useSettings();
-const { connectedWallet } = storeToRefs(settings);
-
-const criticalErrorMessage = ref('');
-const { provider, signer, chainId } = storeToRefs(ethereumProvider);
-
-const { run: requestSigner, error: requestSignerError } = useRequestSigner();
-
-const { getConnectedWalletProvider } = useWallet(
-  provider,
-  connectedWallet,
-  configuration.rpcUrls,
-  requestSigner,
-);
+const { rpcUrls } = storeToRefs(configuration);
+const { connectedWallet } = storeToRefs(useSettings());
+const { getConnectedWalletProvider } = useWallet(provider, connectedWallet, rpcUrls);
 
 const walletMenuIsOpen = ref(false);
 
-const openWalletMenu = () => {
+function openWalletMenu(): void {
   walletMenuIsOpen.value = true;
-};
+}
 
-const closeWalletMenu = () => {
+function closeWalletMenu(): void {
   walletMenuIsOpen.value = false;
-};
+}
 
 const tabs = [
   {
@@ -94,17 +82,13 @@ const tabsClasses = computed(() => ({
   'blur-xl': walletMenuIsOpen.value,
 }));
 
-const isSupportedChain = computed(() => configuration.isSupportedChain(ethereumProvider.chainId));
-
-const chainChangeHandler = () => {
-  criticalErrorMessage.value = isSupportedChain.value ? '' : 'Connected chain is not supported!';
-};
-
 const errorMessage = computed(() => {
-  return criticalErrorMessage.value || requestSignerError.value;
+  if (ethereumProvider.chainId > 0 && !configuration.isSupportedChain(ethereumProvider.chainId)) {
+    return 'Connected chain is not supported';
+  } else {
+    return undefined;
+  }
 });
-
-watch(chainId, chainChangeHandler);
 
 onMounted(async () => {
   provider.value = await getConnectedWalletProvider();
