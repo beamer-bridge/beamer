@@ -2,24 +2,24 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Sequence, Union, cast
 
 import click
-from brownie import Wei
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
-from eth_utils import encode_hex, to_checksum_address
+from eth_utils import encode_hex, to_wei
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
+from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-OPTIMISM_L2_MESSENGER_ADDRESS = to_checksum_address("0x4200000000000000000000000000000000000007")
 GANACHE_CHAIN_ID = 1337
 
 
 class DeployedContract(Contract):
     deployment_block: int
     deployment_args: list[Any]
+    name: str
 
 
 def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
@@ -31,6 +31,7 @@ def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
 def web3_for_rpc(rpc: str, account: LocalAccount) -> Web3:
     web3 = Web3(HTTPProvider(rpc))
 
+    web3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
     web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
     web3.eth.default_account = account.address
@@ -56,7 +57,7 @@ CONTRACTS_PATH = Path("contracts/build/contracts")
 CONTRACTS: dict[str, tuple] = load_contracts_info(CONTRACTS_PATH)
 
 
-def contract_to_json(contracts: dict[str, DeployedContract]) -> dict:
+def collect_contracts_info(contracts: dict[str, DeployedContract]) -> dict:
     return {
         name: dict(
             address=contract.address,
@@ -67,7 +68,18 @@ def contract_to_json(contracts: dict[str, DeployedContract]) -> dict:
     }
 
 
-def deploy_contract(web3: Web3, name: str, *args: Any) -> DeployedContract:
+def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> DeployedContract:
+    # constructor_spec is either
+    # 1) a contract name e.g. "Foo", or
+    # 2) a sequence containing the contract name and
+    #    constructor arguments, e.g. ["Foo", "0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc"]
+    if isinstance(constructor_spec, str):
+        name = constructor_spec
+        args: Sequence = ()
+    else:
+        name = constructor_spec[0]
+        args = constructor_spec[1:]
+
     data = CONTRACTS[name]
     print(f"Deploying {name}")
     ContractFactory = web3.eth.contract(abi=data[0], bytecode=data[1])
@@ -79,79 +91,86 @@ def deploy_contract(web3: Web3, name: str, *args: Any) -> DeployedContract:
     deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
     deployed.deployment_block = tx_receipt.blockNumber  # type: ignore
     deployed.deployment_args = list(args)
+    deployed.name = name
 
-    print(f"Deployed contract {name} at {address} in {encode_hex(tx_hash)}")
+    print(f"Deployed {name} at {address} in {encode_hex(tx_hash)}")
     return deployed
 
 
-def deploy_l1(web3: Web3) -> dict[str, DeployedContract]:
-    resolver = deploy_contract(web3, "Resolver")
+def deploy_beamer(
+    account: LocalAccount,
+    config: dict,
+    l2_config: dict,
+    resolver: Contract,
+    allow_same_chain: bool,
+) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
+    web3 = web3_for_rpc(l2_config["rpc"], account)
+    assert web3.eth.chain_id == l2_config["chain_id"]
 
-    return {"Resolver": resolver}
+    token = deploy_contract(web3, ("MintableToken", int(1e18)))
 
-
-def deploy_l2(
-    web3: Web3, resolver: Contract, supported_target_chains: dict[int, int], test_messenger: bool
-) -> dict[str, DeployedContract]:
-    token = deploy_contract(web3, "MintableToken", int(1e18))
-
-    if test_messenger:
-        messenger = deploy_contract(web3, "TestCrossDomainMessenger")
-        messenger_address = messenger.address
-    else:
-        messenger_address = OPTIMISM_L2_MESSENGER_ADDRESS
+    l1_messenger = deploy_contract(resolver.web3, l2_config["l1_messenger"])
+    l2_messenger = deploy_contract(web3, l2_config["l2_messenger"])
 
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
-    resolution_registry.functions.addCaller(
-        resolver.web3.eth.chain_id, messenger_address, resolver.address
-    ).transact()
+    proof_submitter = deploy_contract(web3, (l2_config["proof_submitter"], l2_messenger.address))
 
-    proof_submitter = deploy_contract(web3, "OptimismProofSubmitter", messenger_address)
-
-    claim_stake = Wei("0.00047 ether")
+    claim_stake = to_wei(0.00047, "ether")
     claim_period = 60 * 60  # 1 hour
     challenge_period_extension = 60 * 60  # 1 hour
     request_manager = deploy_contract(
         web3,
-        "RequestManager",
-        claim_stake,
-        claim_period,
-        challenge_period_extension,
-        resolution_registry.address,
+        (
+            "RequestManager",
+            claim_stake,
+            claim_period,
+            challenge_period_extension,
+            resolution_registry.address,
+        ),
     )
 
-    for chain_id, finalization_time in supported_target_chains.items():
-        request_manager.functions.setFinalizationTime(chain_id, finalization_time).transact()
+    # Configure finalization times for each supported target chain
+    for other_l2_config in config["L2"]:
+        if (
+            allow_same_chain
+            or other_l2_config is not l2_config
+            or other_l2_config["chain_id"] == GANACHE_CHAIN_ID
+        ):
+            request_manager.functions.setFinalizationTime(
+                other_l2_config["chain_id"], other_l2_config["finalization_time"]
+            ).transact()
 
-    fill_manager = deploy_contract(web3, "FillManager", resolver.address, proof_submitter.address)
+    fill_manager = deploy_contract(
+        web3, ("FillManager", resolver.address, proof_submitter.address)
+    )
 
     # Authorize call chain
-    proof_submitter.functions.addCaller(web3.eth.chain_id, fill_manager.address).transact()
-
-    contracts = {
-        "MintableToken": token,
-        "ResolutionRegistry": resolution_registry,
-        "OptimismProofSubmitter": proof_submitter,
-        "RequestManager": request_manager,
-        "FillManager": fill_manager,
-    }
-
-    if test_messenger:
-        contracts["TestCrossDomainMessenger"] = messenger
-    return contracts
-
-
-def update_l1(
-    resolver: DeployedContract, l2_chain_id: int, messenger_address: str, deployment_data: dict
-) -> None:
+    proof_submitter.functions.addCaller(l2_config["chain_id"], fill_manager.address).transact()
+    l2_messenger.functions.addCaller(l2_config["chain_id"], proof_submitter.address).transact()
     resolver.functions.addCaller(
-        l2_chain_id, messenger_address, deployment_data["OptimismProofSubmitter"].address
+        l2_config["chain_id"], l1_messenger.address, l2_messenger.address
     ).transact()
     resolver.functions.addRegistry(
-        l2_chain_id,
-        deployment_data["ResolutionRegistry"].address,
-        messenger_address,
+        l2_config["chain_id"], resolution_registry.address, l1_messenger.address
     ).transact()
+    l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address).transact()
+    resolution_registry.functions.addCaller(
+        resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
+    ).transact()
+
+    l1_contracts = {l1_messenger.name: l1_messenger}
+    l2_contracts = {
+        deployed.name: deployed
+        for deployed in (
+            token,
+            request_manager,
+            fill_manager,
+            resolution_registry,
+            proof_submitter,
+            l2_messenger,
+        )
+    }
+    return l1_contracts, l2_contracts
 
 
 @click.command()
@@ -180,12 +199,6 @@ def update_l1(
     help="The file containing deployment information.",
 )
 @click.option(
-    "--test-messenger/--no-test-messenger",
-    default=False,
-    show_default=True,
-    help="Whether to use TestCrossDomainMessenger. Only useful for local testing.",
-)
-@click.option(
     "--allow-same-chain/--disallow-same-chain",
     default=False,
     show_default=True,
@@ -196,56 +209,39 @@ def main(
     password: str,
     output_dir: Path,
     config_file: Path,
-    test_messenger: bool,
     allow_same_chain: bool,
 ) -> None:
-    commit_id = get_commit_id()
     account = account_from_keyfile(keystore_file, password)
+    print("Deployer:", account.address)
+
     with open(config_file) as f:
         config = json.load(f)
 
-    deployment_data: dict = {}
-
     web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
-    l1_data = deploy_l1(web3_l1)
-    resolver = l1_data["Resolver"]
+    resolver = deploy_contract(web3_l1, "Resolver")
 
-    deployment_data["beamer_commit"] = commit_id
-    deployment_data["L1"] = contract_to_json(l1_data)
+    deployment_data: dict = {"beamer_commit": get_commit_id(), "deployer": account.address}
+    deployment_data["L1"] = collect_contracts_info({"Resolver": resolver})
     deployment_data["L2"] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    for contract_name in l1_data:
-        shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
-
     for l2_config in config["L2"]:
         name = l2_config["name"]
+        chain_id = l2_config["chain_id"]
         print(f"Deployment for {name}")
 
-        web3_l2 = web3_for_rpc(l2_config["rpc"], account)
-        chain_id = web3_l2.eth.chain_id
-        assert chain_id == l2_config["chain_id"]
-
-        supported_target_chains = {
-            l2["chain_id"]: l2["finalization_time"]
-            for l2 in config["L2"]
-            if allow_same_chain or (l2["chain_id"] != chain_id or chain_id == GANACHE_CHAIN_ID)
-        }
-
-        l2_data = deploy_l2(web3_l2, resolver, supported_target_chains, test_messenger)
-        if test_messenger:
-            messenger_address = l2_data["TestCrossDomainMessenger"].address
-        else:
-            messenger_address = l2_config["messenger_contract_address"]
-        update_l1(resolver, web3_l2.eth.chain_id, messenger_address, l2_data)
-
-        deployment_data["L2"][chain_id] = contract_to_json(l2_data)
-
+        l1_data, l2_data = deploy_beamer(account, config, l2_config, resolver, allow_same_chain)
+        deployment_data["L1"].update(collect_contracts_info(l1_data))
+        deployment_data["L2"][chain_id] = collect_contracts_info(l2_data)
         for contract_name in l2_data:
             shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
 
+    for contract_name in deployment_data["L1"]:
+        shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
+
     with output_dir.joinpath("deployment.json").open("w") as f:
         json.dump(deployment_data, f, indent=2)
+    print(f"Deployment data stored at {output_dir}")
 
 
 if __name__ == "__main__":
