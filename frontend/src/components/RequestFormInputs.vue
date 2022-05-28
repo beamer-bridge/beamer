@@ -104,7 +104,7 @@
       class="flex flex-row justify-end gap-3 items-center text-base text-light mt-4"
     >
       <span>fees</span>
-      <span>{{ formattedRequestFeeAmount }} ETH</span>
+      <span>{{ formattedRequestFeeAmount }}</span>
       <div
         class="form-tooltip whitespace-pre-wrap"
         data-theme="default"
