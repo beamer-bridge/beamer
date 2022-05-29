@@ -11,14 +11,7 @@
       <RequestFormInputs />
 
       <Teleport v-if="signer" to="#action-button-portal">
-        <FormKit
-          class="w-72 flex flex-row justify-center bg-green"
-          type="submit"
-          :disabled="!valid"
-          @click="submitForm"
-        >
-          Transfer funds
-        </FormKit>
+        <ActionButton :disabled="!valid" @click="submitForm"> Transfer Funds </ActionButton>
       </Teleport>
     </FormKit>
   </div>
@@ -31,6 +24,7 @@ import { storeToRefs } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
+import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { switchToActivities } from '@/router/navigation';
