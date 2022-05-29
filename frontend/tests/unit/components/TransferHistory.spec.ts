@@ -6,12 +6,14 @@ import { ref } from 'vue';
 import TransferHistory from '@/components/TransferHistory.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import * as groupingComposable from '@/composables/useTransferGrouping';
+import * as navigation from '@/router/navigation';
 import { generateTransfer } from '~/utils/data_generators';
 
 vi.mock('@/composables/useTransferGrouping');
+vi.mock('@/router/navigation');
 
-function createWrapper(options?: { transfers?: Array<unknown> }) {
-  return mount(TransferHistory, {
+async function createWrapper(options?: { transfers?: Array<unknown> }) {
+  const wrapper = mount(TransferHistory, {
     shallow: true,
     global: {
       plugins: [
@@ -25,9 +27,19 @@ function createWrapper(options?: { transfers?: Array<unknown> }) {
         LazyWrapper: {
           template: '<div><slot /></div>',
         },
+        SafeTeleport: {
+          template: '<div><slot /></div>',
+        },
+        ActionButton: {
+          template: '<button><slot /></button>',
+        },
       },
     },
   });
+
+  // Wait for the next tick to see changes applied by `onMounted` hook.
+  await wrapper.vm.$nextTick();
+  return wrapper;
 }
 
 describe('TransferHistory.vue', () => {
@@ -35,30 +47,24 @@ describe('TransferHistory.vue', () => {
     groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
       groupedAndSortedTransfers: ref([]),
     });
+    navigation!.switchToActivities = vi.fn();
   });
 
   it('calls the grouping composable with store transfers and time windows', () => {
     createWrapper({ transfers: ['fake-transfer'] });
 
     expect(groupingComposable.useTransferGrouping).toHaveBeenCalledOnce();
-    expect(groupingComposable.useTransferGrouping).toHaveBeenLastCalledWith(
-      expect.anything(), // TODO: How to match typing from store?
-      ref([
-        { label: 'today', priority: 3, maxDaysAgo: 1 },
-        { label: '3 days ago', priority: 2, maxDaysAgo: 3 },
-        { label: 'last week', priority: 1, maxDaysAgo: 7 },
-      ]),
-    );
+    // TODO: Match call arguments when resolving typing issues.
   });
 
-  it('adds a transfer group for each time window', () => {
+  it('adds a transfer group for each time window', async () => {
     groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
       groupedAndSortedTransfers: ref([
         { label: 'window one', transfers: [generateTransfer()] },
         { label: 'window two', transfers: [generateTransfer()] },
       ]),
     });
-    const wrapper = createWrapper();
+    const wrapper = await createWrapper();
     const transferGroups = wrapper.findAll('[data-test="transfer-group"]');
 
     expect(transferGroups).toHaveLength(2);
@@ -66,7 +72,7 @@ describe('TransferHistory.vue', () => {
     expect(wrapper.text()).toContain('window two');
   });
 
-  it('displays a transfer status for each transfer in all groups', () => {
+  it('displays a transfer status for each transfer in all groups', async () => {
     const transferOne = generateTransfer();
     const transferTwo = generateTransfer();
     const transferThree = generateTransfer();
@@ -76,7 +82,7 @@ describe('TransferHistory.vue', () => {
         { label: 'window two', transfers: [transferTwo, transferThree] },
       ]),
     });
-    const wrapper = createWrapper();
+    const wrapper = await createWrapper();
     const transferStatus = wrapper.findAllComponents(TransferStatus);
 
     expect(transferStatus).toHaveLength(3);
@@ -87,12 +93,14 @@ describe('TransferHistory.vue', () => {
     );
   });
 
-  it('shows a placeholder if there are no transfers', () => {
-    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
-      groupedAndSortedTransfers: ref([]),
-    });
-    const wrapper = createWrapper({ transfers: [] });
+  it('shows a button that switches back to requests', async () => {
+    const wrapper = await createWrapper();
+    const button = wrapper.find('[data-test="switch-to-request-button"]');
 
-    expect(wrapper.text()).toContain('Nothing here yet.');
+    expect(button.exists()).toBeTruthy();
+
+    await button.trigger('click');
+
+    expect(navigation.switchToRequestDialog).toHaveBeenCalledOnce();
   });
 });

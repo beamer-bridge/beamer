@@ -42,6 +42,16 @@
     <!-- Bottom gradient to create phase out effect for scrolling content. -->
     <div class="absolute bottom-0 right-0 w-full h-10 z-10 bg-gradient-to-t from-teal" />
   </div>
+
+  <SafeTeleport to="#action-button-portal">
+    <ActionButton
+      class="bg-green-lime"
+      data-test="switch-to-request-button"
+      @click="switchToRequestDialog"
+    >
+      New Transfer
+    </ActionButton>
+  </SafeTeleport>
 </template>
 
 <script setup lang="ts">
@@ -50,9 +60,12 @@ import type { Ref } from 'vue';
 import { ref } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
+import ActionButton from '@/components/layout/ActionButton.vue';
 import LazyWrapper from '@/components/layout/LazyWrapper.vue';
+import SafeTeleport from '@/components/layout/SafeTeleport.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import { useTransferGrouping } from '@/composables/useTransferGrouping';
+import { switchToRequestDialog } from '@/router/navigation';
 import { useTransferHistory } from '@/stores/transfer-history';
 
 const listElement = ref();
