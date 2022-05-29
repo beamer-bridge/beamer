@@ -14,13 +14,18 @@
 
       <Card class="relative bg-teal mb-11 w-full h-[50rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
-        <Tabs :tabs="tabs" :class="tabsClasses" :active-tab-label="activeTabLabel" @tab-changed="onTabChanged" />
+        <Tabs
+          :tabs="tabs"
+          :class="tabsClasses"
+          :active-tab-label="activeTabLabel"
+          @tab-changed="onTabChanged"
+        />
       </Card>
 
-      <div id="action-button-portal" class="flex justify-center h-28">
-        <FormKit v-if="!signer && !walletMenuIsOpen" input-class="bg-orange flex flex-row justify-center" type="button"
-          @click="openWalletMenu">Connect to Wallet
-        </FormKit>
+      <div id="action-button-portal" class="flex flex-col justify-center gap-5 h-28">
+        <ActionButton v-if="!signer && !walletMenuIsOpen" class="bg-orange" @click="openWalletMenu"
+          >Connect to Wallet
+        </ActionButton>
       </div>
     </div>
   </div>
@@ -31,6 +36,7 @@ import { storeToRefs } from 'pinia';
 import { computed, markRaw, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import ActionButton from '@/components/layout/ActionButton.vue';
 import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
