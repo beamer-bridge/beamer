@@ -1,6 +1,6 @@
-import { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/providers';
-import { Contract } from 'ethers';
-import { Ref, ShallowRef } from 'vue';
+import type { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/providers';
+import type { Contract } from 'ethers';
+import type { Ref, ShallowRef } from 'vue';
 
 export interface IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;

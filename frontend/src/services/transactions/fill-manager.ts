@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from '@ethersproject/providers';
+import type { JsonRpcProvider } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import FillManager from '@/assets/FillManager.json';

@@ -1,4 +1,5 @@
-import { ETH, Token } from '@/types/data';
+import type { Token } from '@/types/data';
+import { ETH } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';

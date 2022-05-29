@@ -1,5 +1,6 @@
-import { JsonRpcSigner } from '@ethersproject/providers';
-import { computed, reactive, Ref } from 'vue';
+import type { JsonRpcSigner } from '@ethersproject/providers';
+import type { Ref } from 'vue';
+import { computed, reactive } from 'vue';
 
 import { requestFaucet } from '@/services/transactions/faucet';
 import createAsyncProcess from '@/utils/create-async-process';

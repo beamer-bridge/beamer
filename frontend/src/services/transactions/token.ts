@@ -1,5 +1,6 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
+import type { BigNumber } from 'ethers';
+import { Contract } from 'ethers';
 
 import StandardToken from '@/assets/StandardToken.json';
 import type { EthereumProvider } from '@/services/web3-provider';

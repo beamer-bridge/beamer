@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { FormKitFrameworkContext } from '@formkit/core';
+import type { FormKitFrameworkContext } from '@formkit/core';
 import vSelect from 'vue-select';
 
 import type { SelectorOption } from '@/types/form';

@@ -1,8 +1,8 @@
-import { JsonRpcSigner } from '@ethersproject/providers';
+import type { JsonRpcSigner } from '@ethersproject/providers';
 import { defineStore } from 'pinia';
 import { shallowRef } from 'vue';
 
-import { EthereumProvider } from '@/services/web3-provider';
+import type { EthereumProvider } from '@/services/web3-provider';
 
 export const useEthereumProvider = defineStore('ethereumProvider', {
   state: () => ({

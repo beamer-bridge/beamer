@@ -1,8 +1,9 @@
-import { computed, Ref, ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import type { EthereumProvider } from '@/services/web3-provider';
-import { ChainConfigMapping } from '@/types/config';
-import { SelectorOption } from '@/types/form';
+import type { ChainConfigMapping } from '@/types/config';
+import type { SelectorOption } from '@/types/form';
 
 export function useChainSelection(
   provider: Ref<EthereumProvider | undefined>,

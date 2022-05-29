@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { WalletType } from '@/types/settings';
+import type { WalletType } from '@/types/settings';
 
 export const useSettings = defineStore('settings', {
   state: () => ({

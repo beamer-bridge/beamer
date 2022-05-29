@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { Transfer } from '@/actions/transfers';
+import type { Transfer } from '@/actions/transfers';
 
 import { transferHistorySerializer } from './serializer';
 import type { TransferHistoryState } from './types';

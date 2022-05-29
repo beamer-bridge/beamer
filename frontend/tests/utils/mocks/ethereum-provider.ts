@@ -1,8 +1,8 @@
-import { JsonRpcSigner } from '@ethersproject/providers';
+import type { JsonRpcSigner } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
-import { IEthereumProvider, ISigner } from '@/services/web3-provider';
+import type { IEthereumProvider, ISigner } from '@/services/web3-provider';
 
 export abstract class MockedEthereumProvider implements IEthereumProvider {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;

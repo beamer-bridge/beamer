@@ -3,7 +3,8 @@ import type {
   JsonRpcSigner,
   TransactionResponse,
 } from '@ethersproject/providers';
-import { BigNumber, BigNumberish, Contract } from 'ethers';
+import type { BigNumberish } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
 import type { EthereumProvider } from '@/services/web3-provider';

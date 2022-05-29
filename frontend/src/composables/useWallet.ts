@@ -1,4 +1,4 @@
-import { Ref } from 'vue';
+import type { Ref } from 'vue';
 
 import type { EthereumProvider } from '@/services/web3-provider';
 import { createMetaMaskProvider, createWalletConnectProvider } from '@/services/web3-provider';
