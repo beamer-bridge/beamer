@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { FormKitFrameworkContext } from '@formkit/core';
+import type { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';

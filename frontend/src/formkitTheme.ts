@@ -1,4 +1,4 @@
-import { FormKitNode } from '@formkit/core';
+import type { FormKitNode } from '@formkit/core';
 
 function rootClasses(sectionKey: string, node: FormKitNode): Record<string, boolean> {
   const type = node.props.type;

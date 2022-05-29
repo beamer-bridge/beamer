@@ -1,9 +1,12 @@
-import { Block, getNetwork, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
+import type { Block, JsonRpcSigner } from '@ethersproject/providers';
+import { getNetwork, Web3Provider } from '@ethersproject/providers';
+import type { Contract } from 'ethers';
+import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
-import { Ref, ref, ShallowRef, shallowRef } from 'vue';
+import type { Ref, ShallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 
-import { ChainData, Eip1193Provider, IEthereumProvider, TokenData } from './types';
+import type { ChainData, Eip1193Provider, IEthereumProvider, TokenData } from './types';
 
 export abstract class EthereumProvider implements IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);

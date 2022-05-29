@@ -1,8 +1,9 @@
-import { ExternalProvider } from '@ethersproject/providers';
+import type { ExternalProvider } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { hexValue } from 'ethers/lib/utils';
 
-import { Eip1193Provider, EthereumProvider, ISigner } from '@/services/web3-provider';
+import type { Eip1193Provider, ISigner } from '@/services/web3-provider';
+import { EthereumProvider } from '@/services/web3-provider';
 
 export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undefined> {
   const detectedProvider = (await detectEthereumProvider()) as ExternalProvider | undefined;

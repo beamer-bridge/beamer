@@ -1,7 +1,7 @@
-import { Signer } from "ethers";
+import type { Signer } from "ethers";
 import { BaseServiceV2, validators } from "@eth-optimism/common-ts";
 import { CrossChainMessenger, MessageStatus } from "@eth-optimism/sdk";
-import { Provider } from "@ethersproject/abstract-provider";
+import type { Provider } from "@ethersproject/abstract-provider";
 
 type MessageRelayerOptions = {
   l1RpcProvider: Provider

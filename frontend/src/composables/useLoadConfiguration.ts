@@ -1,6 +1,6 @@
 import { onMounted, ref } from 'vue';
 
-import { BeamerConfig, ChainConfig } from '@/types/config';
+import type { BeamerConfig, ChainConfig } from '@/types/config';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useLoadConfiguration(

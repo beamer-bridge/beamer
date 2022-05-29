@@ -1,7 +1,8 @@
 import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
 import { hexValue } from 'ethers/lib/utils';
 
-import { Eip1193Provider, EthereumProvider } from '@/services/web3-provider';
+import type { Eip1193Provider } from '@/services/web3-provider';
+import { EthereumProvider } from '@/services/web3-provider';
 
 export async function createWalletConnectProvider(rpcList: {
   [chainId: string]: string;

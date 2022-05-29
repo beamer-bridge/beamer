@@ -1,7 +1,8 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-import { MultiStepAction, Step, StepData } from '@/actions/steps';
+import type { StepData } from '@/actions/steps';
+import { MultiStepAction, Step } from '@/actions/steps';
 import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   getRequestIdentifier,
