@@ -11,7 +11,9 @@
       <RequestFormInputs />
 
       <Teleport v-if="signer" to="#action-button-portal">
-        <ActionButton :disabled="!valid" @click="submitForm"> Transfer Funds </ActionButton>
+        <ActionButton v-if="transferFundsButtonVisible" :disabled="!valid" @click="submitForm">
+          Transfer Funds
+        </ActionButton>
       </Teleport>
     </FormKit>
   </div>
@@ -27,6 +29,7 @@ import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
 import { useRequestFee } from '@/composables/useRequestFee';
+import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { switchToActivities } from '@/router/navigation';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -41,6 +44,7 @@ const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { provider, signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
+const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 
 const requestForm = ref<FormKitFrameworkContext>();
 

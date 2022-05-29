@@ -45,6 +45,7 @@
 
   <SafeTeleport to="#action-button-portal">
     <ActionButton
+      v-if="newTransferButtonVisible"
       class="bg-green-lime"
       data-test="switch-to-request-button"
       @click="switchToRequestDialog"
@@ -64,10 +65,12 @@ import ActionButton from '@/components/layout/ActionButton.vue';
 import LazyWrapper from '@/components/layout/LazyWrapper.vue';
 import SafeTeleport from '@/components/layout/SafeTeleport.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
+import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTransferGrouping } from '@/composables/useTransferGrouping';
 import { switchToRequestDialog } from '@/router/navigation';
 import { useTransferHistory } from '@/stores/transfer-history';
 
+const { activated: newTransferButtonVisible } = useToggleOnActivation();
 const listElement = ref();
 const transferHistory = useTransferHistory();
 const { transfers } = storeToRefs(transferHistory);

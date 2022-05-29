@@ -115,3 +115,9 @@ const { reconnectToWallet } = useWallet(provider, connectedWallet, rpcUrls);
 
 onMounted(reconnectToWallet);
 </script>
+
+<style>
+#action-button-portal > *:not(:first-child) {
+  display: none;
+}
+</style>
