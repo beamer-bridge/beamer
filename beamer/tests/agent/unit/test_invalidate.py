@@ -35,7 +35,6 @@ def test_handle_fill_hash_invalidated():
     event = FillHashInvalidated(
         chain_id=request.target_chain_id,
         tx_hash=HexBytes(""),
-        request_id=request.id,
         fill_hash=fill_hash,
     )
     assert process_event(event, context) == (True, None)

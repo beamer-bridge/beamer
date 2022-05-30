@@ -20,7 +20,6 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     function submitProof(
         address l1Resolver,
         uint256 sourceChainId,
-        uint256 requestId,
         bytes32 requestHash,
         address filler
     )
@@ -35,7 +34,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
-                (requestId, fillHash, block.chainid, sourceChainId, filler)
+                (fillHash, block.chainid, sourceChainId, filler)
             ),
             MESSAGE_GAS_LIMIT
         );
@@ -46,14 +45,13 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     function submitNonFillProof(
         address l1Resolver,
         uint256 sourceChainId,
-        uint256 requestId,
         bytes32 fillHash
     ) external {
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolveNonFill,
-                (requestId, fillHash, block.chainid, sourceChainId)
+                (fillHash, block.chainid, sourceChainId)
             ),
             MESSAGE_GAS_LIMIT
         );

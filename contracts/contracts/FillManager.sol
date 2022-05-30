@@ -64,13 +64,7 @@ contract FillManager is Ownable {
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
         IProofSubmitter.ProofReceipt memory proofReceipt = proofSubmitter
-            .submitProof(
-                l1Resolver,
-                sourceChainId,
-                requestId,
-                requestHash,
-                msg.sender
-            );
+            .submitProof(l1Resolver, sourceChainId, requestHash, msg.sender);
         require(proofReceipt.fillId != 0, "Submitting proof data failed");
 
         fills[requestHash] = proofReceipt.fillHash;
@@ -88,19 +82,13 @@ contract FillManager is Ownable {
     }
 
     function invalidateFillHash(
-        uint256 requestId,
         bytes32 requestHash,
         bytes32 fillId,
         uint256 sourceChainId
     ) external {
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         require(fills[requestHash] != fillHash, "Fill hash valid");
-        proofSubmitter.submitNonFillProof(
-            l1Resolver,
-            sourceChainId,
-            requestId,
-            fillHash
-        );
+        proofSubmitter.submitNonFillProof(l1Resolver, sourceChainId, fillHash);
         emit HashInvalidated(requestHash, fillId, fillHash);
     }
 
