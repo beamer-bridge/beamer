@@ -135,7 +135,6 @@ def test_handle_request_resolved():
     event = RequestResolved(
         chain_id=TARGET_CHAIN_ID,
         tx_hash=HexBytes(""),
-        request_id=REQUEST_ID,
         fill_hash=FillHash(b""),
         filler=filler,
     )
