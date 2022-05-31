@@ -1,5 +1,4 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
-import { JsonRpcProvider } from '@ethersproject/providers';
 
 import type { StepData } from '@/actions/steps';
 import { MultiStepAction, Step } from '@/actions/steps';
@@ -155,9 +154,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempt to get request event before sending transaction!');
     }
 
-    const provider = new JsonRpcProvider(this.sourceChain.rpcUrl);
     const identifier = await getRequestIdentifier(
-      provider,
+      this.sourceChain.rpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.transactionHash,
     );
@@ -170,12 +168,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempting to wait for fulfillment without request identifier!');
     }
 
-    const provider = new JsonRpcProvider(this.targetChain.rpcUrl);
-
     await waitForFulfillment(
-      provider,
-      this._requestInformation.identifier,
+      this.targetChain.rpcUrl,
       this.targetChain.fillManagerAddress,
+      this._requestInformation.identifier,
     );
 
     // TODO: set this.fulfillmentInformation

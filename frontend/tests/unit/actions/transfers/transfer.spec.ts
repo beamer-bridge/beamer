@@ -48,7 +48,8 @@ class TestTransfer extends Transfer {
 }
 
 const DATA = generateTransferData();
-const SIGNER = new JsonRpcSigner(undefined, new JsonRpcProvider());
+const PROVIDER = new JsonRpcProvider();
+const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const SIGNER_ADDRESS = '0xSigner';
 
 describe('transfer', () => {
@@ -124,7 +125,7 @@ describe('transfer', () => {
         fees: generateTokenAmountData({ amount: '4' }),
       });
       const transfer = new TestTransfer(data);
-      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const signer = new JsonRpcSigner(undefined, PROVIDER);
 
       await transfer.sendRequestTransaction(signer, SIGNER_ADDRESS);
 
@@ -168,22 +169,12 @@ describe('transfer', () => {
       );
     });
 
-    it('connects to the source chain', async () => {
-      const data = generateTransferData({
-        sourceChain: generateChain({ rpcUrl: 'https://source.rpc' }),
-        requestInformation: generateRequestInformationData(),
-      });
-      const transfer = new TestTransfer(data);
-
-      await transfer.waitForRequestEvent();
-
-      expect(JsonRpcProvider).toHaveBeenCalledTimes(1);
-      expect(JsonRpcProvider).toHaveBeenLastCalledWith('https://source.rpc');
-    });
-
     it('uses the stored request transaction hash', async () => {
       const data = generateTransferData({
-        sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
+        sourceChain: generateChain({
+          rpcUrl: 'https://source.rpc',
+          requestManagerAddress: '0xRequestManager',
+        }),
         requestInformation: generateRequestInformationData({
           transactionHash: '0xHash',
         }),
@@ -194,7 +185,7 @@ describe('transfer', () => {
 
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenLastCalledWith(
-        expect.any(JsonRpcProvider),
+        'https://source.rpc',
         '0xRequestManager',
         '0xHash',
       );
@@ -215,24 +206,12 @@ describe('transfer', () => {
       );
     });
 
-    it('connects to the target chain', async () => {
-      const data = generateTransferData({
-        targetChain: generateChain({ rpcUrl: 'https://target.rpc' }),
-        requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
-        }),
-      });
-      const transfer = new TestTransfer(data);
-
-      await transfer.waitForFulfillment();
-
-      expect(JsonRpcProvider).toHaveBeenCalledTimes(1);
-      expect(JsonRpcProvider).toHaveBeenLastCalledWith('https://target.rpc');
-    });
-
     it('uses the correct parameters to wait for the request fill', async () => {
       const data = generateTransferData({
-        targetChain: generateChain({ fillManagerAddress: '0xFillManager' }),
+        targetChain: generateChain({
+          rpcUrl: 'https://target.rpc',
+          fillManagerAddress: '0xFillManager',
+        }),
         requestInformation: generateRequestInformationData({
           identifier: generateUInt256Data('1'),
         }),
@@ -243,9 +222,9 @@ describe('transfer', () => {
 
       expect(fillManager.waitForFulfillment).toHaveBeenCalledTimes(1);
       expect(fillManager.waitForFulfillment).toHaveBeenLastCalledWith(
-        expect.any(JsonRpcProvider),
-        new UInt256('1'),
+        'https://target.rpc',
         '0xFillManager',
+        new UInt256('1'),
       );
     });
   });

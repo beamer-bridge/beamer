@@ -23,14 +23,14 @@
 import type { FormKitFrameworkContext } from '@formkit/core';
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
-import { computed, reactive, ref, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestFormInputs from '@/components/RequestFormInputs.vue';
-import { useRequestFee } from '@/composables/useRequestFee';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { switchToActivities } from '@/router/navigation';
+import { getRequestFee } from '@/services/transactions/request-manager';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
@@ -47,12 +47,6 @@ const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 
 const requestForm = ref<FormKitFrameworkContext>();
-
-const requestManagerAddress = computed(
-  () => configuration.chains[chainId.value]?.requestManagerAddress,
-);
-
-const { amount: fees } = useRequestFee(provider, requestManagerAddress);
 
 const submitForm = () => {
   requestForm.value?.node.submit();
@@ -80,6 +74,7 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   )!;
   const targetAmount = TokenAmount.parse(formResult.amount, targetToken);
   const validityPeriod = new UInt256('600');
+  const fees = await getRequestFee(sourceChain.rpcUrl, sourceChain.requestManagerAddress);
 
   const transfer = reactive(
     Transfer.new(
@@ -89,7 +84,7 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
       targetAmount,
       formResult.toAddress,
       validityPeriod,
-      fees.value as TokenAmount,
+      fees,
     ),
   ) as Transfer;
 

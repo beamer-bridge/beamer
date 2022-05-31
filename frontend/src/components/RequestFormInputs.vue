@@ -142,10 +142,8 @@ const formElement = ref<HTMLElement>();
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 
-const { provider, signer, chainId } = storeToRefs(ethereumProvider);
+const { provider, signer } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
-
-const requestManagerAddress = computed(() => chains.value[chainId.value]?.requestManagerAddress);
 
 const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChainSelection(
   provider,
@@ -157,9 +155,19 @@ const selectedSourceChainIdentifier = computed(() => selectedSourceChain.value?.
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
+const sourceChainRpcUrl = computed(() =>
+  selectedSourceChain.value ? chains.value[selectedSourceChain.value.value].rpcUrl : undefined,
+);
+
+const sourceChainRequestManagerAddress = computed(() =>
+  selectedSourceChain.value
+    ? chains.value[selectedSourceChain.value.value].requestManagerAddress
+    : undefined,
+);
+
 const { available: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
-  provider,
-  requestManagerAddress,
+  sourceChainRpcUrl,
+  sourceChainRequestManagerAddress,
 );
 
 const { available: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
