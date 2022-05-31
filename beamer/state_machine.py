@@ -200,8 +200,6 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     assert request is not None, "Request object missing upon ClaimMade event"
 
-    events: Optional[list[Event]] = None
-
     claim = context.claims.get(event.claim_id)
     if claim is None:
         challenge_back_off_timestamp = int(time.time())
@@ -213,15 +211,20 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
 
-        return True, events
+        return True, None
+
+    # Don't process challenge events before there was a chance to invalidate the claim
+    if claim.is_started:
+        return False, None
 
     # this is at least the second ClaimMade event for this claim id
     assert event.last_challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
     try:
         claim.challenge(event)
     except TransitionNotAllowed:
-        return False, events
+        return False, None
 
+    events: Optional[list[Event]] = None
     if not request.is_l1_resolved and request.fill_tx is not None:
         events = [
             InitiateL1ResolutionEvent(
@@ -248,11 +251,11 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
-
     claim = _find_claim_by_fill_hash(context, event.fill_hash)
     if claim is not None:
         request = context.requests.get(claim.request_id)
-        assert request is not None
+        assert request is not None, "Request missing for claim"
+
         request.l1_resolve(event.filler)
         return True, None
 
@@ -262,7 +265,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
     claim = _find_claim_by_fill_hash(context, event.fill_hash)
     if claim is not None:
-        claim.invalidate()
+        claim.start_challenge()
         return True, None
 
     return False, None

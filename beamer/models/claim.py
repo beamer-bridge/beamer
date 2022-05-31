@@ -25,29 +25,27 @@ class Claim(StateMachine):
         # sending another transaction
         self.transaction_pending = False
 
+    started = State("Started", initial=True)
     # Claimer is winning
-    claimer_winning = State("ClaimerWinning", initial=True)
+    claimer_winning = State("ClaimerWinning")
     # Challenger is winning
     challenger_winning = State("ChallengerWinning")
-    invalidated = State("Invalidated")
     invalidated_l1_resolved = State("InvalidatedL1Resolved")
     ignored = State("Ignored")
     withdrawn = State("Withdrawn")
 
+    start_challenge = (
+        started.to(claimer_winning)
+        | claimer_winning.to(claimer_winning)
+        | challenger_winning.to(challenger_winning)
+    )
     challenge = (
         claimer_winning.to(challenger_winning)
         | challenger_winning.to(claimer_winning)
         | ignored.to(ignored)
     )
-    invalidate = (
-        claimer_winning.to(invalidated)
-        | challenger_winning.to(invalidated)
-        | invalidated.to(invalidated)
-    )
-    l1_invalidate = (
-        claimer_winning.to(invalidated_l1_resolved)
-        | challenger_winning.to(invalidated_l1_resolved)
-        | invalidated.to(invalidated_l1_resolved)
+    l1_invalidate = claimer_winning.to(invalidated_l1_resolved) | challenger_winning.to(
+        invalidated_l1_resolved
     )
     withdraw = (
         claimer_winning.to(withdrawn)

@@ -122,7 +122,6 @@ def test_challenge_2(request_manager, token, config):
 # claim and challenging it.
 def test_challenge_3(request_manager, fill_manager, token, config):
     requester, charlie, target = alloc_accounts(3)
-
     agent = beamer.agent.Agent(config)
 
     w3 = brownie.web3
@@ -337,6 +336,7 @@ def test_withdraw_not_participant(request_manager, token, config):
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()
     assert claim is not None
+
     request_manager.challengeClaim(claim.claimId, {"from": dave, "value": stake + 1})
     brownie.chain.mine(timestamp=claim.termination)
 
@@ -345,10 +345,10 @@ def test_withdraw_not_participant(request_manager, token, config):
     # We wait enough time for agent to potentially withdraw
     collector = EventCollector(request_manager, "ClaimWithdrawn")
     withdraw_event = collector.next_event(wait_time=2)
+    assert withdraw_event is None
+
     agent.stop()
     agent.wait()
-
-    assert withdraw_event is None
 
 
 # Scenario 7:
@@ -364,7 +364,6 @@ def test_withdraw_not_participant(request_manager, token, config):
 # Note: testing that the agent can handle multiparty bidding
 def test_challenge_7(request_manager, fill_manager, token, config):
     requester, charlie, dave, target = alloc_accounts(4)
-
     agent = beamer.agent.Agent(config)
 
     w3 = brownie.web3
