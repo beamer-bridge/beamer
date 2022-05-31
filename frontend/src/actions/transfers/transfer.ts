@@ -8,6 +8,7 @@ import {
   getRequestIdentifier,
   sendRequestTransaction,
 } from '@/services/transactions/request-manager';
+import { ensureTokenAllowance } from '@/services/transactions/token';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { EthereumAmount, TokenAmountData } from '@/types/token-amount';
@@ -20,6 +21,7 @@ import type { RequestInformationData } from './request-information';
 import { RequestInformation } from './request-information';
 
 const STEPS_DATA = [
+  { identifier: 'ensureTokenAllowance', label: 'Ensure token allowance' },
   { identifier: 'sendRequestTransaction', label: 'Please confirm the transaction' },
   { identifier: 'waitForRequestEvent', label: 'Waiting for transaction receipt' },
   { identifier: 'waitForFulfillment', label: 'Request is being fulfilled' },
@@ -89,6 +91,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   ): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
+      ensureTokenAllowance: () => this.ensureTokenAllowance(signer),
       sendRequestTransaction: () => this.sendRequestTransaction(signer, signerAddress),
       waitForRequestEvent: () => this.waitForRequestEvent(),
       waitForFulfillment: () => this.waitForFulfillment(),
@@ -114,6 +117,15 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       requestInformation: this._requestInformation?.encode(),
       fulfillmentInformation: this.fulfillmentInformation,
     };
+  }
+
+  protected async ensureTokenAllowance(signer: JsonRpcSigner): Promise<void> {
+    await ensureTokenAllowance(
+      signer,
+      this.sourceAmount.token.address,
+      this.sourceChain.requestManagerAddress,
+      this.sourceAmount.uint256,
+    );
   }
 
   protected async sendRequestTransaction(

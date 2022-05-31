@@ -5,6 +5,7 @@ import type { TransferData } from '@/actions/transfers/transfer';
 import { Transfer } from '@/actions/transfers/transfer';
 import * as fillManager from '@/services/transactions/fill-manager';
 import * as requestManager from '@/services/transactions/request-manager';
+import * as tokenUtils from '@/services/transactions/token';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 import {
@@ -20,12 +21,17 @@ import {
 } from '~/utils/data_generators';
 
 vi.mock('@ethersproject/providers');
+vi.mock('@/services/transactions/token');
 vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestTransfer extends Transfer {
   public getStepMethods(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
     return super.getStepMethods(signer, signerAddress);
+  }
+
+  public ensureTokenAllowance(signer: JsonRpcSigner) {
+    return super.ensureTokenAllowance(signer);
   }
 
   public sendRequestTransaction(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
@@ -47,6 +53,7 @@ const SIGNER_ADDRESS = '0xSigner';
 
 describe('transfer', () => {
   beforeEach(() => {
+    tokenUtils!.ensureTokenAllowance = vi.fn().mockResolvedValue(undefined);
     requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
     requestManager!.getRequestIdentifier = vi.fn().mockResolvedValue(1);
     fillManager!.waitForFulfillment = vi.fn().mockResolvedValue(undefined);
@@ -68,9 +75,34 @@ describe('transfer', () => {
 
       await transfer.execute(SIGNER, SIGNER_ADDRESS);
 
+      expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
       expect(fillManager!.waitForFulfillment).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('ensureTokenAllowance()', () => {
+    it('calls the token utility function for the source token', async () => {
+      const data = generateTransferData({
+        sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
+        sourceAmount: generateTokenAmountData({
+          token: generateToken({ address: '0xSourceToken' }),
+          amount: '1',
+        }),
+      });
+      const transfer = new TestTransfer(data);
+      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+
+      await transfer.ensureTokenAllowance(signer);
+
+      expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
+      expect(tokenUtils.ensureTokenAllowance).toHaveBeenLastCalledWith(
+        signer,
+        '0xSourceToken',
+        '0xRequestManager',
+        new UInt256('1'),
+      );
     });
   });
 
