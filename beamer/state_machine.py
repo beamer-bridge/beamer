@@ -265,7 +265,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
     claim = _find_claim_by_fill_hash(context, event.fill_hash)
     if claim is not None:
-        claim.start_challenge()
+        claim.start_challenge(event.tx_hash)
         return True, None
 
     return False, None
