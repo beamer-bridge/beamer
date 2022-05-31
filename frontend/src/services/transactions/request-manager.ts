@@ -1,24 +1,20 @@
-import type {
-  JsonRpcProvider,
-  JsonRpcSigner,
-  TransactionResponse,
-} from '@ethersproject/providers';
+import type { JsonRpcSigner, TransactionResponse } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import type { BigNumberish } from 'ethers';
 import { BigNumber, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
-import type { EthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress } from '@/types/data';
 import { EthereumAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export async function getRequestFee(
-  provider: EthereumProvider,
+  rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<EthereumAmount> {
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi);
-  const connectedContract = provider.connectContract(requestManagerContract);
-  const fetchedAmount: BigNumberish = await connectedContract.totalFee();
+  const provider = new JsonRpcProvider(rpcUrl);
+  const contract = new Contract(requestManagerAddress, RequestManager.abi, provider);
+  const fetchedAmount: BigNumberish = await contract.totalFee();
   return new EthereumAmount(fetchedAmount.toString());
 }
 
@@ -64,10 +60,11 @@ export async function sendRequestTransaction(
 }
 
 export async function getRequestIdentifier(
-  provider: JsonRpcProvider,
+  rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
 ): Promise<UInt256> {
+  const provider = new JsonRpcProvider(rpcUrl);
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, provider);
   const transaction = await provider.getTransaction(transactionHash);
   const receipt = await transaction.wait();

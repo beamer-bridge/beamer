@@ -1,21 +1,18 @@
-import type { JsonRpcProvider } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import FillManager from '@/assets/FillManager.json';
 import type { UInt256 } from '@/types/uint-256';
 
 export async function waitForFulfillment(
-  targetNetworkProvider: JsonRpcProvider,
-  requestIdentifier: UInt256,
+  rpcUrl: string,
   fillManagerAddress: string,
+  requestIdentifier: UInt256,
 ): Promise<void> {
-  const fillManagerContract = new Contract(
-    fillManagerAddress,
-    FillManager.abi,
-    targetNetworkProvider,
-  );
+  const provider = new JsonRpcProvider(rpcUrl);
+  const fillManagerContract = new Contract(fillManagerAddress, FillManager.abi, provider);
 
-  const currentBlockNumber = await targetNetworkProvider.getBlockNumber();
+  const currentBlockNumber = await provider.getBlockNumber();
   const eventFilter = fillManagerContract.filters.RequestFilled(
     BigNumber.from(requestIdentifier.asString),
   );
