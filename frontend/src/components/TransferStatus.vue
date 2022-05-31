@@ -67,6 +67,7 @@ const progressSteps = computed(() =>
     label: step.label,
     completed: step.completed,
     failed: step.failed,
+    errorMessage: step.errorMessage,
   })),
 );
 
