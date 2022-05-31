@@ -1,12 +1,6 @@
 <template>
-  <ul class="steps steps-vertical text-left">
-    <ProgressStep
-      v-for="(step, index) in steps"
-      :key="index"
-      :label="step.label"
-      :completed="step.completed"
-      :failed="step.failed"
-    />
+  <ul class="steps steps-vertical text-left w-full p-5">
+    <ProgressStep v-for="(step, index) in steps" :key="index" v-bind="step" />
   </ul>
 </template>
 
@@ -18,14 +12,9 @@ interface Props {
     label: string;
     completed?: boolean;
     failed?: boolean;
+    errorMessage?: string;
   }>;
 }
 
 defineProps<Props>();
 </script>
-
-<style>
-.steps-vertical .step {
-  min-height: 3rem !important;
-}
-</style>
