@@ -1,6 +1,7 @@
 from typing import Optional
 
 from eth_typing import ChecksumAddress as Address
+from hexbytes import HexBytes
 from statemachine import State, StateMachine
 from web3.types import Wei
 
@@ -24,6 +25,7 @@ class Claim(StateMachine):
         # not arrived at the agent's EventProcessor yet, it will prevent
         # sending another transaction
         self.transaction_pending = False
+        self.invalidation_tx: Optional[HexBytes] = None
 
     started = State("Started", initial=True)
     # Claimer is winning
@@ -109,6 +111,9 @@ class Claim(StateMachine):
             return Wei(challenger_stake - claimer_stake + initial_claim_stake)
         else:
             return Wei(claimer_stake - challenger_stake + 1)
+
+    def on_start_challenge(self, invalidation_tx: HexBytes = None) -> None:
+        self.invalidation_tx = invalidation_tx
 
     def on_challenge(self, new_claim_made: ClaimMade) -> None:
         self._on_new_claim_made(new_claim_made)

@@ -13,6 +13,7 @@ from beamer.tests.agent.unit.utils import (
     make_context,
     make_request,
 )
+from beamer.tests.agent.utils import make_tx_hash
 from beamer.typing import ClaimId, FillId
 
 
@@ -70,9 +71,10 @@ def test_handle_hash_invalidated():
     context.claims.add(claim.id, claim)
 
     fill_hash = request.fill_hash_with_fill_id(request.fill_id)
+    tx_hash = make_tx_hash()
     event = HashInvalidated(
         chain_id=request.target_chain_id,
-        tx_hash=HexBytes(""),
+        tx_hash=tx_hash,
         request_hash=request.request_hash,
         fill_id=request.fill_id,
         fill_hash=fill_hash,
@@ -81,6 +83,7 @@ def test_handle_hash_invalidated():
 
     # Check that the event changes the claim state
     assert claim.is_claimer_winning  # pylint:disable=no-member
+    assert claim.invalidation_tx == tx_hash
 
 
 @patch("beamer.chain._invalidate")
