@@ -32,7 +32,7 @@ from beamer.l1_resolution import run_relayer
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, RequestId
+from beamer.typing import ChainId, ClaimId, FillHash, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -91,6 +91,17 @@ def process_event(event: Event, context: Context) -> HandlerResult:
 
     else:
         raise RuntimeError("Unrecognized event type")
+
+
+def _find_claim_by_fill_hash(context: Context, fill_hash: FillHash) -> Optional[Claim]:
+    for claim in context.claims:
+        request = context.requests.get(claim.request_id)
+        assert request is not None
+
+        if fill_hash == request.fill_hash_with_fill_id(claim.fill_id):
+            return claim
+
+    return None
 
 
 def _handle_latest_block_updated(
@@ -237,52 +248,30 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
-    request = context.requests.get(event.request_id)
-    if request is None:
-        return False, None
 
-    request.l1_resolve(event.filler)
-    return True, None
+    claim = _find_claim_by_fill_hash(context, event.fill_hash)
+    if claim is not None:
+        request = context.requests.get(claim.request_id)
+        assert request is not None
+        request.l1_resolve(event.filler)
+        return True, None
+
+    return False, None
 
 
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
-    request: Optional[Request] = None
-    # TODO: replace this with something more efficient, see #644
-    for candidate in context.requests:
-        if candidate.request_hash == event.request_hash:
-            request = candidate
-            break
+    claim = _find_claim_by_fill_hash(context, event.fill_hash)
+    if claim is not None:
+        claim.invalidate()
+        return True, None
 
-    if request is None:
-        return False, None
-
-    # Mark the claims with that fill_id as invalidated
-    found_claim = False
-    for claim in context.claims:
-        if claim.request_id != request.id:
-            continue
-
-        fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
-        if fill_hash_of_claim == event.fill_hash:
-            found_claim = True
-            claim.invalidate()
-
-    return found_claim, None
+    return False, None
 
 
 def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
-    request = context.requests.get(event.request_id)
-    if request is None:
-        return False, None
-
-    # Mark the claims with that fill_id as invalidated
-    for claim in context.claims:
-        if claim.request_id != request.id:
-            continue
-
-        fill_hash_of_claim = request.fill_hash_with_fill_id(claim.latest_claim_made.fill_id)
-        if fill_hash_of_claim == event.fill_hash:
-            claim.l1_invalidate()
+    claim = _find_claim_by_fill_hash(context, event.fill_hash)
+    if claim is not None:
+        claim.l1_invalidate()
 
     return True, None
 

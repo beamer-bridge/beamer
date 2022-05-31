@@ -744,15 +744,13 @@ def test_withdraw_without_challenge_with_resolution(
     contracts.messenger2.setLastSender(contracts.resolver.address)
 
     if invalidate:
-        resolution_registry.invalidateFillHash(
-            request_id, fill_hash, chain.id, {"from": contracts.messenger2}
-        )
+        resolution_registry.invalidateFillHash(fill_hash, chain.id, {"from": contracts.messenger2})
     # Assert that invalidation works
     assert resolution_registry.invalidFillHashes(fill_hash) == invalidate
 
     # Register a L1 resolution
     resolution_registry.resolveRequest(
-        request_id, fill_hash, web3.eth.chain_id, l1_filler, {"from": contracts.messenger2}
+        fill_hash, web3.eth.chain_id, l1_filler, {"from": contracts.messenger2}
     )
 
     # Assert that correct filler is resolved, it reverts the false invalidation

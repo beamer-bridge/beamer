@@ -6,7 +6,7 @@ from web3.types import Wei
 
 from beamer.events import ClaimMade
 from beamer.models.request import Request
-from beamer.typing import ClaimId, RequestId, Termination
+from beamer.typing import ClaimId, FillId, RequestId, Termination
 
 
 class Claim(StateMachine):
@@ -68,6 +68,10 @@ class Claim(StateMachine):
     @property
     def termination(self) -> Termination:
         return self._latest_claim_made.termination
+
+    @property
+    def fill_id(self) -> FillId:
+        return self._latest_claim_made.fill_id
 
     @property
     def latest_claim_made(self) -> ClaimMade:

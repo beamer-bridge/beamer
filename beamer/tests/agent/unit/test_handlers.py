@@ -12,15 +12,17 @@ from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIM_ID,
     CLAIMER_STAKE,
+    FILL_ID,
     REQUEST_ID,
     TARGET_CHAIN_ID,
     TIMESTAMP,
     make_claim_challenged,
+    make_claim_unchallenged,
     make_context,
     make_request,
 )
 from beamer.tests.agent.utils import make_address
-from beamer.typing import FillHash, Termination
+from beamer.typing import Termination
 
 
 def test_skip_not_self_filled():
@@ -131,22 +133,27 @@ def test_handle_initiate_l1_resolution():
 def test_handle_request_resolved():
     context, config = make_context()
     filler = make_address()
+    fill_id = FILL_ID
+
+    # Must store the result in the request
+    request = make_request()
+    request.fill(config.account.address, b"", fill_id)
+    request.try_to_claim()
 
     event = RequestResolved(
         chain_id=TARGET_CHAIN_ID,
         tx_hash=HexBytes(""),
-        fill_hash=FillHash(b""),
+        fill_hash=request.fill_hash_with_fill_id(fill_id),
         filler=filler,
     )
 
     # Without a request, this must fail
     assert process_event(event, context) == (False, None)
 
-    # Must store the result in the request
-    request = make_request()
-    request.fill(config.account.address, b"", b"")
-    request.try_to_claim()
+    # Adding the request and claim to context
     context.requests.add(request.id, request)
+    claim = make_claim_unchallenged(request, fill_id=fill_id)
+    context.claims.add(claim.id, claim)
 
     assert request.l1_resolution_filler is None
     assert process_event(event, context) == (True, None)
