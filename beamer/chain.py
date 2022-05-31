@@ -195,6 +195,8 @@ class EventProcessor:
             )
             iteration += 1
             if not any_state_changed:
+                if len(unprocessed) > 0:
+                    self._have_new_events.set()
                 break
 
         # New events might be created by event handlers. If they would be
@@ -257,7 +259,22 @@ def process_claims(context: Context) -> None:
     for claim in context.claims:
         log.debug("Processing claim", claim=claim)
 
+        request = context.requests.get(claim.request_id)
+        # As per definition an invalid or expired request cannot be claimed
+        # This gives us a chronological order. The agent should never garbage collect
+        # a request which has active claims
+        assert request is not None, "Active claim for non-existent request"
+
         if claim.is_ignored:
+            continue
+
+        if claim.is_started:
+            # If the claim is not valid, we might need to send a non-fill-proof
+            if not claim.valid_claim_for_request(request):
+                maybe_invalidate(claim, context)
+            else:
+                claim.start_challenge()
+
             continue
 
         if claim.is_withdrawn:
@@ -269,25 +286,12 @@ def process_claims(context: Context) -> None:
             # TODO: See https://github.com/beamer-bridge/beamer/issues/674
             continue
 
-        if claim.is_invalidated:
-            # TODO: Maybe trigger L1 forwarding
-            #  See https://github.com/beamer-bridge/beamer/issues/669
-            continue
-
-        request = context.requests.get(claim.request_id)
-        # As per definition an invalid or expired request cannot be claimed
-        # This gives us a chronological order. The agent should never garbage collect
-        # a request which has active claims
-        assert request is not None, "Active claim for non-existent request"
-
-        # If the claim is not valid, we might need to send a non-fill-proof
-        if not claim.valid_claim_for_request(request):
-            maybe_invalidate(claim, context)
-            continue
+        # TODO: Maybe trigger L1 forwarding
+        #  See https://github.com/beamer-bridge/beamer/issues/669
 
         # Check if claim is an honest claim. Honest claims can be ignored.
         # This only counts for claims, where the agent is not the filler
-        if request.filler != context.address:
+        if claim.valid_claim_for_request(request) and request.filler != context.address:
             claim.ignore()
             continue
 
@@ -449,11 +453,8 @@ def maybe_invalidate(claim: Claim, context: Context) -> None:
     if timestamp < claim.challenge_back_off_timestamp:
         return
 
-    if timestamp > request.valid_until:
-        return
-
     _invalidate(request, claim, context)
-    claim.invalidate()
+    claim.start_challenge()
 
 
 def maybe_withdraw(claim: Claim, context: Context) -> None:
@@ -509,7 +510,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     func = context.fill_manager.functions.invalidateFillHash(
-        request.id, request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
+        request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
     )
     try:
         txn_hash = _transact(func)
@@ -517,5 +518,4 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         log.error("Calling invalidateFillHash failed", claim=claim, cause=exc.cause())
         return
 
-    claim.transaction_pending = True
     log.debug("Invalidated fill hash", claim=claim.id, txn_hash=txn_hash.hex())

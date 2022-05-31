@@ -69,16 +69,18 @@ def make_claim_unchallenged(
     claimer_stake: Wei = CLAIMER_STAKE,
     fill_id: FillId = FILL_ID,
     termination: Termination = TERMINATION,
+    stay_in_started_state: bool = False,
 ) -> Claim:
     return make_claim_challenged(
-        request,
-        claim_id,
-        claimer,
-        claimer_stake,
-        to_checksum_address(ADDRESS_ZERO),
-        Wei(0),
-        fill_id,
-        termination,
+        request=request,
+        claim_id=claim_id,
+        claimer=claimer,
+        claimer_stake=claimer_stake,
+        challenger=to_checksum_address(ADDRESS_ZERO),
+        challenger_stake=Wei(0),
+        fill_id=fill_id,
+        termination=termination,
+        stay_in_started_state=stay_in_started_state,
     )
 
 
@@ -91,7 +93,9 @@ def make_claim_challenged(
     challenger_stake: Wei = CHALLENGER_STAKE,
     fill_id: FillId = FILL_ID,
     termination: Termination = TERMINATION,
+    stay_in_started_state: bool = False,
 ) -> Claim:
+    claimer = claimer or make_address()
     challenger = challenger or make_address()
 
     claim = Claim(
@@ -110,6 +114,17 @@ def make_claim_challenged(
         challenge_back_off_timestamp=123,
     )
     claim.add_challenger_stake(challenger, challenger_stake)
+
+    if not stay_in_started_state:
+        # In a challenged state, the claim must be in the challenge game states
+        claim.start_challenge()
+
+        if (
+            claim.is_claimer_winning  # pylint:disable=no-member
+            and challenger_stake > claimer_stake
+        ):
+            claim.challenge(claim.latest_claim_made)
+
     return claim
 
 

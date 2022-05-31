@@ -105,7 +105,7 @@ class EventCollector:
         self._events: List[Any] = []
         self._from_block = 0
 
-    def next_event(self, wait_time: float = 5) -> Optional[Any]:
+    def next_event(self, wait_time: float = 10) -> Optional[Any]:
         """Return the next event. If no event comes within `wait_time` seconds,
         return None."""
         with Sleeper(wait_time) as sleeper:

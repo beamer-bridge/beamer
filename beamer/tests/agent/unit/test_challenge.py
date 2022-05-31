@@ -33,8 +33,6 @@ def test_challenge_as_challenger(filler, fill_id):
     )
     context.claims.add(claim.id, claim)
 
-    print(claim.latest_claim_made)
-
     assert not claim.transaction_pending
     process_claims(context)
     assert claim.valid_claim_for_request(request) != claim.transaction_pending
