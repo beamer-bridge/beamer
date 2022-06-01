@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+import { flushPromises } from '@vue/test-utils';
 
 import type { TransferData } from '@/actions/transfers/transfer';
 import { Transfer } from '@/actions/transfers/transfer';
@@ -57,7 +58,18 @@ describe('transfer', () => {
     tokenUtils!.ensureTokenAllowance = vi.fn().mockResolvedValue(undefined);
     requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
     requestManager!.getRequestIdentifier = vi.fn().mockResolvedValue(1);
-    fillManager!.waitForFulfillment = vi.fn().mockResolvedValue(undefined);
+    requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
+      promise: new Promise(() => undefined),
+      cancel: vi.fn(),
+    });
+    fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
+      promise: new Promise<void>((resolve) => resolve()),
+      cancel: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    flushPromises();
   });
 
   it('defines a method for every step', () => {
@@ -79,6 +91,7 @@ describe('transfer', () => {
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
+      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenCalledTimes(1);
       expect(fillManager!.waitForFulfillment).toHaveBeenCalledTimes(1);
     });
   });
@@ -226,6 +239,78 @@ describe('transfer', () => {
         '0xFillManager',
         new UInt256('1'),
       );
+    });
+
+    it('uses the correct parameters to wait for the request expiration', async () => {
+      const data = generateTransferData({
+        sourceChain: generateChain({
+          rpcUrl: 'https://source.rpc',
+          requestManagerAddress: '0xRequestManager',
+        }),
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
+      });
+      const transfer = new TestTransfer(data);
+
+      await transfer.waitForFulfillment();
+
+      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenCalledTimes(1);
+      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenLastCalledWith(
+        'https://source.rpc',
+        '0xRequestManager',
+        new UInt256('1'),
+      );
+    });
+
+    it('cancels waiting for exception when request got fulfilled', async () => {
+      const cancelExpirationCheck = vi.fn();
+      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
+        promise: new Promise(() => undefined),
+        cancel: cancelExpirationCheck,
+      });
+      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
+        promise: new Promise<void>((resolve) => resolve()),
+        cancel: () => undefined,
+      });
+
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
+      });
+      const transfer = new TestTransfer(data);
+
+      await transfer.waitForFulfillment();
+
+      expect(cancelExpirationCheck).toHaveBeenCalledOnce();
+    });
+
+    it('cancels waiting for fulfillment when request has expired', async () => {
+      const cancelFulfillmentCheck = vi.fn();
+      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
+        promise: new Promise((_, reject) => reject()),
+        cancel: vi.fn(),
+      });
+      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
+        promise: new Promise(() => undefined),
+        cancel: cancelFulfillmentCheck,
+      });
+
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
+      });
+      const transfer = new TestTransfer(data);
+
+      try {
+        await transfer.waitForFulfillment();
+      } catch {
+        // Ignore on purpose
+      }
+
+      expect(cancelFulfillmentCheck).toHaveBeenCalledOnce();
     });
   });
 
