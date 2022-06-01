@@ -2,42 +2,47 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import FillManager from '@/assets/FillManager.json';
+import type { Cancelable } from '@/types/async';
 import type { UInt256 } from '@/types/uint-256';
 
-export async function waitForFulfillment(
+async function checkForPastFulfillmentEvent(
   rpcUrl: string,
   fillManagerAddress: string,
   requestIdentifier: UInt256,
-): Promise<void> {
+): Promise<boolean> {
   const provider = new JsonRpcProvider(rpcUrl);
-  const fillManagerContract = new Contract(fillManagerAddress, FillManager.abi, provider);
-
+  const contract = new Contract(fillManagerAddress, FillManager.abi, provider);
   const currentBlockNumber = await provider.getBlockNumber();
-  const eventFilter = fillManagerContract.filters.RequestFilled(
-    BigNumber.from(requestIdentifier.asString),
-  );
-  const events = await fillManagerContract.queryFilter(eventFilter, currentBlockNumber - 500);
-  if (events.length > 0) return;
+  const eventFilter = contract.filters.RequestFilled(BigNumber.from(requestIdentifier.asString));
+  const events = await contract.queryFilter(eventFilter, currentBlockNumber - 500);
+  return events.length > 0;
+}
 
-  const eventListeningTimeout = 1000 * 30;
-
-  const fulfillmentPromise: Promise<void> = new Promise((resolve) => {
-    fillManagerContract.on(eventFilter, () => {
+export function waitForFulfillment(
+  rpcUrl: string,
+  fillManagerAddress: string,
+  requestIdentifier: UInt256,
+): Cancelable<void> {
+  const provider = new JsonRpcProvider(rpcUrl);
+  const contract = new Contract(fillManagerAddress, FillManager.abi, provider);
+  const eventFilter = contract.filters.RequestFilled(BigNumber.from(requestIdentifier.asString));
+  const promise = new Promise<void>((resolve) => {
+    const cleanUpAndResolve = () => {
+      contract.removeAllListeners();
       resolve();
-    });
+    };
+
+    checkForPastFulfillmentEvent(rpcUrl, fillManagerAddress, requestIdentifier).then(
+      (fulfilled) => {
+        if (fulfilled) {
+          cleanUpAndResolve();
+        }
+      },
+    );
+
+    contract.on(eventFilter, cleanUpAndResolve);
   });
 
-  const timeoutPromise: Promise<never> = new Promise((_resolve, reject) => {
-    setTimeout(() => {
-      reject(
-        new Error(
-          'It looks like it will take longer than expected! Please check your balances later!',
-        ),
-      );
-    }, eventListeningTimeout);
-  });
-
-  return Promise.race([fulfillmentPromise, timeoutPromise]).finally(() => {
-    fillManagerContract.removeAllListeners(eventFilter);
-  });
+  const cancel = () => contract.removeAllListeners();
+  return { promise, cancel };
 }

@@ -4,6 +4,7 @@ import type { BigNumberish } from 'ethers';
 import { BigNumber, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
+import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { EthereumAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -75,6 +76,56 @@ export async function getRequestIdentifier(
   } else {
     throw new Error("Request Failed. Couldn't retrieve Request ID");
   }
+}
+
+export async function checkIfRequestHasExpired(
+  rpcUrl: string,
+  requestManagerAddress: string,
+  requestIdentifier: UInt256,
+): Promise<boolean> {
+  const provider = new JsonRpcProvider(rpcUrl);
+  const contract = new Contract(requestManagerAddress, RequestManager.abi, provider);
+  const request: { validUntil: BigNumber; activeClaims: BigNumber } | undefined =
+    await contract.requests(BigNumber.from(requestIdentifier.asString));
+
+  if (request === undefined) {
+    throw new Error('No request known for this identifier!');
+  }
+
+  const block = await provider.getBlock('latest');
+  const validityExpired = request.validUntil.lt(block.timestamp);
+  const noActiveClaims = request.activeClaims.eq(0);
+
+  return validityExpired && noActiveClaims;
+}
+
+export function waitUntilRequestExpiresAndFail(
+  rpcUrl: string,
+  requestManagerAddress: EthereumAddress,
+  requestIdentifier: UInt256,
+): Cancelable<void> {
+  const provider = new JsonRpcProvider(rpcUrl);
+
+  const promise = new Promise<void>((_, reject) => {
+    const checkExpiration = async () => {
+      const hasExpired = await checkIfRequestHasExpired(
+        rpcUrl,
+        requestManagerAddress,
+        requestIdentifier,
+      );
+
+      if (hasExpired) {
+        provider.removeAllListeners();
+        reject(new Error('Request has expired!'));
+      }
+    };
+
+    checkExpiration();
+    provider.on('block', checkExpiration);
+  });
+
+  const cancel = () => provider.removeAllListeners();
+  return { promise, cancel };
 }
 
 function getTransactionErrorMessage(error: unknown): string {

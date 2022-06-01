@@ -6,6 +6,7 @@ import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   getRequestIdentifier,
   sendRequestTransaction,
+  waitUntilRequestExpiresAndFail,
 } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
 import type { Chain, EthereumAddress } from '@/types/data';
@@ -168,13 +169,26 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempting to wait for fulfillment without request identifier!');
     }
 
-    await waitForFulfillment(
+    const { promise: fulfillmentPromise, cancel: cancelFulfillmentChecks } = waitForFulfillment(
       this.targetChain.rpcUrl,
       this.targetChain.fillManagerAddress,
       this._requestInformation.identifier,
     );
 
-    // TODO: set this.fulfillmentInformation
+    const { promise: expirationPromise, cancel: cancelExpirationCheck } =
+      waitUntilRequestExpiresAndFail(
+        this.sourceChain.rpcUrl,
+        this.sourceChain.requestManagerAddress,
+        this._requestInformation.identifier,
+      );
+
+    try {
+      await Promise.race([fulfillmentPromise, expirationPromise]);
+      // TODO: set this.fulfillmentInformation
+    } finally {
+      cancelFulfillmentChecks();
+      cancelExpirationCheck();
+    }
   }
 }
 
