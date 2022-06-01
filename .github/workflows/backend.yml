@@ -86,32 +86,32 @@ jobs:
       - name: Check formatting of contracts
         run: prettier --list-different 'contracts/**/*.sol'
 
-      - name: Install solhint
-        run: npm install solhint --global
+      # - name: Install solhint
+      #   run: npm install solhint --global
 
-      - name: Lint contracts
-        run: |
-          solhint 'contracts/**/*.sol'
+      # - name: Lint contracts
+      #   run: |
+      #     solhint 'contracts/**/*.sol'
 
-      - name: Lint beamer
-        run: poetry run make lint
+      # - name: Lint beamer
+      #   run: poetry run make lint
 
-      - name: Run contract tests
-        run: poetry run brownie test -v -G beamer/tests/contracts
+      # - name: Run contract tests
+      #   run: poetry run brownie test -v -G beamer/tests/contracts
 
-      - name: Run agent tests
-        run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
+      # - name: Run agent tests
+      #   run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
 
-      - name: Load images from cache
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
+      # - name: Load images from cache
+      #   uses: satackey/action-docker-layer-caching@v0.0.11
+      #   # Ignore the failure of a step and avoid terminating the job.
+      #   continue-on-error: true
 
       - name: Bring the stack up
         working-directory: docker/optimism/ops
         run: |
           ./scripts/stats.sh &
-          docker-compose -f docker-compose.yml -f docker-compose-nobuild.yml up --scale relayer=1 -d
+          docker-compose -f docker-compose.yml up --scale relayer=1 -d
 
       - name: Wait for the Sequencer node
         working-directory: docker/optimism/ops
