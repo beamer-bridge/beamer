@@ -1,16 +1,14 @@
 digraph claim_state_machine {
-    node [] claimer_winning, challenger_winning, invalidated, invalidated_l1_resolved, ignored, withdrawn;
+    node [] started, claimer_winning, challenger_winning, invalidated_l1_resolved, ignored, withdrawn;
+
+    started -> claimer_winning [label = start_challenge];
 
     claimer_winning -> challenger_winning [label = challenge];
     challenger_winning -> claimer_winning [label = challenge];
     ignored -> ignored [label = challenge];
 
-    claimer_winning -> invalidated [label = invalidate];
-    challenger_winning -> invalidated [label = invalidate];
-
     claimer_winning -> invalidated_l1_resolved [label = resolution];
     challenger_winning -> invalidated_l1_resolved [label = resolution];
-    invalidated -> invalidated_l1_resolved [label = resolution];
 
     claimer_winning -> withdrawn [label = withdraw];
     challenger_winning -> withdrawn [label = withdraw];
