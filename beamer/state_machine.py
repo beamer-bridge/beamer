@@ -279,16 +279,18 @@ def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) 
     return True, None
 
 
-def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> HandlerResult:
-    l1_resolution_gas_cost = 1_000_000  # TODO: Adapt to real price
+def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
+    l1_gas_cost = 1_000_000  # TODO: Adapt to real price
     l1_gas_price = context.web3_l1.eth.gas_price
     l1_safety_factor = 1.25
-    limit = int(l1_resolution_gas_cost * l1_gas_price * l1_safety_factor)
+    limit = int(l1_gas_cost * l1_gas_price * l1_safety_factor)
 
+    # Agent is claimer
     if claim.claimer == context.address:
         if claim.latest_claim_made.challenger_stake_total > limit:
-            return True, None
+            return True
     else:
+        # Agent is challenger
         reward = claim.get_challenger_stake(context.address)
         last_challenger = claim.latest_claim_made.last_challenger
         if last_challenger == context.address:
@@ -298,8 +300,8 @@ def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> Handler
             )
 
         if reward > limit:
-            return True, None
-    return False, None
+            return True
+    return False
 
 
 def _handle_initiate_l1_resolution(
