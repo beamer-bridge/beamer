@@ -3,7 +3,8 @@ import { computed, ref } from 'vue';
 
 import { getTokenDecimals } from '@/services/transactions/token';
 import type { EthereumProvider } from '@/services/web3-provider';
-import type { ChainConfigMapping, Token } from '@/types/config';
+import type { ChainConfigMapping } from '@/types/config';
+import type { Token } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
 export function useTokenSelection(

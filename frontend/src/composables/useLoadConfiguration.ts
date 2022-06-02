@@ -1,10 +1,10 @@
 import { onMounted, ref } from 'vue';
 
-import type { BeamerConfig, ChainConfig } from '@/types/config';
+import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useLoadConfiguration(
-  setChainConfiguration: (id: string, configuration: ChainConfig) => void,
+  setChainConfiguration: (id: string, configuration: ChainWithTokens) => void,
 ) {
   const configurationLoaded = ref(false);
 
