@@ -1,0 +1,50 @@
+digraph "Beamer contracts" {
+    graph[rankdir=TD, ranksep=6, splines=ortho, nodesep=1.2, pad=1]
+    node [shape=box, width=1.5, height=1, fontname="Liberation Mono"]
+    edge [fontname="Liberation Mono"]
+    subgraph L1 {
+        rank=same
+        nodesep = 1.0
+        l1dummy [style=invis]
+        Resolver [label="Resolver"]
+        L1Messenger [label="L1Messenger", color="purple"]
+        
+    }
+    subgraph L2 {
+        graph[nodesep=1]
+        rank=same
+        l2dummy [style=invis]
+        RequestManager [label="RequestManager"]
+        FillManager [label="FillManager"]
+        L2Messenger [label="L2Messenger", color="purple"]
+        ProofSubmitter [label="ProofSubmitter", color="purple"]
+        ResolutionRegistry [label="ResolutionRegistry", rank=2]
+    }
+    
+    {
+        # restricted calls
+        edge [color=red]
+        FillManager -> ProofSubmitter [label="submitProof()"]
+        FillManager -> ProofSubmitter [headlabel="submitNonFillProof()"]
+        ProofSubmitter ->L2Messenger [headlabel="sendMessage()"]
+        Resolver -> L1Messenger [xlabel="sendMessage()"]
+    }
+
+    {
+        # restricted calls crossing the L1/L2 boundary
+        edge [color=red, style=dashed]
+        L2Messenger -> Resolver [headlabel="resolve()"]
+        L1Messenger -> ResolutionRegistry [headlabel="resolveRequest()"]
+    }
+
+    {
+        # unrestricted calls
+        Resolver -> L1Messenger [headlabel="originalSender()"]
+        ResolutionRegistry -> L2Messenger [headlabel="originalSender()"]
+        RequestManager -> ResolutionRegistry [headlabel="fillers()"]
+    }
+    
+    l1dummy -> l2dummy [style=invis]
+    l1dummy -> Resolver [style=invis]
+    l2dummy -> RequestManager [style=invis]
+}
