@@ -5,11 +5,7 @@
   >
     <template #header>
       <div class="relative text-center text-xl" data-test="header">
-        {{ shortenAmountDecimals }}
-        {{ transfer.sourceAmount.token.symbol }}
-        &nbsp;to&nbsp;
-        {{ transfer.targetChain.name }}
-
+        {{ formattedAmount }}&nbsp;to&nbsp;{{ transfer.targetChain.name }}
         <div
           class="w-6 h-6 rounded-full absolute right-0 top-0"
           :class="[statusBackgroundColorClass]"
@@ -42,40 +38,23 @@ interface Props {
 
 const props = defineProps<Props>();
 const isExpanded = ref(props.transfer.active);
-const shortenAmountDecimals = computed(() => {
-  const { decimalAmount } = props.transfer.sourceAmount;
-  const [beforeDot, afterDot] = decimalAmount.split('.');
-  return `${beforeDot}.${(afterDot ?? '00').slice(0, 2)}`;
+const formattedAmount = computed(() => props.transfer.sourceAmount.format({ decimalPlaces: 2 }));
+
+const requestTransactionUrl = computed(() => {
+  const { explorerTransactionUrl } = props.transfer.sourceChain;
+  const { transactionHash } = props.transfer.requestInformation ?? {};
+  return transactionHash ? `${explorerTransactionUrl}${transactionHash}` : undefined;
 });
 
-const summary = computed(() => {
-  const { transfer } = props;
-
-  const { completed, active, failed } = transfer;
-  const statusLabel = completed ? 'Completed' : failed ? 'Failed' : active ? 'In Progress' : '';
-  const statusColor = completed ? 'green' : failed ? 'red' : active ? 'green-lime' : 'black';
-
-  const { sourceChain, requestInformation } = transfer;
-  const { transactionHash } = requestInformation ?? {};
-  const { explorerTransactionUrl } = sourceChain;
-  const requestTransactionUrl = transactionHash
-    ? `${explorerTransactionUrl}${transactionHash}`
-    : undefined;
-
-  const { date, targetAccount, sourceAmount, targetChain } = transfer;
-
-  return {
-    date,
-    amount: sourceAmount.decimalAmount,
-    tokenSymbol: sourceAmount.token.symbol,
-    sourceChainName: sourceChain.name,
-    targetChainName: targetChain.name,
-    targetAccount,
-    statusLabel,
-    statusColor,
-    requestTransactionUrl,
-  };
-});
+const summary = computed(() => ({
+  date: props.transfer.date,
+  amount: props.transfer.sourceAmount.decimalAmount,
+  tokenSymbol: props.transfer.sourceAmount.token.symbol,
+  sourceChainName: props.transfer.sourceChain.name,
+  targetChainName: props.transfer.targetChain.name,
+  targetAccount: props.transfer.targetAccount,
+  requestTransactionUrl: requestTransactionUrl.value,
+}));
 
 const status = computed(() => {
   const { completed, failed, active } = props.transfer;

@@ -39,12 +39,26 @@ describe('TokenAmount', () => {
     });
   });
 
-  describe('formattedAmount', () => {
-    it('returns the decimals value plus the token symbol', () => {
-      const token = generateToken({ decimals: 2, symbol: 'TTT' });
-      const amount = new TokenAmount({ amount: '100', token });
+  describe('format()', () => {
+    it('per defaults formats all decimals and and token symbol', () => {
+      const token = generateToken({ decimals: 4, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '12345', token });
 
-      expect(amount.formattedAmount).toBe('1.0 TTT');
+      expect(amount.format()).toBe('1.2345 TTT');
+    });
+
+    it('can shorten decimals decimal places', () => {
+      const token = generateToken({ decimals: 4, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '12345', token });
+
+      expect(amount.format({ decimalPlaces: 2 })).toBe('1.23 TTT');
+    });
+
+    it('can hide token symbol', () => {
+      const token = generateToken({ decimals: 4, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '12345', token });
+
+      expect(amount.format({ withSymbol: false })).toBe('1.2345');
     });
   });
 

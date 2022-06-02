@@ -13,7 +13,7 @@ export function useRequestFee(
   const amount = ref<EthereumAmount>(new EthereumAmount('0'));
 
   const available = computed(() => !!provider.value && !!requestManagerAddress.value);
-  const formattedAmount = computed(() => amount.value.formattedAmount);
+  const formattedAmount = computed(() => amount.value.format());
 
   const updateRequestFeeAmount = async () => {
     error.value = '';

@@ -26,8 +26,20 @@ export class TokenAmount implements Encodable<TokenAmountData> {
     return this.amount.format(this.token.decimals);
   }
 
-  get formattedAmount(): string {
-    return `${this.decimalAmount} ${this.token.symbol}`;
+  public format(options?: { decimalPlaces?: number; withSymbol?: boolean }): string {
+    let formattedAmount = this.decimalAmount;
+
+    if (options?.decimalPlaces) {
+      const beforeDot = formattedAmount.split('.')[0];
+      const totalLength = beforeDot.length + options.decimalPlaces + 1;
+      formattedAmount = formattedAmount.slice(0, totalLength);
+    }
+
+    if (options?.withSymbol ?? true) {
+      formattedAmount += ` ${this.token.symbol}`;
+    }
+
+    return formattedAmount;
   }
 
   public encode(): TokenAmountData {
