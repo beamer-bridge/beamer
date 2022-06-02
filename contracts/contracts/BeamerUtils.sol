@@ -2,6 +2,11 @@
 pragma solidity ^0.8.12;
 
 library BeamerUtils {
+    struct FillInfo {
+        address filler;
+        bytes32 fillId;
+    }
+
     function createRequestHash(
         uint256 requestId,
         uint256 sourceChainId,
