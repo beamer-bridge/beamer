@@ -1,0 +1,18 @@
+{
+    "L1": {
+        "name": "geth L1",
+        "rpc": "http://localhost:9545",
+        "chain_id": 31337
+    },
+    "L2": [
+        {
+            "name": "Optimism",
+            "rpc": "http://localhost:8545",
+            "chain_id": 17,
+            "finalization_time": 3600,
+            "proof_submitter": "OptimismProofSubmitter",
+            "l1_messenger": ["OptimismL1Messenger", ${l1_messenger_args}],
+            "l2_messenger": "OptimismL2Messenger"
+        }
+    ]
+}
