@@ -3,13 +3,14 @@ import { computed, ref } from 'vue';
 
 import type { EthereumProvider } from '@/services/web3-provider';
 import type { ChainConfigMapping } from '@/types/config';
+import type { Chain } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
 export function useChainSelection(
   provider: Ref<EthereumProvider | undefined>,
   chains: Ref<ChainConfigMapping>,
 ) {
-  const _selectedSourceChain = ref<SelectorOption<number> | null>(null);
+  const _selectedSourceChain = ref<SelectorOption<Chain> | null>(null);
   const selectedSourceChain = computed({
     get() {
       return (
@@ -17,7 +18,7 @@ export function useChainSelection(
         getChainSelectorOption(String(provider.value?.chainId.value), chains.value)
       );
     },
-    set(chain: SelectorOption<number> | null) {
+    set(chain: SelectorOption<Chain> | null) {
       _selectedSourceChain.value = chain;
     },
   });
@@ -29,15 +30,15 @@ export function useChainSelection(
     sourceChains.value.filter((chain) => chain?.value !== selectedSourceChain.value?.value),
   );
 
-  const switchChain = async (chainId: Ref<number>) => {
-    if (provider.value && chainId.value !== provider.value.chainId.value) {
+  const switchChain = async (chain: Ref<Chain>) => {
+    if (provider.value && chain.value.identifier !== provider.value.chainId.value) {
       try {
-        const isSuccessfulSwitch = await provider.value.switchChain(chainId.value);
+        const isSuccessfulSwitch = await provider.value.switchChain(chain.value.identifier);
         if (isSuccessfulSwitch === null) {
           await provider.value.addChain({
-            chainId: chainId.value,
-            name: chains.value[chainId.value].name,
-            rpcUrl: chains.value[chainId.value].rpcUrl,
+            chainId: chain.value.identifier,
+            name: chain.value.name,
+            rpcUrl: chain.value.rpcUrl,
           });
         }
       } catch (error) {
@@ -52,11 +53,17 @@ export function useChainSelection(
 function getChainSelectorOption(
   chainId: string,
   chains: ChainConfigMapping,
-): SelectorOption<number> | null {
-  return chains[chainId]
-    ? {
-        value: Number(chainId),
-        label: chains[chainId]?.name,
-      }
-    : null;
+): SelectorOption<Chain> | null {
+  if (chains[chainId]) {
+    const chain: Chain = {
+      identifier: Number(chainId),
+      name: chains[chainId].name,
+      rpcUrl: chains[chainId].rpcUrl,
+      requestManagerAddress: chains[chainId].requestManagerAddress,
+      fillManagerAddress: chains[chainId].fillManagerAddress,
+      explorerTransactionUrl: chains[chainId].explorerTransactionUrl,
+    };
+    return { value: chain, label: chain.name };
+  }
+  return null;
 }

@@ -21,10 +21,10 @@
         </div>
         <div class="flex-1 flex flex-col">
           <FormKit
-            id="tokenAddress"
+            id="token"
             v-model="selectedToken"
             type="selector"
-            name="tokenAddress"
+            name="token"
             :options="tokens"
             placeholder="Token"
             validation="required"
@@ -50,7 +50,7 @@
       <FormKit
         v-model="selectedSourceChain"
         type="selector"
-        name="sourceChainId"
+        name="sourceChain"
         label="From"
         :options="sourceChains"
         placeholder="Source Rollup"
@@ -79,7 +79,7 @@
       <FormKit
         outer-class="mb-4"
         type="selector"
-        name="targetChainId"
+        name="targetChain"
         label="To"
         :options="targetChains"
         placeholder="Target Rollup"
@@ -182,7 +182,7 @@ const {
   run: runFaucetRequest,
 } = useFaucet(
   signer,
-  computed(() => selectedSourceChain.value?.value),
+  computed(() => selectedSourceChain.value?.value.identifier),
 );
 </script>
 

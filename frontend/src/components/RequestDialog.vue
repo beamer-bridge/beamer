@@ -35,7 +35,7 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 import type { ChainWithTokens } from '@/types/config';
-import type { Chain, Token } from '@/types/data';
+import type { Token } from '@/types/data';
 import type { RequestFormResult } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -56,21 +56,13 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
   if (!provider.value || !signer.value) {
     throw new Error('No signer available!');
   }
-  const sourceConfiguration = configuration.chains[formResult.sourceChainId.value];
-  const sourceChain = parseChainFromConfiguration(sourceConfiguration);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const sourceToken = parseTokenFromChainConfiguration(
-    sourceConfiguration,
-    formResult.tokenAddress.label,
-  )!;
-  const sourceAmount = TokenAmount.parse(formResult.amount, sourceToken);
+  const sourceAmount = TokenAmount.parse(formResult.amount, formResult.token.value);
 
-  const targetConfiguration = configuration.chains[formResult.targetChainId.value];
-  const targetChain = parseChainFromConfiguration(targetConfiguration);
+  const targetConfiguration = configuration.chains[formResult.targetChain.value.identifier];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const targetToken = parseTokenFromChainConfiguration(
     targetConfiguration,
-    formResult.tokenAddress.label,
+    formResult.token.label,
   )!;
   const targetAmount = TokenAmount.parse(formResult.amount, targetToken);
   const validityPeriod = new UInt256('600');
@@ -78,9 +70,9 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
 
   const transfer = reactive(
     Transfer.new(
-      sourceChain,
+      formResult.sourceChain.value,
       sourceAmount,
-      targetChain,
+      formResult.targetChain.value,
       targetAmount,
       formResult.toAddress,
       validityPeriod,
@@ -99,17 +91,6 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
     console.log(transfer);
   }
 };
-
-function parseChainFromConfiguration(configuration: ChainWithTokens): Chain {
-  return {
-    identifier: configuration.identifier,
-    name: configuration.name,
-    rpcUrl: configuration.rpcUrl,
-    requestManagerAddress: configuration.requestManagerAddress,
-    fillManagerAddress: configuration.fillManagerAddress,
-    explorerTransactionUrl: configuration.explorerTransactionUrl,
-  };
-}
 
 function parseTokenFromChainConfiguration(
   configuration: ChainWithTokens,

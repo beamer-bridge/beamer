@@ -1,9 +1,11 @@
+import type { Chain, Token } from './data';
+
 export type RequestFormResult = {
   amount: string;
-  sourceChainId: SelectorOption<number>;
-  targetChainId: SelectorOption<number>;
+  sourceChain: SelectorOption<Chain>;
+  targetChain: SelectorOption<Chain>;
   toAddress: string;
-  tokenAddress: SelectorOption<string>;
+  token: SelectorOption<Token>;
 };
 
 export type SelectorOption<T> = {

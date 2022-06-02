@@ -1,7 +1,6 @@
 import type { Ref } from 'vue';
 import { computed, ref } from 'vue';
 
-import { getTokenDecimals } from '@/services/transactions/token';
 import type { EthereumProvider } from '@/services/web3-provider';
 import type { ChainConfigMapping } from '@/types/config';
 import type { Token } from '@/types/data';
@@ -18,29 +17,23 @@ export function useTokenSelection(
     ),
   );
 
-  const _selectedToken = ref<SelectorOption<string> | null>(null);
+  const _selectedToken = ref<SelectorOption<Token> | null>(null);
   const selectedToken = computed({
     get() {
       return _selectedToken.value;
     },
-    set(token: SelectorOption<string> | null) {
+    set(token: SelectorOption<Token> | null) {
       _selectedToken.value = token;
     },
   });
-  const selectedTokenAddress = computed(() => selectedToken.value?.value);
+  const selectedTokenAddress = computed(() => selectedToken.value?.value.address);
 
   const addTokenToProvider = async () => {
     if (!provider.value || !selectedToken.value) {
       throw new Error('Provider or token missing!');
     }
     try {
-      const decimals = await getTokenDecimals(provider.value, selectedToken.value.value);
-
-      await provider.value.addToken({
-        address: selectedToken.value.value,
-        symbol: selectedToken.value.label,
-        decimals: Number(decimals),
-      });
+      await provider.value.addToken(selectedToken.value.value);
     } catch (error) {
       console.error(error);
     }
@@ -57,9 +50,9 @@ export function useTokenSelection(
   };
 }
 
-function getTokenSelectorOption(token: Token): SelectorOption<string> {
+function getTokenSelectorOption(token: Token): SelectorOption<Token> {
   return {
-    value: token.address,
+    value: token,
     label: token.symbol,
   };
 }
