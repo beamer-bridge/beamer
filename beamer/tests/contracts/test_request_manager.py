@@ -4,10 +4,11 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
+from beamer.tests.agent.unit.utils import FILL_ID
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import RM_C_FIELD_TERMINATION
 from beamer.tests.util import alloc_accounts, create_fill_hash, earnings, make_request
-from beamer.typing import ClaimId, Termination
+from beamer.typing import ClaimId, FillId, Termination
 
 
 def test_request_invalid_target_chain(request_manager, token):
@@ -442,6 +443,79 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     assert owner_earnings() == claim_stake
     assert web3.eth.get_balance(claimer1.address) == claimer1_eth_balance
     assert web3.eth.get_balance(claimer2.address) == claimer2_eth_balance - claim_stake
+
+
+@pytest.mark.parametrize("second_fill_id", [FILL_ID, FillId(b"wrong_fill_id")])
+def test_withdraw_second_claim_same_claimer_different_fill_ids(
+    request_manager, token, claim_stake, claim_period, second_fill_id
+):
+    """
+    Test withdraw with two claims by the same address. First one is successful.
+    If the second fill id is also equal to the first, this is an identical claim.
+    The claimer should also win.
+    If the fill id is different the challenger must win,
+    even though the claimer was successful with a different claim and fill id.
+    """
+    requester, claimer, challenger = alloc_accounts(3)
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(claimer) == 0
+
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+
+    claim1_tx = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
+    claim1_id = claim1_tx.return_value
+
+    claim2_tx = request_manager.claimRequest(
+        request_id, second_fill_id, {"from": claimer, "value": claim_stake}
+    )
+    claim2_id = claim2_tx.return_value
+
+    challenger_eth_balance = web3.eth.get_balance(challenger.address)
+    assert web3.eth.get_balance(challenger.address) == challenger_eth_balance
+    request_manager.challengeClaim(claim2_id, {"from": challenger, "value": claim_stake + 1})
+    assert web3.eth.get_balance(challenger.address) == challenger_eth_balance - claim_stake - 1
+
+    # Withdraw must fail when claim period is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim1_id, {"from": claimer})
+    # Withdraw must fail when claim period is not over
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim2_id, {"from": claimer})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=claim_period)
+
+    # Withdraw must fail because it was challenged
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim2_id, {"from": claimer})
+
+    current_claimer_eth_balance = web3.eth.get_balance(claimer.address)
+
+    withdraw_tx = request_manager.withdraw(claim1_id, {"from": claimer})
+    assert "DepositWithdrawn" in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert web3.eth.get_balance(claimer.address) == current_claimer_eth_balance + claim_stake
+    assert token.balanceOf(claimer) == transfer_amount
+
+    claim_winner = claimer if second_fill_id == FILL_ID else challenger
+    claim_loser = challenger if claimer == claim_winner else claimer
+
+    claim_winner_balance = web3.eth.get_balance(claim_winner.address)
+    claim_loser_balance = web3.eth.get_balance(claim_loser.address)
+
+    # Even though the challenge period of claim2 isn't over, the claim can be resolved now.
+    withdraw_tx = request_manager.withdraw(claim2_id, {"from": claim_winner})
+    assert "DepositWithdrawn" not in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert web3.eth.get_balance(claim_winner.address) == claim_winner_balance + 2 * claim_stake + 1
+    assert web3.eth.get_balance(claim_loser.address) == claim_loser_balance
 
 
 def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_stake, claim_period):
