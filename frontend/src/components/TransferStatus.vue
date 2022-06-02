@@ -18,7 +18,7 @@
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-10 items-center text-lg" data-test="body">
+      <div class="flex flex-col gap-5 items-center text-lg" data-test="body">
         <TransferSummary v-bind="summary" />
         <Progress v-if="!transfer.completed" :steps="progressSteps" />
       </div>
@@ -49,16 +49,29 @@ const shortenAmountDecimals = computed(() => {
 const summary = computed(() => {
   const { transfer } = props;
 
+  const { completed, active, failed } = transfer;
+  const statusLabel = completed ? 'Completed' : failed ? 'Failed' : active ? 'In Progress' : '';
+  const statusColor = completed ? 'green' : failed ? 'red' : active ? 'green-lime' : 'black';
+
+  const { sourceChain, requestInformation } = transfer;
+  const { transactionHash } = requestInformation ?? {};
+  const { explorerTransactionUrl } = sourceChain;
+  const requestTransactionUrl = transactionHash
+    ? `${explorerTransactionUrl}${transactionHash}`
+    : undefined;
+
+  const { date, targetAccount, sourceAmount, targetChain } = transfer;
+
   return {
-    date: transfer.date,
-    amount: transfer.sourceAmount.decimalAmount,
-    tokenSymbol: transfer.sourceAmount.token.symbol,
-    sourceChainName: transfer.sourceChain.name,
-    targetChainName: transfer.targetChain.name,
-    targetAccount: transfer.targetAccount,
-    requestTransactionUrl: transfer.requestInformation?.transactionHash
-      ? `${transfer.sourceChain.explorerTransactionUrl}${transfer.requestInformation?.transactionHash}`
-      : undefined,
+    date,
+    amount: sourceAmount.decimalAmount,
+    tokenSymbol: sourceAmount.token.symbol,
+    sourceChainName: sourceChain.name,
+    targetChainName: targetChain.name,
+    targetAccount,
+    statusLabel,
+    statusColor,
+    requestTransactionUrl,
   };
 });
 
@@ -73,7 +86,7 @@ const progressSteps = computed(() =>
 
 const statusBackgroundColorClass = computed(() => {
   const { active, completed, failed } = props.transfer;
-  return failed ? 'bg-orange-dark' : completed ? 'bg-green' : active ? 'bg-green-lime' : 'bg-grey';
+  return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-green-lime' : 'bg-grey';
 });
 
 watch(

@@ -2,7 +2,7 @@
   <div data-content="" class="step relative !min-h-[4rem]" :class="stepClasses">
     <div class="absolute left-20 text-left" :class="contentClasses">
       {{ label }}
-      <span v-if="errorMessage" class="text-orange-dark"> <br />{{ errorMessage }} </span>
+      <span v-if="errorMessage" class="text-red"> <br />{{ errorMessage }} </span>
     </div>
   </div>
 </template>
@@ -55,7 +55,7 @@ const contentClasses = computed(() => ({
 }
 
 .steps .step--failed:after {
-  @apply border-teal bg-orange-dark;
+  @apply border-teal bg-red;
   border-width: 2px;
 }
 

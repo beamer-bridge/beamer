@@ -91,36 +91,62 @@ describe('TransferStatus.vue', () => {
     });
   });
 
-  it('shows transfer summary with correct data in the body', () => {
-    const data = generateTransferData({
-      date: 1234,
-      sourceAmount: generateTokenAmountData({
-        amount: '1',
-        token: generateToken({ symbol: 'TTT', decimals: 0 }),
-      }),
-      sourceChain: generateChain({
-        name: 'Source Chain',
-        explorerTransactionUrl: 'https://test.explorer/tx/',
-      }),
-      targetChain: generateChain({ name: 'Target Chain' }),
-      targetAccount: '0xTargetAccount',
-      requestInformation: generateRequestInformationData({ transactionHash: '0xHash' }),
-    });
-    const transfer = new Transfer(data);
-    const wrapper = createWrapper({ transfer });
-    const summary = wrapper.findComponent(TransferSummary);
+  describe('shows transfer summary', async () => {
+    it('provides correct transfer metadata', () => {
+      const data = generateTransferData({
+        date: 1234,
+        sourceAmount: generateTokenAmountData({
+          amount: '1',
+          token: generateToken({ symbol: 'TTT', decimals: 0 }),
+        }),
+        sourceChain: generateChain({
+          name: 'Source Chain',
+          explorerTransactionUrl: 'https://test.explorer/tx/',
+        }),
+        targetChain: generateChain({ name: 'Target Chain' }),
+        targetAccount: '0xTargetAccount',
+        requestInformation: generateRequestInformationData({ transactionHash: '0xHash' }),
+      });
+      const transfer = new Transfer(data);
+      const wrapper = createWrapper({ transfer });
+      const summary = wrapper.findComponent(TransferSummary);
 
-    expect(summary.exists()).toBeTruthy();
-    expect(summary.isVisible()).toBeTruthy();
-    expect(summary.props()).toEqual(expect.objectContaining({ date: new Date(1234) }));
-    expect(summary.props()).toContain({ amount: '1' });
-    expect(summary.props()).toContain({ tokenSymbol: 'TTT' });
-    expect(summary.props()).toContain({ sourceChainName: 'Source Chain' });
-    expect(summary.props()).toContain({ targetChainName: 'Target Chain' });
-    expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
-    expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
-    expect(summary.props()).toContain({
-      requestTransactionUrl: 'https://test.explorer/tx/0xHash',
+      expect(summary.exists()).toBeTruthy();
+      expect(summary.isVisible()).toBeTruthy();
+      expect(summary.props()).toEqual(expect.objectContaining({ date: new Date(1234) }));
+      expect(summary.props()).toContain({ amount: '1' });
+      expect(summary.props()).toContain({ tokenSymbol: 'TTT' });
+      expect(summary.props()).toContain({ sourceChainName: 'Source Chain' });
+      expect(summary.props()).toContain({ targetChainName: 'Target Chain' });
+      expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
+      expect(summary.props()).toContain({ targetAccount: '0xTargetAccount' });
+      expect(summary.props()).toContain({
+        requestTransactionUrl: 'https://test.explorer/tx/0xHash',
+      });
+    });
+
+    it('sets status to in progress when transfer is active', () => {
+      const transfer = generateTransfer({ active: true });
+      const wrapper = createWrapper({ transfer });
+      const summary = wrapper.findComponent(TransferSummary);
+
+      expect(summary.props()).toContain({ statusLabel: 'In Progress', statusColor: 'green-lime' });
+    });
+
+    it('sets status to completed when transfer has completed', () => {
+      const transfer = generateTransfer({ completed: true });
+      const wrapper = createWrapper({ transfer });
+      const summary = wrapper.findComponent(TransferSummary);
+
+      expect(summary.props()).toContain({ statusLabel: 'Completed', statusColor: 'green' });
+    });
+
+    it('sets status to failed when transfer has failed', () => {
+      const transfer = generateTransfer({ failed: true });
+      const wrapper = createWrapper({ transfer });
+      const summary = wrapper.findComponent(TransferSummary);
+
+      expect(summary.props()).toContain({ statusLabel: 'Failed', statusColor: 'red' });
     });
   });
 

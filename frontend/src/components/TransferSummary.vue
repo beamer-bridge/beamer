@@ -11,6 +11,11 @@
       {{ targetAccount }}
     </div>
 
+    <div v-if="statusLabel.length > 0">
+      Status:
+      <span :class="statusClasses">{{ statusLabel }}</span>
+    </div>
+
     <a
       v-if="requestTransactionUrl"
       class="underline"
@@ -23,6 +28,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 interface Props {
   readonly date: Date;
   readonly amount: string;
@@ -30,8 +37,15 @@ interface Props {
   readonly sourceChainName: string;
   readonly targetChainName: string;
   readonly targetAccount: string;
+  readonly statusLabel: string;
+  readonly statusColor?: string;
   readonly requestTransactionUrl?: string;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  statusColor: 'black',
+  requestTransactionUrl: undefined,
+});
+
+const statusClasses = computed(() => [`text-${props.statusColor}`]);
 </script>
