@@ -107,15 +107,14 @@ jobs:
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
 
-      - name: Bring the stack up
-        working-directory: docker/optimism/ops
-        run: |
-          ./scripts/stats.sh &
-          docker-compose -f docker-compose.yml -f docker-compose-nobuild.yml up --scale relayer=1 -d
+      - name: Start local Optimism chain
+        run: bash docker/optimism/optimism.sh up
 
-      - name: Wait for the Sequencer node
-        working-directory: docker/optimism/ops
-        run: ./scripts/wait-for-sequencer.sh
+      - name: Deploy Beamer contracts on local Optimism
+        run: bash docker/optimism/optimism.sh deploy-beamer
 
-      - name: Run E2E tests
-        run: sh ./docker/optimism.sh e2e
+      - name: Optimism E2E test
+        run: bash docker/optimism/optimism.sh e2e-test
+
+      - name: Stop local Optimism chain
+        run: bash docker/optimism/optimism.sh down
