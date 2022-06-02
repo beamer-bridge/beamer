@@ -41,6 +41,11 @@ class InitiateL1ResolutionEvent(Event):
 
 
 @dataclass(frozen=True)
+class InitiateL1InvalidationEvent(Event):
+    claim_id: ClaimId
+
+
+@dataclass(frozen=True)
 class TxEvent(Event):
     tx_hash: HexBytes
 

@@ -286,9 +286,6 @@ def process_claims(context: Context) -> None:
             # TODO: See https://github.com/beamer-bridge/beamer/issues/674
             continue
 
-        # TODO: Maybe trigger L1 forwarding
-        #  See https://github.com/beamer-bridge/beamer/issues/669
-
         # Check if claim is an honest claim. Honest claims can be ignored.
         # This only counts for claims, where the agent is not the filler
         if claim.valid_claim_for_request(request) and request.filler != context.address:

@@ -100,36 +100,6 @@ def test_request_garbage_collection_with_claim():
     assert len(context.claims) == 0
 
 
-def test_handle_initiate_l1_resolution():
-    context, config = make_context()
-
-    request = make_request()
-    context.requests.add(request.id, request)
-
-    event = InitiateL1ResolutionEvent(
-        chain_id=TARGET_CHAIN_ID,
-        request_id=REQUEST_ID,
-        claim_id=CLAIM_ID,
-    )
-
-    # Without a claim, this must fail
-    assert process_event(event, context) == (False, None)
-
-    claim = make_claim_challenged(request, claimer=config.account.address)
-    context.claims.add(claim.id, claim)
-
-    # Must only be called if request is filled
-    with pytest.raises(AssertionError, match="Request not yet filled"):
-        process_event(event, context)
-
-    # Check that task is added to resolution pool
-    context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
-    request.fill(config.account.address, b"", b"")
-    request.try_to_claim()
-    assert process_event(event, context) == (True, None)
-    assert context.resolution_pool.submit.called  # type: ignore  # pylint:disable=no-member
-
-
 def test_handle_request_resolved():
     context, config = make_context()
     filler = make_address()

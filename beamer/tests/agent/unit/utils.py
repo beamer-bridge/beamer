@@ -158,7 +158,7 @@ def make_context() -> Tuple[Context, Config]:
         },
         config=config,
         web3_l1=MagicMock(),
-        resolution_pool=MagicMock(),
+        task_pool=MagicMock(),
         l1_resolutions={},
     )
     context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore

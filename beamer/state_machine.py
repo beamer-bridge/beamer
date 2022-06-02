@@ -22,13 +22,14 @@ from beamer.events import (
     Event,
     FillHashInvalidated,
     HashInvalidated,
+    InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
     RequestResolved,
 )
-from beamer.l1_resolution import run_relayer
+from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
@@ -49,8 +50,8 @@ class Context:
     latest_blocks: dict[ChainId, BlockData]
     config: Config
     web3_l1: Web3
-    resolution_pool: Executor
-    l1_resolutions: dict[RequestId, Future]
+    task_pool: Executor
+    l1_resolutions: dict[tuple[RequestId, ClaimId], Future]
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -88,6 +89,9 @@ def process_event(event: Event, context: Context) -> HandlerResult:
 
     elif isinstance(event, InitiateL1ResolutionEvent):
         return _handle_initiate_l1_resolution(event, context)
+
+    elif isinstance(event, InitiateL1InvalidationEvent):
+        return _handle_initiate_l1_invalidation(event, context)
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -217,22 +221,30 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     if claim.is_started:
         return False, None
 
+    events: list[Event] = []
+    if not claim.is_invalidated_l1_resolved and claim.invalidation_tx is not None:
+        events.append(
+            InitiateL1InvalidationEvent(
+                chain_id=request.target_chain_id,  # Resolution happens on the target chain
+                claim_id=claim.id,
+            )
+        )
+
     # this is at least the second ClaimMade event for this claim id
     assert event.last_challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
     try:
         claim.challenge(event)
     except TransitionNotAllowed:
-        return False, None
+        return False, events
 
-    events: Optional[list[Event]] = None
     if not request.is_l1_resolved and request.fill_tx is not None:
-        events = [
+        events.append(
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
                 request_id=request.id,
                 claim_id=claim.id,
             )
-        ]
+        )
 
     log.info("Request claimed", request=request, claim_id=event.claim_id)
     return True, events
@@ -317,8 +329,8 @@ def _handle_initiate_l1_resolution(
 
     assert request.fill_tx is not None, "Request not yet filled"
     if _l1_resolution_criteria_fulfilled(claim, context):
-        future = context.resolution_pool.submit(
-            run_relayer,
+        future = context.task_pool.submit(
+            run_relayer_for_tx,
             context.config.l1_rpc_url,
             context.config.l2b_rpc_url,
             context.config.account.key,
@@ -329,14 +341,56 @@ def _handle_initiate_l1_resolution(
             try:
                 f.result()
                 assert request is not None, "Request object missing"
-                del context.l1_resolutions[request.id]
+                assert claim is not None, "Claim object missing"
+
+                del context.l1_resolutions[(request.id, claim.id)]
             except Exception as ex:
-                log.error("L1 Resolution failed", ex=ex)
+                log.error("L1 resolution failed", ex=ex)
 
         future.add_done_callback(on_future_done)
-        context.l1_resolutions[request.id] = future
+        context.l1_resolutions[(request.id, claim.id)] = future
         request.l1_resolve()
 
-        log.info("Initiated L1 resolution", request=request, claim_id=event.claim_id)
+        log.info("Initiated L1 resolution", request=request, claim=claim)
+
+    return True, None
+
+
+def _handle_initiate_l1_invalidation(
+    event: InitiateL1InvalidationEvent, context: Context
+) -> HandlerResult:
+    claim = context.claims.get(event.claim_id)
+    if claim is None:
+        return False, None
+
+    # A request should never be dropped before all claims are finalized
+    request = context.requests.get(claim.request_id)
+    assert request is not None, "Request object missing"
+
+    assert claim.invalidation_tx is not None, "Claim not invalidated"
+    if _l1_resolution_criteria_fulfilled(claim, context):
+        future = context.task_pool.submit(
+            run_relayer_for_tx,
+            context.config.l1_rpc_url,
+            context.config.l2b_rpc_url,
+            context.config.account.key,
+            claim.invalidation_tx,
+        )
+
+        def on_future_done(f: Future) -> None:
+            try:
+                f.result()
+                assert request is not None, "Request object missing"
+                assert claim is not None, "Claim object missing"
+
+                del context.l1_resolutions[(request.id, claim.id)]
+            except Exception as ex:
+                log.error("L1 invalidation failed", ex=ex)
+
+        future.add_done_callback(on_future_done)
+        context.l1_resolutions[(request.id, claim.id)] = future
+        claim.l1_invalidate()
+
+        log.info("Initiated L1 invalidation", request=request, claim=claim)
 
     return True, None
