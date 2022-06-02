@@ -75,7 +75,7 @@ export class MultiStepAction {
         await method();
         step.complete();
       } catch (error) {
-        step.setErrorMessage(error.message ?? error);
+        step.setErrorMessage((error as { message?: string }).message ?? 'Unknown failure!');
         throw error;
       } finally {
         step.deactivate();

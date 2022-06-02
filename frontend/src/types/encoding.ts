@@ -1,9 +1,9 @@
 type EncodableBaseTypes = boolean | string | number | undefined;
 
-type EncodableArray = Array<EncodableBaseTypes>;
+type EncodableArray = Array<EncodableData>;
 
 interface EncodableObject {
-  [key: string]: EncodableBaseTypes | EncodableArray | EncodableObject;
+  [key: string]: EncodableData;
 }
 
 export type EncodableData = EncodableBaseTypes | EncodableArray | EncodableObject;

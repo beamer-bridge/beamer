@@ -1,4 +1,4 @@
-import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
+import WalletConnect from '@walletconnect/web3-provider';
 import { hexValue } from 'ethers/lib/utils';
 
 import type { Eip1193Provider } from '@/services/web3-provider';
@@ -9,7 +9,7 @@ export async function createWalletConnectProvider(rpcList: {
 }): Promise<WalletConnectProvider | undefined> {
   const provider = new WalletConnect({
     rpc: rpcList,
-  });
+  }) as Eip1193Provider & WalletConnect;
 
   await provider.enable();
 
