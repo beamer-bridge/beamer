@@ -3,8 +3,8 @@ import { createTestingPinia } from '@pinia/testing';
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
 
+import Transfer from '@/components/Transfer.vue';
 import TransferHistory from '@/components/TransferHistory.vue';
-import TransferStatus from '@/components/TransferStatus.vue';
 import * as groupingComposable from '@/composables/useTransferGrouping';
 import * as navigation from '@/router/navigation';
 import { generateTransfer } from '~/utils/data_generators';
@@ -72,7 +72,7 @@ describe('TransferHistory.vue', () => {
     expect(wrapper.text()).toContain('window two');
   });
 
-  it('displays a transfer status for each transfer in all groups', async () => {
+  it('displays a transfer for each transfer in all groups', async () => {
     const transferOne = generateTransfer();
     const transferTwo = generateTransfer();
     const transferThree = generateTransfer();
@@ -83,14 +83,12 @@ describe('TransferHistory.vue', () => {
       ]),
     });
     const wrapper = await createWrapper();
-    const transferStatus = wrapper.findAllComponents(TransferStatus);
+    const transfers = wrapper.findAllComponents(Transfer);
 
-    expect(transferStatus).toHaveLength(3);
-    expect(transferStatus[0].props()).toEqual(expect.objectContaining({ transfer: transferOne }));
-    expect(transferStatus[1].props()).toEqual(expect.objectContaining({ transfer: transferTwo }));
-    expect(transferStatus[2].props()).toEqual(
-      expect.objectContaining({ transfer: transferThree }),
-    );
+    expect(transfers).toHaveLength(3);
+    expect(transfers[0].props()).toEqual(expect.objectContaining({ transfer: transferOne }));
+    expect(transfers[1].props()).toEqual(expect.objectContaining({ transfer: transferTwo }));
+    expect(transfers[2].props()).toEqual(expect.objectContaining({ transfer: transferThree }));
   });
 
   it('shows a button that switches back to requests', async () => {

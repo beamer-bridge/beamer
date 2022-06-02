@@ -29,7 +29,7 @@
         </div>
 
         <LazyWrapper :threshold="0.0">
-          <TransferStatus
+          <TransferComponent
             v-for="(transfer, groupTransferIndex) of group.transfers"
             :key="transfer.requestInformation?.identifier?.asString ?? groupTransferIndex"
             :transfer="transfer"
@@ -64,7 +64,7 @@ import type { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import LazyWrapper from '@/components/layout/LazyWrapper.vue';
 import SafeTeleport from '@/components/layout/SafeTeleport.vue';
-import TransferStatus from '@/components/TransferStatus.vue';
+import TransferComponent from '@/components/Transfer.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTransferGrouping } from '@/composables/useTransferGrouping';
 import { switchToRequestDialog } from '@/router/navigation';
