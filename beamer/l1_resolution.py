@@ -24,7 +24,7 @@ def relayer_executable_exists() -> bool:
     return False
 
 
-def run_relayer(l1_rpc: URL, l2_rpc: URL, privkey: str, tx_hash: HexBytes) -> None:
+def run_relayer_for_tx(l1_rpc: URL, l2_rpc: URL, privkey: str, tx_hash: HexBytes) -> None:
     subprocess.run(
         [
             _RELAYER_EXECUTABLE,
