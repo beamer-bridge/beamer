@@ -1,5 +1,5 @@
 <template>
-  <ul class="steps steps-vertical text-left w-full p-5">
+  <ul class="steps steps-vertical text-left w-full px-5">
     <ProgressStep v-for="(step, index) in steps" :key="index" v-bind="step" />
   </ul>
 </template>
