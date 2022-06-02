@@ -1,61 +1,75 @@
 #!/usr/bin/env bash
-ROOT=$(dirname $(dirname "$(realpath "$0")"))
-DOCKER_COMPOSE_FILES="-f ${ROOT}/beamer/docker/optimism/ops/docker-compose.yml -f ${ROOT}/beamer/docker/optimism/ops/docker-compose-nobuild.yml"
+. "$(realpath $(dirname $0))/../scripts/common.sh"
+
+ROOT="$(get_root_dir)"
+OPTIMISM="${ROOT}/docker/optimism/optimism"
+
+# Deployer's address & private key.
+ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
+PRIVKEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+CACHE_DIR=$(obtain_cache_dir $0)
+DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
+DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/optimism-local.json"
+KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
+
+ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
+echo Beamer deployer\'s keyfile: ${KEYFILE}
 
 down() {
-    echo -e "\nShutting down the end-to-end environment"
-    echo "${DOCKER_COMPOSE_FILES}"
-    docker-compose "${DOCKER_COMPOSE_FILES}" down
-}
-
-setup_chains() {
-    # It's currently not possible to define networks in a per-project way
-    # Instead, update the config
-    poetry run brownie networks list | grep -q l1 || \
-        poetry run brownie networks add Ethereum l1 host="http://0.0.0.0:9545" chainid=1337
-    poetry run brownie networks list | grep -q l2 || \
-        poetry run brownie networks add Ethereum l2 host="http://0.0.0.0:8545" chainid=420
+    echo "Shutting down the end-to-end environment"
+    make -C ${OPTIMISM}/ops down
 }
 
 up() {
-    echo -e "\nStarting the end-to-end environment"
-    docker-compose "{DOCKER_COMPOSE_FILES}" --scale relayer=1 -d
+    echo "Starting the end-to-end environment"
+    docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
+    docker compose ${docker_compose_file} up -d
 
-    echo -e "\nWait to make sure all services are up and running"
-    sh "${ROOT}/docker/optimism/ops/scripts/wait-for-sequencer.sh"
+    echo "Wait to make sure all services are up and running"
+    # The current wait-for-sequencer.sh script in the optimism repo
+    # has a bug in that it does not specify the configuration files.
+    # So work around that here.
+    WAIT_FOR_SEQUENCER_SCRIPT=$(mktemp --suffix=-wait-for-sequencer.sh)
+    sed "s#docker-compose#docker-compose ${docker_compose_file}#" \
+            "${OPTIMISM}/ops/scripts/wait-for-sequencer.sh" > ${WAIT_FOR_SEQUENCER_SCRIPT}
+    sh ${WAIT_FOR_SEQUENCER_SCRIPT}
 
-    setup_chains
-
-    rm -rf "${ROOT}/contracts/build/deployments/"
+    # For some reason the relayer dies (presumably while not being able to
+    # connect to l2geth). So here we just run `docker compose` again to make
+    # sure the relayer is running.
+    docker compose ${docker_compose_file} up --scale relayer=1 -d
 }
 
-e2e() {
-    setup_chains &&
-    rm -rf contracts/build/deployments &&
-    export ADDRESS_FILE_PATH=$(mktemp -d)/addresses.json &&
-    addresses | tee $ADDRESS_FILE_PATH &&
-    poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_l1.py --network l1 &&
-    poetry run brownie run $(pwd)/docker/optimism-scripts/deploy_optimism.py --network l2 &&
-    poetry run brownie run $(pwd)/docker/optimism-scripts/setup_l1.py --network l1 &&
-    poetry run brownie run $(pwd)/docker/optimism-scripts/check_l2.py --network l2
+create_deployment_config_file() {
+    ADDRESS=$(addresses | jq '.["Proxy__OVM_L1CrossDomainMessenger"]')
+    sed "s/\${l1_messenger_args}/${ADDRESS}/" \
+        ${ROOT}/scripts/deployment/optimism-local-template.json \
+        > ${DEPLOYMENT_CONFIG_FILE}
+}
+
+e2e_test() {
+    l2_rpc=http://localhost:8545
+    poetry run python "${ROOT}/scripts/e2e-test.py" ${DEPLOYMENT_DIR} ${KEYFILE} ${l2_rpc}
 }
 
 usage() {
     cat <<EOF
-$0  [up | down | addresses]
+$0  [up | down | addresses | deploy-beamer | e2e-test ]
 
 Commands:
-  up           Bring up a private Optimism instance. Deploy Beamer contracts on it.
-  down         Stop the Optimism instance.
-  addresses    List deployed contracts' addresses.
-  e2e          Run a simple end-to-end test.
+  up             Bring up a private Optimism instance.
+  down           Stop the Optimism instance.
+  addresses      List deployed Optimism contracts' addresses.
+  deploy-beamer  Deploy Beamer contracts.
+  e2e-test       Run a test that verifies L2 -> L1 -> L2 messaging.
 EOF
 }
 
 addresses() {
-    docker logs ops_deployer_1 2>/dev/null | \
-    sed -nE 's/deploying "([^"]+)" .+ deployed at (.+) with.*$/\1: \2/p' | sort | \
-    python scripts/parse-addresses.py
+    docker logs ops-deployer-1 2>/dev/null |
+    sed -nE 's/deploying "([^"]+)" .+ deployed at (.+) with.*$/\1: \2/p' | sort | 
+    poetry run python ${ROOT}/scripts/parse-addresses.py
 }
 
 case $1 in
@@ -71,8 +85,13 @@ case $1 in
         addresses
         ;;
 
-    e2e)
-        e2e
+    deploy-beamer)
+        create_deployment_config_file &&
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        ;;
+
+    e2e-test)
+        e2e_test
         ;;
 
     *)
