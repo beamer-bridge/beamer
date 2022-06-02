@@ -121,6 +121,7 @@ describe('Transfer.vue', () => {
     expect(status.props()).toEqual({
       completed: true,
       failed: false,
+      expired: false,
       active: false,
     });
   });

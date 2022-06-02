@@ -2,12 +2,18 @@ import { mount } from '@vue/test-utils';
 
 import TransferStatus from '@/components/TransferStatus.vue';
 
-function createWrapper(options?: { completed?: boolean; failed?: boolean; active?: boolean }) {
+function createWrapper(options?: {
+  completed?: boolean;
+  failed?: boolean;
+  expired?: boolean;
+  active?: boolean;
+}) {
   return mount(TransferStatus, {
     shallow: true,
     props: {
       completed: options?.completed,
       failed: options?.failed,
+      expired: options?.expired,
       active: options?.active,
     },
   });
@@ -30,11 +36,19 @@ describe('TransferStatus.vue', () => {
     expect(label.classes()).toContain('text-red');
   });
 
+  it('show correct expiration label and color ignoring failure', async () => {
+    const wrapper = createWrapper({ expired: true, failed: true });
+    const label = wrapper.get('[data-test="label"]');
+
+    expect(label.text()).toBe('Expired');
+    expect(label.classes()).toContain('text-red');
+  });
+
   it('show correct in progress label and color', () => {
     const wrapper = createWrapper({ active: true });
     const label = wrapper.get('[data-test="label"]');
 
     expect(label.text()).toBe('In Progress');
-    expect(label.classes()).toContain('text-green-lime');
+    expect(label.classes()).toContain('text-green');
   });
 });

@@ -57,8 +57,8 @@ const summary = computed(() => ({
 }));
 
 const status = computed(() => {
-  const { completed, failed, active } = props.transfer;
-  return { completed, failed, active };
+  const { completed, failed, expired, active } = props.transfer;
+  return { completed, failed, expired, active };
 });
 
 const progressSteps = computed(() =>
