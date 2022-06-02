@@ -15,7 +15,6 @@ function createWrapper(options?: {
   sourceChainName?: string;
   targetChainName?: string;
   targetAccount?: string;
-  statusLabel?: string;
   requestTransactionUrl?: string;
 }) {
   return mount(TransferSummary, {
@@ -27,7 +26,6 @@ function createWrapper(options?: {
       sourceChainName: options?.sourceChainName ?? getRandomChainName(),
       targetChainName: options?.targetChainName ?? getRandomChainName(),
       targetAccount: options?.targetAccount ?? getRandomEthereumAddress(),
-      statusLabel: options?.statusLabel ?? '',
       requestTransactionUrl: options?.requestTransactionUrl,
     },
   });
@@ -69,12 +67,6 @@ describe('TransferSummary.vue', () => {
     const wrapper = createWrapper({ targetAccount: '0xTargetAccount' });
 
     expect(wrapper.text()).toContain('0xTargetAccount');
-  });
-
-  it('shows the transfer status', () => {
-    const wrapper = createWrapper({ statusLabel: 'In Progress' });
-
-    expect(wrapper.text()).toContain('Status: In Progress');
   });
 
   it('shows no explorer URL when given', () => {
