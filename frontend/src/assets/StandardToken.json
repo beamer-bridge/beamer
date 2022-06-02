@@ -221,7 +221,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "recipient",
+          "name": "to",
           "type": "address"
         },
         {
@@ -245,12 +245,12 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "sender",
+          "name": "from",
           "type": "address"
         },
         {
           "internalType": "address",
-          "name": "recipient",
+          "name": "to",
           "type": "address"
         },
         {
@@ -272,55 +272,55 @@
     }
   ],
   "allSourcePaths": {
-    "1": "/Users/paul/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/ERC20.sol",
-    "2": "/Users/paul/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/IERC20.sol",
-    "3": "/Users/paul/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/extensions/IERC20Metadata.sol",
-    "4": "/Users/paul/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/utils/Context.sol",
-    "9": "contracts/StandardToken.sol"
+    "1": "/home/manuel/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/ERC20.sol",
+    "17": "contracts/StandardToken.sol",
+    "2": "/home/manuel/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/IERC20.sol",
+    "3": "/home/manuel/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+    "6": "/home/manuel/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/Context.sol"
   },
   "ast": {
     "absolutePath": "contracts/StandardToken.sol",
     "exportedSymbols": {
       "Context": [
-        2141
+        3611
       ],
       "ERC20": [
-        2031
+        3501
       ],
       "IERC20": [
-        1473
+        2654
       ],
       "IERC20Metadata": [
-        2166
+        3931
       ],
       "StandardToken": [
-        1290
+        2362
       ]
     },
-    "id": 1291,
+    "id": 2363,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1286,
+        "id": 2358,
         "literals": [
           "solidity",
           "^",
           "0.8",
-          ".7"
+          ".12"
         ],
         "nodeType": "PragmaDirective",
-        "src": "32:23:9"
+        "src": "32:24:17"
       },
       {
-        "absolutePath": "/Users/paul/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/ERC20.sol",
-        "file": "OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/ERC20.sol",
-        "id": 1287,
+        "absolutePath": "/home/manuel/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/ERC20.sol",
+        "file": "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/ERC20.sol",
+        "id": 2359,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 1291,
-        "sourceUnit": 2032,
-        "src": "57:83:9",
+        "scope": 2363,
+        "sourceUnit": 3502,
+        "src": "58:83:17",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -329,49 +329,49 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 1288,
+              "id": 2360,
               "name": "ERC20",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 2031,
-              "src": "177:5:9"
+              "referencedDeclaration": 3501,
+              "src": "223:5:17"
             },
-            "id": 1289,
+            "id": 2361,
             "nodeType": "InheritanceSpecifier",
-            "src": "177:5:9"
+            "src": "223:5:17"
           }
         ],
         "canonicalName": "StandardToken",
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": false,
-        "id": 1290,
+        "id": 2362,
         "linearizedBaseContracts": [
-          1290,
-          2031,
-          2166,
-          1473,
-          2141
+          2362,
+          3501,
+          3931,
+          2654,
+          3611
         ],
         "name": "StandardToken",
-        "nameLocation": "160:13:9",
+        "nameLocation": "206:13:17",
         "nodeType": "ContractDefinition",
         "nodes": [],
-        "scope": 1291,
-        "src": "142:44:9",
+        "scope": 2363,
+        "src": "188:45:17",
         "usedErrors": []
       }
     ],
-    "src": "32:155:9"
+    "src": "32:202:17"
   },
   "bytecode": "",
   "bytecodeSha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
   "compiler": {
-    "evm_version": "london",
+    "evm_version": "istanbul",
     "optimizer": {
       "enabled": true,
       "runs": 200
     },
-    "version": "0.8.11+commit.d7f03943"
+    "version": "0.8.14+commit.80d49f37"
   },
   "contractName": "StandardToken",
   "coverageMap": {
@@ -379,10 +379,10 @@
     "statements": {}
   },
   "dependencies": [
-    "OpenZeppelin/openzeppelin-contracts@4.4.2/Context",
-    "OpenZeppelin/openzeppelin-contracts@4.4.2/ERC20",
-    "OpenZeppelin/openzeppelin-contracts@4.4.2/IERC20",
-    "OpenZeppelin/openzeppelin-contracts@4.4.2/IERC20Metadata"
+    "OpenZeppelin/openzeppelin-contracts@4.5.0/Context",
+    "OpenZeppelin/openzeppelin-contracts@4.5.0/ERC20",
+    "OpenZeppelin/openzeppelin-contracts@4.5.0/IERC20",
+    "OpenZeppelin/openzeppelin-contracts@4.5.0/IERC20Metadata"
   ],
   "deployedBytecode": "",
   "deployedSourceMap": "",
@@ -394,7 +394,7 @@
         "details": "See {IERC20-allowance}."
       },
       "approve(address,uint256)": {
-        "details": "See {IERC20-approve}. Requirements: - `spender` cannot be the zero address."
+        "details": "See {IERC20-approve}. NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on `transferFrom`. This is semantically equivalent to an infinite approval. Requirements: - `spender` cannot be the zero address."
       },
       "balanceOf(address)": {
         "details": "See {IERC20-balanceOf}."
@@ -418,22 +418,22 @@
         "details": "See {IERC20-totalSupply}."
       },
       "transfer(address,uint256)": {
-        "details": "See {IERC20-transfer}. Requirements: - `recipient` cannot be the zero address. - the caller must have a balance of at least `amount`."
+        "details": "See {IERC20-transfer}. Requirements: - `to` cannot be the zero address. - the caller must have a balance of at least `amount`."
       },
       "transferFrom(address,address,uint256)": {
-        "details": "See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. Requirements: - `sender` and `recipient` cannot be the zero address. - `sender` must have a balance of at least `amount`. - the caller must have allowance for ``sender``'s tokens of at least `amount`."
+        "details": "See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. NOTE: Does not update the allowance if the current allowance is the maximum `uint256`. Requirements: - `from` and `to` cannot be the zero address. - `from` must have a balance of at least `amount`. - the caller must have allowance for ``from``'s tokens of at least `amount`."
       }
     },
     "version": 1
   },
   "offset": [
-    142,
-    186
+    188,
+    233
   ],
   "opcodes": "",
   "pcMap": {},
-  "sha1": "242cbff4319f73fcb2fc565a23cb09cb5330a462",
-  "source": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.7;\n\nimport \"OpenZeppelin/openzeppelin-contracts@4.4.2/contracts/token/ERC20/ERC20.sol\";\n\nabstract contract StandardToken is ERC20 {\n}\n",
+  "sha1": "70172be5ecf9f2739e0cffb84a272ee3b976a133",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.12;\n\nimport \"OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/ERC20.sol\";\n\n// solhint-disable-next-line no-empty-blocks\nabstract contract StandardToken is ERC20 {\n\n}\n",
   "sourceMap": "",
   "sourcePath": "contracts/StandardToken.sol",
   "type": "contract"
