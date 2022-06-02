@@ -23,7 +23,7 @@ contract RequestManager is Ownable {
         address targetTokenAddress;
         address targetAddress;
         uint256 amount;
-        address depositReceiver;
+        BeamerUtils.FillInfo withdrawInfo;
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
@@ -175,7 +175,7 @@ contract RequestManager is Ownable {
         newRequest.targetTokenAddress = targetTokenAddress;
         newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
-        newRequest.depositReceiver = address(0);
+        newRequest.withdrawInfo = BeamerUtils.FillInfo(address(0), bytes32(0));
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFee;
         newRequest.protocolFee = protocolFee;
@@ -202,7 +202,7 @@ contract RequestManager is Ownable {
         Request storage request = requests[requestId];
 
         require(
-            request.depositReceiver == address(0),
+            request.withdrawInfo.filler == address(0),
             "Deposit already withdrawn"
         );
         require(
@@ -211,7 +211,7 @@ contract RequestManager is Ownable {
         );
         require(request.activeClaims == 0, "Active claims running");
 
-        request.depositReceiver = request.sender;
+        request.withdrawInfo.filler = request.sender;
 
         emit DepositWithdrawn(requestId, request.sender);
 
@@ -232,10 +232,11 @@ contract RequestManager is Ownable {
 
         require(block.timestamp < request.validUntil, "Request expired");
         require(
-            request.depositReceiver == address(0),
+            request.withdrawInfo.filler == address(0),
             "Deposit already withdrawn"
         );
         require(msg.value == claimStake, "Invalid stake amount");
+        require(fillId != bytes32(0), "FillId must not be 0x0");
 
         request.activeClaims += 1;
         claimCounter += 1;
@@ -356,10 +357,10 @@ contract RequestManager is Ownable {
         emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
 
         if (
-            request.depositReceiver == address(0) &&
+            request.withdrawInfo.filler == address(0) &&
             claimReceiver == claim.claimer
         ) {
-            withdrawDeposit(request, claim, claimReceiver);
+            withdrawDeposit(request, claim);
         }
 
         return claimReceiver;
@@ -390,26 +391,31 @@ contract RequestManager is Ownable {
         );
 
         bool claimValid = false;
-        address depositReceiver = request.depositReceiver;
+        BeamerUtils.FillInfo memory withdrawInfo = request.withdrawInfo;
 
         // Priority list for validity check of claim
         // Claim is valid if either
         // 1) ResolutionRegistry entry in fillers, claimer is the filler
         // 2) ResolutionRegistry entry in invalidFillHashes, claim is invalid
-        // 3) DepositReceiver, the claimer is the address that withdrew the deposit with another claim
+        // 3) Request.withdrawInfo, the claimer withdrew with an identical claim (same fill id)
         // 4) Claim properties, claim terminated and claimer has the highest stake
-        address filler = resolutionRegistry.fillers(fillHash);
+        BeamerUtils.FillInfo memory fillInfo = BeamerUtils.FillInfo(
+            resolutionRegistry.fillers(fillHash),
+            claim.fillId
+        );
 
-        if (filler == address(0)) {
-            filler = depositReceiver;
+        if (fillInfo.filler == address(0)) {
+            fillInfo = withdrawInfo;
         }
 
         if (resolutionRegistry.invalidFillHashes(fillHash)) {
             // Claim resolution via 2)
             claimValid = false;
-        } else if (filler != address(0)) {
+        } else if (fillInfo.filler != address(0)) {
             // Claim resolution via 1) or 3)
-            claimValid = filler == claim.claimer;
+            claimValid =
+                fillInfo.filler == claim.claimer &&
+                fillInfo.fillId == claim.fillId;
         } else {
             // Claim resolution via 4)
             require(
@@ -454,19 +460,19 @@ contract RequestManager is Ownable {
         return (claimReceiver, ethToTransfer);
     }
 
-    function withdrawDeposit(
-        Request storage request,
-        Claim storage claim,
-        address depositReceiver
-    ) private {
-        emit DepositWithdrawn(claim.requestId, depositReceiver);
+    function withdrawDeposit(Request storage request, Claim storage claim)
+        private
+    {
+        address claimer = claim.claimer;
+        emit DepositWithdrawn(claim.requestId, claimer);
+
+        request.withdrawInfo = BeamerUtils.FillInfo(claimer, claim.fillId);
 
         collectedProtocolFees[request.sourceTokenAddress] += request
             .protocolFee;
 
         IERC20 token = IERC20(request.sourceTokenAddress);
-        token.safeTransfer(depositReceiver, request.amount + request.lpFee);
-        request.depositReceiver = depositReceiver;
+        token.safeTransfer(claimer, request.amount + request.lpFee);
     }
 
     function withdrawProtocolFees(address tokenAddress, address recipient)
