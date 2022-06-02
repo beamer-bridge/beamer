@@ -63,7 +63,7 @@ describe('Transfer.vue', () => {
       expect(header.text()).toContain('Test Chain');
     });
 
-    it('shows the source amount with digits after dot cut to two', () => {
+    it('shows the source amount with two decimal places', () => {
       const data = generateTransferData({
         sourceAmount: generateTokenAmountData({
           amount: generateUInt256Data('12345'),
@@ -75,20 +75,6 @@ describe('Transfer.vue', () => {
       const header = wrapper.find('[data-test="header"]');
 
       expect(header.text()).toContain('1.23');
-    });
-
-    it('shows the source token amount with final zeros if even value', () => {
-      const data = generateTransferData({
-        sourceAmount: generateTokenAmountData({
-          amount: generateUInt256Data('1'),
-          token: generateToken({ decimals: 0 }),
-        }),
-      });
-      const transfer = new Transfer(data);
-      const wrapper = createWrapper({ transfer });
-      const header = wrapper.find('[data-test="header"]');
-
-      expect(header.text()).toContain('1.00');
     });
   });
 
