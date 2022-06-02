@@ -6,8 +6,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings 0 .",
-    "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix .",
+    "check-types": "tsc --noEmit",
+    "eslint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings 0 .",
+    "eslint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix .",
+    "lint": "yarn check-types && yarn eslint",
+    "lint:fix": "yarn check-types; yarn eslint:fix",
     "test:unit": "vitest run --dir=./tests/unit",
     "test:coverage": "vitest run --dir=./tests --coverage"
   },
