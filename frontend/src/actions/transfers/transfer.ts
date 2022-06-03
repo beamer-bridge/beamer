@@ -5,10 +5,13 @@ import { MultiStepAction, Step } from '@/actions/steps';
 import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   getRequestIdentifier,
+  RequestExpiredError,
   sendRequestTransaction,
   waitUntilRequestExpiresAndFail,
+  withdrawRequest,
 } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
+import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { EthereumAmount, TokenAmountData } from '@/types/token-amount';
@@ -38,6 +41,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly date: Date;
   private _requestInformation?: RequestInformation;
   private _fulfillmentInformation?: FulfillmentInformation;
+  private _expired: boolean;
+  private _withdrawn: boolean;
 
   constructor(data: TransferData) {
     super((data.steps ?? STEPS_DATA).map((data) => new Step(data)));
@@ -54,6 +59,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       ? new RequestInformation(data.requestInformation)
       : undefined;
     this._fulfillmentInformation = data.fulfillmentInformation;
+    this._expired = data.expired ?? false;
+    this._withdrawn = data.withdrawn ?? false;
   }
 
   static new(
@@ -85,6 +92,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return this._fulfillmentInformation;
   }
 
+  get expired(): boolean {
+    return this._expired;
+  }
+
+  get withdrawn(): boolean {
+    return this._withdrawn;
+  }
+
   protected getStepMethods(
     signer: JsonRpcSigner,
     signerAddress: EthereumAddress,
@@ -103,6 +118,35 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return super.executeSteps(methods);
   }
 
+  public async withdraw(provider: IEthereumProvider): Promise<void> {
+    if (!this._expired) {
+      throw new Error('Can only withdraw transfer funds after request expired!');
+    }
+
+    // Theoretically impossible given the above condition.
+    if (!this._requestInformation?.identifier) {
+      throw new Error('Attempting to withdraw without request identifier!');
+    }
+
+    if (!provider.signer.value) {
+      throw new Error('Can not withdraw without connected wallet!');
+    }
+
+    const currentChainIdentifier = await provider.getChainId();
+
+    if (currentChainIdentifier !== this.sourceChain.identifier) {
+      provider.switchChain(this.sourceChain.identifier);
+    }
+
+    await withdrawRequest(
+      provider.signer.value,
+      this.sourceChain.requestManagerAddress,
+      this._requestInformation.identifier,
+    );
+
+    this._withdrawn = true;
+  }
+
   public encode(): TransferData {
     return {
       sourceChain: this.sourceChain,
@@ -116,6 +160,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       steps: this.steps.map((step) => step.encode()),
       requestInformation: this._requestInformation?.encode(),
       fulfillmentInformation: this.fulfillmentInformation,
+      expired: this._expired,
+      withdrawn: this._withdrawn,
     };
   }
 
@@ -185,6 +231,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     try {
       await Promise.race([fulfillmentPromise, expirationPromise]);
       // TODO: set this.fulfillmentInformation
+    } catch (exception: unknown) {
+      if (exception instanceof RequestExpiredError) {
+        this._expired = true;
+      }
+
+      throw exception;
     } finally {
       cancelFulfillmentChecks();
       cancelExpirationCheck();
@@ -204,4 +256,6 @@ export type TransferData = {
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
   fulfillmentInformation?: FulfillmentInformation;
+  expired?: boolean;
+  withdrawn?: boolean;
 };

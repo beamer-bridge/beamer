@@ -5,6 +5,7 @@ import { flushPromises } from '@vue/test-utils';
 import type { TransferData } from '@/actions/transfers/transfer';
 import { Transfer } from '@/actions/transfers/transfer';
 import * as fillManager from '@/services/transactions/fill-manager';
+import { RequestExpiredError } from '@/services/transactions/request-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
 import type { EthereumAddress } from '@/types/data';
@@ -20,6 +21,7 @@ import {
   generateUInt256Data,
   getRandomEthereumAddress,
 } from '~/utils/data_generators';
+import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 vi.mock('@/services/transactions/token');
@@ -312,6 +314,108 @@ describe('transfer', () => {
 
       expect(cancelFulfillmentCheck).toHaveBeenCalledOnce();
     });
+
+    it('sets transfer to be expired if expiration promise rejects with according error', async () => {
+      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
+        promise: new Promise((_, reject) => reject(new RequestExpiredError())),
+        cancel: vi.fn(),
+      });
+      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
+        promise: new Promise(() => undefined),
+        cancel: vi.fn(),
+      });
+
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
+      });
+      const transfer = new TestTransfer(data);
+      expect(transfer.expired).toBeFalsy();
+
+      try {
+        await transfer.waitForFulfillment();
+      } catch {
+        // Ignore on purpose
+      }
+
+      expect(transfer.expired).toBeTruthy();
+    });
+  });
+
+  describe('withdraw', () => {
+    it('fails if the transfer is not expired', () => {
+      const data = generateTransferData({ expired: false });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider();
+
+      return expect(transfer.withdraw(provider)).rejects.toThrow(
+        'Can only withdraw transfer funds after request expired!',
+      );
+    });
+
+    it('fails when request identifier has not been set', () => {
+      const data = generateTransferData({
+        expired: true,
+        requestInformation: generateRequestInformationData({ identifier: undefined }),
+      });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider();
+
+      return expect(transfer.withdraw(provider)).rejects.toThrow(
+        'Attempting to withdraw without request identifier!',
+      );
+    });
+
+    it('fails when no signer is available', () => {
+      const data = generateTransferData({
+        expired: true,
+        requestInformation: generateRequestInformationData({ identifier: '1' }),
+      });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider({ signer: undefined });
+
+      return expect(transfer.withdraw(provider)).rejects.toThrow(
+        'Can not withdraw without connected wallet!',
+      );
+    });
+
+    it('triggers a chain switch if providers connected chain does not match source chain', async () => {
+      const data = generateTransferData({
+        expired: true,
+        requestInformation: generateRequestInformationData({ identifier: '1' }),
+        sourceChain: generateChain({ identifier: 1 }),
+      });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+
+      await transfer.withdraw(provider);
+
+      expect(provider.switchChain).toHaveBeenCalledOnce();
+    });
+
+    it('uses the correct parameters to make the withdraw', async () => {
+      const data = generateTransferData({
+        expired: true,
+        requestInformation: generateRequestInformationData({ identifier: '1' }),
+        sourceChain: generateChain({
+          identifier: 1,
+          requestManagerAddress: '0xRequestManager',
+        }),
+      });
+      const transfer = new TestTransfer(data);
+      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const provider = new MockedEthereumProvider({ chainId: 1, signer });
+
+      await transfer.withdraw(provider);
+
+      expect(requestManager.withdrawRequest).toHaveBeenCalledOnce();
+      expect(requestManager.withdrawRequest).toHaveBeenLastCalledWith(
+        signer,
+        '0xRequestManager',
+        new UInt256('1'),
+      );
+    });
   });
 
   describe('encode()', () => {
@@ -326,6 +430,8 @@ describe('transfer', () => {
       const date = 1652688517448;
       const requestInformation = generateRequestInformationData();
       const fulfillmentInformation = generateFulfillmentInformation();
+      const expired = true;
+      const withdrawn = true;
       const steps = [generateStepData()];
       const data: TransferData = {
         sourceChain,
@@ -338,6 +444,8 @@ describe('transfer', () => {
         date,
         requestInformation,
         fulfillmentInformation,
+        expired,
+        withdrawn,
         steps,
       };
       const transfer = new TestTransfer(data);
@@ -354,6 +462,8 @@ describe('transfer', () => {
       expect(encodedData.date).toMatchObject(date);
       expect(encodedData.requestInformation).toMatchObject(requestInformation);
       expect(encodedData.fulfillmentInformation).toMatchObject(fulfillmentInformation);
+      expect(encodedData.expired).toBe(true);
+      expect(encodedData.withdrawn).toBe(true);
       expect(encodedData.steps).toMatchObject(steps);
     });
 
