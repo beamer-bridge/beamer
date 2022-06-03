@@ -90,20 +90,22 @@ Submit a request::
 Working with a local Optimism instance
 --------------------------------------
 
-To setup a local Optimism instance and deploy Beamer contracts on it,
-run::
+To start a local Optimism instance, run::
 
     sh ./docker/optimism/optimism.sh up
 
-This will start all the required containers, compile and deploy the contracts.
-Note that it takes a while (~1 minute) for all the services to become ready
-before we can deploy the contracts.
+This will start all the required containers. Note that it takes a while (~1
+minute) for all the services to become ready. Next, deploy the Beamer
+contracts and start the end-to-end test::
+
+    sh ./docker/optimism/optimism.sh deploy-beamer
+    sh ./docker/optimism/optimism.sh e2e-test
 
 To stop and remove all the containers, simply run::
 
     sh ./docker/optimism/optimism.sh down
 
-To get the contracts' addresses, run::
+To list Optimism contracts' addresses, run::
 
     sh ./docker/optimism/optimism.sh addresses
 
