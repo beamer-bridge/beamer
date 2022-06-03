@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { ref } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
 import Expandable from '@/components/layout/Expandable.vue';
@@ -6,6 +7,9 @@ import Progress from '@/components/layout/Progress.vue';
 import TransferComponent from '@/components/Transfer.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
+import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
+import * as withdrawTransferComposable from '@/composables/useWithdrawTransfer';
+import * as ethereumProviderComposable from '@/stores/ethereum-provider';
 import {
   generateChain,
   generateRequestInformationData,
@@ -15,6 +19,9 @@ import {
   generateTransferData,
   generateUInt256Data,
 } from '~/utils/data_generators';
+
+vi.mock('@/composables/useWithdrawTransfer');
+vi.mock('@/stores/ethereum-provider');
 
 function createWrapper(options?: { transfer?: Transfer }) {
   return mount(TransferComponent, {
@@ -36,6 +43,18 @@ function createWrapper(options?: { transfer?: Transfer }) {
 describe('Transfer.vue', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+
+    Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+      value: vi.fn().mockReturnValue({
+        active: ref(false),
+        error: ref(undefined),
+        run: vi.fn(),
+      }),
+    });
+
+    Object.defineProperty(ethereumProviderComposable, 'useEthereumProvider', {
+      value: vi.fn().mockReturnValue({ provider: ref(undefined) }),
+    });
   });
 
   describe('header content', () => {
@@ -123,6 +142,69 @@ describe('Transfer.vue', () => {
       failed: false,
       expired: false,
       active: false,
+    });
+  });
+
+  describe('handles expired transfers correctly', () => {
+    it('hides transfer withdrawer if transfer is not expired', async () => {
+      const transfer = generateTransfer({ expired: false });
+      const wrapper = createWrapper({ transfer });
+      const withdrawer = wrapper.findComponent(TransferWithdrawer);
+
+      expect(withdrawer.exists()).toBeFalsy();
+    });
+
+    it('shows transfers withrawer if transfer has expired', () => {
+      Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+        value: vi.fn().mockReturnValue({
+          active: ref(true),
+          error: ref(new Error('test error')),
+          run: vi.fn(),
+        }),
+      });
+
+      const transfer = generateTransfer({
+        expired: true,
+        transferData: generateTransferData({ withdrawn: false }),
+      });
+      const wrapper = createWrapper({ transfer });
+      const withdrawer = wrapper.findComponent(TransferWithdrawer);
+
+      expect(withdrawer.exists()).toBeTruthy();
+      expect(withdrawer.isVisible()).toBeTruthy();
+      expect(withdrawer.props()).toContain({ withdrawn: false });
+      expect(withdrawer.props()).toContain({ active: true });
+      expect(withdrawer.props()).toContain({ errorMessage: 'test error' });
+    });
+
+    it('on event triggers withraw transaction with connected wallet', async () => {
+      const runWithdrawTransfer = vi.fn();
+      const provider = 'fake-provider';
+      Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+        value: vi.fn().mockReturnValue({
+          active: ref(false),
+          error: ref(undefined),
+          run: runWithdrawTransfer,
+        }),
+      });
+
+      Object.defineProperty(ethereumProviderComposable, 'useEthereumProvider', {
+        value: vi.fn().mockReturnValue({
+          provider,
+        }),
+      });
+
+      const transfer = generateTransfer({
+        expired: true,
+        transferData: generateTransferData({ withdrawn: false }),
+      });
+      const wrapper = createWrapper({ transfer });
+      const withdrawer = wrapper.findComponent(TransferWithdrawer);
+
+      await withdrawer.vm.$emit('withdraw');
+
+      expect(runWithdrawTransfer).toHaveBeenCalledOnce();
+      expect(runWithdrawTransfer).toHaveBeenLastCalledWith(transfer, provider);
     });
   });
 

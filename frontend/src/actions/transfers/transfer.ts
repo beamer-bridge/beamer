@@ -136,6 +136,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
     if (currentChainIdentifier !== this.sourceChain.identifier) {
       provider.switchChain(this.sourceChain.identifier);
+      return; // For now we must bail out here so the page can reload.
     }
 
     await withdrawRequest(
