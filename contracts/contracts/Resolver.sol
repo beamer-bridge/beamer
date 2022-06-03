@@ -15,14 +15,16 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
-        bytes32 fillHash,
-        address filler
+        bytes32 requestHash,
+        address filler,
+        bytes32 fillId
     );
 
     mapping(uint256 => ResolutionInfos) public resolutionInfos;
 
     function resolve(
-        bytes32 fillHash,
+        bytes32 requestHash,
+        bytes32 fillId,
         uint256 fillChainId,
         uint256 sourceChainId,
         address filler
@@ -42,12 +44,18 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             info.resolutionRegistry,
             abi.encodeCall(
                 ResolutionRegistry.resolveRequest,
-                (fillHash, block.chainid, filler)
+                (requestHash, fillId, block.chainid, filler)
             ),
             1_000_000
         );
 
-        emit Resolution(sourceChainId, fillChainId, fillHash, filler);
+        emit Resolution(
+            sourceChainId,
+            fillChainId,
+            requestHash,
+            filler,
+            fillId
+        );
     }
 
     function resolveNonFill(

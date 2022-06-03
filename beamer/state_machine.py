@@ -32,6 +32,7 @@ from beamer.events import (
 from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
+from beamer.tests.util import create_fill_hash_from_request_hash
 from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillHash, RequestId
 from beamer.util import TokenMatchChecker
@@ -263,7 +264,8 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
-    claim = _find_claim_by_fill_hash(context, event.fill_hash)
+    fill_hash = create_fill_hash_from_request_hash(event.request_hash, event.fill_id)
+    claim = _find_claim_by_fill_hash(context, fill_hash)
     if claim is not None:
         request = context.requests.get(claim.request_id)
         assert request is not None, "Request missing for claim"

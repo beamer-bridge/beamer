@@ -103,8 +103,9 @@ class ClaimWithdrawn(ClaimEvent):
 
 @dataclass(frozen=True)
 class RequestResolved(TxEvent):
-    fill_hash: FillHash
+    request_hash: RequestHash
     filler: ChecksumAddress
+    fill_id: FillId
 
 
 @dataclass(frozen=True)
