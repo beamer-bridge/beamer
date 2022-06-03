@@ -32,7 +32,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
-                (fillHash, block.chainid, sourceChainId, filler)
+                (requestHash, fillId, block.chainid, sourceChainId, filler)
             ),
             MESSAGE_GAS_LIMIT
         );

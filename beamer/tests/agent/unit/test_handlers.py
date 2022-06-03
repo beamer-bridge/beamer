@@ -113,8 +113,9 @@ def test_handle_request_resolved():
     event = RequestResolved(
         chain_id=TARGET_CHAIN_ID,
         tx_hash=HexBytes(""),
-        fill_hash=request.fill_hash_with_fill_id(fill_id),
+        request_hash=request.request_hash,
         filler=filler,
+        fill_id=fill_id,
     )
 
     # Without a request, this must fail
