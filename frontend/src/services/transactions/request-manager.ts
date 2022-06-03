@@ -54,8 +54,8 @@ export async function sendRequestTransaction(
 
     return transaction.hash;
   } catch (error: unknown) {
+    console.error(error);
     const parseErrorMessage = getTransactionErrorMessage(error);
-    console.log(parseErrorMessage);
     throw new Error(parseErrorMessage);
   }
 }
@@ -116,7 +116,7 @@ export function waitUntilRequestExpiresAndFail(
 
       if (hasExpired) {
         provider.removeAllListeners();
-        reject(new Error('Request has expired!'));
+        reject(new RequestExpiredError());
       }
     };
 
@@ -126,6 +126,40 @@ export function waitUntilRequestExpiresAndFail(
 
   const cancel = () => provider.removeAllListeners();
   return { promise, cancel };
+}
+
+export class RequestExpiredError extends Error {
+  constructor() {
+    super('Request has expired!');
+    Object.setPrototypeOf(this, RequestExpiredError.prototype);
+  }
+}
+
+export async function withdrawRequest(
+  signer: JsonRpcSigner,
+  requestManagerAddress: EthereumAddress,
+  requestIdentifier: UInt256,
+): Promise<void> {
+  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
+
+  const requestParameter = [BigNumber.from(requestIdentifier.asString)];
+
+  try {
+    const estimatedGasLimit = await requestManagerContract.estimateGas.withdrawExpiredRequest(
+      ...requestParameter,
+    );
+
+    const transaction: TransactionResponse = await requestManagerContract.withdrawExpiredRequest(
+      ...requestParameter,
+      { gasLimit: estimatedGasLimit },
+    );
+
+    await transaction.wait();
+  } catch (error: unknown) {
+    console.error(error);
+    const parseErrorMessage = getTransactionErrorMessage(error);
+    throw new Error(parseErrorMessage);
+  }
 }
 
 function getTransactionErrorMessage(error: unknown): string {
