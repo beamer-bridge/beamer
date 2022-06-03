@@ -17,6 +17,11 @@
       <div class="flex flex-col gap-5 items-center text-lg" data-test="body">
         <TransferSummary v-bind="summary" />
         <TransferStatus v-bind="status" />
+        <TransferWithdrawer
+          v-if="transfer.expired"
+          v-bind="withdrawProperties"
+          @withdraw="withdrawTransfer"
+        />
         <Progress v-if="!transfer.completed" :steps="progressSteps" />
       </div>
     </template>
@@ -31,6 +36,9 @@ import Expandable from '@/components/layout/Expandable.vue';
 import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
+import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
+import { useWithdrawTransfer } from '@/composables/useWithdrawTransfer';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 
 interface Props {
   transfer: Transfer;
@@ -75,6 +83,23 @@ const statusBackgroundColorClass = computed(() => {
   const { active, completed, failed } = props.transfer;
   return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-green-lime' : 'bg-grey';
 });
+
+const { provider } = useEthereumProvider();
+const {
+  active: withdrawTransferActive,
+  error: withdrawTransferError,
+  run: runWithdrawTransfer,
+} = useWithdrawTransfer();
+
+const withdrawProperties = computed(() => ({
+  withdrawn: props.transfer.withdrawn,
+  active: withdrawTransferActive.value,
+  errorMessage: withdrawTransferError.value?.message,
+}));
+
+function withdrawTransfer() {
+  runWithdrawTransfer(props.transfer, provider);
+}
 
 watch(
   () => props.transfer.active,

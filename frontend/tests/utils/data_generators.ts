@@ -147,6 +147,7 @@ export function generateTransfer(options?: {
   active?: boolean;
   completed?: boolean;
   failed?: boolean;
+  expired?: boolean;
 }): Transfer {
   const temporaryTransfer = new Transfer(generateTransferData());
   const steps = [...temporaryTransfer.steps];
@@ -170,6 +171,10 @@ export function generateTransfer(options?: {
   if (options?.failed) {
     steps[0].complete();
     steps[1].setErrorMessage('error message');
+  }
+
+  if (options?.expired !== undefined) {
+    transferData.expired = options.expired;
   }
 
   const data = generateTransferData({ ...transferData, steps });
