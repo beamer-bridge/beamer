@@ -2,8 +2,8 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 import type { Ref } from 'vue';
 import { computed, reactive } from 'vue';
 
+import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { requestFaucet } from '@/services/transactions/faucet';
-import createAsyncProcess from '@/utils/create-async-process';
 
 export function useFaucet(
   signer: Ref<JsonRpcSigner | undefined>,
@@ -25,7 +25,8 @@ export function useFaucet(
       faucetUsedForChain[chainId.value] = true;
     }
   };
-  const { active, run } = createAsyncProcess(executeFaucetRequest);
 
-  return { available, run, active };
+  const { active, error, run } = useAsynchronousTask(executeFaucetRequest);
+
+  return { available, active, error, run };
 }
