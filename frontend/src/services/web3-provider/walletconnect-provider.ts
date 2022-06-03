@@ -1,4 +1,6 @@
-import WalletConnect from '@walletconnect/web3-provider';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore TODO: we need to check what is going on here.
+import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
 import { hexValue } from 'ethers/lib/utils';
 
 import type { Eip1193Provider } from '@/services/web3-provider';
