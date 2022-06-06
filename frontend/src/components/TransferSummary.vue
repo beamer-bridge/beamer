@@ -4,11 +4,7 @@
       {{ date.toLocaleString() }}<br />
       You sent {{ amount }}&nbsp;{{ tokenSymbol }}<br />
       from {{ sourceChainName }} to {{ targetChainName }}<br />
-    </div>
-
-    <div>
-      Target address:<br />
-      {{ targetAccount }}
+      Target address:&nbsp;<EthereumAddress :address="targetAccount" />
     </div>
 
     <a
@@ -23,6 +19,8 @@
 </template>
 
 <script setup lang="ts">
+import EthereumAddress from '@/components/layout/EthereumAddress.vue';
+
 interface Props {
   readonly date: Date;
   readonly amount: string;

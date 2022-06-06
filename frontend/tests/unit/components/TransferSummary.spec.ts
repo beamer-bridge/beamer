@@ -28,6 +28,14 @@ function createWrapper(options?: {
       targetAccount: options?.targetAccount ?? getRandomEthereumAddress(),
       requestTransactionUrl: options?.requestTransactionUrl,
     },
+    global: {
+      stubs: {
+        EthereumAddress: {
+          template: '<span>{{ address }}</span>',
+          props: { address: String },
+        },
+      },
+    },
   });
 }
 
