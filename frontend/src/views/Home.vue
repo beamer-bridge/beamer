@@ -15,6 +15,7 @@
       <Card class="relative bg-teal mb-11 w-full h-[50rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
+          class="tooltip-reference-element"
           :tabs="tabs"
           :class="tabsClasses"
           :active-tab-label="activeTabLabel"

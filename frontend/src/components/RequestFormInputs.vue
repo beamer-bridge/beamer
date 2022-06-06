@@ -1,5 +1,5 @@
 <template>
-  <div class="request-form-inputs flex flex-col">
+  <div ref="formElement" class="request-form-inputs flex flex-col">
     <div class="mb-6">
       <div class="flex flex-row gap-5 items-stretch">
         <div class="h-18 flex flex-col justify-center">
@@ -30,24 +30,23 @@
             validation="required"
             messages-class="hidden"
           />
-          <div
-            class="form-tooltip self-end"
-            data-theme="default"
-            data-tip="Adds current token to the connected wallet"
+          <Tooltip
+            class="self-end -mr-3"
+            hint="Adds current token to the connected wallet"
+            show-outside-of-closest-reference-element
           >
             <button
-              class="btn btn-ghost btn-sm text-orange m-2"
-              type="button"
+              class="text-orange font-semibold m-2 rounded-md hover:bg-teal-light/30 px-5 py-2"
               :disabled="!addTokenAvailable"
               @click="addTokenToProvider"
             >
               Add to Wallet
             </button>
-          </div>
+          </Tooltip>
         </div>
       </div>
     </div>
-    <div class="mb-6">
+    <div class="mb-6 flex flex-col">
       <FormKit
         v-model="selectedSourceChain"
         type="selector"
@@ -59,25 +58,22 @@
         messages-class="hidden"
         @input="switchChain"
       />
-      <div class="flex flex-col items-end">
-        <div
-          class="form-tooltip"
-          data-theme="default"
-          data-tip="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your connected wallet"
+      <Tooltip
+        class="self-end -mr-3"
+        hint="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your connected wallet"
+        show-outside-of-closest-reference-element
+      >
+        <button
+          class="text-orange font-semibold m-2 rounded-md hover:bg-teal-light/30 px-5 py-2"
+          :disabled="!faucetAvailable"
+          @click="runFaucetRequest"
         >
-          <button
-            class="btn btn-ghost btn-sm text-orange m-2"
-            type="button"
-            :disabled="!faucetAvailable"
-            @click="runFaucetRequest"
-          >
-            <div v-if="faucetRequestActive" class="h-5 w-5">
-              <spinner></spinner>
-            </div>
-            <template v-else>Get Test Tokens</template>
-          </button>
-        </div>
-      </div>
+          <div v-if="faucetRequestActive" class="h-5 w-5">
+            <spinner></spinner>
+          </div>
+          <template v-else>Get Test Tokens</template>
+        </button>
+      </Tooltip>
     </div>
     <div>
       <FormKit
@@ -105,13 +101,24 @@
     >
       <span>fees</span>
       <span>{{ formattedRequestFeeAmount }}</span>
-      <div
-        class="form-tooltip whitespace-pre-wrap"
-        data-theme="default"
-        :data-tip="gasFeesTooltipText"
-      >
+      <Tooltip class="-mr-3" show-outside-of-closest-reference-element>
         <img class="h-6 w-6 mr-5 cursor-help" src="@/assets/images/help.svg" />
-      </div>
+        <template #hint>
+          The fee amount is composed of three parts:<br />
+          <ul class="pl-5">
+            <li>• the gas reimbursement fee</li>
+            <li>• the liquidity provider fee</li>
+            <li>• the Beamer service fee</li>
+          </ul>
+          <br />
+          The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity
+          provider servicing the request, while the Beamer service fee stays with the contract and
+          supports the Beamer platform development.<br />
+          Note that the fee is paid on top of the token amount being transferred,so that the token
+          amount received on the target rollup is exactly the same as the token amount sent from
+          the source rollup.
+        </template>
+      </Tooltip>
     </div>
   </div>
 </template>
@@ -119,8 +126,9 @@
 <script setup lang="ts">
 import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
+import Tooltip from '@/components/layout/Tooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
@@ -130,6 +138,7 @@ import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 
+const formElement = ref<HTMLElement>();
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 
@@ -165,15 +174,6 @@ const {
   signer,
   computed(() => selectedSourceChain.value?.value),
 );
-
-const gasFeesTooltipText = `The fee amount is composed of three parts:
-  • the gas reimbursement fee
-  • the liquidity provider fee
-  • the Beamer service fee
-
-The gas reimbursement fee and the liquidity provider fee are paid out to the liquidity provider servicing the request, while the Beamer service fee stays with the contract and supports the Beamer platform development.
-
-Note that the fee is paid on top of the token amount being transferred,so that the token amount received on the target rollup is exactly the same as the token amount sent from the source rollup.`;
 </script>
 
 <style lang="css">
