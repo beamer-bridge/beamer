@@ -28,7 +28,7 @@ interface Props {
 defineProps<Props>();
 </script>
 
-<style>
+<style scoped>
 /* 
 Please note that the used numeric values here are based on `rem` to scale with
 the application, but are very fixed an not variable. If any of these value gets
