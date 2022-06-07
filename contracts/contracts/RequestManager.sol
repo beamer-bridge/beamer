@@ -380,6 +380,15 @@ contract RequestManager is Ownable {
             "Claim already withdrawn"
         );
 
+        bytes32 requestHash = BeamerUtils.createRequestHash(
+            claim.requestId,
+            block.chainid,
+            request.targetChainId,
+            request.targetTokenAddress,
+            request.targetAddress,
+            request.amount
+        );
+
         bytes32 fillHash = BeamerUtils.createFillHash(
             claim.requestId,
             block.chainid,
@@ -399,23 +408,20 @@ contract RequestManager is Ownable {
         // 2) ResolutionRegistry entry in invalidFillHashes, claim is invalid
         // 3) Request.withdrawInfo, the claimer withdrew with an identical claim (same fill id)
         // 4) Claim properties, claim terminated and claimer has the highest stake
-        BeamerUtils.FillInfo memory fillInfo = BeamerUtils.FillInfo(
-            resolutionRegistry.fillers(fillHash),
-            claim.fillId
+        (address filler, bytes32 fillId) = resolutionRegistry.fillers(
+            requestHash
         );
 
-        if (fillInfo.filler == address(0)) {
-            fillInfo = withdrawInfo;
+        if (filler == address(0)) {
+            (filler, fillId) = (withdrawInfo.filler, withdrawInfo.fillId);
         }
 
         if (resolutionRegistry.invalidFillHashes(fillHash)) {
             // Claim resolution via 2)
             claimValid = false;
-        } else if (fillInfo.filler != address(0)) {
+        } else if (filler != address(0)) {
             // Claim resolution via 1) or 3)
-            claimValid =
-                fillInfo.filler == claim.claimer &&
-                fillInfo.fillId == claim.fillId;
+            claimValid = filler == claim.claimer && fillId == claim.fillId;
         } else {
             // Claim resolution via 4)
             require(
