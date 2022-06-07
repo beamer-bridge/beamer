@@ -13,6 +13,8 @@ from web3.contract import Contract
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
+from beamer.util import transact
+
 GANACHE_CHAIN_ID = 1337
 
 
@@ -84,16 +86,15 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
     print(f"Deploying {name}")
     ContractFactory = web3.eth.contract(abi=data[0], bytecode=data[1])
 
-    tx_hash = ContractFactory.constructor(*args).transact()
-    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+    receipt = transact(ContractFactory.constructor(*args))
 
-    address = tx_receipt.contractAddress  # type: ignore
+    address = receipt.contractAddress
     deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
-    deployed.deployment_block = tx_receipt.blockNumber  # type: ignore
+    deployed.deployment_block = receipt.blockNumber
     deployed.deployment_args = list(args)
     deployed.name = name
 
-    print(f"Deployed {name} at {address} in {encode_hex(tx_hash)}")
+    print(f"Deployed {name} at {address} in {encode_hex(receipt.transactionHash)}")
     return deployed
 
 
@@ -136,27 +137,35 @@ def deploy_beamer(
             or other_l2_config is not l2_config
             or other_l2_config["chain_id"] == GANACHE_CHAIN_ID
         ):
-            request_manager.functions.setFinalizationTime(
-                other_l2_config["chain_id"], other_l2_config["finalization_time"]
-            ).transact()
+            transact(
+                request_manager.functions.setFinalizationTime(
+                    other_l2_config["chain_id"], other_l2_config["finalization_time"]
+                )
+            )
 
     fill_manager = deploy_contract(
         web3, ("FillManager", resolver.address, proof_submitter.address)
     )
 
     # Authorize call chain
-    proof_submitter.functions.addCaller(l2_config["chain_id"], fill_manager.address).transact()
-    l2_messenger.functions.addCaller(l2_config["chain_id"], proof_submitter.address).transact()
-    resolver.functions.addCaller(
-        l2_config["chain_id"], l1_messenger.address, l2_messenger.address
-    ).transact()
-    resolver.functions.addRegistry(
-        l2_config["chain_id"], resolution_registry.address, l1_messenger.address
-    ).transact()
-    l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address).transact()
-    resolution_registry.functions.addCaller(
-        resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
-    ).transact()
+    transact(proof_submitter.functions.addCaller(l2_config["chain_id"], fill_manager.address))
+    transact(l2_messenger.functions.addCaller(l2_config["chain_id"], proof_submitter.address))
+    transact(
+        resolver.functions.addCaller(
+            l2_config["chain_id"], l1_messenger.address, l2_messenger.address
+        )
+    )
+    transact(
+        resolver.functions.addRegistry(
+            l2_config["chain_id"], resolution_registry.address, l1_messenger.address
+        )
+    )
+    transact(l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address))
+    transact(
+        resolution_registry.functions.addCaller(
+            resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
+        )
+    )
 
     l1_contracts = {l1_messenger.name: l1_messenger}
     l2_contracts = {
