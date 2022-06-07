@@ -6,7 +6,7 @@ Requirements
 
 - `Python <https://www.python.org>`_ 3.9
 - `poetry <https://python-poetry.org>`_
-- `ganache <https://trufflesuite.com/ganache>`_
+- `ganache <https://trufflesuite.com/ganache>`_ 7
 - `prettier-plugin-solidity <https://github.com/prettier-solidity/prettier-plugin-solidity>`_
 
 
@@ -27,8 +27,8 @@ Compile the contracts::
 
 Start ganache::
 
-    ganache-cli --accounts 10 --hardfork istanbul --gasLimit 12000000 \
-                --mnemonic brownie --port 8545 --chainId 1337
+    ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
+            --wallet.mnemonic brownie --server.port 8545 --chain.chainId 1337
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
 
