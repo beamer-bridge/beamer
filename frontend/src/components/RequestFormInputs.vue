@@ -152,8 +152,10 @@ const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChai
   chains,
 );
 
+const selectedSourceChainIdentifier = computed(() => selectedSourceChain.value?.value ?? -1);
+
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
-  useTokenSelection(provider, chains);
+  useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
 const { available: showRequestFee, formattedAmount: formattedRequestFeeAmount } = useRequestFee(
   provider,
