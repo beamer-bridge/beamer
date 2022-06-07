@@ -17,6 +17,7 @@ interface IProofSubmitter {
     function submitNonFillProof(
         address l1Resolver,
         uint256 sourceChainId,
-        bytes32 fillHash
+        bytes32 requestHash,
+        bytes32 fillId
     ) external;
 }

@@ -5,7 +5,6 @@ import "./CrossDomainRestrictedCalls.sol";
 import "./BeamerUtils.sol";
 
 contract ResolutionRegistry is CrossDomainRestrictedCalls {
-
     event RequestResolved(bytes32 requestHash, address filler, bytes32 fillId);
 
     event FillHashInvalidated(bytes32 fillHash);
@@ -33,14 +32,16 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
         emit RequestResolved(requestHash, filler, fillId);
     }
 
-    function invalidateFillHash(bytes32 fillHash, uint256 resolutionChainId)
-        external
-        restricted(resolutionChainId, msg.sender)
-    {
+    function invalidateFillHash(
+        bytes32 requestHash,
+        bytes32 fillId,
+        uint256 resolutionChainId
+    ) external restricted(resolutionChainId, msg.sender) {
         require(
-            fillers[fillHash] == address(0),
+            fillers[requestHash].filler == address(0),
             "Cannot invalidate resolved fillHashes"
         );
+        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         require(
             invalidFillHashes[fillHash] == false,
             "FillHash already invalidated"

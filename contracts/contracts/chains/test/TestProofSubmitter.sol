@@ -44,13 +44,14 @@ contract TestProofSubmitter is IProofSubmitter, RestrictedCalls {
     function submitNonFillProof(
         address l1Resolver,
         uint256 sourceChainId,
-        bytes32 fillHash
+        bytes32 requestHash,
+        bytes32 fillId
     ) external {
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
                 Resolver.resolveNonFill,
-                (fillHash, block.chainid, sourceChainId)
+                (requestHash, fillId, block.chainid, sourceChainId)
             ),
             MESSAGE_GAS_LIMIT
         );

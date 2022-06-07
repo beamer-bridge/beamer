@@ -88,7 +88,12 @@ contract FillManager is Ownable {
     ) external {
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         require(fills[requestHash] != fillHash, "Fill hash valid");
-        proofSubmitter.submitNonFillProof(l1Resolver, sourceChainId, fillHash);
+        proofSubmitter.submitNonFillProof(
+            l1Resolver,
+            sourceChainId,
+            requestHash,
+            fillId
+        );
         emit HashInvalidated(requestHash, fillId, fillHash);
     }
 
