@@ -10,6 +10,7 @@ import ProgressStep from '@/components/layout/ProgressStep.vue';
 interface Props {
   readonly steps: Array<{
     label: string;
+    active?: boolean;
     completed?: boolean;
     failed?: boolean;
     errorMessage?: string;

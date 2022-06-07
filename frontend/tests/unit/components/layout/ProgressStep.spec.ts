@@ -1,12 +1,19 @@
 import { mount } from '@vue/test-utils';
 
 import ProgressStep from '@/components/layout/ProgressStep.vue';
+import WaitingDots from '@/components/layout/WaitingDots.vue';
 
-function createWrapper(options?: { completed?: boolean; failed?: boolean; label?: string }) {
+function createWrapper(options?: {
+  active?: boolean;
+  completed?: boolean;
+  failed?: boolean;
+  label?: string;
+}) {
   return mount(ProgressStep, {
     shallow: true,
     props: {
       label: options?.label ?? 'label',
+      active: options?.active,
       completed: options?.completed,
       failed: options?.failed,
     },
@@ -18,6 +25,14 @@ describe('ProgressStep.vue', () => {
     const wrapper = createWrapper({ label: 'test label' });
 
     expect(wrapper.text()).toContain('test label');
+  });
+
+  it('shows waiting dots to indicate active step', async () => {
+    const wrapper = createWrapper({ active: true });
+    const dots = wrapper.findComponent(WaitingDots);
+
+    expect(dots.exists()).toBeTruthy();
+    expect(dots.isVisible()).toBeTruthy();
   });
 
   it('indicates that a step got completed', () => {

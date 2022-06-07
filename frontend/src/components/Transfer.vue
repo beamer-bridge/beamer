@@ -64,6 +64,7 @@ const status = computed(() => {
 const progressSteps = computed(() =>
   props.transfer.steps.map((step) => ({
     label: step.label,
+    active: step.active,
     completed: step.completed,
     failed: step.failed,
     errorMessage: step.errorMessage,
