@@ -2,6 +2,7 @@
   <div data-content="" class="step relative !min-h-[4rem]" :class="stepClasses">
     <div class="absolute left-20 text-left" :class="contentClasses">
       {{ label }}
+      <WaitingDots v-if="active" />
       <span v-if="errorMessage" class="text-red"> <br />{{ errorMessage }} </span>
     </div>
   </div>
@@ -10,14 +11,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import WaitingDots from '@/components/layout/WaitingDots.vue';
+
 interface Props {
   readonly label: string;
+  readonly active?: boolean;
   readonly completed?: boolean;
   readonly failed?: boolean;
   readonly errorMessage?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  active: false,
   completed: false,
   failed: false,
   errorMessage: undefined,

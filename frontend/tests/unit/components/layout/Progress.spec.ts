@@ -6,8 +6,10 @@ import ProgressStep from '@/components/layout/ProgressStep.vue';
 function createWrapper(options?: {
   steps?: Array<{
     label: string;
+    active?: boolean;
     completed?: boolean;
     failed?: boolean;
+    errorMessage?: string;
   }>;
 }) {
   return mount(Progress, {
@@ -27,7 +29,21 @@ describe('RequestProcessing.vue', () => {
     expect(progressSteps[1].props()).toContain({ label: 'two' });
   });
 
-  it('sets correct the completion state for each state', () => {
+  it('sets correctly the activity state for each state', () => {
+    const wrapper = createWrapper({
+      steps: [
+        { label: 'one', active: true },
+        { label: 'two', active: false },
+      ],
+    });
+    const progressSteps = wrapper.findAllComponents(ProgressStep);
+
+    expect(progressSteps.length).toBe(2);
+    expect(progressSteps[0].props()).toContain({ active: true });
+    expect(progressSteps[1].props()).toContain({ active: false });
+  });
+
+  it('sets correctly the completion state for each state', () => {
     const wrapper = createWrapper({
       steps: [
         { label: 'one', completed: true },
@@ -41,7 +57,7 @@ describe('RequestProcessing.vue', () => {
     expect(progressSteps[1].props()).toContain({ completed: false });
   });
 
-  it('sets correct the failed state for each state', () => {
+  it('sets correctly the failed state for each state', () => {
     const wrapper = createWrapper({
       steps: [
         { label: 'one', failed: true },
@@ -53,5 +69,19 @@ describe('RequestProcessing.vue', () => {
     expect(progressSteps.length).toBe(2);
     expect(progressSteps[0].props()).toContain({ failed: true });
     expect(progressSteps[1].props()).toContain({ failed: false });
+  });
+
+  it('sets correctly the error message for each state', () => {
+    const wrapper = createWrapper({
+      steps: [
+        { label: 'one', errorMessage: 'error one' },
+        { label: 'two', errorMessage: '' },
+      ],
+    });
+    const progressSteps = wrapper.findAllComponents(ProgressStep);
+
+    expect(progressSteps.length).toBe(2);
+    expect(progressSteps[0].props()).toContain({ errorMessage: 'error one' });
+    expect(progressSteps[1].props()).toContain({ errorMessage: '' });
   });
 });
