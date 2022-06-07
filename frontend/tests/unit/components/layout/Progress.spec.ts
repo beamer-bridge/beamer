@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 
 import Progress from '@/components/layout/Progress.vue';
-import ProgressStep from '@/components/layout/ProgressStep.vue';
+import WaitingDots from '@/components/layout/WaitingDots.vue';
 
 function createWrapper(options?: {
   steps?: Array<{
@@ -19,69 +19,61 @@ function createWrapper(options?: {
     },
   });
 }
-describe('RequestProcessing.vue', () => {
-  it('sets correctly the label for each step', () => {
+describe('Progress.vue', () => {
+  it('renders all steps with each label', () => {
     const wrapper = createWrapper({ steps: [{ label: 'one' }, { label: 'two' }] });
-    const progressSteps = wrapper.findAllComponents(ProgressStep);
+    const listItems = wrapper.findAll('li');
 
-    expect(progressSteps.length).toBe(2);
-    expect(progressSteps[0].props()).toContain({ label: 'one' });
-    expect(progressSteps[1].props()).toContain({ label: 'two' });
+    expect(listItems.length).toBe(2);
+    expect(listItems[0].text()).toBe('one');
+    expect(listItems[1].text()).toBe('two');
   });
 
-  it('sets correctly the activity state for each state', () => {
+  it('shows waiting dots to indicate active step', () => {
     const wrapper = createWrapper({
       steps: [
         { label: 'one', active: true },
         { label: 'two', active: false },
       ],
     });
-    const progressSteps = wrapper.findAllComponents(ProgressStep);
+    const listItems = wrapper.findAll('li');
 
-    expect(progressSteps.length).toBe(2);
-    expect(progressSteps[0].props()).toContain({ active: true });
-    expect(progressSteps[1].props()).toContain({ active: false });
+    expect(listItems[0].findComponent(WaitingDots).exists()).toBeTruthy();
+    expect(listItems[1].findComponent(WaitingDots).exists()).toBeFalsy();
   });
 
-  it('sets correctly the completion state for each state', () => {
+  it('indicates that a step got completed', () => {
     const wrapper = createWrapper({
       steps: [
         { label: 'one', completed: true },
         { label: 'two', completed: false },
       ],
     });
-    const progressSteps = wrapper.findAllComponents(ProgressStep);
+    const listItems = wrapper.findAll('li');
 
-    expect(progressSteps.length).toBe(2);
-    expect(progressSteps[0].props()).toContain({ completed: true });
-    expect(progressSteps[1].props()).toContain({ completed: false });
+    expect(listItems[0].classes()).toContain('completed');
+    expect(listItems[1].classes()).not.toContain('completed');
   });
 
-  it('sets correctly the failed state for each state', () => {
+  it('indicates that a step has failed', () => {
     const wrapper = createWrapper({
       steps: [
         { label: 'one', failed: true },
         { label: 'two', failed: false },
       ],
     });
-    const progressSteps = wrapper.findAllComponents(ProgressStep);
+    const listItems = wrapper.findAll('li');
 
-    expect(progressSteps.length).toBe(2);
-    expect(progressSteps[0].props()).toContain({ failed: true });
-    expect(progressSteps[1].props()).toContain({ failed: false });
+    expect(listItems[0].classes()).toContain('failed');
+    expect(listItems[1].classes()).not.toContain('failed');
   });
 
-  it('sets correctly the error message for each state', () => {
+  it('shows error message of a step', () => {
     const wrapper = createWrapper({
-      steps: [
-        { label: 'one', errorMessage: 'error one' },
-        { label: 'two', errorMessage: '' },
-      ],
+      steps: [{ label: 'one', errorMessage: 'test error' }],
     });
-    const progressSteps = wrapper.findAllComponents(ProgressStep);
+    const listItems = wrapper.findAll('li');
 
-    expect(progressSteps.length).toBe(2);
-    expect(progressSteps[0].props()).toContain({ errorMessage: 'error one' });
-    expect(progressSteps[1].props()).toContain({ errorMessage: '' });
+    expect(listItems[0].text()).toContain('test error');
   });
 });
