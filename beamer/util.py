@@ -1,13 +1,12 @@
 import json
 import logging
 import sys
-from typing import Any, List, Optional, TextIO, cast
+from typing import Any, List, Optional, TextIO, Union, cast
 
 import requests
 import structlog
 from eth_utils import is_checksum_address, to_checksum_address
-from hexbytes import HexBytes
-from web3.contract import ContractFunction
+from web3.contract import ContractConstructor, ContractFunction
 from web3.exceptions import ContractLogicError
 from web3.types import TxParams
 
@@ -25,14 +24,13 @@ class TransactionFailed(Exception):
         return str(self.__cause__)
 
 
-def transact(func: ContractFunction, **kwargs: Any) -> HexBytes:
+def transact(func: Union[ContractConstructor, ContractFunction], **kwargs: Any) -> Any:
     try:
         txn_hash = func.transact(cast(Optional[TxParams], kwargs))
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
-    func.web3.eth.wait_for_transaction_receipt(txn_hash)
-    return txn_hash
+    return func.web3.eth.wait_for_transaction_receipt(txn_hash)
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:

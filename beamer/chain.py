@@ -310,7 +310,7 @@ def fill_request(request: Request, context: Context) -> None:
         amount=request.amount,
     )
     try:
-        txn_hash = transact(func)
+        receipt = transact(func)
     except TransactionFailed as exc:
         log.error("fillRequest failed", request_id=request.id, cause=exc.cause())
         return
@@ -319,7 +319,7 @@ def fill_request(request: Request, context: Context) -> None:
     log.debug(
         "Filled request",
         request=request,
-        txn_hash=txn_hash.hex(),
+        txn_hash=receipt.transactionHash.hex(),
         token=token.functions.symbol().call(),
     )
 
@@ -338,7 +338,7 @@ def claim_request(request: Request, context: Context) -> None:
 
     func = context.request_manager.functions.claimRequest(request.id, request.fill_id)
     try:
-        txn_hash = transact(func, value=stake)
+        receipt = transact(func, value=stake)
     except TransactionFailed as exc:
         log.error(
             "claimRequest failed",
@@ -353,7 +353,7 @@ def claim_request(request: Request, context: Context) -> None:
     log.debug(
         "Claimed request",
         request=request,
-        txn_hash=txn_hash.hex(),
+        txn_hash=receipt.transactionHash.hex(),
     )
 
 
@@ -400,7 +400,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
 
     func = context.request_manager.functions.challengeClaim(claim.id)
     try:
-        txn_hash = transact(func, value=stake)
+        receipt = transact(func, value=stake)
     except TransactionFailed as exc:
         log.error("challengeClaim failed", claim=claim, cause=exc.cause(), stake=stake)
         return False
@@ -410,7 +410,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     log.debug(
         "Challenged claim",
         claim=claim,
-        txn_hash=txn_hash.hex(),
+        txn_hash=receipt.transactionHash.hex(),
     )
 
     return True
@@ -467,7 +467,7 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
 def _withdraw(claim: Claim, context: Context) -> None:
     func = context.request_manager.functions.withdraw(claim.id)
     try:
-        txn_hash = transact(func)
+        receipt = transact(func)
     except TransactionFailed as exc:
         # Ignore the exception when the claim has been withdrawn already
         if "Claim already withdrawn" in exc.cause():
@@ -479,7 +479,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
         return
 
     claim.transaction_pending = True
-    log.debug("Withdrew", claim=claim.id, txn_hash=txn_hash.hex())
+    log.debug("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
@@ -487,9 +487,9 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
     )
     try:
-        txn_hash = transact(func)
+        receipt = transact(func)
     except TransactionFailed as exc:
         log.error("Calling invalidateFillHash failed", claim=claim, cause=exc.cause())
         return
 
-    log.debug("Invalidated fill hash", claim=claim.id, txn_hash=txn_hash.hex())
+    log.debug("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())
