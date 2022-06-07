@@ -27,7 +27,11 @@ export function useChainSelection(
     Object.keys(chains.value).map((chainId) => getChainSelectorOption(chainId, chains.value)),
   );
   const targetChains = computed(() =>
-    sourceChains.value.filter((chain) => chain?.value !== selectedSourceChain.value?.value),
+    sourceChains.value.filter(
+      (chain) =>
+        chain?.value.identifier !== selectedSourceChain.value?.value.identifier ||
+        process.env.NODE_ENV === 'development',
+    ),
   );
 
   const switchChain = async (chain: Ref<Chain>) => {
