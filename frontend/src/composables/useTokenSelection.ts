@@ -8,11 +8,12 @@ import type { Token } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
 export function useTokenSelection(
-  provider: Ref<EthereumProvider | undefined>,
   chains: Ref<ChainConfigMapping>,
+  connectedChainIdentifier: Ref<number>,
+  provider: Ref<EthereumProvider | undefined>,
 ) {
   const tokens = computed(() =>
-    chains.value[String(provider.value?.chainId.value)]?.tokens.map((token) =>
+    chains.value[connectedChainIdentifier.value]?.tokens.map((token) =>
       getTokenSelectorOption(token),
     ),
   );

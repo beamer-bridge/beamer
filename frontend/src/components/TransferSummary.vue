@@ -4,12 +4,14 @@
       {{ date.toLocaleString() }}<br />
       You sent {{ amount }}&nbsp;{{ tokenSymbol }}<br />
       from {{ sourceChainName }} to {{ targetChainName }}<br />
-      Target address:&nbsp;<EthereumAddress :address="targetAccount" />
+      Target address:&nbsp;
+      <EthereumAddress :address="targetAccount" />
     </div>
 
     <a
       v-if="requestTransactionUrl"
       class="underline"
+      target="_blank"
       :href="requestTransactionUrl"
       data-test="explorer-link"
     >
