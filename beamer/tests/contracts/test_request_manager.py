@@ -41,9 +41,9 @@ def test_claim(token, request_manager, claim_stake):
     request_id = make_request(
         request_manager, token=token, requester=requester, target_address=requester, amount=1
     )
-    fill_id = to_bytes(b"123")
+
     claim_tx = request_manager.claimRequest(
-        request_id, fill_id, {"from": requester, "value": claim_stake}
+        request_id, FILL_ID, {"from": requester, "value": claim_stake}
     )
     claim_id = claim_tx.return_value
     expected_termination = (
@@ -59,7 +59,7 @@ def test_claim(token, request_manager, claim_stake):
     assert claim_event["lastChallenger"] == brownie.ZERO_ADDRESS
     assert claim_event["challengerStakeTotal"] == 0
     assert claim_event["termination"] == expected_termination
-    assert claim_event["fillId"] == to_hex(fill_id)
+    assert claim_event["fillId"] == to_hex(FILL_ID)
 
 
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
@@ -67,17 +67,23 @@ def test_claim_with_different_stakes(token, request_manager, claim_stake):
     (requester,) = alloc_accounts(1)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": requester, "value": claim_stake}
+    )
     assert "ClaimMade" in claim.events
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake - 1})
+        request_manager.claimRequest(
+            request_id, FILL_ID, {"from": requester, "value": claim_stake - 1}
+        )
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake + 1})
+        request_manager.claimRequest(
+            request_id, FILL_ID, {"from": requester, "value": claim_stake + 1}
+        )
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(request_id, 0, {"from": requester})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": requester})
 
 
 def test_claim_challenge(request_manager, token, claim_stake):
@@ -85,7 +91,9 @@ def test_claim_challenge(request_manager, token, claim_stake):
     requester, challenger = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    claim = request_manager.claimRequest(request_id, 0, {"from": requester, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": requester, "value": claim_stake}
+    )
 
     with brownie.reverts("Not enough stake provided"):
         request_manager.challengeClaim(
@@ -117,7 +125,9 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
     claimer, challenger, requester = alloc_accounts(3)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim.return_value
 
     with brownie.reverts("Not enough stake provided"):
@@ -158,7 +168,9 @@ def test_claim_two_challengers(request_manager, token, claim_stake):
     claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim.return_value
 
     # First challenger challenges
@@ -194,7 +206,9 @@ def test_claim_period_extension(
     claimer, challenger, requester = alloc_accounts(3)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim.return_value
 
     def _get_claim_termination(_claim_id: ClaimId) -> Termination:
@@ -261,7 +275,7 @@ def test_withdraw_nonexistent_claim(request_manager):
 def test_claim_nonexistent_request(request_manager):
     """Test claiming a non-existent request"""
     with brownie.reverts("requestId not valid"):
-        request_manager.claimRequest(1234, 0, {"from": alloc_accounts(1)[0]})
+        request_manager.claimRequest(1234, FILL_ID, {"from": alloc_accounts(1)[0]})
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
@@ -278,7 +292,9 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     assert web3.eth.get_balance(request_manager.address) == 0
 
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
-    claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim_tx = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim_tx.return_value
 
     assert web3.eth.get_balance(request_manager.address) == claim_stake
@@ -327,7 +343,9 @@ def test_withdraw_with_challenge(
     assert web3.eth.get_balance(request_manager.address) == 0
 
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
-    claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim_tx = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim_tx.return_value
 
     assert token.balanceOf(request_manager.address) == transfer_amount
@@ -388,12 +406,12 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer1, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer1, "value": claim_stake}
     )
     claim1_id = claim1_tx.return_value
 
     claim2_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer2, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer2, "value": claim_stake}
     )
     claim2_id = claim2_tx.return_value
 
@@ -537,12 +555,12 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer1, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer1, "value": claim_stake}
     )
     claim1_id = claim1_tx.return_value
 
     claim2_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer2, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer2, "value": claim_stake}
     )
     claim2_id = claim2_tx.return_value
 
@@ -620,12 +638,12 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
 
     claim1_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer1, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer1, "value": claim_stake}
     )
     claim1_id = claim1_tx.return_value
 
     claim2_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer2, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer2, "value": claim_stake}
     )
     claim2_id = claim2_tx.return_value
 
@@ -688,7 +706,9 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
     requester, claimer = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, requester, 23)
 
-    claim_tx = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim_tx = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim_tx.return_value
 
     # Timetravel after claim period
@@ -699,7 +719,7 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
 
     # Claiming the same request again must fail
     with brownie.reverts("Deposit already withdrawn"):
-        request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": claimer, "value": claim_stake})
 
 
 def test_second_claim_after_withdraw(deployer, request_manager, token, claim_stake, claim_period):
@@ -712,20 +732,20 @@ def test_second_claim_after_withdraw(deployer, request_manager, token, claim_sta
     claimer2_eth_balance = web3.eth.get_balance(claimer2.address)
 
     claim1_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer1, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer1, "value": claim_stake}
     )
     claim1_id = claim1_tx.return_value
 
     # Timetravel after claim period / 2.
     chain.mine(timedelta=claim_period / 2)
     claim2_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer2, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer2, "value": claim_stake}
     )
     claim2_id = claim2_tx.return_value
 
     # Another claim from the future depositReceiver
     claim3_tx = request_manager.claimRequest(
-        request_id, 0, {"from": claimer1, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer1, "value": claim_stake}
     )
     claim3_id = claim3_tx.return_value
 
@@ -860,7 +880,9 @@ def test_withdraw_two_challengers(
     claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
 
     request_id = make_request(request_manager, token, requester, requester, 1)
-    claim = request_manager.claimRequest(request_id, 0, {"from": claimer, "value": claim_stake})
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
     claim_id = claim.return_value
     first_challenger_eth_balance = web3.eth.get_balance(first_challenger.address)
     second_challenger_eth_balance = web3.eth.get_balance(second_challenger.address)
