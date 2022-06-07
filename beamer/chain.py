@@ -5,21 +5,19 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable
 
-import requests.exceptions
 import structlog
-from hexbytes import HexBytes
 from web3 import Web3
-from web3.contract import Contract, ContractFunction
-from web3.exceptions import ContractLogicError
-from web3.types import TxParams, Wei
+from web3.contract import Contract
+from web3.types import Wei
 
 from beamer.events import Event, EventFetcher
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.state_machine import Context, process_event
 from beamer.typing import BlockNumber, ChainId
+from beamer.util import TransactionFailed, transact
 
 log = structlog.get_logger(__name__)
 
@@ -208,27 +206,6 @@ class EventProcessor:
             self._events.extend(created_events)
 
 
-class _TransactionFailed(Exception):
-    def __repr__(self) -> str:
-        return "_TransactionFailed(%r)" % self.__cause__
-
-    def __str__(self) -> str:
-        return "transaction failed: %s" % self.cause()
-
-    def cause(self) -> str:
-        return str(self.__cause__)
-
-
-def _transact(func: ContractFunction, **kwargs: Any) -> HexBytes:
-    try:
-        txn_hash = func.transact(cast(Optional[TxParams], kwargs))
-    except (ContractLogicError, requests.exceptions.RequestException) as exc:
-        raise _TransactionFailed() from exc
-
-    func.web3.eth.wait_for_transaction_receipt(txn_hash)
-    return txn_hash
-
-
 def process_requests(context: Context) -> None:
     log.debug("Processing requests", num_requests=len(context.requests))
 
@@ -320,8 +297,8 @@ def fill_request(request: Request, context: Context) -> None:
 
     func = token.functions.approve(context.fill_manager.address, request.amount)
     try:
-        _transact(func)
-    except _TransactionFailed as exc:
+        transact(func)
+    except TransactionFailed as exc:
         log.error("approve failed", request_id=request.id, cause=exc.cause())
         return
 
@@ -333,8 +310,8 @@ def fill_request(request: Request, context: Context) -> None:
         amount=request.amount,
     )
     try:
-        txn_hash = _transact(func)
-    except _TransactionFailed as exc:
+        txn_hash = transact(func)
+    except TransactionFailed as exc:
         log.error("fillRequest failed", request_id=request.id, cause=exc.cause())
         return
 
@@ -361,8 +338,8 @@ def claim_request(request: Request, context: Context) -> None:
 
     func = context.request_manager.functions.claimRequest(request.id, request.fill_id)
     try:
-        txn_hash = _transact(func, value=stake)
-    except _TransactionFailed as exc:
+        txn_hash = transact(func, value=stake)
+    except TransactionFailed as exc:
         log.error(
             "claimRequest failed",
             request_id=request.id,
@@ -423,8 +400,8 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
 
     func = context.request_manager.functions.challengeClaim(claim.id)
     try:
-        txn_hash = _transact(func, value=stake)
-    except _TransactionFailed as exc:
+        txn_hash = transact(func, value=stake)
+    except TransactionFailed as exc:
         log.error("challengeClaim failed", claim=claim, cause=exc.cause(), stake=stake)
         return False
 
@@ -490,8 +467,8 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
 def _withdraw(claim: Claim, context: Context) -> None:
     func = context.request_manager.functions.withdraw(claim.id)
     try:
-        txn_hash = _transact(func)
-    except _TransactionFailed as exc:
+        txn_hash = transact(func)
+    except TransactionFailed as exc:
         # Ignore the exception when the claim has been withdrawn already
         if "Claim already withdrawn" in exc.cause():
             claim.transaction_pending = True
@@ -510,8 +487,8 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
     )
     try:
-        txn_hash = _transact(func)
-    except _TransactionFailed as exc:
+        txn_hash = transact(func)
+    except TransactionFailed as exc:
         log.error("Calling invalidateFillHash failed", claim=claim, cause=exc.cause())
         return
 
