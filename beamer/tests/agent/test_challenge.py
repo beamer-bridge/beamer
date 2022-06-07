@@ -6,6 +6,7 @@ import pytest
 from eth_utils import to_checksum_address
 
 import beamer.agent
+from beamer.tests.agent.unit.utils import FILL_ID
 from beamer.tests.util import EventCollector, HTTPProxy, alloc_accounts, earnings, make_request
 
 
@@ -133,7 +134,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         )
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
 
         collector = EventCollector(request_manager, "ClaimMade")
         collector.next_event()
@@ -187,7 +188,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         )
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
@@ -263,7 +264,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     request_id = make_request(
         request_manager, token, requester, target, amount, fee_data="standard"
     )
-    fill_id = 0
+    fill_id = FILL_ID
 
     if honest_claim:
         # Fill by Charlie
@@ -331,7 +332,7 @@ def test_withdraw_not_participant(request_manager, token, config):
     )
 
     stake = request_manager.claimStake()
-    request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+    request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
 
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()
@@ -373,7 +374,7 @@ def test_challenge_7(request_manager, fill_manager, token, config):
         request_id = make_request(request_manager, token, requester, target, amount)
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, 0, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
