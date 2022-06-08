@@ -1,61 +1,52 @@
 #!/usr/bin/env bash
-nth_parent() {
-    local n=$1
-    local path=$2
-    while [ $n -gt 0 ]; do
-        path=$(dirname "$path");
-        ((n--))
-    done
-    echo $path
-}
+. "$(realpath $(dirname $0))/../scripts/common.sh"
 
-
-ROOT="$(nth_parent 3 "$(realpath "$0")")"
+ROOT="$(get_root_dir)"
 NITRO="$ROOT/docker/arbitrum/nitro"
 
-DEPLOYMENT_DIR=$(mktemp -d)
+# Deployer's address & private key.
 ADDRESS=0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
-KEYFILE=$(mktemp -d)/${ADDRESS}.json
-echo Beamer deployer\'s keyfile: ${KEYFILE}
 
-poetry run python ${ROOT}/scripts/generate_account.py --key ${PRIVKEY} --password '' ${KEYFILE}
+CACHE_DIR=$(obtain_cache_dir $0)
+rm -rf ${CACHE_DIR}
+mkdir ${CACHE_DIR}
+
+DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
+DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/arbitrum-local.json"
+KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
+
+TEST_NODE_SCRIPT="${CACHE_DIR}/test-node-patched.bash"
+
+patch_test_node_script() {
+    # We need to patch the test-node.bash script so that it
+    # 1) does not ask for confirmation when given the --init option
+    # 2) uses the correct working directory
+    [ -f ${TEST_NODE_SCRIPT} ] || {
+        sed -E "s#^(run=true)\$#\1\nforce_init=true#;
+                s#^mydir=\`dirname .0\`#mydir=${NITRO}#" \
+            ${NITRO}/test-node.bash > ${TEST_NODE_SCRIPT}
+        chmod +x ${TEST_NODE_SCRIPT}
+    }
+}
+
+patch_test_node_script
+
+ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
+echo Beamer deployer\'s keyfile: ${KEYFILE}
 
 down() {
     echo "Shutting down the end-to-end environment"
     docker-compose -f ${NITRO}/docker-compose.yaml down
 }
 
-setup_brownie_chains() {
-    # It's currently not possible to define networks in a per-project way.
-    # Instead, update the config.
-    # First, remove the old networks, if any.
-    brownie networks delete l1 >/dev/null 2>&1 || true
-    brownie networks delete l2 >/dev/null 2>&1 || true
-
-    poetry run brownie networks add Ethereum l1 host="http://0.0.0.0:8545" chainid=1337
-    poetry run brownie networks add Ethereum l2 host="http://0.0.0.0:8547" chainid=421612
-}
-
-deploy_contracts() {
-    pushd "${ROOT}"
-    poetry run python scripts/deployment/main.py \
-        --keystore-file ${KEYFILE} \
-        --password '' \
-        --output-dir ${DEPLOYMENT_DIR} \
-        --config-file scripts/deployment/arbitrum-local.json \
-        --test-messenger \
-        --allow-same-chain
-    popd
-}
-
 wait_for_sequencer() {
-    local RETRIES=90
+    local RETRIES=180
     local i=0
     until docker logs nitro-sequencer-1 2>&1 | grep -q "HTTP server started";
     do
         echo 'Waiting for sequencer...'
-        sleep 2
+        sleep 1
         if [ $i -eq $RETRIES ]; then
             echo 'Timed out waiting for sequencer'
             break
@@ -65,36 +56,50 @@ wait_for_sequencer() {
 }
 
 fund_account() {
-    ${NITRO}/test-node.bash script send-l1 --ethamount 100 --to address_${ADDRESS}
-    ${NITRO}/test-node.bash script send-l2 --ethamount 100 --to address_${ADDRESS}
+    ${TEST_NODE_SCRIPT} script send-l1 --ethamount 100 --to address_${ADDRESS}
+    ${TEST_NODE_SCRIPT} script send-l2 --ethamount 100 --to address_${ADDRESS}
     # Wait a bit for the transactions to go through
     sleep 3
 }
 
 up() {
     echo Starting the end-to-end environment
-    # We need to patch the test-node.bash script so that it does not ask for
-    # confirmation when given the --init option.
-    PATCHED_TEST_NODE=${NITRO}/.test-node-patched.bash
-    sed -E 's/^(run=true)$/\1\nforce_init=true/' ${NITRO}/test-node.bash \
-        > ${PATCHED_TEST_NODE}
-    chmod +x ${PATCHED_TEST_NODE}
-
-    ${PATCHED_TEST_NODE} --init --detach --no-blockscout
-
+    ${TEST_NODE_SCRIPT} --init --detach --no-blockscout
     wait_for_sequencer
-    setup_brownie_chains
     fund_account
-    deploy_contracts
 }
+
+create_deployment_config_file() {
+    # get the address of the bridge contract, we need to to configure that
+    # address as the native messenger for our L1 messenger since the bridge
+    # will be delivering our message
+    BRIDGE=$(docker exec nitro-sequencer-1 jq -r .bridge /config/deployment.json)
+    BRIDGE=\"$(echo $BRIDGE | python -c 'import eth_utils; print(eth_utils.to_checksum_address(input()))')\"
+
+    INBOX=$(docker exec nitro-sequencer-1 jq -r .inbox /config/deployment.json)
+    INBOX=\"$(echo $INBOX | python -c 'import eth_utils; print(eth_utils.to_checksum_address(input()))')\"
+
+    sed "s/\${l1_messenger_args}/${BRIDGE}, ${INBOX}/" \
+        ${ROOT}/scripts/deployment/arbitrum-local-template.json \
+        > ${DEPLOYMENT_CONFIG_FILE}
+}
+
+e2e_test() {
+    l2_rpc=http://localhost:8547
+    password=""
+    poetry run python "${ROOT}/scripts/e2e-test.py" ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" ${l2_rpc}
+}
+
 
 usage() {
     cat <<EOF
-$0  [up | down ]
+$0  [up | down | deploy-beamer | e2e-test ]
 
 Commands:
-  up           Bring up a private Arbitrum instance. Deploy Beamer contracts on it.
-  down         Stop the Arbitrum instance.
+  up             Bring up a private Arbitrum instance.
+  down           Stop the Arbitrum instance.
+  deploy-beamer  Deploy Beamer contracts.
+  e2e-test       Run a test that verifies L2 -> L1 -> L2 messaging.
 EOF
 }
 
@@ -105,6 +110,15 @@ case $1 in
 
     down)
         down
+        ;;
+
+    deploy-beamer)
+        create_deployment_config_file &&
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        ;;
+
+    e2e-test)
+        e2e_test
         ;;
 
     *)
