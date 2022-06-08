@@ -12,7 +12,6 @@ from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIM_ID,
     CLAIMER_STAKE,
-    FILL_ID,
     REQUEST_ID,
     TARGET_CHAIN_ID,
     TIMESTAMP,
@@ -22,6 +21,7 @@ from beamer.tests.agent.unit.utils import (
     make_request,
 )
 from beamer.tests.agent.utils import make_address
+from beamer.tests.constants import FILL_ID
 from beamer.typing import Termination
 
 

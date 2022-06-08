@@ -1,8 +1,7 @@
 import brownie
 from brownie import chain
 
-from beamer.tests.agent.unit.utils import FILL_ID
-from beamer.tests.constants import RM_R_FIELD_LP_FEE, RM_R_FIELD_PROTOCOL_FEE
+from beamer.tests.constants import FILL_ID, RM_R_FIELD_LP_FEE, RM_R_FIELD_PROTOCOL_FEE
 from beamer.tests.util import alloc_accounts, make_request, temp_fee_data
 
 # Using this makes sure that we get nonzero fees when making requests.

@@ -6,7 +6,7 @@ import pytest
 from eth_utils import to_checksum_address
 
 import beamer.agent
-from beamer.tests.agent.unit.utils import FILL_ID
+from beamer.tests.constants import FILL_ID
 from beamer.tests.util import EventCollector, HTTPProxy, alloc_accounts, earnings, make_request
 
 
