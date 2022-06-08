@@ -98,15 +98,19 @@ def process_event(event: Event, context: Context) -> HandlerResult:
         raise RuntimeError("Unrecognized event type")
 
 
-def _find_claim_by_fill_hash(context: Context, fill_hash: FillHash) -> Optional[Claim]:
+def _find_claims_by_fill_hash(context: Context, fill_hash: FillHash) -> list[Claim]:
+    """
+    This returns a list, as there can be multiple claims with the same fill hash
+    """
+    matching_claims = []
     for claim in context.claims:
         request = context.requests.get(claim.request_id)
         assert request is not None
 
         if fill_hash == request.fill_hash_with_fill_id(claim.fill_id):
-            return claim
+            matching_claims.append(claim)
 
-    return None
+    return matching_claims
 
 
 def _handle_latest_block_updated(
@@ -265,9 +269,9 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
     fill_hash = create_fill_hash_from_request_hash(event.request_hash, event.fill_id)
-    claim = _find_claim_by_fill_hash(context, fill_hash)
-    if claim is not None:
-        request = context.requests.get(claim.request_id)
+    claims = _find_claims_by_fill_hash(context, fill_hash)
+    if len(claims) > 0:
+        request = context.requests.get(claims[0].request_id)
         assert request is not None, "Request missing for claim"
 
         request.l1_resolve(event.filler)
@@ -277,17 +281,16 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
-    claim = _find_claim_by_fill_hash(context, event.fill_hash)
-    if claim is not None:
+    claims = _find_claims_by_fill_hash(context, event.fill_hash)
+    for claim in claims:
         claim.start_challenge(event.tx_hash)
-        return True, None
 
-    return False, None
+    return len(claims) > 0, None
 
 
 def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
-    claim = _find_claim_by_fill_hash(context, event.fill_hash)
-    if claim is not None:
+    claims = _find_claims_by_fill_hash(context, event.fill_hash)
+    for claim in claims:
         claim.l1_invalidate()
 
     return True, None

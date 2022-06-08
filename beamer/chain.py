@@ -260,7 +260,7 @@ def process_claims(context: Context) -> None:
             continue
 
         if claim.is_invalidated_l1_resolved:
-            # TODO: See https://github.com/beamer-bridge/beamer/issues/674
+            maybe_withdraw(claim, context)
             continue
 
         # Check if claim is an honest claim. Honest claims can be ignored.
@@ -452,6 +452,10 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
         # Claimer cheated
         if agent_is_challenger and claim.claimer != request.l1_resolution_filler:
             _withdraw(claim, context)
+
+    # Claim has a non-fill proof and the agent is challenging
+    elif claim.is_invalidated_l1_resolved and agent_is_challenger:
+        _withdraw(claim, context)
 
     # Otherwise check that the challenge period is over
     elif block["timestamp"] >= claim.termination:
