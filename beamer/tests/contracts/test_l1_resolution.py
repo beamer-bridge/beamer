@@ -5,7 +5,7 @@ from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
-from beamer.tests.agent.unit.utils import FILL_ID_EMPTY
+from beamer.tests.constants import FILL_ID_EMPTY
 from beamer.tests.util import alloc_accounts, create_request_hash
 
 
@@ -82,13 +82,17 @@ def test_restricted_calls(contracts, resolver):
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolve(0, brownie.chain.id, brownie.chain.id, caller, {"from": caller})
+        contracts.resolver.resolve(
+            0, 0, brownie.chain.id, brownie.chain.id, caller, {"from": caller}
+        )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolveNonFill(0, brownie.chain.id, brownie.chain.id, {"from": caller})
+        contracts.resolver.resolveNonFill(
+            0, 0, brownie.chain.id, brownie.chain.id, {"from": caller}
+        )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.resolveRequest(0, 0, caller, {"from": caller})
+        contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.invalidateFillHash(0, 0, {"from": caller})
+        contracts.resolution_registry.invalidateFillHash(0, 0, 0, {"from": caller})

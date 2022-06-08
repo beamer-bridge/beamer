@@ -4,10 +4,15 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
-from beamer.tests.agent.unit.utils import FILL_ID
 from beamer.tests.agent.utils import make_address
-from beamer.tests.constants import RM_C_FIELD_TERMINATION
-from beamer.tests.util import alloc_accounts, create_fill_hash, earnings, make_request
+from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION
+from beamer.tests.util import (
+    alloc_accounts,
+    create_fill_hash,
+    create_request_hash,
+    earnings,
+    make_request,
+)
 from beamer.typing import ClaimId, FillId, Termination
 
 
@@ -825,6 +830,15 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
     # Start L1 resolution
+    request_hash = create_request_hash(
+        request_id,
+        web3.eth.chain_id,
+        web3.eth.chain_id,
+        token.address,
+        requester.address,
+        transfer_amount,
+    )
+
     fill_hash = create_fill_hash(
         request_id,
         web3.eth.chain_id,
@@ -839,14 +853,14 @@ def test_withdraw_without_challenge_with_resolution(
 
     if invalidate:
         resolution_registry.invalidateFillHash(
-            fill_hash, chain.id, {"from": contracts.l1_messenger}
+            request_hash, fill_id, chain.id, {"from": contracts.l1_messenger}
         )
     # Assert that invalidation works
     assert resolution_registry.invalidFillHashes(fill_hash) == invalidate
 
     # Register a L1 resolution
     resolution_registry.resolveRequest(
-        fill_hash, web3.eth.chain_id, l1_filler, {"from": contracts.l1_messenger}
+        request_hash, fill_id, web3.eth.chain_id, l1_filler, {"from": contracts.l1_messenger}
     )
 
     # Assert that correct filler is resolved, it reverts the false invalidation

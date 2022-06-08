@@ -7,13 +7,9 @@ from hexbytes import HexBytes
 from beamer.chain import process_claims
 from beamer.events import FillHashInvalidated, HashInvalidated
 from beamer.state_machine import process_event
-from beamer.tests.agent.unit.utils import (
-    FILL_ID,
-    make_claim_unchallenged,
-    make_context,
-    make_request,
-)
+from beamer.tests.agent.unit.utils import make_claim_unchallenged, make_context, make_request
 from beamer.tests.agent.utils import make_tx_hash
+from beamer.tests.constants import FILL_ID
 from beamer.typing import ClaimId, FillId
 
 

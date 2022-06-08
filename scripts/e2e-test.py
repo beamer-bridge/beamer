@@ -72,7 +72,6 @@ def main() -> None:
     request_hash = create_request_hash(
         request_id, chain_id, chain_id, token.address, deployer.address, request_amount
     )
-    fill_hash = fill_manager.functions.fills(request_hash).call()
 
     # A fill has been done, and the proof has been submitted.  As the message
     # resolver runs in the e2e setup, the resultion will be triggered
@@ -83,10 +82,10 @@ def main() -> None:
     for _ in range(50):
         time.sleep(1)
         print("Waiting for resolution data...")
-        if resolution_registry.functions.fillers(fill_hash).call() == deployer.address:
+        if resolution_registry.functions.fillers(request_hash).call()[0] == deployer.address:
             break
 
-    assert resolution_registry.functions.fillers(fill_hash).call() == deployer.address
+    assert resolution_registry.functions.fillers(request_hash).call()[0] == deployer.address
 
 
 if __name__ == "__main__":

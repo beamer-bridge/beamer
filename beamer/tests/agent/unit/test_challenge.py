@@ -5,7 +5,6 @@ from beamer.chain import process_claims
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIMER_STAKE,
-    FILL_ID,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
@@ -13,6 +12,7 @@ from beamer.tests.agent.unit.utils import (
     make_request,
 )
 from beamer.tests.agent.utils import make_address
+from beamer.tests.constants import FILL_ID
 from beamer.typing import FillId, Termination
 
 
