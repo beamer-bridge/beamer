@@ -1,18 +1,17 @@
 import brownie
 import pytest
+from brownie.convert.datatypes import HexString
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
-from beamer.tests.util import alloc_accounts, create_fill_hash
+from beamer.tests.agent.unit.utils import FILL_ID_EMPTY
+from beamer.tests.util import alloc_accounts, create_request_hash
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("forward_state", [True])
-@pytest.mark.parametrize("use_correct_fill_id", [True, False])
-def test_l1_resolution_correct_hash(
-    fill_manager, deployer, resolution_registry, token, amount, use_correct_fill_id
-):
+def test_l1_resolution_correct_hash(fill_manager, deployer, resolution_registry, token, amount):
     requested_amount = 100
     request_id = 23
     filler, receiver = alloc_accounts(2)
@@ -26,27 +25,28 @@ def test_l1_resolution_correct_hash(
     fill_tx = fill_manager.fillRequest(
         request_id, chain_id, token.address, receiver, amount, {"from": filler}
     )
-
     fill_id = fill_tx.return_value
 
-    if not use_correct_fill_id:
-        fill_id = keccak(b"wrong fill id")
-
-    fill_hash = create_fill_hash(
+    request_hash = create_request_hash(
         request_id,
         chain_id,
         chain_id,
         token.address,
         receiver.address,
         requested_amount,
-        fill_id,
     )
 
     expected_address = ADDRESS_ZERO
-    if amount == requested_amount and use_correct_fill_id:
-        expected_address = filler
+    expected_fill_id = FILL_ID_EMPTY
 
-    assert resolution_registry.fillers(fill_hash) == expected_address
+    if amount == requested_amount:
+        expected_address = filler
+        expected_fill_id = fill_id
+
+    resolved_filler, resolved_fill_id = resolution_registry.fillers(request_hash)
+
+    assert resolved_filler == expected_address
+    assert resolved_fill_id == HexString(expected_fill_id, "bytes32")
 
 
 @pytest.mark.parametrize("forward_state", [True])
