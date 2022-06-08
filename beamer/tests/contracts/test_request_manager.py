@@ -890,6 +890,101 @@ def test_withdraw_without_challenge_with_resolution(
         request_manager.withdraw(claim_id, {"from": claimer})
 
 
+def test_withdraw_l1_resolved_muliple_claims(
+    contracts, request_manager, resolution_registry, token, claim_stake
+):
+    requester, first_claimer, second_claimer = alloc_accounts(3)
+    transfer_amount = 23
+    token.mint(requester, transfer_amount, {"from": requester})
+
+    # Initial balances
+    first_claimer_eth_balance = web3.eth.get_balance(first_claimer.address)
+    second_claimer_eth_balance = web3.eth.get_balance(second_claimer.address)
+    owner_eth_balance = web3.eth.get_balance(request_manager.owner())
+
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+
+    # Creating 4 Claims
+    fill_id = FILL_ID
+
+    # Claim 1: valid claim
+    claim_tx_1 = request_manager.claimRequest(
+        request_id, fill_id, {"from": first_claimer, "value": claim_stake}
+    )
+    claim_id_1 = claim_tx_1.return_value
+
+    # Claim 2: claimer is not the filler, invalid claim
+    claim_tx_2 = request_manager.claimRequest(
+        request_id, fill_id, {"from": second_claimer, "value": claim_stake}
+    )
+    claim_id_2 = claim_tx_2.return_value
+
+    # Claim 3: another valid claim
+    claim_tx_3 = request_manager.claimRequest(
+        request_id, fill_id, {"from": first_claimer, "value": claim_stake}
+    )
+    claim_id_3 = claim_tx_3.return_value
+
+    # Claim 4: claimer is the filler but fill id is wrong, invalid claim
+    claim_tx_4 = request_manager.claimRequest(
+        request_id, b"wrong fill id", {"from": first_claimer, "value": claim_stake}
+    )
+    claim_id_4 = claim_tx_4.return_value
+
+    contracts.l1_messenger.setLastSender(contracts.resolver.address)
+
+    # Before L1 resolution, all claims are still running and cannot be withdrawn
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id_1, {"from": first_claimer})
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id_2, {"from": second_claimer})
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id_3, {"from": first_claimer})
+    with brownie.reverts("Claim period not finished"):
+        request_manager.withdraw(claim_id_4, {"from": first_claimer})
+
+    # Start L1 resolution
+    request_hash = create_request_hash(
+        request_id,
+        web3.eth.chain_id,
+        web3.eth.chain_id,
+        token.address,
+        requester.address,
+        transfer_amount,
+    )
+
+    # Register a L1 resolution
+    resolution_registry.resolveRequest(
+        request_hash, fill_id, web3.eth.chain_id, first_claimer, {"from": contracts.l1_messenger}
+    )
+
+    # The claim period is not over, but the resolution must allow withdrawal now
+    # Valid claim will result in payout
+    withdraw_tx = request_manager.withdraw(claim_id_1, {"from": first_claimer})
+    assert "DepositWithdrawn" in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    # Wrong claimer, since it is not challenged stakes go to the contract owner
+    withdraw_tx = request_manager.withdraw(claim_id_2, {"from": second_claimer})
+    assert "DepositWithdrawn" not in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    # Another valid claim, deposit is already withdrawn but stakes go back to claimer
+    withdraw_tx = request_manager.withdraw(claim_id_3, {"from": first_claimer})
+    assert "DepositWithdrawn" not in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    # Wrong fill id, since it is not challenged stakes go to the contract owner
+    withdraw_tx = request_manager.withdraw(claim_id_4, {"from": first_claimer})
+    assert "DepositWithdrawn" not in withdraw_tx.events
+    assert "ClaimWithdrawn" in withdraw_tx.events
+
+    assert web3.eth.get_balance(first_claimer.address) == first_claimer_eth_balance - claim_stake
+    assert web3.eth.get_balance(second_claimer.address) == second_claimer_eth_balance - claim_stake
+    # Two of the claims were invalid, thus stakes went to the contract owner
+    assert web3.eth.get_balance(request_manager.owner()) == owner_eth_balance + 2 * claim_stake
+
+
 def test_withdraw_two_challengers(
     request_manager, token, claim_stake, finalization_time, challenge_period_extension
 ):
