@@ -1,4 +1,5 @@
 from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 from hexbytes import HexBytes
@@ -219,9 +220,12 @@ def test_maybe_claim_no_l1():
     assert not claim.transaction_pending
 
 
+@patch("beamer.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ACCOUNT.address, make_address()])
-def test_maybe_claim_l1_as_claimer(termination: Termination, l1_filler: ChecksumAddress):
+def test_maybe_claim_l1_as_claimer(
+    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress
+):
     context, config = make_context()
 
     request = make_request()
@@ -239,14 +243,17 @@ def test_maybe_claim_l1_as_claimer(termination: Termination, l1_filler: Checksum
 
     # If agent is the filler, `withdraw` should be called, otherwise not
     if l1_filler == context.address:
-        assert claim.transaction_pending
+        assert mocked_withdraw.called
     else:
-        assert not claim.transaction_pending
+        assert not mocked_withdraw.called
 
 
+@patch("beamer.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ADDRESS1, make_address()])
-def test_maybe_claim_l1_as_challenger(termination: Termination, l1_filler: ChecksumAddress):
+def test_maybe_claim_l1_as_challenger(
+    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress
+):
     context, config = make_context()
 
     request = make_request()
@@ -268,6 +275,6 @@ def test_maybe_claim_l1_as_challenger(termination: Termination, l1_filler: Check
     # If agent is the challenger and the claimer cheated,
     # `withdraw` should be called, otherwise not
     if l1_filler != ADDRESS1:
-        assert claim.transaction_pending
+        assert mocked_withdraw.called
     else:
-        assert not claim.transaction_pending
+        assert not mocked_withdraw.called

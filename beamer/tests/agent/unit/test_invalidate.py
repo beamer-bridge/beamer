@@ -7,10 +7,18 @@ from hexbytes import HexBytes
 from beamer.chain import process_claims
 from beamer.events import FillHashInvalidated, HashInvalidated
 from beamer.state_machine import process_event
-from beamer.tests.agent.unit.utils import make_claim_unchallenged, make_context, make_request
-from beamer.tests.agent.utils import make_tx_hash
+from beamer.tests.agent.unit.utils import (
+    ACCOUNT,
+    ADDRESS1,
+    TIMESTAMP,
+    make_claim_challenged,
+    make_claim_unchallenged,
+    make_context,
+    make_request,
+)
+from beamer.tests.agent.utils import make_address, make_tx_hash
 from beamer.tests.constants import FILL_ID
-from beamer.typing import ClaimId, FillId
+from beamer.typing import ClaimId, FillId, Termination
 
 
 def test_handle_fill_hash_invalidated():
@@ -155,3 +163,41 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out(mocked_invalidate):
     process_claims(context)
     assert claim.is_claimer_winning
     assert mocked_invalidate.called
+
+
+@patch("beamer.chain._withdraw")
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (ACCOUNT.address, ADDRESS1, False),
+        (ADDRESS1, ACCOUNT.address, True),
+        (ADDRESS1, make_address(), False),
+    ],
+)
+def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
+    context, _ = make_context()
+
+    request = make_request()
+    context.requests.add(request.id, request)
+
+    claimer = test_data[0]
+    challenger = test_data[1]
+    should_withdraw = test_data[2]
+
+    claim = make_claim_challenged(
+        request=request,
+        claimer=claimer,
+        challenger=challenger,
+        # Claim should not be withdrawable yet
+        termination=Termination(TIMESTAMP + 1),
+    )
+    context.claims.add(claim.id, claim)
+    claim.start_challenge(make_tx_hash())
+    claim.l1_invalidate()
+    assert claim.is_invalidated_l1_resolved  # pylint:disable=no-member
+
+    assert not mocked_withdraw.called
+
+    process_claims(context)
+
+    assert should_withdraw == mocked_withdraw.called
