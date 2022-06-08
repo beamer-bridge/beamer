@@ -459,10 +459,6 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
         if context.address in winning_addresses:
             _withdraw(claim, context)
 
-    agent_winning = context.address in claim.get_winning_addresses()
-    if not agent_winning:
-        return
-
 
 def _withdraw(claim: Claim, context: Context) -> None:
     func = context.request_manager.functions.withdraw(claim.id)
