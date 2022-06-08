@@ -25,6 +25,7 @@ TARGET_CHAIN_ID = ChainId(3)
 REQUEST_ID = RequestId(10)
 CLAIM_ID = ClaimId(200)
 FILL_ID = FillId(b"abc")
+FILL_ID_EMPTY = FillId(b"")
 
 CLAIMER_STAKE = Wei(10_000_000)
 CHALLENGER_STAKE = Wei(5_000_000)
