@@ -23,7 +23,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-from beamer.typing import Termination
+from beamer.typing import FillId, Termination
 
 
 def test_skip_not_self_filled():
@@ -223,26 +223,30 @@ def test_maybe_claim_no_l1():
 @patch("beamer.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ACCOUNT.address, make_address()])
+@pytest.mark.parametrize("l1_fill_id", [FILL_ID, FillId(b"wrong fill id")])
 def test_maybe_claim_l1_as_claimer(
-    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress
+    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress, l1_fill_id: FillId
 ):
     context, config = make_context()
+    # Assert that ACCOUNT.address is the agent's address
+    # Is used as an assurance that in case ACCOUNT is changed
+    assert config.account.address == ACCOUNT.address
 
     request = make_request()
     request.fill(config.account.address, b"", b"")
-    request.l1_resolution_filler = l1_filler
+    request.l1_resolve(l1_filler, l1_fill_id)
     context.requests.add(request.id, request)
 
     claim = make_claim_challenged(
-        request=request, claimer=config.account.address, termination=termination
+        request=request, claimer=config.account.address, fill_id=FILL_ID, termination=termination
     )
     context.claims.add(claim.id, claim)
 
     assert not claim.transaction_pending
     process_claims(context)
 
-    # If agent is the filler, `withdraw` should be called, otherwise not
-    if l1_filler == context.address:
+    # If agent is the correct filler, `withdraw` should be called, otherwise not
+    if l1_filler == context.address and l1_fill_id == FILL_ID:
         assert mocked_withdraw.called
     else:
         assert not mocked_withdraw.called
@@ -251,20 +255,25 @@ def test_maybe_claim_l1_as_claimer(
 @patch("beamer.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ADDRESS1, make_address()])
+@pytest.mark.parametrize("l1_fill_id", [FILL_ID, FillId(b"wrong fill id")])
 def test_maybe_claim_l1_as_challenger(
-    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress
+    mocked_withdraw, termination: Termination, l1_filler: ChecksumAddress, l1_fill_id: FillId
 ):
     context, config = make_context()
-
+    # Assert that ACCOUNT.address is the agent's address
+    # Is used as an assurance that in case ACCOUNT is changed
+    assert config.account.address == ACCOUNT.address
     request = make_request()
     request.fill(ADDRESS1, b"", b"")
-    request.l1_resolution_filler = l1_filler
+    request.l1_resolve(l1_filler, l1_fill_id)
+
     context.requests.add(request.id, request)
 
     claim = make_claim_challenged(
         request=request,
         claimer=ADDRESS1,
         challenger=config.account.address,
+        fill_id=FILL_ID,
         termination=termination,
     )
     context.claims.add(claim.id, claim)
@@ -274,7 +283,7 @@ def test_maybe_claim_l1_as_challenger(
 
     # If agent is the challenger and the claimer cheated,
     # `withdraw` should be called, otherwise not
-    if l1_filler != ADDRESS1:
+    if l1_filler != ADDRESS1 or l1_fill_id != FILL_ID:
         assert mocked_withdraw.called
     else:
         assert not mocked_withdraw.called
