@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { flushPromises } from '@vue/test-utils';
 
@@ -57,16 +56,28 @@ const SIGNER_ADDRESS = '0xSigner';
 
 describe('transfer', () => {
   beforeEach(() => {
-    tokenUtils!.ensureTokenAllowance = vi.fn().mockResolvedValue(undefined);
-    requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
-    requestManager!.getRequestIdentifier = vi.fn().mockResolvedValue(1);
-    requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
-      promise: new Promise(() => undefined),
-      cancel: vi.fn(),
+    Object.defineProperties(tokenUtils, {
+      ensureTokenAllowance: { value: vi.fn().mockResolvedValue(undefined) },
     });
-    fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
-      promise: new Promise<void>((resolve) => resolve()),
-      cancel: vi.fn(),
+
+    Object.defineProperties(requestManager, {
+      sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
+      getRequestIdentifier: { value: vi.fn().mockResolvedValue(1) },
+      waitUntilRequestExpiresAndFail: {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise(() => undefined),
+          cancel: vi.fn(),
+        }),
+      },
+    });
+
+    Object.defineProperties(fillManager, {
+      waitForFulfillment: {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise<void>((resolve) => resolve()),
+          cancel: vi.fn(),
+        }),
+      },
     });
   });
 
@@ -94,7 +105,7 @@ describe('transfer', () => {
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
       expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenCalledTimes(1);
-      expect(fillManager!.waitForFulfillment).toHaveBeenCalledTimes(1);
+      expect(fillManager.waitForFulfillment).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -160,7 +171,9 @@ describe('transfer', () => {
 
     it('sets the request account and transaction hash', async () => {
       const transfer = new TestTransfer(DATA);
-      requestManager!.sendRequestTransaction = vi.fn().mockResolvedValue('0xHash');
+      Object.defineProperties(requestManager, {
+        sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
+      });
 
       expect(transfer.requestInformation?.requestAccount).toBeUndefined();
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
@@ -267,13 +280,18 @@ describe('transfer', () => {
 
     it('cancels waiting for exception when request got fulfilled', async () => {
       const cancelExpirationCheck = vi.fn();
-      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
-        promise: new Promise(() => undefined),
-        cancel: cancelExpirationCheck,
+      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise(() => undefined),
+          cancel: cancelExpirationCheck,
+        }),
       });
-      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
-        promise: new Promise<void>((resolve) => resolve()),
-        cancel: () => undefined,
+
+      Object.defineProperty(fillManager, 'waitForFulfillment', {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise<void>((resolve) => resolve()),
+          cancel: () => undefined,
+        }),
       });
 
       const data = generateTransferData({
@@ -290,13 +308,18 @@ describe('transfer', () => {
 
     it('cancels waiting for fulfillment when request has expired', async () => {
       const cancelFulfillmentCheck = vi.fn();
-      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
-        promise: new Promise((_, reject) => reject()),
-        cancel: vi.fn(),
+      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
+        value: vi.fn().mockReturnValue({
+          promise: Promise.reject(),
+          cancel: vi.fn(),
+        }),
       });
-      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
-        promise: new Promise(() => undefined),
-        cancel: cancelFulfillmentCheck,
+
+      Object.defineProperty(fillManager, 'waitForFulfillment', {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise(() => undefined),
+          cancel: cancelFulfillmentCheck,
+        }),
       });
 
       const data = generateTransferData({
@@ -316,13 +339,18 @@ describe('transfer', () => {
     });
 
     it('sets transfer to be expired if expiration promise rejects with according error', async () => {
-      requestManager!.waitUntilRequestExpiresAndFail = vi.fn().mockReturnValue({
-        promise: new Promise((_, reject) => reject(new RequestExpiredError())),
-        cancel: vi.fn(),
+      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
+        value: vi.fn().mockReturnValue({
+          promise: Promise.reject(new RequestExpiredError()),
+          cancel: vi.fn(),
+        }),
       });
-      fillManager!.waitForFulfillment = vi.fn().mockReturnValue({
-        promise: new Promise(() => undefined),
-        cancel: vi.fn(),
+
+      Object.defineProperty(fillManager, 'waitForFulfillment', {
+        value: vi.fn().mockReturnValue({
+          promise: new Promise(() => undefined),
+          cancel: vi.fn(),
+        }),
       });
 
       const data = generateTransferData({
