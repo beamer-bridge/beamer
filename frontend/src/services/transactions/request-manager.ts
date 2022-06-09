@@ -9,12 +9,16 @@ import type { EthereumAddress } from '@/types/data';
 import { EthereumAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
+function getContract(rpcUrl: string, address: EthereumAddress): Contract {
+  const provider = new JsonRpcProvider(rpcUrl);
+  return new Contract(address, RequestManager.abi, provider);
+}
+
 export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<EthereumAmount> {
-  const provider = new JsonRpcProvider(rpcUrl);
-  const contract = new Contract(requestManagerAddress, RequestManager.abi, provider);
+  const contract = getContract(rpcUrl, requestManagerAddress);
   const fetchedAmount: BigNumberish = await contract.totalFee();
   return new EthereumAmount(fetchedAmount.toString());
 }
@@ -66,10 +70,10 @@ export async function getRequestIdentifier(
   transactionHash: string,
 ): Promise<UInt256> {
   const provider = new JsonRpcProvider(rpcUrl);
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, provider);
+  const contract = getContract(rpcUrl, requestManagerAddress);
   const transaction = await provider.getTransaction(transactionHash);
   const receipt = await transaction.wait();
-  const event = requestManagerContract.interface.parseLog(receipt.logs[0]);
+  const event = contract.interface.parseLog(receipt.logs[0]);
 
   if (event) {
     return new UInt256(event.args.requestId);
@@ -84,7 +88,7 @@ export async function checkIfRequestHasExpired(
   requestIdentifier: UInt256,
 ): Promise<boolean> {
   const provider = new JsonRpcProvider(rpcUrl);
-  const contract = new Contract(requestManagerAddress, RequestManager.abi, provider);
+  const contract = getContract(rpcUrl, requestManagerAddress);
   const request: { validUntil: BigNumber; activeClaims: BigNumber } | undefined =
     await contract.requests(BigNumber.from(requestIdentifier.asString));
 
