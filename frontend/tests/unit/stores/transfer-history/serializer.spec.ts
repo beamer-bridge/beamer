@@ -31,12 +31,12 @@ describe('transfer history serializer', () => {
   });
 
   describe('deserialize()', () => {
-    it('returns empty state if retrieved data can not be parsed as an object', () => {
+    it('returns empty list of transfers if retrieved data can not be parsed as an object', () => {
       global.console.error = vi.fn();
 
       const state = transferHistorySerializer.deserialize('1');
 
-      expect(state).toEqual({ transfers: [] });
+      expect(state.transfers).toEqual([]);
     });
 
     it('reports error to console if retrieved data can not be parsed', () => {
@@ -90,6 +90,11 @@ describe('transfer history serializer', () => {
         }),
       );
     });
+
+    it('sets the state to be loaded', () => {
+      const state = transferHistorySerializer.deserialize(JSON.stringify({}));
+
+      expect(state.loaded).toBeTruthy();
     });
   });
 });

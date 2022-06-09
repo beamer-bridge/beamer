@@ -14,7 +14,7 @@ describe('configuration store', () => {
       const history = useTransferHistory();
       const oldTransfer = generateTransfer();
       const newTransfer = generateTransfer();
-      history.$state = { transfers: [oldTransfer] };
+      history.$state = { transfers: [oldTransfer], loaded: false };
 
       history.addTransfer(newTransfer);
 
