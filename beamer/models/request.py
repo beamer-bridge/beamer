@@ -34,6 +34,7 @@ class Request(StateMachine):
         self.fill_tx: Optional[HexBytes] = None
         self.fill_id: Optional[FillId] = None
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
+        self.l1_resolution_fill_id: Optional[FillId] = None
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
@@ -59,8 +60,11 @@ class Request(StateMachine):
         self.fill_tx = fill_tx
         self.fill_id = fill_id
 
-    def on_l1_resolve(self, l1_filler: Optional[ChecksumAddress] = None) -> None:
+    def on_l1_resolve(
+        self, l1_filler: Optional[ChecksumAddress] = None, l1_fill_id: Optional[FillId] = None
+    ) -> None:
         self.l1_resolution_filler = l1_filler
+        self.l1_resolution_fill_id = l1_fill_id
 
     @property
     def request_hash(self) -> RequestHash:
