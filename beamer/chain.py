@@ -439,18 +439,24 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
     assert request is not None, "Active claim for non-existent request"
 
     block = context.latest_blocks[request.source_chain_id]
-    has_l1_resolution = request.l1_resolution_filler is not None
     agent_is_claimer = claim.claimer == context.address
     agent_is_challenger = claim.get_challenger_stake(context.address) > 0
 
     # When request is L1 resolved, the termination isn't important
-    if has_l1_resolution:
+    if request.is_l1_resolved:
         # We claimed the request
-        if agent_is_claimer and request.l1_resolution_filler == context.address:
+        if (
+            agent_is_claimer
+            and request.l1_resolution_filler == context.address
+            and request.l1_resolution_fill_id == claim.fill_id
+        ):
             _withdraw(claim, context)
 
         # Claimer cheated
-        if agent_is_challenger and claim.claimer != request.l1_resolution_filler:
+        if agent_is_challenger and (
+            request.l1_resolution_filler != claim.claimer
+            or request.l1_resolution_fill_id != claim.fill_id
+        ):
             _withdraw(claim, context)
 
     # Claim has a non-fill proof and the agent is challenging
