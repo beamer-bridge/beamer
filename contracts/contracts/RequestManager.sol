@@ -81,6 +81,7 @@ contract RequestManager is Ownable {
     uint256 public constant MAX_VALIDITY_PERIOD = 52 weeks;
 
     // Variables
+    bool public deprecated;
     uint256 public requestCounter;
     uint256 public claimCounter;
     ResolutionRegistry public resolutionRegistry;
@@ -143,6 +144,7 @@ contract RequestManager is Ownable {
         uint256 amount,
         uint256 validityPeriod
     ) external payable returns (uint256) {
+        require(deprecated == false, "Contract is deprecated");
         require(
             finalizationTimes[targetChainId] != 0,
             "Target rollup not supported"
@@ -512,5 +514,10 @@ contract RequestManager is Ownable {
             "Finalization time must be greater than 0"
         );
         finalizationTimes[targetChainId] = finalizationTime;
+    }
+
+    function deprecateContract() external onlyOwner {
+        require(deprecated == false, "Contract already deprecated");
+        deprecated = true;
     }
 }
