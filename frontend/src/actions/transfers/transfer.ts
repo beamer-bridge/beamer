@@ -2,7 +2,7 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 
 import type { StepData } from '@/actions/steps';
 import { MultiStepAction, Step } from '@/actions/steps';
-import { waitForFulfillment } from '@/services/transactions/fill-manager';
+import { getCurrentBlockNumber, waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   failWhenRequestExpires,
   getRequestData,
@@ -102,8 +102,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected getStepMethods(
-    signer: JsonRpcSigner,
-    signerAddress: EthereumAddress,
+    signer?: JsonRpcSigner,
+    signerAddress?: EthereumAddress,
   ): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
@@ -114,7 +114,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  public async execute(signer: JsonRpcSigner, signerAddress: EthereumAddress): Promise<void> {
+  public async execute(signer?: JsonRpcSigner, signerAddress?: EthereumAddress): Promise<void> {
     const methods = this.getStepMethods(signer, signerAddress);
     return super.executeSteps(methods);
   }
@@ -177,7 +177,11 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  protected async ensureTokenAllowance(signer: JsonRpcSigner): Promise<void> {
+  protected async ensureTokenAllowance(signer?: JsonRpcSigner): Promise<void> {
+    if (signer === undefined) {
+      throw new Error('Missing wallet connection!');
+    }
+
     await ensureTokenAllowance(
       signer,
       this.sourceAmount.token.address,
@@ -187,9 +191,15 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async sendRequestTransaction(
-    signer: JsonRpcSigner,
-    signerAddress: EthereumAddress,
+    signer?: JsonRpcSigner,
+    signerAddress?: EthereumAddress,
   ): Promise<void> {
+    if (signer === undefined || signerAddress === undefined) {
+      throw new Error('Missing wallet connection!');
+    }
+
+    const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.rpcUrl);
+
     const transactionHash = await sendRequestTransaction(
       signer,
       this.sourceAmount.uint256,
@@ -205,6 +215,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this._requestInformation = new RequestInformation({
       transactionHash,
       requestAccount: signerAddress,
+      blockNumberOnTargetChain,
     });
   }
 
@@ -231,6 +242,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.targetChain.rpcUrl,
       this.targetChain.fillManagerAddress,
       this._requestInformation.identifier,
+      this._requestInformation.blockNumberOnTargetChain,
     );
 
     const { promise: expirationPromise, cancel: cancelExpirationCheck } = failWhenRequestExpires(

@@ -29,15 +29,15 @@ vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestTransfer extends Transfer {
-  public getStepMethods(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
+  public getStepMethods(signer?: JsonRpcSigner, signerAddress?: EthereumAddress) {
     return super.getStepMethods(signer, signerAddress);
   }
 
-  public ensureTokenAllowance(signer: JsonRpcSigner) {
+  public ensureTokenAllowance(signer?: JsonRpcSigner) {
     return super.ensureTokenAllowance(signer);
   }
 
-  public sendRequestTransaction(signer: JsonRpcSigner, signerAddress: EthereumAddress) {
+  public sendRequestTransaction(signer?: JsonRpcSigner, signerAddress?: EthereumAddress) {
     return super.sendRequestTransaction(signer, signerAddress);
   }
 
@@ -102,6 +102,7 @@ describe('transfer', () => {
     });
 
     Object.defineProperties(fillManager, {
+      getCurrentBlockNumber: { value: vi.fn().mockResolvedValue(0) },
       waitForFulfillment: {
         value: vi.fn().mockReturnValue({
           promise: new Promise<void>((resolve) => resolve()),
@@ -140,6 +141,13 @@ describe('transfer', () => {
   });
 
   describe('ensureTokenAllowance()', () => {
+    it('fails if given signer is undefined', async () => {
+      const data = generateTransferData();
+      const transfer = new TestTransfer(data);
+
+      return expect(transfer.ensureTokenAllowance()).rejects.toThrow('Missing wallet connection!');
+    });
+
     it('calls the token utility function for the source token', async () => {
       const data = generateTransferData({
         sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
@@ -164,6 +172,24 @@ describe('transfer', () => {
   });
 
   describe('sendRequestTransaction()', () => {
+    it('fails if given signer is undefined', () => {
+      const data = generateTransferData();
+      const transfer = new TestTransfer(data);
+
+      return expect(transfer.sendRequestTransaction(undefined, SIGNER_ADDRESS)).rejects.toThrow(
+        'Missing wallet connection!',
+      );
+    });
+
+    it('fails if given signer address is undefined', () => {
+      const data = generateTransferData();
+      const transfer = new TestTransfer(data);
+
+      return expect(transfer.sendRequestTransaction(SIGNER, undefined)).rejects.toThrow(
+        'Missing wallet connection!',
+      );
+    });
+
     it('calls the transfer function on the request manager contract', async () => {
       const data = generateTransferData({
         sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
@@ -201,6 +227,7 @@ describe('transfer', () => {
 
     it('sets the request account and transaction hash', async () => {
       define(requestManager, 'sendRequestTransaction', vi.fn().mockResolvedValue('0xHash'));
+      define(fillManager, 'getCurrentBlockNumber', vi.fn().mockResolvedValue(2));
       const transfer = new TestTransfer(TRANSFER_DATA);
 
       expect(transfer.requestInformation?.requestAccount).toBeUndefined();
@@ -210,6 +237,7 @@ describe('transfer', () => {
 
       expect(transfer.requestInformation?.requestAccount).toBe('0xSigner');
       expect(transfer.requestInformation?.transactionHash).toBe('0xHash');
+      expect(transfer.requestInformation?.blockNumberOnTargetChain).toBe(2);
     });
   });
 
@@ -276,6 +304,7 @@ describe('transfer', () => {
         }),
         requestInformation: generateRequestInformationData({
           identifier: generateUInt256Data('1'),
+          blockNumberOnTargetChain: 2,
         }),
       });
       const transfer = new TestTransfer(data);
@@ -287,6 +316,7 @@ describe('transfer', () => {
         'https://target.rpc',
         '0xFillManager',
         new UInt256('1'),
+        2,
       );
     });
 
