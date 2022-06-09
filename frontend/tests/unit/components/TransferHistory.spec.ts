@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { createTestingPinia } from '@pinia/testing';
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
@@ -44,10 +43,14 @@ async function createWrapper(options?: { transfers?: Array<unknown> }) {
 
 describe('TransferHistory.vue', () => {
   beforeEach(() => {
-    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
-      groupedAndSortedTransfers: ref([]),
+    Object.defineProperty(groupingComposable, 'useTransferGrouping', {
+      value: vi.fn().mockReturnValue({
+        groupedAndSortedTransfers: ref([]),
+      }),
     });
-    navigation!.switchToActivities = vi.fn();
+    Object.defineProperty(navigation, 'switchToActivities', {
+      value: vi.fn(),
+    });
   });
 
   it('calls the grouping composable with store transfers and time windows', () => {
@@ -58,11 +61,13 @@ describe('TransferHistory.vue', () => {
   });
 
   it('adds a transfer group for each time window', async () => {
-    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
-      groupedAndSortedTransfers: ref([
-        { label: 'window one', transfers: [generateTransfer()] },
-        { label: 'window two', transfers: [generateTransfer()] },
-      ]),
+    Object.defineProperty(groupingComposable, 'useTransferGrouping', {
+      value: vi.fn().mockReturnValue({
+        groupedAndSortedTransfers: ref([
+          { label: 'window one', transfers: [generateTransfer()] },
+          { label: 'window two', transfers: [generateTransfer()] },
+        ]),
+      }),
     });
     const wrapper = await createWrapper();
     const transferGroups = wrapper.findAll('[data-test="transfer-group"]');
@@ -76,11 +81,13 @@ describe('TransferHistory.vue', () => {
     const transferOne = generateTransfer();
     const transferTwo = generateTransfer();
     const transferThree = generateTransfer();
-    groupingComposable!.useTransferGrouping = vi.fn().mockReturnValue({
-      groupedAndSortedTransfers: ref([
-        { label: 'window one', transfers: [transferOne] },
-        { label: 'window two', transfers: [transferTwo, transferThree] },
-      ]),
+    Object.defineProperty(groupingComposable, 'useTransferGrouping', {
+      value: vi.fn().mockReturnValue({
+        groupedAndSortedTransfers: ref([
+          { label: 'window one', transfers: [transferOne] },
+          { label: 'window two', transfers: [transferTwo, transferThree] },
+        ]),
+      }),
     });
     const wrapper = await createWrapper();
     const transfers = wrapper.findAllComponents(Transfer);

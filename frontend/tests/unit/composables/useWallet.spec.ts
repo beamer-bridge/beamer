@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ref } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
@@ -13,12 +12,12 @@ vi.mock('@/services/web3-provider');
 
 describe('useWallets', () => {
   beforeEach(() => {
-    web3ProviderService!.createMetaMaskProvider = vi
-      .fn()
-      .mockResolvedValue(new MockedMetaMaskProvider());
-    web3ProviderService!.createWalletConnectProvider = vi
-      .fn()
-      .mockResolvedValue(new MockedWalletConnectProvider());
+    Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+      value: vi.fn().mockResolvedValue(new MockedMetaMaskProvider()),
+    });
+    Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
+      value: vi.fn().mockResolvedValue(new MockedWalletConnectProvider()),
+    });
   });
 
   describe('connectMetaMask()', () => {
@@ -32,7 +31,9 @@ describe('useWallets', () => {
 
     it('requests the signer from the provider', async () => {
       const wallet = new MockedMetaMaskProvider();
-      web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(wallet);
+      Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
       const { connectMetaMask } = useWallet(ref(undefined), ref(undefined), ref({}));
 
       await connectMetaMask();
@@ -42,7 +43,9 @@ describe('useWallets', () => {
 
     it('sets the provider instance', async () => {
       const wallet = { requestSigner: vi.fn() }; // TODO: work-around for horrible mock typing issues.
-      web3ProviderService!.createMetaMaskProvider = vi.fn().mockResolvedValue(wallet);
+      Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
       const provider = ref(undefined);
       const { connectMetaMask } = useWallet(provider, ref(undefined), ref({}));
 
@@ -76,7 +79,9 @@ describe('useWallets', () => {
 
     it('sets the provider instance', async () => {
       const wallet = 'fake-provider'; // TODO: work-around for horrible mock typing issues.
-      web3ProviderService!.createWalletConnectProvider = vi.fn().mockResolvedValue(wallet);
+      Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
       const provider = ref(undefined);
       const { connectWalletConnect } = useWallet(provider, ref(undefined), ref({}));
 
