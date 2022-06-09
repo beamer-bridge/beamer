@@ -143,7 +143,7 @@ contract RequestManager is Ownable {
         address targetAddress,
         uint256 amount,
         uint256 validityPeriod
-    ) external payable returns (uint256) {
+    ) external returns (uint256) {
         require(deprecated == false, "Contract is deprecated");
         require(
             finalizationTimes[targetChainId] != 0,
