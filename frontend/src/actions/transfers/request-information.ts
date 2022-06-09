@@ -6,11 +6,13 @@ import { UInt256 } from '@/types/uint-256';
 export class RequestInformation implements Encodable<RequestInformationData> {
   readonly transactionHash: TransactionHash;
   readonly requestAccount: EthereumAddress;
+  readonly blockNumberOnTargetChain: number;
   private _identifier?: UInt256;
 
   constructor(data: RequestInformationData) {
     this.transactionHash = data.transactionHash;
     this.requestAccount = data.requestAccount;
+    this.blockNumberOnTargetChain = data.blockNumberOnTargetChain ?? 0;
     this._identifier = data.identifier ? new UInt256(data.identifier) : undefined;
   }
 
@@ -30,6 +32,7 @@ export class RequestInformation implements Encodable<RequestInformationData> {
     return {
       transactionHash: this.transactionHash,
       requestAccount: this.requestAccount,
+      blockNumberOnTargetChain: this.blockNumberOnTargetChain,
       identifier: this.identifier?.encode(),
     };
   }
@@ -38,5 +41,6 @@ export class RequestInformation implements Encodable<RequestInformationData> {
 export type RequestInformationData = {
   transactionHash: TransactionHash;
   requestAccount: EthereumAddress;
+  blockNumberOnTargetChain?: number;
   identifier?: UInt256Data;
 };

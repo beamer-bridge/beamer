@@ -4,6 +4,7 @@ import {
   generateRequestInformationData,
   generateUInt256Data,
   getRandomEthereumAddress,
+  getRandomNumber,
   getRandomTransactionHash,
 } from '~/utils/data_generators';
 
@@ -32,14 +33,16 @@ describe('RequestInformation', () => {
     it('serializes all data to persist token amount', () => {
       const transactionHash = getRandomTransactionHash();
       const requestAccount = getRandomEthereumAddress();
+      const blockNumberOnTargetChain = getRandomNumber();
       const identifier = generateUInt256Data();
-      const data = { transactionHash, requestAccount, identifier };
+      const data = { transactionHash, requestAccount, blockNumberOnTargetChain, identifier };
       const information = new RequestInformation(data);
 
       const encodedData = information.encode();
 
       expect(encodedData.transactionHash).toMatchObject(transactionHash);
       expect(encodedData.requestAccount).toMatchObject(requestAccount);
+      expect(encodedData.blockNumberOnTargetChain).toMatchObject(blockNumberOnTargetChain);
       expect(encodedData.identifier).toMatchObject(identifier);
     });
 
