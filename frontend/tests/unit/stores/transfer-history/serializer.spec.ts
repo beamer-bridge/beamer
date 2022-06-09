@@ -1,6 +1,6 @@
 import { Transfer } from '@/actions/transfers';
 import { transferHistorySerializer } from '@/stores/transfer-history/serializer';
-import { generateTransferData } from '~/utils/data_generators';
+import { generateStepData, generateTransferData } from '~/utils/data_generators';
 
 vi.mock('@/actions/transfers', () => ({
   Transfer: vi.fn().mockImplementation((data) => ({ data })),
@@ -30,7 +30,7 @@ describe('transfer history serializer', () => {
     });
   });
 
-  describe('getItem()', () => {
+  describe('deserialize()', () => {
     it('returns empty state if retrieved data can not be parsed as an object', () => {
       global.console.error = vi.fn();
 
@@ -70,9 +70,26 @@ describe('transfer history serializer', () => {
         }),
       );
 
-      expect(state).toEqual({
-        transfers: [new Transfer(transferOneData), new Transfer(transferTwoData)],
-      });
+      expect(state.transfers[0]).toEqual(new Transfer(transferOneData));
+      expect(state.transfers[1]).toEqual(new Transfer(transferTwoData));
+    });
+
+    it('sets all transfer to being inactive', () => {
+      const stepOne = generateStepData({ active: false });
+      const stepTwo = generateStepData({ active: true });
+      const transferData = generateTransferData({ steps: [stepOne, stepTwo] });
+
+      const state = transferHistorySerializer.deserialize(
+        JSON.stringify({ transfers: [transferData] }),
+      );
+
+      expect(state.transfers[0]).toEqual(
+        new Transfer({
+          ...transferData,
+          steps: [stepOne, { ...stepTwo, active: false }],
+        }),
+      );
+    });
     });
   });
 });

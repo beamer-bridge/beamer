@@ -1,6 +1,7 @@
 import type { StateTree } from 'pinia';
 import type { Serializer } from 'pinia-plugin-persistedstate';
 
+import type { StepData } from '@/actions/steps';
 import type { TransferData } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
 
@@ -19,11 +20,25 @@ export const transferHistorySerializer: Serializer = {
     if (typeof encodedState !== 'object') {
       console.error('Failed to load unknown format for transfer history store!');
     } else {
-      state.transfers = (encodedState.transfers ?? []).map(
-        (data: TransferData) => new Transfer(data),
-      );
+      const { transfers = [] } = encodedState;
+      const inactiveTransfers = transfers.map(markTransferInactive);
+      state.transfers = inactiveTransfers.map((data: TransferData) => new Transfer(data));
     }
 
     return state;
   },
 };
+
+/*
+ * The purpose of marking transfers as inactive is to allow continuing
+ * interrupted transfers that get reloaded to the store. Else the transfer still
+ * counts as active, which does not mean that it is not completed yet, but that
+ * the steps get actively executed right now, which is not the case (anymore).
+ */
+function markTransferInactive(data: TransferData): TransferData {
+  if (data.steps) {
+    data.steps = data.steps.map((step: StepData) => ({ ...step, active: false }));
+  }
+
+  return data;
+}
