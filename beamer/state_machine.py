@@ -278,7 +278,7 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
     request = _find_request_by_request_hash(context, event.request_hash)
     if request is not None:
-        request.l1_resolve(event.filler)
+        request.l1_resolve(event.filler, event.fill_id)
         return True, None
 
     return False, None
