@@ -1088,3 +1088,35 @@ def test_withdraw_before_expiration(token, request_manager):
     chain.mine(timedelta=validity_period / 2)
     with brownie.reverts("Request not expired yet"):
         request_manager.withdrawExpiredRequest(request_id, {"from": requester})
+
+
+def test_deprecation(deployer, request_manager, token):
+    (requester,) = alloc_accounts(1)
+    amount = 17
+    token.mint(requester, 2 * amount)
+
+    make_request(
+        request_manager,
+        token,
+        requester,
+        requester,
+        amount,
+    )
+    with brownie.reverts("Ownable: caller is not the owner"):
+        request_manager.deprecateContract({"from": requester.address})
+
+    assert not request_manager.deprecated()
+    request_manager.deprecateContract({"from": deployer.address})
+    assert request_manager.deprecated()
+
+    with brownie.reverts("Contract already deprecated"):
+        request_manager.deprecateContract({"from": deployer.address})
+
+    with brownie.reverts("Contract is deprecated"):
+        make_request(
+            request_manager,
+            token,
+            requester,
+            requester,
+            amount,
+        )
