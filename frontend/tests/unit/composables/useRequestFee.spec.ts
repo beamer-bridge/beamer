@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { flushPromises } from '@vue/test-utils';
 import type { Ref } from 'vue';
 import { ref } from 'vue';
@@ -22,9 +21,9 @@ const REQUEST_AMOUNT = ref(new TokenAmount(generateTokenAmountData())) as Ref<To
 
 describe('useRequestFee', () => {
   beforeEach(() => {
-    requestManagerService!.getRequestFee = vi
-      .fn()
-      .mockResolvedValue(new UInt256(generateUInt256Data()));
+    Object.defineProperty(requestManagerService, 'getRequestFee', {
+      value: vi.fn().mockResolvedValue(new UInt256(generateUInt256Data())),
+    });
 
     global.console.error = vi.fn();
   });
@@ -61,7 +60,9 @@ describe('useRequestFee', () => {
 
   describe('amount', () => {
     it('should be fetched from request manager', async () => {
-      requestManagerService!.getRequestFee = vi.fn().mockResolvedValue(new UInt256('99999'));
+      Object.defineProperty(requestManagerService, 'getRequestFee', {
+        value: vi.fn().mockResolvedValue(new UInt256('99999')),
+      });
       const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
 
       const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, requestAmount);
@@ -78,7 +79,9 @@ describe('useRequestFee', () => {
       const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, requestAmount);
       await flushPromises();
 
-      requestManagerService!.getRequestFee = vi.fn().mockResolvedValue(new UInt256('33'));
+      Object.defineProperty(requestManagerService, 'getRequestFee', {
+        value: vi.fn().mockResolvedValue(new UInt256('33')),
+      });
       requestAmount.value = new TokenAmount(generateTokenAmountData());
       await flushPromises();
 
@@ -90,7 +93,9 @@ describe('useRequestFee', () => {
 
   describe('formattedAmount', () => {
     it('should display as a formatted token amount', async () => {
-      requestManagerService!.getRequestFee = vi.fn().mockResolvedValue(new UInt256('70100'));
+      Object.defineProperty(requestManagerService, 'getRequestFee', {
+        value: vi.fn().mockResolvedValue(new UInt256('70100')),
+      });
       const requestAmount = ref(
         new TokenAmount(
           generateTokenAmountData({ token: generateToken({ symbol: 'UTT', decimals: 3 }) }),
@@ -106,7 +111,9 @@ describe('useRequestFee', () => {
 
   describe('error', () => {
     it('should include any fetching error', async () => {
-      requestManagerService!.getRequestFee = vi.fn().mockRejectedValue(new Error('error'));
+      Object.defineProperty(requestManagerService, 'getRequestFee', {
+        value: vi.fn().mockRejectedValue(new Error('error')),
+      });
 
       const { error } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
       await flushPromises();
