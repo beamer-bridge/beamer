@@ -32,9 +32,8 @@ from beamer.events import (
 from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
-from beamer.tests.util import create_fill_hash_from_request_hash
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, FillHash, RequestId
+from beamer.typing import ChainId, ClaimId, FillHash, RequestHash, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -111,6 +110,15 @@ def _find_claims_by_fill_hash(context: Context, fill_hash: FillHash) -> list[Cla
             matching_claims.append(claim)
 
     return matching_claims
+
+
+def _find_request_by_request_hash(
+    context: Context, request_hash: RequestHash
+) -> Optional[Request]:
+    for request in context.requests:
+        if request.request_hash == request_hash:
+            return request
+    return None
 
 
 def _handle_latest_block_updated(
@@ -268,12 +276,8 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
 
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
-    fill_hash = create_fill_hash_from_request_hash(event.request_hash, event.fill_id)
-    claims = _find_claims_by_fill_hash(context, fill_hash)
-    if len(claims) > 0:
-        request = context.requests.get(claims[0].request_id)
-        assert request is not None, "Request missing for claim"
-
+    request = _find_request_by_request_hash(context, event.request_hash)
+    if request is not None:
         request.l1_resolve(event.filler)
         return True, None
 
