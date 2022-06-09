@@ -16,16 +16,25 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import type { Ref } from 'vue';
+
+import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
 import ImprintModal from '@/components/ImprintModal.vue';
 import Spinner from '@/components/Spinner.vue';
+import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
 import { useConfiguration } from '@/stores/configuration';
+import { useTransferHistory } from '@/stores/transfer-history';
 
 const enableFeedback = false;
-const configuration = useConfiguration();
 
+const configuration = useConfiguration();
 const { configurationLoaded } = useLoadConfiguration(configuration.setChainConfiguration);
+
+const { transfers, loaded } = storeToRefs(useTransferHistory());
+useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
 </script>
 
 <style lang="css">

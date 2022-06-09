@@ -15,7 +15,7 @@ export const transferHistorySerializer: Serializer = {
   },
   deserialize: (rawState: string): TransferHistoryState => {
     const encodedState = JSON.parse(rawState);
-    const state = { transfers: [] };
+    const state = { transfers: [], loaded: false };
 
     if (typeof encodedState !== 'object') {
       console.error('Failed to load unknown format for transfer history store!');
@@ -25,6 +25,7 @@ export const transferHistorySerializer: Serializer = {
       state.transfers = inactiveTransfers.map((data: TransferData) => new Transfer(data));
     }
 
+    state.loaded = true;
     return state;
   },
 };

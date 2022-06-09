@@ -8,6 +8,7 @@ import type { TransferHistoryState } from './types';
 export const useTransferHistory = defineStore('transferHistory', {
   state: (): TransferHistoryState => ({
     transfers: [],
+    loaded: false,
   }),
   actions: {
     addTransfer(transfer: Transfer): void {
