@@ -11,11 +11,10 @@
       </span>
 
       <Spinner v-if="active" class="border-t-teal h-6 w-6" />
-
-      <span v-if="errorMessage" class="text-red"><br />{{ errorMessage }}</span>
     </template>
 
     <div v-else class="text-green">Tokens Withdrawn</div>
+    <span v-if="errorMessage" class="text-red">{{ errorMessage }}</span>
   </div>
 </template>
 
