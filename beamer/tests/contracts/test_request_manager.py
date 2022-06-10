@@ -1120,3 +1120,41 @@ def test_deprecation(deployer, request_manager, token):
             requester,
             amount,
         )
+
+
+def test_transfer_limit_update_only_owner(deployer, request_manager):
+    (random_guy,) = alloc_accounts(1)
+    original_transfer_limit = request_manager.transferLimit.call()
+    new_transfer_limit = original_transfer_limit + 1
+
+    with brownie.reverts("Ownable: caller is not the owner"):
+        request_manager.updateTransferLimit(new_transfer_limit, {"from": random_guy.address})
+
+    assert request_manager.transferLimit.call() == original_transfer_limit
+    request_manager.updateTransferLimit(new_transfer_limit, {"from": deployer.address})
+    assert request_manager.transferLimit.call() == new_transfer_limit
+    # Also show that transfer limit can be decreased again
+    request_manager.updateTransferLimit(original_transfer_limit, {"from": deployer.address})
+    assert request_manager.transferLimit.call() == original_transfer_limit
+
+
+def test_transfer_limit_requests(deployer, request_manager, token):
+    (requester,) = alloc_accounts(1)
+    transfer_limit = request_manager.transferLimit.call()
+
+    assert token.balanceOf(requester) == 0
+    token.mint(requester, transfer_limit)
+
+    make_request(request_manager, token, requester, requester, transfer_limit)
+
+    assert token.balanceOf(requester) == 0
+    token.mint(requester, transfer_limit + 1)
+
+    with brownie.reverts("Amount exceeds transfer limit"):
+        make_request(request_manager, token, requester, requester, transfer_limit + 1)
+
+    request_manager.updateTransferLimit(transfer_limit + 1, {"from": deployer.address})
+
+    make_request(request_manager, token, requester, requester, transfer_limit + 1)
+
+    assert token.balanceOf(requester) == 0
