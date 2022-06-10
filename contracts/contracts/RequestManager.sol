@@ -95,6 +95,8 @@ contract RequestManager is Ownable {
     uint256 public lpFeePPM = 1_000; // 0.1% of the token amount being transferred
     uint256 public protocolFeePPM = 0; // 0% of the token amount being transferred
 
+    uint256 public transferLimit = 10000 ether; // 10000e18
+
     // Protocol fee tracking: ERC20 token address => amount
     mapping(address => uint256) public collectedProtocolFees;
 
@@ -157,6 +159,7 @@ contract RequestManager is Ownable {
             validityPeriod <= MAX_VALIDITY_PERIOD,
             "Validity period too long"
         );
+        require(amount <= transferLimit, "Amount exceeds transfer limit");
 
         IERC20 token = IERC20(sourceTokenAddress);
 
@@ -503,6 +506,10 @@ contract RequestManager is Ownable {
         protocolFeePPM = newProtocolFeePPM;
         lpFeePPM = newLpFeePPM;
         minLpFee = newMinLpFee;
+    }
+
+    function updateTransferLimit(uint256 newTransferLimit) external onlyOwner {
+        transferLimit = newTransferLimit;
     }
 
     function setFinalizationTime(
