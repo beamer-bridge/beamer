@@ -4,10 +4,11 @@ import type { StepData } from '@/actions/steps';
 import { MultiStepAction, Step } from '@/actions/steps';
 import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
+  failWhenRequestExpires,
+  getRequestData,
   getRequestIdentifier,
   RequestExpiredError,
   sendRequestTransaction,
-  waitUntilRequestExpiresAndFail,
   withdrawRequest,
 } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
@@ -128,7 +129,17 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempting to withdraw without request identifier!');
     }
 
-    if (!provider.signer.value) {
+    // As long as we have not explicitly set this to `true` we should
+    // check it again to avoid unnecessary transactions.
+    if (!this._withdrawn) {
+      await this.checkAndUpdateWithdrawState();
+    }
+
+    if (this._withdrawn) {
+      throw new Error('Funds have been already withdrawn!');
+    }
+
+    if (!provider?.signer?.value) {
       throw new Error('Can not withdraw without connected wallet!');
     }
 
@@ -222,12 +233,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this._requestInformation.identifier,
     );
 
-    const { promise: expirationPromise, cancel: cancelExpirationCheck } =
-      waitUntilRequestExpiresAndFail(
-        this.sourceChain.rpcUrl,
-        this.sourceChain.requestManagerAddress,
-        this._requestInformation.identifier,
-      );
+    const { promise: expirationPromise, cancel: cancelExpirationCheck } = failWhenRequestExpires(
+      this.sourceChain.rpcUrl,
+      this.sourceChain.requestManagerAddress,
+      this._requestInformation.identifier,
+      this._requestInformation.requestAccount,
+    );
 
     try {
       await Promise.race([fulfillmentPromise, expirationPromise]);
@@ -235,6 +246,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     } catch (exception: unknown) {
       if (exception instanceof RequestExpiredError) {
         this._expired = true;
+        await this.checkAndUpdateWithdrawState();
       }
 
       throw exception;
@@ -242,6 +254,21 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       cancelFulfillmentChecks();
       cancelExpirationCheck();
     }
+  }
+
+  protected async checkAndUpdateWithdrawState(): Promise<void> {
+    if (!this._requestInformation?.identifier) {
+      throw new Error('Can not check withdraw state without request identfier!');
+    }
+
+    const { depositReceiver } = await getRequestData(
+      this.sourceChain.rpcUrl,
+      this.sourceChain.requestManagerAddress,
+      this._requestInformation.identifier,
+    );
+
+    this._withdrawn =
+      depositReceiver.toLowerCase() != '0x0000000000000000000000000000000000000000';
   }
 }
 
