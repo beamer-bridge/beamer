@@ -7,6 +7,7 @@ import * as fillManager from '@/services/transactions/fill-manager';
 import { RequestExpiredError } from '@/services/transactions/request-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
+import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 import {
@@ -47,12 +48,36 @@ class TestTransfer extends Transfer {
   public waitForFulfillment() {
     return super.waitForFulfillment();
   }
+
+  public checkAndUpdateWithdrawState() {
+    return super.checkAndUpdateWithdrawState();
+  }
 }
 
-const DATA = generateTransferData();
-const PROVIDER = new JsonRpcProvider();
-const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
+const TRANSFER_DATA = generateTransferData();
+const RPC_PROVIDER = new JsonRpcProvider();
+const PROVIDER = new MockedEthereumProvider();
+const SIGNER = new JsonRpcSigner(undefined, RPC_PROVIDER);
 const SIGNER_ADDRESS = '0xSigner';
+
+function createTestCancelable<T>(options?: {
+  result?: T;
+  error?: unknown;
+  cancel?: () => void;
+}): () => Cancelable<T> {
+  const { result, error, cancel = vi.fn() } = options || {};
+  const promise = result
+    ? Promise.resolve(result)
+    : error
+    ? Promise.reject(error)
+    : new Promise<T>(() => undefined);
+  return () => ({ promise, cancel });
+}
+
+// A shortcut to make some tests having less lines and better readable.
+function define(object: unknown, property: string, value: unknown): void {
+  Object.defineProperty(object, property, { value });
+}
 
 describe('transfer', () => {
   beforeEach(() => {
@@ -63,7 +88,12 @@ describe('transfer', () => {
     Object.defineProperties(requestManager, {
       sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
       getRequestIdentifier: { value: vi.fn().mockResolvedValue(1) },
-      waitUntilRequestExpiresAndFail: {
+      getRequestData: {
+        value: vi.fn().mockResolvedValue({
+          depositReceiver: '0x0000000000000000000000000000000000000000',
+        }),
+      },
+      failWhenRequestExpires: {
         value: vi.fn().mockReturnValue({
           promise: new Promise(() => undefined),
           cancel: vi.fn(),
@@ -86,7 +116,7 @@ describe('transfer', () => {
   });
 
   it('defines a method for every step', () => {
-    const transfer = new TestTransfer(DATA);
+    const transfer = new TestTransfer(TRANSFER_DATA);
 
     const methods = transfer.getStepMethods(SIGNER, SIGNER_ADDRESS);
 
@@ -97,14 +127,14 @@ describe('transfer', () => {
 
   describe('execute()', () => {
     it('triggers all protocol relevant functions', async () => {
-      const transfer = new TestTransfer(DATA);
+      const transfer = new TestTransfer(TRANSFER_DATA);
 
       await transfer.execute(SIGNER, SIGNER_ADDRESS);
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
-      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenCalledTimes(1);
+      expect(requestManager.failWhenRequestExpires).toHaveBeenCalledTimes(1);
       expect(fillManager.waitForFulfillment).toHaveBeenCalledTimes(1);
     });
   });
@@ -151,7 +181,7 @@ describe('transfer', () => {
         fees: generateTokenAmountData({ amount: '4' }),
       });
       const transfer = new TestTransfer(data);
-      const signer = new JsonRpcSigner(undefined, PROVIDER);
+      const signer = new JsonRpcSigner(undefined, RPC_PROVIDER);
 
       await transfer.sendRequestTransaction(signer, SIGNER_ADDRESS);
 
@@ -170,10 +200,8 @@ describe('transfer', () => {
     });
 
     it('sets the request account and transaction hash', async () => {
-      const transfer = new TestTransfer(DATA);
-      Object.defineProperties(requestManager, {
-        sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
-      });
+      define(requestManager, 'sendRequestTransaction', vi.fn().mockResolvedValue('0xHash'));
+      const transfer = new TestTransfer(TRANSFER_DATA);
 
       expect(transfer.requestInformation?.requestAccount).toBeUndefined();
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
@@ -221,13 +249,19 @@ describe('transfer', () => {
   });
 
   describe('waitForFulfillment()', () => {
+    const TRANSFER_DATA = generateTransferData({
+      requestInformation: generateRequestInformationData({
+        identifier: generateUInt256Data('1'),
+      }),
+    });
+
     it('fails when request identifier has not been set', async () => {
-      const data = generateTransferData({
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
         requestInformation: generateRequestInformationData({
           identifier: undefined,
         }),
       });
-      const transfer = new TestTransfer(data);
 
       return expect(transfer.waitForFulfillment()).rejects.toThrow(
         'Attempting to wait for fulfillment without request identifier!',
@@ -264,70 +298,38 @@ describe('transfer', () => {
         }),
         requestInformation: generateRequestInformationData({
           identifier: generateUInt256Data('1'),
+          requestAccount: '0xRequestAccount',
         }),
       });
       const transfer = new TestTransfer(data);
 
       await transfer.waitForFulfillment();
 
-      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenCalledTimes(1);
-      expect(requestManager.waitUntilRequestExpiresAndFail).toHaveBeenLastCalledWith(
+      expect(requestManager.failWhenRequestExpires).toHaveBeenCalledTimes(1);
+      expect(requestManager.failWhenRequestExpires).toHaveBeenLastCalledWith(
         'https://source.rpc',
         '0xRequestManager',
         new UInt256('1'),
+        '0xRequestAccount',
       );
     });
 
     it('cancels waiting for exception when request got fulfilled', async () => {
-      const cancelExpirationCheck = vi.fn();
-      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
-        value: vi.fn().mockReturnValue({
-          promise: new Promise(() => undefined),
-          cancel: cancelExpirationCheck,
-        }),
-      });
-
-      Object.defineProperty(fillManager, 'waitForFulfillment', {
-        value: vi.fn().mockReturnValue({
-          promise: new Promise<void>((resolve) => resolve()),
-          cancel: () => undefined,
-        }),
-      });
-
-      const data = generateTransferData({
-        requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
-        }),
-      });
-      const transfer = new TestTransfer(data);
+      const cancel = vi.fn();
+      define(requestManager, 'failWhenRequestExpires', createTestCancelable({ cancel }));
+      define(fillManager, 'waitForFulfillment', createTestCancelable({ result: true }));
+      const transfer = new TestTransfer(TRANSFER_DATA);
 
       await transfer.waitForFulfillment();
 
-      expect(cancelExpirationCheck).toHaveBeenCalledOnce();
+      expect(cancel).toHaveBeenCalledOnce();
     });
 
     it('cancels waiting for fulfillment when request has expired', async () => {
-      const cancelFulfillmentCheck = vi.fn();
-      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
-        value: vi.fn().mockReturnValue({
-          promise: Promise.reject(),
-          cancel: vi.fn(),
-        }),
-      });
-
-      Object.defineProperty(fillManager, 'waitForFulfillment', {
-        value: vi.fn().mockReturnValue({
-          promise: new Promise(() => undefined),
-          cancel: cancelFulfillmentCheck,
-        }),
-      });
-
-      const data = generateTransferData({
-        requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
-        }),
-      });
-      const transfer = new TestTransfer(data);
+      const cancel = vi.fn();
+      define(requestManager, 'failWhenRequestExpires', createTestCancelable({ error: true }));
+      define(fillManager, 'waitForFulfillment', createTestCancelable({ cancel }));
+      const transfer = new TestTransfer(TRANSFER_DATA);
 
       try {
         await transfer.waitForFulfillment();
@@ -335,31 +337,15 @@ describe('transfer', () => {
         // Ignore on purpose
       }
 
-      expect(cancelFulfillmentCheck).toHaveBeenCalledOnce();
+      expect(cancel).toHaveBeenCalledOnce();
     });
 
     it('sets transfer to be expired if expiration promise rejects with according error', async () => {
-      Object.defineProperty(requestManager, 'waitUntilRequestExpiresAndFail', {
-        value: vi.fn().mockReturnValue({
-          promise: Promise.reject(new RequestExpiredError()),
-          cancel: vi.fn(),
-        }),
-      });
-
-      Object.defineProperty(fillManager, 'waitForFulfillment', {
-        value: vi.fn().mockReturnValue({
-          promise: new Promise(() => undefined),
-          cancel: vi.fn(),
-        }),
-      });
-
-      const data = generateTransferData({
-        requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
-        }),
-      });
-      const transfer = new TestTransfer(data);
-      expect(transfer.expired).toBeFalsy();
+      const error = new RequestExpiredError();
+      define(requestManager, 'failWhenRequestExpires', createTestCancelable({ error }));
+      define(fillManager, 'waitForFulfillment', createTestCancelable());
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, expired: false });
+      transfer.checkAndUpdateWithdrawState = vi.fn();
 
       try {
         await transfer.waitForFulfillment();
@@ -368,39 +354,61 @@ describe('transfer', () => {
       }
 
       expect(transfer.expired).toBeTruthy();
+      expect(transfer.checkAndUpdateWithdrawState).toHaveBeenCalledOnce();
     });
   });
 
   describe('withdraw', () => {
-    it('fails if the transfer is not expired', () => {
-      const data = generateTransferData({ expired: false });
-      const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider();
+    const TRANSFER_DATA = generateTransferData({
+      expired: true,
+      withdrawn: false,
+      requestInformation: generateRequestInformationData({
+        identifier: generateUInt256Data('1'),
+      }),
+    });
 
-      return expect(transfer.withdraw(provider)).rejects.toThrow(
+    it('fails if the transfer is not expired', () => {
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, expired: false });
+
+      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Can only withdraw transfer funds after request expired!',
       );
     });
 
     it('fails when request identifier has not been set', () => {
-      const data = generateTransferData({
-        expired: true,
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
         requestInformation: generateRequestInformationData({ identifier: undefined }),
       });
-      const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider();
 
-      return expect(transfer.withdraw(provider)).rejects.toThrow(
+      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Attempting to withdraw without request identifier!',
       );
     });
 
+    it('checks withdraw state again if it is false', async () => {
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
+      transfer.checkAndUpdateWithdrawState = vi.fn();
+
+      try {
+        await transfer.withdraw(PROVIDER);
+      } catch {
+        /* ignore */
+      }
+
+      expect(transfer.checkAndUpdateWithdrawState).toHaveBeenCalledOnce();
+    });
+
+    it('fails when funds are already withdrawn', () => {
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: true });
+
+      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+        'Funds have been already withdrawn!',
+      );
+    });
+
     it('fails when no signer is available', () => {
-      const data = generateTransferData({
-        expired: true,
-        requestInformation: generateRequestInformationData({ identifier: '1' }),
-      });
-      const transfer = new TestTransfer(data);
+      const transfer = new TestTransfer(TRANSFER_DATA);
       const provider = new MockedEthereumProvider({ signer: undefined });
 
       return expect(transfer.withdraw(provider)).rejects.toThrow(
@@ -408,13 +416,11 @@ describe('transfer', () => {
       );
     });
 
-    it('triggers a chain switch if providers connected chain does not match source chain', async () => {
-      const data = generateTransferData({
-        expired: true,
-        requestInformation: generateRequestInformationData({ identifier: '1' }),
+    it('triggers a chain switch if provider chain and source chain differ', async () => {
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
         sourceChain: generateChain({ identifier: 1 }),
       });
-      const transfer = new TestTransfer(data);
       const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
 
       await transfer.withdraw(provider);
@@ -425,7 +431,9 @@ describe('transfer', () => {
     it('uses the correct parameters to make the withdraw', async () => {
       const data = generateTransferData({
         expired: true,
-        requestInformation: generateRequestInformationData({ identifier: '1' }),
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
         sourceChain: generateChain({
           identifier: 1,
           requestManagerAddress: '0xRequestManager',
@@ -443,6 +451,69 @@ describe('transfer', () => {
         '0xRequestManager',
         new UInt256('1'),
       );
+    });
+  });
+
+  describe('checkAndUpdateWithdrawState()', () => {
+    const TRANSFER_DATA = generateTransferData({
+      requestInformation: generateRequestInformationData({
+        identifier: generateUInt256Data('1'),
+      }),
+    });
+
+    it('fails if request identifier has not been set', async () => {
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
+        requestInformation: generateRequestInformationData({
+          identifier: undefined,
+        }),
+      });
+
+      return expect(transfer.checkAndUpdateWithdrawState()).rejects.toThrow(
+        'Can not check withdraw state without request identfier!',
+      );
+    });
+
+    it('uses the correct parameters to query the request data', async () => {
+      const data = generateTransferData({
+        sourceChain: generateChain({
+          rpcUrl: 'https://source.rpc',
+          requestManagerAddress: '0xRequestManager',
+        }),
+        requestInformation: generateRequestInformationData({
+          identifier: generateUInt256Data('1'),
+        }),
+      });
+      const transfer = new TestTransfer(data);
+
+      await transfer.checkAndUpdateWithdrawState();
+
+      expect(requestManager.getRequestData).toHaveBeenCalledOnce();
+      expect(requestManager.getRequestData).toHaveBeenLastCalledWith(
+        'https://source.rpc',
+        '0xRequestManager',
+        new UInt256('1'),
+      );
+    });
+
+    it('sets withdraw state to false if deposit receiver is zero', async () => {
+      const depositReceiver = '0x0000000000000000000000000000000000000000';
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ depositReceiver }));
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: true });
+
+      await transfer.checkAndUpdateWithdrawState();
+
+      expect(transfer.withdrawn).toBeFalsy();
+    });
+
+    it('sets withdraw state to true if deposit receiver is zero', async () => {
+      const depositReceiver = '0xDepositReceiver';
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ depositReceiver }));
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
+
+      await transfer.checkAndUpdateWithdrawState();
+
+      expect(transfer.withdrawn).toBeTruthy();
     });
   });
 

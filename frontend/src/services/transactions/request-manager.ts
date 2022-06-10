@@ -82,31 +82,52 @@ export async function getRequestIdentifier(
   }
 }
 
+type RequestData = {
+  validUntil: BigNumber;
+  activeClaims: BigNumber;
+  depositReceiver: string;
+};
+
+export async function getRequestData(
+  rpcUrl: string,
+  requestManagerAddress: string,
+  requestIdentifier: UInt256,
+): Promise<RequestData> {
+  const contract = getContract(rpcUrl, requestManagerAddress);
+  const request: RequestData | undefined = await contract.requests(
+    BigNumber.from(requestIdentifier.asString),
+  );
+
+  if (request !== undefined) {
+    return request;
+  } else {
+    throw new Error('No request known for this identifier!');
+  }
+}
+
 export async function checkIfRequestHasExpired(
   rpcUrl: string,
   requestManagerAddress: string,
   requestIdentifier: UInt256,
+  requestAccount: string,
 ): Promise<boolean> {
+  const request = await getRequestData(rpcUrl, requestManagerAddress, requestIdentifier);
   const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, requestManagerAddress);
-  const request: { validUntil: BigNumber; activeClaims: BigNumber } | undefined =
-    await contract.requests(BigNumber.from(requestIdentifier.asString));
-
-  if (request === undefined) {
-    throw new Error('No request known for this identifier!');
-  }
-
   const block = await provider.getBlock('latest');
   const validityExpired = request.validUntil.lt(block.timestamp);
   const noActiveClaims = request.activeClaims.eq(0);
+  const notWithdrawnBySomeoneElse =
+    request.depositReceiver.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
+    request.depositReceiver.toLowerCase() == requestAccount.toLowerCase();
 
-  return validityExpired && noActiveClaims;
+  return validityExpired && noActiveClaims && notWithdrawnBySomeoneElse;
 }
 
-export function waitUntilRequestExpiresAndFail(
+export function failWhenRequestExpires(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   requestIdentifier: UInt256,
+  requestAccount: string,
 ): Cancelable<void> {
   const provider = new JsonRpcProvider(rpcUrl);
 
@@ -116,6 +137,7 @@ export function waitUntilRequestExpiresAndFail(
         rpcUrl,
         requestManagerAddress,
         requestIdentifier,
+        requestAccount,
       );
 
       if (hasExpired) {
