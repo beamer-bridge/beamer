@@ -43,10 +43,10 @@
     pino-sentry "^0.7.0"
     prom-client "^13.1.0"
 
-"@eth-optimism/contracts@0.5.26":
-  version "0.5.26"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.5.26.tgz#60fb8943b6a920bdadf3740674c6e540eb9798a3"
-  integrity sha512-2X59p+V9069sgLloEuCteqUIXOghixCA8jzEvy0ufvqlRD0vpR4jWljmaTzkYUYa4+bjOCeglcQIvdGe5WyTWw==
+"@eth-optimism/contracts@0.5.27":
+  version "0.5.27"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.5.27.tgz#d607fdb324c068ce541bbc4c7499cb2c651d9917"
+  integrity sha512-wvGL5LcsycjuQZ4FYRT0A/3JGR6o1BKpEu5460whiWCMBrI3Jm+TuWXweHcAAwcOpRubhk5m04zr0AhrN4msqQ==
   dependencies:
     "@eth-optimism/core-utils" "0.8.6"
     "@ethersproject/abstract-provider" "^5.6.1"
@@ -78,12 +78,12 @@
     chai "^4.3.4"
     ethers "^5.6.8"
 
-"@eth-optimism/sdk@^1.1.7":
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-1.1.7.tgz#a394cfa0324e50d864ea657abb611f10baef6f6b"
-  integrity sha512-253amB3R4GLp+bLkChJRPdFN1U/WUFrHuEnUqYxavlVi+PhyrvK5h7ZZTaLI4SeHRujl6myp2FAj0Xb9Y6F7+Q==
+"@eth-optimism/sdk@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-1.1.8.tgz#e9bfdde3286e53b499efd63180a99f399969b88f"
+  integrity sha512-XeUf1h+M/H01uMIgRdy/C0clklydmLRPo/sAuekWNnWbDK3/kYXxp5+r6A5hPeEAmkyDbpDSc6zArA1UX6FQ+g==
   dependencies:
-    "@eth-optimism/contracts" "0.5.26"
+    "@eth-optimism/contracts" "0.5.27"
     "@eth-optimism/core-utils" "0.8.6"
     lodash "^4.17.21"
     merkletreejs "^0.2.27"
