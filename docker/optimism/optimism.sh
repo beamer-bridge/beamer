@@ -50,7 +50,8 @@ create_deployment_config_file() {
 
 e2e_test() {
     l2_rpc=http://localhost:8545
-    poetry run python "${ROOT}/scripts/e2e-test.py" ${DEPLOYMENT_DIR} ${KEYFILE} ${l2_rpc}
+    password=""
+    poetry run python "${ROOT}/scripts/e2e-test.py" ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" ${l2_rpc}
 }
 
 usage() {

@@ -10,13 +10,15 @@ from scripts._util import contracts_for_web3
 
 
 def main() -> None:
-    assert len(sys.argv) == 4
+    assert len(sys.argv) == 5
     deployment_dir = Path(sys.argv[1])
     keystore_file = Path(sys.argv[2])
-    l2_rpc = URL(sys.argv[3])
+    password = sys.argv[3]
+    l2_rpc = URL(sys.argv[4])
 
-    deployer = account_from_keyfile(keystore_file, "")
+    deployer = account_from_keyfile(keystore_file, password)
     web3 = make_web3(l2_rpc, deployer)
+
     l2_contracts = contracts_for_web3(web3, deployment_dir)
     chain_id = ChainId(web3.eth.chain_id)
 
