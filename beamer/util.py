@@ -9,11 +9,14 @@ import structlog
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_utils import is_checksum_address, to_checksum_address
+from web3 import HTTPProvider, Web3
 from web3.contract import ContractConstructor, ContractFunction
 from web3.exceptions import ContractLogicError
-from web3.types import TxParams
+from web3.gas_strategies.rpc import rpc_gas_price_strategy
+from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
+from web3.types import GasPriceStrategy, TxParams
 
-from beamer.typing import ChainId, ChecksumAddress
+from beamer.typing import URL, ChainId, ChecksumAddress
 
 
 class TransactionFailed(Exception):
@@ -72,6 +75,18 @@ def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
     with open(keyfile, "rt") as fp:
         privkey = Account.decrypt(json.load(fp), password)
     return cast(LocalAccount, Account.from_key(privkey))
+
+
+def make_web3(
+    url: URL, account: LocalAccount, gas_price_strategy: GasPriceStrategy = rpc_gas_price_strategy
+) -> Web3:
+    w3 = Web3(HTTPProvider(url, request_kwargs=dict(timeout=5)))
+    w3.eth.set_gas_price_strategy(gas_price_strategy)
+    # Add POA middleware for geth POA chains, no/op for other chains
+    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+    w3.eth.default_account = account.address
+    return w3
 
 
 _Token = tuple[ChainId, ChecksumAddress]
