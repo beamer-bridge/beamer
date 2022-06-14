@@ -52,7 +52,8 @@ class Claim(StateMachine):
         | invalidated_l1_resolved.to(invalidated_l1_resolved)
     )
     withdraw = (
-        claimer_winning.to(withdrawn)
+        started.to(withdrawn)
+        | claimer_winning.to(withdrawn)
         | challenger_winning.to(withdrawn)
         | ignored.to(withdrawn)
         | withdrawn.to(withdrawn)
