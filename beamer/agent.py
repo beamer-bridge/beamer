@@ -2,11 +2,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import structlog
-import web3
-from eth_account.signers.local import LocalAccount
 from eth_typing import Address
-from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
 import beamer.metrics
 from beamer.chain import EventMonitor, EventProcessor
@@ -14,20 +10,10 @@ from beamer.config import Config
 from beamer.contracts import make_contracts
 from beamer.state_machine import Context
 from beamer.tracker import Tracker
-from beamer.typing import URL, ChainId
-from beamer.util import TokenMatchChecker
+from beamer.typing import ChainId
+from beamer.util import TokenMatchChecker, make_web3
 
 log = structlog.get_logger(__name__)
-
-
-def _make_web3(url: URL, account: LocalAccount) -> web3.Web3:
-    w3 = web3.Web3(web3.HTTPProvider(url, request_kwargs=dict(timeout=5)))
-    w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
-    # Add POA middleware for geth POA chains, no/op for other chains
-    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
-    w3.eth.default_account = account.address
-    return w3
 
 
 class Agent:
@@ -40,9 +26,9 @@ class Agent:
         # would otherwise run into nonce problems
         self._task_pool = ThreadPoolExecutor(max_workers=1)
 
-        w3_l1 = _make_web3(config.l1_rpc_url, config.account)
-        w3_l2a = _make_web3(config.l2a_rpc_url, config.account)
-        w3_l2b = _make_web3(config.l2b_rpc_url, config.account)
+        w3_l1 = make_web3(config.l1_rpc_url, config.account)
+        w3_l2a = make_web3(config.l2a_rpc_url, config.account)
+        w3_l2b = make_web3(config.l2b_rpc_url, config.account)
 
         l2a_contracts_info = config.deployment_info[ChainId(w3_l2a.eth.chain_id)]
         l2b_contracts_info = config.deployment_info[ChainId(w3_l2b.eth.chain_id)]
