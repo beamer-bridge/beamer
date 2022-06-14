@@ -34,7 +34,7 @@ from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillHash, RequestHash, RequestId
-from beamer.util import SECONDS_PER_DAY, TokenMatchChecker
+from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
 
@@ -121,21 +121,27 @@ def _find_request_by_request_hash(
     return None
 
 
-def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
+def _invalidation_ready_for_l1_relay(
+    claim: Claim, target_chain_id: ChainId, request_manager: Contract
+) -> bool:
+    target_chain_finalization = request_manager.functions.finalizationTimes(target_chain_id).call()
     return (
         not claim.is_invalidated_l1_resolved
         and claim.invalidation_tx is not None
         and claim.invalidation_timestamp is not None
-        and int(time.time()) > claim.invalidation_timestamp + 7 * SECONDS_PER_DAY
+        and int(time.time()) > claim.invalidation_timestamp + target_chain_finalization
     )
 
 
-def _proof_ready_for_l1_relay(request: Request) -> bool:
+def _proof_ready_for_l1_relay(request: Request, request_manager: Contract) -> bool:
+    target_chain_finalization = request_manager.functions.finalizationTimes(
+        request.target_chain_id
+    ).call()
     return (
         not request.is_l1_resolved
         and request.fill_tx is not None
         and request.fill_timestamp is not None
-        and int(time.time()) > request.fill_timestamp + 7 * SECONDS_PER_DAY
+        and int(time.time()) > request.fill_timestamp + target_chain_finalization
     )
 
 
@@ -259,7 +265,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return False, None
 
     events: list[Event] = []
-    if _invalidation_ready_for_l1_relay(claim):
+    if _invalidation_ready_for_l1_relay(claim, request.target_chain_id, context.request_manager):
         events.append(
             InitiateL1InvalidationEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -274,7 +280,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if _proof_ready_for_l1_relay(request):
+    if _proof_ready_for_l1_relay(request, context.request_manager):
         events.append(
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
