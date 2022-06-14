@@ -1,10 +1,13 @@
 import json
 import logging
 import sys
+from pathlib import Path
 from typing import Any, List, Optional, TextIO, Union, cast
 
 import requests
 import structlog
+from eth_account import Account
+from eth_account.signers.local import LocalAccount
 from eth_utils import is_checksum_address, to_checksum_address
 from web3.contract import ContractConstructor, ContractFunction
 from web3.exceptions import ContractLogicError
@@ -63,6 +66,12 @@ def setup_logging(log_level: str, log_json: bool) -> None:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+
+
+def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
+    with open(keyfile, "rt") as fp:
+        privkey = Account.decrypt(json.load(fp), password)
+    return cast(LocalAccount, Account.from_key(privkey))
 
 
 _Token = tuple[ChainId, ChecksumAddress]

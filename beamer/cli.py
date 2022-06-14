@@ -1,12 +1,9 @@
-import json
 import signal
 from pathlib import Path
 from typing import Optional
 
 import click
 import structlog
-from eth_account import Account
-from eth_account.signers.local import LocalAccount
 
 import beamer.contracts
 import beamer.util
@@ -14,14 +11,9 @@ from beamer.agent import Agent
 from beamer.config import Config
 from beamer.l1_resolution import relayer_executable_exists
 from beamer.typing import URL
+from beamer.util import account_from_keyfile
 
 log = structlog.get_logger(__name__)
-
-
-def _account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
-    with open(keyfile, "rt") as fp:
-        privkey = Account.decrypt(json.load(fp), password)
-    return Account.from_key(privkey)
 
 
 def _sigint_handler(agent: Agent) -> None:
@@ -113,7 +105,7 @@ def main(
     # TODO: use return value and exit if relayer is not available
     relayer_executable_exists()
 
-    account = _account_from_keyfile(keystore_file, password)
+    account = account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
     deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
     config = Config(
