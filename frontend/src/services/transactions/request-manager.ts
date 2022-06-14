@@ -85,7 +85,7 @@ export async function getRequestIdentifier(
 type RequestData = {
   validUntil: BigNumber;
   activeClaims: BigNumber;
-  depositReceiver: string;
+  withdrawInfo: { filler: EthereumAddress };
 };
 
 export async function getRequestData(
@@ -117,8 +117,8 @@ export async function checkIfRequestHasExpired(
   const validityExpired = request.validUntil.lt(block.timestamp);
   const noActiveClaims = request.activeClaims.eq(0);
   const notWithdrawnBySomeoneElse =
-    request.depositReceiver.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
-    request.depositReceiver.toLowerCase() == requestAccount.toLowerCase();
+    request.withdrawInfo.filler.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
+    request.withdrawInfo.filler.toLowerCase() == requestAccount.toLowerCase();
 
   return validityExpired && noActiveClaims && notWithdrawnBySomeoneElse;
 }

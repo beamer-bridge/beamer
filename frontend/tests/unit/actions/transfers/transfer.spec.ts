@@ -90,7 +90,7 @@ describe('transfer', () => {
       getRequestIdentifier: { value: vi.fn().mockResolvedValue(1) },
       getRequestData: {
         value: vi.fn().mockResolvedValue({
-          depositReceiver: '0x0000000000000000000000000000000000000000',
+          withdrawInfo: { filler: '0x0000000000000000000000000000000000000000' },
         }),
       },
       failWhenRequestExpires: {
@@ -525,9 +525,9 @@ describe('transfer', () => {
       );
     });
 
-    it('sets withdraw state to false if deposit receiver is zero', async () => {
-      const depositReceiver = '0x0000000000000000000000000000000000000000';
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ depositReceiver }));
+    it('sets withdraw state to false if filler is zero', async () => {
+      const withdrawInfo = { filler: '0x0000000000000000000000000000000000000000' };
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawInfo }));
       const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: true });
 
       await transfer.checkAndUpdateWithdrawState();
@@ -536,8 +536,8 @@ describe('transfer', () => {
     });
 
     it('sets withdraw state to true if deposit receiver is zero', async () => {
-      const depositReceiver = '0xDepositReceiver';
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ depositReceiver }));
+      const withdrawInfo = { filler: '0xDepositReceiver' };
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawInfo }));
       const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
 
       await transfer.checkAndUpdateWithdrawState();

@@ -272,14 +272,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Can not check withdraw state without request identfier!');
     }
 
-    const { depositReceiver } = await getRequestData(
+    const { withdrawInfo } = await getRequestData(
       this.sourceChain.rpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );
 
-    this._withdrawn =
-      depositReceiver.toLowerCase() != '0x0000000000000000000000000000000000000000';
+    const filler = withdrawInfo.filler.toLowerCase();
+    this._withdrawn = filler != '0x0000000000000000000000000000000000000000';
   }
 }
 
