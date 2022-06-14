@@ -39,7 +39,6 @@ Deploy the contracts on the local ganache test chain::
 
     python scripts/deployment/main.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                                       --password '' \
-                                      --test-messenger \
                                       --output-dir deployments/ganache-local \
                                       --config-file scripts/deployment/ganache-local.json
 
