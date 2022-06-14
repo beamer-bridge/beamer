@@ -1,4 +1,5 @@
 import { EthereumAmount, TokenAmount } from '@/types/token-amount';
+import { UInt256 } from '@/types/uint-256';
 import {
   generateToken,
   generateTokenAmountData,
@@ -6,6 +7,17 @@ import {
 } from '~/utils/data_generators';
 
 describe('TokenAmount', () => {
+  describe('new()', () => {
+    it('allows easily to create instances with UInt256 value directly', () => {
+      const uint = new UInt256(generateUInt256Data());
+      const token = generateToken();
+      const amount = TokenAmount.new(uint, token);
+
+      expect(amount.uint256).toEqual(uint);
+      expect(amount.token).toEqual(token);
+    });
+  });
+
   describe('parse()', () => {
     it('can parse integer based on given token decimals', () => {
       const token = generateToken({ decimals: 5 });

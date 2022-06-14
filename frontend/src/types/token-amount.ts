@@ -13,6 +13,10 @@ export class TokenAmount implements Encodable<TokenAmountData> {
     this.amount = new UInt256(data.amount);
   }
 
+  static new(amount: UInt256, token: Token) {
+    return new this({ amount: amount.asString, token });
+  }
+
   static parse(value: string, token: Token) {
     const amount = UInt256.parse(value, token.decimals).encode();
     return new this({ amount, token });
