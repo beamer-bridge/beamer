@@ -150,6 +150,7 @@ class EventProcessor:
         while not self._stop:
             if self._have_new_events.wait(1):
                 self._have_new_events.clear()
+            if self._events:
                 self._process_events()
 
             if self._synced:
@@ -193,8 +194,6 @@ class EventProcessor:
             )
             iteration += 1
             if not any_state_changed:
-                if len(unprocessed) > 0:
-                    self._have_new_events.set()
                 break
 
         # New events might be created by event handlers. If they would be
