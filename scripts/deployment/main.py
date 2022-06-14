@@ -5,15 +5,12 @@ from pathlib import Path
 from typing import Any, Sequence, Union, cast
 
 import click
-from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex, to_wei
-from web3 import HTTPProvider, Web3
+from web3 import Web3
 from web3.contract import Contract
-from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-from beamer.util import transact
+from beamer.util import account_from_keyfile, make_web3, transact
 
 GANACHE_CHAIN_ID = 1337
 
@@ -22,23 +19,6 @@ class DeployedContract(Contract):
     deployment_block: int
     deployment_args: list[Any]
     name: str
-
-
-def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
-    with open(keyfile, "rt") as fp:
-        privkey = Account.decrypt(json.load(fp), password)
-    return cast(LocalAccount, Account.from_key(privkey))
-
-
-def web3_for_rpc(rpc: str, account: LocalAccount) -> Web3:
-    web3 = Web3(HTTPProvider(rpc))
-
-    web3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
-    web3.eth.default_account = account.address
-
-    return web3
 
 
 def load_contracts_info(contracts_path: Path) -> dict[str, tuple]:
@@ -105,7 +85,8 @@ def deploy_beamer(
     resolver: Contract,
     allow_same_chain: bool,
 ) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
-    web3 = web3_for_rpc(l2_config["rpc"], account)
+
+    web3 = make_web3(l2_config["rpc"], account)
     assert web3.eth.chain_id == l2_config["chain_id"]
 
     token = deploy_contract(web3, ("MintableToken", int(1e18)))
@@ -220,13 +201,14 @@ def main(
     config_file: Path,
     allow_same_chain: bool,
 ) -> None:
-    account = account_from_keyfile(keystore_file, password)
-    print("Deployer:", account.address)
 
     with open(config_file) as f:
         config = json.load(f)
 
-    web3_l1 = web3_for_rpc(config["L1"]["rpc"], account)
+    account = account_from_keyfile(keystore_file, password)
+    print("Deployer:", account.address)
+    web3_l1 = make_web3(config["L1"]["rpc"], account)
+
     resolver = deploy_contract(web3_l1, "Resolver")
 
     deployment_data: dict = {"beamer_commit": get_commit_id(), "deployer": account.address}

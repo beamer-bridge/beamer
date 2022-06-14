@@ -1,84 +1,20 @@
-import json
-import sys
 from functools import update_wrapper
 from pathlib import Path
 from random import randint
 from typing import Any, Callable, Optional
 
 import click
-import requests
 import structlog
-from eth_account import Account
-from eth_typing import URI
 from eth_utils import to_canonical_address, to_checksum_address
-from web3 import HTTPProvider, Web3
+from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
 
-import beamer.contracts
-from beamer.typing import Address, ChainId, PrivateKey, TokenAmount
-from beamer.util import setup_logging
-from scripts._util import validate_address, validate_bytes
+from beamer.typing import URL, Address, ChainId, TokenAmount
+from beamer.util import account_from_keyfile, make_web3, setup_logging
+from scripts._util import contracts_for_web3, validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
-
-
-def connect_to_blockchain(deployment_dir: Path, eth_rpc: URI) -> tuple[Web3, dict[str, Contract]]:
-    try:
-        provider = HTTPProvider(eth_rpc)
-        web3 = Web3(provider)
-        # Do a request, will throw ConnectionError on bad Ethereum client
-        chain_id = ChainId(web3.eth.chain_id)
-    except requests.exceptions.ConnectionError:
-        log.error(
-            "Can not connect to the Ethereum client. Please check that it is running and that "
-            "your settings are correct.",
-            eth_rpc=eth_rpc,
-        )
-        sys.exit(1)
-
-    # Add POA middleware for geth POA chains, no/op for other chains
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
-    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
-    contract_infos = deployment_info[chain_id]
-    contracts = {
-        name: web3.eth.contract(abi=info.abi, address=info.address)
-        for name, info in contract_infos.items()
-    }
-
-    return web3, contracts
-
-
-def open_keystore(keystore_file: str, password: str) -> PrivateKey:
-    with open(keystore_file, mode="r", encoding="utf-8") as keystore:
-        try:
-            private_key = bytes(
-                Account.decrypt(keyfile_json=json.load(keystore), password=password)
-            )
-            return PrivateKey(private_key)
-        except ValueError as error:
-            log.critical(
-                "Could not decode keyfile with given password. Please try again.",
-                reason=str(error),
-            )
-            sys.exit(1)
-
-
-def setup_web3(
-    deployment_dir: Path, eth_rpc: URI, keystore_file: str, password: str
-) -> tuple[Web3, dict[str, Contract]]:
-    web3, contracts = connect_to_blockchain(deployment_dir, eth_rpc=eth_rpc)
-    privkey = open_keystore(keystore_file, password)
-
-    account = Account.from_key(privkey)
-    web3.eth.default_account = account.address
-
-    # Add middleware to sign transactions by default
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
-
-    return web3, contracts
 
 
 def pass_args(f: Callable) -> Callable:
@@ -110,10 +46,12 @@ def pass_args(f: Callable) -> Callable:
 )
 @click.option("--eth-rpc", default="http://localhost:8545", type=str, help="Ethereum node RPC URI")
 @click.pass_context
-def cli(ctx: Any, deployment_dir: Path, keystore_file: str, password: str, eth_rpc: URI) -> None:
+def cli(ctx: Any, deployment_dir: Path, keystore_file: Path, password: str, eth_rpc: URL) -> None:
     setup_logging(log_level="DEBUG", log_json=False)
 
-    web3, contracts = setup_web3(deployment_dir, eth_rpc, keystore_file, password)
+    account = account_from_keyfile(keystore_file, password)
+    web3 = make_web3(eth_rpc, account)
+    contracts = contracts_for_web3(web3, deployment_dir)
 
     ctx.ensure_object(dict)
     ctx.obj["web3"] = web3

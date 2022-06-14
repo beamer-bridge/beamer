@@ -1,50 +1,24 @@
-import json
 import random
 import sys
 import time
 from pathlib import Path
-from typing import cast
 
-from eth_account import Account
-from eth_account.signers.local import LocalAccount
-from web3 import HTTPProvider, Web3
-from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
-
-import beamer.contracts
 from beamer.tests.util import create_request_hash
-from beamer.typing import ChainId
-
-
-def web3_for_rpc(rpc: str, account: LocalAccount) -> Web3:
-    web3 = Web3(HTTPProvider(rpc))
-
-    web3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    web3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
-    web3.eth.default_account = account.address
-
-    return web3
-
-
-def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
-    with open(keyfile, "rt") as fp:
-        privkey = Account.decrypt(json.load(fp), password)
-    return cast(LocalAccount, Account.from_key(privkey))
+from beamer.typing import URL, ChainId
+from beamer.util import account_from_keyfile, make_web3
+from scripts._util import contracts_for_web3
 
 
 def main() -> None:
     assert len(sys.argv) == 4
     deployment_dir = Path(sys.argv[1])
     keystore_file = Path(sys.argv[2])
-    l2_rpc = sys.argv[3]
+    l2_rpc = URL(sys.argv[3])
 
     deployer = account_from_keyfile(keystore_file, "")
-    web3 = web3_for_rpc(l2_rpc, deployer)
-    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
-
+    web3 = make_web3(l2_rpc, deployer)
+    l2_contracts = contracts_for_web3(web3, deployment_dir)
     chain_id = ChainId(web3.eth.chain_id)
-    l2_contracts = beamer.contracts.make_contracts(web3, deployment_info[chain_id])
 
     fill_manager = l2_contracts["FillManager"]
 
