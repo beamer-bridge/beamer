@@ -5,6 +5,7 @@ from eth_typing import ChecksumAddress
 from eth_utils import keccak, to_canonical_address
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
+from web3.types import Timestamp
 
 from beamer.typing import ChainId, FillHash, FillId, RequestHash, RequestId, TokenAmount
 
@@ -32,6 +33,7 @@ class Request(StateMachine):
         self.valid_until = valid_until
         self.filler: Optional[ChecksumAddress] = None
         self.fill_tx: Optional[HexBytes] = None
+        self.fill_timestamp: Optional[Timestamp] = None
         self.fill_id: Optional[FillId] = None
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
         self.l1_resolution_fill_id: Optional[FillId] = None
@@ -55,10 +57,17 @@ class Request(StateMachine):
     )
     ignore = pending.to(ignored) | filled.to(ignored)
 
-    def on_fill(self, filler: ChecksumAddress, fill_tx: HexBytes, fill_id: FillId) -> None:
+    def on_fill(
+        self,
+        filler: ChecksumAddress,
+        fill_tx: HexBytes,
+        fill_id: FillId,
+        fill_timestamp: Timestamp,
+    ) -> None:
         self.filler = filler
         self.fill_tx = fill_tx
         self.fill_id = fill_id
+        self.fill_timestamp = fill_timestamp
 
     def on_l1_resolve(
         self, l1_filler: Optional[ChecksumAddress] = None, l1_fill_id: Optional[FillId] = None

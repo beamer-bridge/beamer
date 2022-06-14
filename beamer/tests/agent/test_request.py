@@ -13,6 +13,7 @@ from beamer.chain import maybe_challenge
 from beamer.events import ClaimMade, RequestFilled
 from beamer.models.claim import Claim
 from beamer.models.request import Request
+from beamer.tests.agent.unit.utils import BLOCK_NUMBER
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, alloc_accounts, make_request
 from beamer.typing import ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
 
@@ -108,6 +109,7 @@ def test_challenge_own_claim(config, request_manager, token):
             last_challenger=ZERO_ADDRESS,
             challenger_stake_total=Wei(0),
             termination=Termination(1700000000),
+            block_number=BLOCK_NUMBER,
         ),
         int(time.time()),
     )
@@ -235,6 +237,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
                 target_token_address=token,
                 filler=filler,
                 amount=amount - 1,
+                block_number=brownie.web3.eth.block_number,
             ),
         ]
     )
@@ -253,6 +256,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
                 target_token_address=token,
                 filler=filler,
                 amount=amount,
+                block_number=brownie.web3.eth.block_number,
             ),
         ]
     )
@@ -271,6 +275,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
                 target_token_address=filler,
                 filler=filler,
                 amount=amount,
+                block_number=brownie.web3.eth.block_number,
             ),
         ]
     )
@@ -289,6 +294,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
                 target_token_address=token,
                 filler=filler,
                 amount=amount,
+                block_number=brownie.web3.eth.block_number,
             ),
         ]
     )

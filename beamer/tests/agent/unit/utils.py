@@ -32,6 +32,7 @@ ZERO_STAKE = Wei(0)
 
 TERMINATION = Termination(1)
 TIMESTAMP = Timestamp(457)
+BLOCK_NUMBER = BlockNumber(12345)
 
 ACCOUNT = Account.from_key(0xB25C7DB31FEED9122727BF0939DC769A96564B2DE4C4726D035B36ECF1E5B364)
 ADDRESS1 = make_address()
@@ -110,6 +111,7 @@ def make_claim_challenged(
             last_challenger=challenger,
             challenger_stake_total=challenger_stake,
             termination=termination,
+            block_number=BLOCK_NUMBER,
         ),
         challenge_back_off_timestamp=123,
     )

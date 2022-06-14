@@ -11,6 +11,7 @@ from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
+    BLOCK_NUMBER,
     CLAIM_ID,
     CLAIMER_STAKE,
     REQUEST_ID,
@@ -53,7 +54,7 @@ def test_request_garbage_collection_without_claim():
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     request.withdraw()
 
     context.requests.add(request.id, request)
@@ -75,7 +76,7 @@ def test_request_garbage_collection_with_claim():
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     request.withdraw()
 
     claim = make_claim_challenged(request)
@@ -108,7 +109,7 @@ def test_handle_request_resolved():
 
     # Must store the result in the request
     request = make_request()
-    request.fill(config.account.address, b"", fill_id)
+    request.fill(config.account.address, b"", fill_id, TIMESTAMP)
     request.try_to_claim()
 
     event = RequestResolved(
@@ -117,6 +118,7 @@ def test_handle_request_resolved():
         request_hash=request.request_hash,
         filler=filler,
         fill_id=fill_id,
+        block_number=BLOCK_NUMBER,
     )
 
     # Without a request, this must fail
@@ -134,13 +136,14 @@ def test_handle_request_resolved():
 
 def test_handle_generate_l1_resolution_event():
     context, config = make_context()
+    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
 
     request = make_request()
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     context.requests.add(request.id, request)
 
     claim = make_claim_challenged(
-        request,
+        request=request,
         claimer=config.account.address,
         challenger=make_address(),
         challenger_stake=Wei(CLAIMER_STAKE + 1),
@@ -151,20 +154,24 @@ def test_handle_generate_l1_resolution_event():
     flag, events = process_event(event, context)
 
     assert flag
-    assert events == [
-        InitiateL1ResolutionEvent(
-            chain_id=TARGET_CHAIN_ID,
-            request_id=REQUEST_ID,
-            claim_id=CLAIM_ID,
-        )
-    ]
+
+    if timestamp == TIMESTAMP:
+        assert events == [
+            InitiateL1ResolutionEvent(
+                chain_id=TARGET_CHAIN_ID,
+                request_id=REQUEST_ID,
+                claim_id=CLAIM_ID,
+            )
+        ]
+    else:
+        assert events == []
 
 
 def test_maybe_claim_no_l1():
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     context.requests.add(request.id, request)
 
     # Claimer doesn't win challenge game, `withdraw` must not be called
@@ -233,7 +240,7 @@ def test_maybe_claim_l1_as_claimer(
     assert config.account.address == ACCOUNT.address
 
     request = make_request()
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     request.l1_resolve(l1_filler, l1_fill_id)
     context.requests.add(request.id, request)
 
@@ -264,7 +271,7 @@ def test_maybe_claim_l1_as_challenger(
     # Is used as an assurance that in case ACCOUNT is changed
     assert config.account.address == ACCOUNT.address
     request = make_request()
-    request.fill(ADDRESS1, b"", b"")
+    request.fill(ADDRESS1, b"", b"", TIMESTAMP)
     request.l1_resolve(l1_filler, l1_fill_id)
 
     context.requests.add(request.id, request)

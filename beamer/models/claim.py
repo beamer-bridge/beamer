@@ -3,7 +3,7 @@ from typing import Optional
 from eth_typing import ChecksumAddress as Address
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
-from web3.types import Wei
+from web3.types import Timestamp, Wei
 
 from beamer.events import ClaimMade
 from beamer.models.request import Request
@@ -26,6 +26,7 @@ class Claim(StateMachine):
         # sending another transaction
         self.transaction_pending = False
         self.invalidation_tx: Optional[HexBytes] = None
+        self.invalidation_timestamp: Optional[Timestamp] = None
 
     started = State("Started", initial=True)
     # Claimer is winning
@@ -115,8 +116,11 @@ class Claim(StateMachine):
         else:
             return Wei(claimer_stake - challenger_stake + 1)
 
-    def on_start_challenge(self, invalidation_tx: HexBytes = None) -> None:
+    def on_start_challenge(
+        self, invalidation_tx: HexBytes = None, invalidation_timestamp: Timestamp = None
+    ) -> None:
         self.invalidation_tx = invalidation_tx
+        self.invalidation_timestamp = invalidation_timestamp
 
     def on_challenge(self, new_claim_made: ClaimMade) -> None:
         self._on_new_claim_made(new_claim_made)

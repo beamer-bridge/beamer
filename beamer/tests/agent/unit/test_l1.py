@@ -7,6 +7,7 @@ from beamer.tests.agent.unit.utils import (
     CLAIM_ID,
     REQUEST_ID,
     TARGET_CHAIN_ID,
+    TIMESTAMP,
     make_claim_challenged,
     make_context,
     make_request,
@@ -38,7 +39,7 @@ def test_handle_initiate_l1_resolution():
 
     # Check that task is added to resolution pool
     context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
-    request.fill(config.account.address, b"", b"")
+    request.fill(config.account.address, b"", b"", TIMESTAMP)
     request.try_to_claim()
     assert process_event(event, context) == (True, None)
     assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
@@ -67,6 +68,6 @@ def test_handle_initiate_l1_invalidation():
 
     # Check that task is added to resolution pool
     context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
-    claim.start_challenge(make_tx_hash())
+    claim.start_challenge(make_tx_hash(), TIMESTAMP)
     assert process_event(event, context) == (True, None)
     assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member

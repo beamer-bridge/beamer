@@ -19,6 +19,9 @@ from web3.types import GasPriceStrategy, TxParams
 from beamer.typing import URL, ChainId, ChecksumAddress
 
 
+SECONDS_PER_DAY = 24 * 60 * 60
+
+
 class TransactionFailed(Exception):
     def __repr__(self) -> str:
         return "TransactionFailed(%r)" % self.__cause__
