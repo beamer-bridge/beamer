@@ -47,6 +47,7 @@ class InitiateL1InvalidationEvent(Event):
 
 @dataclass(frozen=True)
 class TxEvent(Event):
+    block_number: BlockNumber
     tx_hash: HexBytes
 
 
@@ -161,6 +162,7 @@ def _decode_event(
     if data.event in _EVENT_TYPES:
         kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
         kwargs["chain_id"] = chain_id
+        kwargs["block_number"] = log_entry["blockNumber"]
         kwargs["tx_hash"] = log_entry["transactionHash"]
         return _EVENT_TYPES[data.event](**kwargs)
     return None

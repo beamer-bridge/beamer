@@ -1,15 +1,19 @@
 import time
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
 from hexbytes import HexBytes
 
 from beamer.chain import process_claims
-from beamer.events import FillHashInvalidated, HashInvalidated
+from beamer.events import FillHashInvalidated, HashInvalidated, InitiateL1InvalidationEvent
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
+    BLOCK_NUMBER,
+    CLAIM_ID,
+    TARGET_CHAIN_ID,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
@@ -25,7 +29,7 @@ def test_handle_fill_hash_invalidated():
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", FILL_ID)
+    request.fill(config.account.address, b"", FILL_ID, TIMESTAMP)
     context.requests.add(request.id, request)
     assert request.fill_id is not None
 
@@ -48,6 +52,7 @@ def test_handle_fill_hash_invalidated():
         chain_id=request.target_chain_id,
         tx_hash=HexBytes(""),
         fill_hash=fill_hash,
+        block_number=BLOCK_NUMBER,
     )
     assert process_event(event, context) == (True, None)
 
@@ -62,7 +67,7 @@ def test_handle_hash_invalidated():
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", FILL_ID)
+    request.fill(config.account.address, b"", FILL_ID, TIMESTAMP)
     context.requests.add(request.id, request)
     assert request.fill_id is not None
 
@@ -82,6 +87,7 @@ def test_handle_hash_invalidated():
         request_hash=request.request_hash,
         fill_id=request.fill_id,
         fill_hash=fill_hash,
+        block_number=BLOCK_NUMBER,
     )
     assert process_event(event, context) == (True, None)
 
@@ -96,7 +102,7 @@ def test_maybe_invalidate_claim_wrong_fill_id(mocked_invalidate, fill_id):
     context, config = make_context()
 
     request = make_request(valid_until=int(time.time() * 2))
-    request.fill(config.account.address, b"", FILL_ID)
+    request.fill(config.account.address, b"", FILL_ID, TIMESTAMP)
     context.requests.add(request.id, request)
 
     claim_event = make_claim_unchallenged(
@@ -121,7 +127,7 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_in_back_off(mocked_invalidate)
     context, config = make_context()
 
     request = make_request()
-    request.fill(config.account.address, b"", FILL_ID)
+    request.fill(config.account.address, b"", FILL_ID, TIMESTAMP)
     context.requests.add(request.id, request)
 
     claim_event = make_claim_unchallenged(
@@ -147,7 +153,7 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out(mocked_invalidate):
     context, config = make_context()
 
     request = make_request(valid_until=int(time.time() / 2))
-    request.fill(config.account.address, b"", FILL_ID)
+    request.fill(config.account.address, b"", FILL_ID, TIMESTAMP)
     context.requests.add(request.id, request)
 
     claim_event = make_claim_unchallenged(
@@ -192,7 +198,7 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
         termination=Termination(TIMESTAMP + 1),
     )
     context.claims.add(claim.id, claim)
-    claim.start_challenge(make_tx_hash())
+    claim.start_challenge(make_tx_hash(), TIMESTAMP)
     claim.l1_invalidate()
     assert claim.is_invalidated_l1_resolved  # pylint:disable=no-member
 
@@ -201,3 +207,34 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
     process_claims(context)
 
     assert should_withdraw == mocked_withdraw.called
+
+
+@pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
+def test_handle_generate_l1_invalidation_event(timestamp):
+    context, config = make_context()
+    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
+
+    request = make_request()
+    context.requests.add(request.id, request)
+
+    claim = make_claim_challenged(
+        request=request,
+        claimer=config.account.address,
+    )
+    claim.start_challenge(make_tx_hash(), timestamp)
+    context.claims.add(claim.id, claim)
+
+    event = deepcopy(claim.latest_claim_made)
+    flag, events = process_event(event, context)
+
+    assert flag
+
+    if timestamp == TIMESTAMP:
+        assert events == [
+            InitiateL1InvalidationEvent(
+                chain_id=TARGET_CHAIN_ID,
+                claim_id=CLAIM_ID,
+            )
+        ]
+    else:
+        assert events == []

@@ -34,7 +34,7 @@ from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
 from beamer.typing import ChainId, ClaimId, FillHash, RequestHash, RequestId
-from beamer.util import TokenMatchChecker
+from beamer.util import SECONDS_PER_DAY, TokenMatchChecker
 
 log = structlog.get_logger(__name__)
 
@@ -121,6 +121,24 @@ def _find_request_by_request_hash(
     return None
 
 
+def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
+    return (
+        not claim.is_invalidated_l1_resolved
+        and claim.invalidation_tx is not None
+        and claim.invalidation_timestamp is not None
+        and int(time.time()) > claim.invalidation_timestamp + 7 * SECONDS_PER_DAY
+    )
+
+
+def _proof_ready_for_l1_relay(request: Request) -> bool:
+    return (
+        not request.is_l1_resolved
+        and request.fill_tx is not None
+        and request.fill_timestamp is not None
+        and int(time.time()) > request.fill_timestamp + 7 * SECONDS_PER_DAY
+    )
+
+
 def _handle_latest_block_updated(
     event: LatestBlockUpdatedEvent, context: Context
 ) -> HandlerResult:
@@ -189,7 +207,13 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         return True, None
 
     try:
-        request.fill(filler=event.filler, fill_tx=event.tx_hash, fill_id=event.fill_id)
+        fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
+        request.fill(
+            filler=event.filler,
+            fill_tx=event.tx_hash,
+            fill_id=event.fill_id,
+            fill_timestamp=fill_block.timestamp,  # type: ignore
+        )
     except TransitionNotAllowed:
         return False, None
 
@@ -235,7 +259,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return False, None
 
     events: list[Event] = []
-    if not claim.is_invalidated_l1_resolved and claim.invalidation_tx is not None:
+    if _invalidation_ready_for_l1_relay(claim):
         events.append(
             InitiateL1InvalidationEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -250,7 +274,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if not request.is_l1_resolved and request.fill_tx is not None:
+    if _proof_ready_for_l1_relay(request):
         events.append(
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -285,9 +309,11 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
+    fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
     claims = _find_claims_by_fill_hash(context, event.fill_hash)
+
     for claim in claims:
-        claim.start_challenge(event.tx_hash)
+        claim.start_challenge(event.tx_hash, fill_block.timestamp)  # type: ignore
 
     return len(claims) > 0, None
 
