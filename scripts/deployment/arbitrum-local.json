@@ -12,7 +12,10 @@
             "finalization_time": 3600,
             "proof_submitter": "ArbitrumProofSubmitter",
             "l1_messenger": "ArbitrumL1Messenger",
-            "l2_messenger": "ArbitrumL2Messenger"
+            "l2_messenger": "ArbitrumL2Messenger",
+            "claim_stake": 4700000000000000,
+            "claim_period": 3600,
+            "challenge_period_extension": 3600
         }
     ]
 }

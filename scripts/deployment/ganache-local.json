@@ -12,7 +12,10 @@
             "finalization_time": 3600,
             "proof_submitter": "TestProofSubmitter",
             "l1_messenger": "TestL1Messenger",
-            "l2_messenger": "TestL2Messenger"
+            "l2_messenger": "TestL2Messenger",
+            "claim_stake": 4700000000000000,
+            "claim_period": 3600,
+            "challenge_period_extension": 3600
         }
     ]
 }
