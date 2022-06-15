@@ -30,13 +30,20 @@ class TransactionFailed(Exception):
         return str(self.__cause__)
 
 
-def transact(func: Union[ContractConstructor, ContractFunction], **kwargs: Any) -> Any:
+def transact(
+    func: Union[ContractConstructor, ContractFunction],
+    timeout: float = 120,
+    poll_latency: float = 0.1,
+    **kwargs: Any,
+) -> Any:
     try:
         txn_hash = func.transact(cast(Optional[TxParams], kwargs))
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
-    return func.web3.eth.wait_for_transaction_receipt(txn_hash)
+    return func.web3.eth.wait_for_transaction_receipt(
+        txn_hash, timeout=timeout, poll_latency=poll_latency
+    )
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:
