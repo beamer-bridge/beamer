@@ -11,7 +11,7 @@ from statemachine.exceptions import TransitionNotAllowed
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
-from web3.types import BlockData
+from web3.types import BlockData, Timestamp
 
 import beamer.metrics
 from beamer.config import Config
@@ -121,28 +121,28 @@ def _find_request_by_request_hash(
     return None
 
 
-def _invalidation_ready_for_l1_relay(
-    claim: Claim, target_chain_id: ChainId, request_manager: Contract
-) -> bool:
-    target_chain_finalization = request_manager.functions.finalizationTimes(target_chain_id).call()
+def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
     return (
         not claim.is_invalidated_l1_resolved
         and claim.invalidation_tx is not None
         and claim.invalidation_timestamp is not None
-        and int(time.time()) > claim.invalidation_timestamp + target_chain_finalization
     )
 
 
-def _proof_ready_for_l1_relay(request: Request, request_manager: Contract) -> bool:
-    target_chain_finalization = request_manager.functions.finalizationTimes(
-        request.target_chain_id
-    ).call()
+def _proof_ready_for_l1_relay(request: Request) -> bool:
     return (
         not request.is_l1_resolved
         and request.fill_tx is not None
         and request.fill_timestamp is not None
-        and int(time.time()) > request.fill_timestamp + target_chain_finalization
     )
+
+
+def _timestamp_is_l1_finalized(
+    timestamp: Timestamp, request_manager: Contract, target_chain_id: ChainId
+) -> bool:
+    target_chain_finalization = request_manager.functions.finalizationTimes(target_chain_id).call()
+
+    return int(time.time()) > timestamp + target_chain_finalization
 
 
 def _handle_latest_block_updated(
@@ -265,7 +265,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return False, None
 
     events: list[Event] = []
-    if _invalidation_ready_for_l1_relay(claim, request.target_chain_id, context.request_manager):
+    if _invalidation_ready_for_l1_relay(claim):
         events.append(
             InitiateL1InvalidationEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -280,7 +280,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     except TransitionNotAllowed:
         return False, events
 
-    if _proof_ready_for_l1_relay(request, context.request_manager):
+    if _proof_ready_for_l1_relay(request):
         events.append(
             InitiateL1ResolutionEvent(
                 chain_id=request.target_chain_id,  # Resolution happens on the target chain
@@ -332,7 +332,7 @@ def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) 
     return True, None
 
 
-def _l1_resolution_criteria_fulfilled(claim: Claim, context: Context) -> bool:
+def _l1_resolution_threshold_reached(claim: Claim, context: Context) -> bool:
     l1_gas_cost = 1_000_000  # TODO: Adapt to real price
     l1_gas_price = context.web3_l1.eth.gas_price
     l1_safety_factor = 1.25
@@ -367,9 +367,17 @@ def _handle_initiate_l1_resolution(
 
     # A request should never be dropped before all claims are finalized
     assert request is not None, "Request object missing"
-
     assert request.fill_tx is not None, "Request not yet filled"
-    if _l1_resolution_criteria_fulfilled(claim, context):
+    assert request.fill_timestamp is not None, "Request not yet filled"
+
+    # Check that message is finalized on L1
+    if not _timestamp_is_l1_finalized(
+        request.fill_timestamp, context.request_manager, request.target_chain_id
+    ):
+        return False, None
+
+    # Check if L1 resolution is cheaper than the winning from challenge
+    if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
             context.config.l1_rpc_url,
@@ -407,9 +415,17 @@ def _handle_initiate_l1_invalidation(
     # A request should never be dropped before all claims are finalized
     request = context.requests.get(claim.request_id)
     assert request is not None, "Request object missing"
-
     assert claim.invalidation_tx is not None, "Claim not invalidated"
-    if _l1_resolution_criteria_fulfilled(claim, context):
+    assert claim.invalidation_timestamp is not None, "Claim not invalidated"
+
+    # Check that message is finalized on L1
+    if not _timestamp_is_l1_finalized(
+        claim.invalidation_timestamp, context.request_manager, request.target_chain_id
+    ):
+        return False, None
+
+    # Check if L1 resolution is cheaper than the winning from challenge
+    if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
             context.config.l1_rpc_url,
