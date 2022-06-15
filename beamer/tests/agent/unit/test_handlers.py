@@ -136,7 +136,6 @@ def test_handle_request_resolved():
 
 def test_handle_generate_l1_resolution_event():
     context, config = make_context()
-    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
 
     request = make_request()
     request.fill(config.account.address, b"", b"", TIMESTAMP)
@@ -154,17 +153,13 @@ def test_handle_generate_l1_resolution_event():
     flag, events = process_event(event, context)
 
     assert flag
-
-    if timestamp == TIMESTAMP:
-        assert events == [
-            InitiateL1ResolutionEvent(
-                chain_id=TARGET_CHAIN_ID,
-                request_id=REQUEST_ID,
-                claim_id=CLAIM_ID,
-            )
-        ]
-    else:
-        assert events == []
+    assert events == [
+        InitiateL1ResolutionEvent(
+            chain_id=TARGET_CHAIN_ID,
+            request_id=REQUEST_ID,
+            claim_id=CLAIM_ID,
+        )
+    ]
 
 
 def test_maybe_claim_no_l1():

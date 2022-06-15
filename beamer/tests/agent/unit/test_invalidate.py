@@ -212,7 +212,6 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
 @pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
 def test_handle_generate_l1_invalidation_event(timestamp):
     context, config = make_context()
-    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
 
     request = make_request()
     context.requests.add(request.id, request)
@@ -229,12 +228,9 @@ def test_handle_generate_l1_invalidation_event(timestamp):
 
     assert flag
 
-    if timestamp == TIMESTAMP:
-        assert events == [
-            InitiateL1InvalidationEvent(
-                chain_id=TARGET_CHAIN_ID,
-                claim_id=CLAIM_ID,
-            )
-        ]
-    else:
-        assert events == []
+    assert events == [
+        InitiateL1InvalidationEvent(
+            chain_id=TARGET_CHAIN_ID,
+            claim_id=CLAIM_ID,
+        )
+    ]

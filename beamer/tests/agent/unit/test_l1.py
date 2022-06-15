@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from web3.types import Wei
 
@@ -15,8 +17,10 @@ from beamer.tests.agent.unit.utils import (
 from beamer.tests.agent.utils import make_tx_hash
 
 
-def test_handle_initiate_l1_resolution():
+@pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
+def test_handle_initiate_l1_resolution(timestamp):
     context, config = make_context()
+    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
 
     request = make_request()
     context.requests.add(request.id, request)
@@ -39,14 +43,21 @@ def test_handle_initiate_l1_resolution():
 
     # Check that task is added to resolution pool
     context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
-    request.fill(config.account.address, b"", b"", TIMESTAMP)
+    request.fill(config.account.address, b"", b"", timestamp)
     request.try_to_claim()
-    assert process_event(event, context) == (True, None)
-    assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
+
+    if timestamp == TIMESTAMP:
+        assert process_event(event, context) == (True, None)
+        assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
+    else:
+        assert process_event(event, context) == (False, None)
+        assert not context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
 
 
-def test_handle_initiate_l1_invalidation():
+@pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
+def test_handle_initiate_l1_invalidation(timestamp):
     context, config = make_context()
+    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
 
     request = make_request()
     context.requests.add(request.id, request)
@@ -68,6 +79,11 @@ def test_handle_initiate_l1_invalidation():
 
     # Check that task is added to resolution pool
     context.web3_l1.eth.gas_price = Wei(1)  # type: ignore
-    claim.start_challenge(make_tx_hash(), TIMESTAMP)
-    assert process_event(event, context) == (True, None)
-    assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
+    claim.start_challenge(make_tx_hash(), timestamp)
+
+    if timestamp == TIMESTAMP:
+        assert process_event(event, context) == (True, None)
+        assert context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
+    else:
+        assert process_event(event, context) == (False, None)
+        assert not context.task_pool.submit.called  # type: ignore  # pylint:disable=no-member
