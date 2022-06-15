@@ -1,3 +1,6 @@
+[![Agent CI](https://github.com/beamer-bridge/beamer/actions/workflows/backend.yml/badge.svg)](https://github.com/beamer-bridge/beamer/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/beamer-bridge/beamer/actions/workflows/frontend.yml/badge.svg)](https://github.com/beamer-bridge/beamer/actions/workflows/frontend.yml)
+
 # Beamer Bridge
 *Transfer ERC20 assets directly between EVM compatible rollups - with a world class user experience*
 
