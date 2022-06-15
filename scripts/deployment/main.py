@@ -67,7 +67,7 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
     print(f"Deploying {name}")
     ContractFactory = web3.eth.contract(abi=data[0], bytecode=data[1])
 
-    receipt = transact(ContractFactory.constructor(*args))
+    receipt = transact(ContractFactory.constructor(*args), timeout=600)
 
     address = receipt.contractAddress
     deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
@@ -135,14 +135,18 @@ def deploy_beamer(
     transact(
         resolver.functions.addCaller(
             l2_config["chain_id"], l1_messenger.address, l2_messenger.address
-        )
+        ),
+        timeout=600,
     )
     transact(
         resolver.functions.addRegistry(
             l2_config["chain_id"], resolution_registry.address, l1_messenger.address
-        )
+        ),
+        timeout=600,
     )
-    transact(l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address))
+    transact(
+        l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address), timeout=600
+    )
     transact(
         resolution_registry.functions.addCaller(
             resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
