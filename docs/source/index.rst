@@ -8,6 +8,7 @@ Welcome to Beamer's documentation!
    agent.rst
    running.rst
    contracts.rst
+   contracts-api-reference.rst
    protocol.rst
    l1_resolution.rst
    contributing.rst
