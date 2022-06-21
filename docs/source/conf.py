@@ -31,10 +31,14 @@ release = '0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
     'sphinx.ext.graphviz',
+    'sphinx.ext.todo',
     'sphinxcontrib.mermaid',
-    'sphinx.ext.todo'
+    'sphinxcontrib.soliditydomain'
 ]
+
+autodoc_default_options = { 'members': None, 'exclude-members': '<private>' }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
