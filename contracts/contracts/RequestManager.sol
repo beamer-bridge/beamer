@@ -9,6 +9,13 @@ import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
 import "./BeamerUtils.sol";
 import "./ResolutionRegistry.sol";
 
+/// The request manager.
+///
+/// This contract is responsible for keeping track of transfer requests,
+/// implementing the rules of the challenge game and holding deposited
+/// tokens until they are withdrawn.
+///
+/// It is the only contract that agents need to interact with on the source chain.
 contract RequestManager is Ownable {
     using Math for uint256;
     using SafeERC20 for IERC20;
@@ -43,6 +50,10 @@ contract RequestManager is Ownable {
     }
 
     // Events
+
+    /// Emitted when a new request has been created.
+    ///
+    /// .. seealso:: :sol:func:`createRequest`
     event RequestCreated(
         uint256 requestId,
         uint256 targetChainId,
@@ -53,8 +64,20 @@ contract RequestManager is Ownable {
         uint256 validUntil
     );
 
+    /// Emitted when the token deposit for request ``requestId`` has been
+    /// transferred to the ``receiver``.
+    ///
+    /// This can happen in two cases:
+    ///
+    ///  * the request expired and the request submitter called :sol:func:`withdrawExpiredRequest`
+    ///  * a claim related to the request has been resolved successfully in favor of the claimer
+    ///
+    /// .. seealso:: :sol:func:`withdraw` :sol:func:`withdrawExpiredRequest`
     event DepositWithdrawn(uint256 requestId, address receiver);
 
+    /// Emitted when a claim or a counter-claim (challenge) has been made.
+    ///
+    /// .. seealso:: :sol:func:`claimRequest` :sol:func:`challengeClaim`
     event ClaimMade(
         uint256 indexed requestId,
         uint256 claimId,
@@ -66,6 +89,12 @@ contract RequestManager is Ownable {
         bytes32 fillId
     );
 
+    /// Emitted when staked native tokens tied to a claim have been withdrawn.
+    ///
+    /// This can only happen when the claim has been resolved and the caller
+    /// of :sol:func:`withdraw` is allowed to withdraw their stake.
+    ///
+    /// .. seealso:: :sol:func:`withdraw`
     event ClaimWithdrawn(
         uint256 claimId,
         uint256 indexed requestId,
@@ -73,46 +102,93 @@ contract RequestManager is Ownable {
     );
 
     // Constants
+
+    /// The minimum amount of source chain's native token that the claimer needs to
+    /// provide when making a claim, as well in each round of the challenge game.
     uint256 public claimStake;
+
+    /// The period for which the claim is valid.
     uint256 public claimPeriod;
+
+    /// The period by which the termination time of a claim is extended after each
+    /// round of the challenge game. This period should allow enough time for the
+    /// other parties to counter-challenge.
+    ///
+    /// .. note::
+    ///
+    ///    The claim's termination time is extended only if it is less than the
+    ///    extension time.
+    ///
+    /// Note that in the first challenge round, i.e. the round initiated by the first
+    /// challenger, the termination time is extended additionally by the finalization
+    /// time of the target chain. This is done to allow for L1 resolution.
     uint256 public challengePeriodExtension;
 
+    /// The minimum validity period of a request.
     uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
+
+    /// The maximum validity period of a request.
     uint256 public constant MAX_VALIDITY_PERIOD = 52 weeks;
 
     // Variables
+
+    /// Indicates whether the contract is deprecated. A deprecated contract
+    /// cannot be used to create new requests.
     bool public deprecated;
+
+    /// The request counter, used to generate request IDs.
     uint256 public requestCounter;
+
+    /// The claim counter, used to generate claim IDs.
     uint256 public claimCounter;
+
+    /// The resolution registry that is used to query for results of L1 resolution.
     ResolutionRegistry public resolutionRegistry;
 
-    mapping(uint256 => uint256) public finalizationTimes; // target rollup chain id => finalization time
+    /// Maps target rollup chain IDs to finalization times.
+    /// Finalization times are in seconds.
+    mapping(uint256 => uint256) public finalizationTimes;
 
+    /// Maps request IDs to requests.
     mapping(uint256 => Request) public requests;
+
+    /// Maps claim IDs to claims.
     mapping(uint256 => Claim) public claims;
 
+    /// The minimum fee, denominated in transfer token, paid to the liquidity provider.
     uint256 public minLpFee = 5 ether; // 5e18
+
+    /// Liquidity provider fee percentage, expressed in ppm (parts per million).
     uint256 public lpFeePPM = 1_000; // 0.1% of the token amount being transferred
+
+    /// Protocol fee percentage, expressed in ppm (parts per million).
     uint256 public protocolFeePPM = 0; // 0% of the token amount being transferred
 
+    /// The maximum amount of tokens that can be transferred in a single request.
     uint256 public transferLimit = 10000 ether; // 10000e18
 
-    // Protocol fee tracking: ERC20 token address => amount
+    /// Maps ERC20 token addresses to related token amounts that belong to the protocol.
     mapping(address => uint256) public collectedProtocolFees;
 
+    /// Compute the liquidy provider fee that needs to be paid for a given transfer amount.
     function lpFee(uint256 amount) public view returns (uint256) {
         return Math.max(minLpFee, (amount * lpFeePPM) / 1_000_000);
     }
 
+    /// Compute the protocol fee that needs to be paid for a given transfer amount.
     function protocolFee(uint256 amount) public view returns (uint256) {
         return (amount * protocolFeePPM) / 1_000_000;
     }
 
+    /// Compute the total fee that needs to be paid for a given transfer amount.
+    /// The total fee is the sum of the liquidity provider fee and the protocol fee.
     function totalFee(uint256 amount) public view returns (uint256) {
         return lpFee(amount) + protocolFee(amount);
     }
 
     // Modifiers
+
+    /// Check whether a given request ID is valid.
     modifier validRequestId(uint256 requestId) {
         require(
             requestId <= requestCounter && requestId > 0,
@@ -121,11 +197,18 @@ contract RequestManager is Ownable {
         _;
     }
 
+    /// Check whether a given claim ID is valid.
     modifier validClaimId(uint256 claimId) {
         require(claimId <= claimCounter && claimId > 0, "claimId not valid");
         _;
     }
 
+    /// Constructor.
+    ///
+    /// @param _claimStake Claim stake amount.
+    /// @param _claimPeriod Claim period, in seconds.
+    /// @param _challengePeriodExtension Challenge period extension, in seconds.
+    /// @param _resolutionRegistry Address of the resolution registry.
     constructor(
         uint256 _claimStake,
         uint256 _claimPeriod,
@@ -138,6 +221,18 @@ contract RequestManager is Ownable {
         resolutionRegistry = ResolutionRegistry(_resolutionRegistry);
     }
 
+    /// Create a new transfer request.
+    ///
+    /// @param targetChainId ID of the target chain.
+    /// @param sourceTokenAddress Address of the token contract on the source chain.
+    /// @param targetTokenAddress Address of the token contract on the target chain.
+    /// @param targetAddress Recipient address on the target chain.
+    /// @param amount Amount of tokens to transfer. Does not include fees.
+    /// @param validityPeriod The number of seconds the request is to be considered valid.
+    ///                       Once its validity period has elapsed, the request cannot be claimed
+    ///                       anymore and will eventually expire, allowing the request submitter
+    ///                       to withdraw the deposited tokens if there are no active claims.
+    /// @return ID of the newly created request.
     function createRequest(
         uint256 targetChainId,
         address sourceTokenAddress,
@@ -200,6 +295,11 @@ contract RequestManager is Ownable {
         return requestCounter;
     }
 
+    /// Withdraw funds deposited with an expired request.
+    ///
+    /// No claims must be active for the request.
+    ///
+    /// @param requestId ID of the expired request.
     function withdrawExpiredRequest(uint256 requestId)
         external
         validRequestId(requestId)
@@ -227,6 +327,15 @@ contract RequestManager is Ownable {
         );
     }
 
+    /// Claim that a request was filled by the caller.
+    ///
+    /// The request must still be valid at call time.
+    /// The caller must provide the ``claimStake`` amount of source rollup's native
+    /// token.
+    ///
+    /// @param requestId ID of the request.
+    /// @param fillId The fill ID.
+    /// @return The claim ID.
     function claimRequest(uint256 requestId, bytes32 fillId)
         external
         payable
@@ -270,6 +379,33 @@ contract RequestManager is Ownable {
         return claimCounter;
     }
 
+    /// Challenge an existing claim.
+    ///
+    /// The claim must still be valid at call time.
+    /// This function implements one round of the challenge game.
+    /// The original claimer is allowed to call this function only
+    /// after someone else made a challenge, i.e. every second round.
+    /// However, once the original claimer counter-challenges, anyone
+    /// can join the game and make another challenge.
+    ///
+    /// The caller must provide enough native tokens as their stake.
+    /// For the original claimer, the minimum stake is
+    /// ``challengerStakeTotal - claimerStake + claimStake``.
+    ///
+    /// For challengers, the minimum stake is
+    /// ``claimerStake - challengerStakeTotal + 1``.
+    ///
+    /// An example (time flows downwards, claimStake = 10)::
+    ///
+    ///   claimRequest() by Max [stakes 10]
+    ///   challengeClaim() by Alice [stakes 11]
+    ///   challengeClaim() by Max [stakes 11]
+    ///   challengeClaim() by Bob [stakes 16]
+    ///
+    /// In this example, if Max didn't want to lose the challenge game to
+    /// Alice and Bob, he would have to challenge with a stake of at least 16.
+    ///
+    /// @param claimId The claim ID.
     function challengeClaim(uint256 claimId)
         external
         payable
@@ -330,6 +466,16 @@ contract RequestManager is Ownable {
         );
     }
 
+    /// Withdraw the deposit that the request submitter left with the contract,
+    /// as well as the staked native tokens associated with the claim.
+    ///
+    /// In case the caller of this function is a challenger that won the game,
+    /// they will only get their staked native tokens plus the reward in the form
+    /// of full (sole challenger) or partial (multiple challengers) amount
+    /// of native tokens staked by the dishonest claimer.
+    ///
+    /// @param claimId The claim ID.
+    /// @return The address of the deposit receiver.
     function withdraw(uint256 claimId)
         external
         validClaimId(claimId)
@@ -486,6 +632,14 @@ contract RequestManager is Ownable {
         token.safeTransfer(claimer, request.amount + request.lpFee);
     }
 
+    /// Withdraw protocol fees collected by the contract.
+    ///
+    /// Protocol fees are paid in token transferred.
+    ///
+    /// .. note:: This function can only be called by the contract owner.
+    ///
+    /// @param tokenAddress The address of the token contract.
+    /// @param recipient The address the fees should be sent to.
     function withdrawProtocolFees(address tokenAddress, address recipient)
         external
         onlyOwner
@@ -498,6 +652,13 @@ contract RequestManager is Ownable {
         token.safeTransfer(recipient, amount);
     }
 
+    /// Update fee parameters.
+    ///
+    /// .. note:: This function can only be called by the contract owner.
+    ///
+    /// @param newProtocolFeePPM The new value for ``protocolFeePPM``.
+    /// @param newLpFeePPM The new value for ``lpFeePPM``.
+    /// @param newMinLpFee The new value for ``minLpFee``.
     function updateFeeData(
         uint256 newProtocolFeePPM,
         uint256 newLpFeePPM,
@@ -508,10 +669,21 @@ contract RequestManager is Ownable {
         minLpFee = newMinLpFee;
     }
 
+    /// Update the transfer amount limit.
+    ///
+    /// .. note:: This function can only be called by the contract owner.
+    ///
+    /// @param newTransferLimit The new value for ``transferLimit``.
     function updateTransferLimit(uint256 newTransferLimit) external onlyOwner {
         transferLimit = newTransferLimit;
     }
 
+    /// Set the finalization time for the given target chain.
+    ///
+    /// .. note:: This function can only be called by the contract owner.
+    ///
+    /// @param targetChainId The target chain ID.
+    /// @param finalizationTime Finalization time in seconds.
     function setFinalizationTime(
         uint256 targetChainId,
         uint256 finalizationTime
@@ -523,6 +695,13 @@ contract RequestManager is Ownable {
         finalizationTimes[targetChainId] = finalizationTime;
     }
 
+    /// Mark the contract as deprecated.
+    ///
+    /// Once the contract is deprecated, it cannot be used to create new
+    /// requests anymore. Withdrawing deposited funds and claim stakes
+    /// still works, though.
+    ///
+    /// .. note:: This function can only be called by the contract owner.
     function deprecateContract() external onlyOwner {
         require(deprecated == false, "Contract already deprecated");
         deprecated = true;
