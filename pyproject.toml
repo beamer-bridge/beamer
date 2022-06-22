@@ -30,7 +30,7 @@ pdbpp = "^0.10.3"
 pytest-cov = "^3.0.0"
 shiv = "^1.0.1"
 Sphinx = "^5.0.2"
-furo = "^2022.6.4"
+furo = "^2022.6.21"
 sphinxcontrib-mermaid = "^0.7.1"
 
 [tool.poetry.scripts]
