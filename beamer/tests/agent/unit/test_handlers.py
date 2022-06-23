@@ -1,12 +1,18 @@
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from hexbytes import HexBytes
 from web3.types import ChecksumAddress, Wei
 
 from beamer.chain import claim_request, process_claims, process_requests
-from beamer.events import InitiateL1ResolutionEvent, RequestResolved
+from beamer.events import (
+    ClaimMade,
+    InitiateL1ResolutionEvent,
+    RequestCreated,
+    RequestFilled,
+    RequestResolved,
+)
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
@@ -14,17 +20,20 @@ from beamer.tests.agent.unit.utils import (
     BLOCK_NUMBER,
     CLAIM_ID,
     CLAIMER_STAKE,
+    NULL_ADDRESS,
     REQUEST_ID,
+    SOURCE_CHAIN_ID,
     TARGET_CHAIN_ID,
+    TERMINATION,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
     make_context,
     make_request,
 )
-from beamer.tests.agent.utils import make_address
+from beamer.tests.agent.utils import make_address, make_tx_hash
 from beamer.tests.constants import FILL_ID
-from beamer.typing import FillId, Termination
+from beamer.typing import FillId, Termination, TokenAmount
 
 
 def test_skip_not_self_filled():
@@ -289,3 +298,73 @@ def test_maybe_claim_l1_as_challenger(
         assert mocked_withdraw.called
     else:
         assert not mocked_withdraw.called
+
+
+@patch("beamer.metrics")
+def test_handling_claim_during_sync(_mocked_metrics):
+    """
+    Tests the problem encountered in https://github.com/beamer-bridge/beamer/issues/782
+    """
+    context, config = make_context()
+
+    source_token = make_address()
+    target_token = make_address()
+    filler = make_address()
+    amount = TokenAmount(123456)
+
+    request_event = RequestCreated(
+        chain_id=SOURCE_CHAIN_ID,
+        block_number=BLOCK_NUMBER,
+        tx_hash=make_tx_hash(),
+        request_id=REQUEST_ID,
+        target_chain_id=TARGET_CHAIN_ID,
+        source_token_address=source_token,
+        target_token_address=target_token,
+        target_address=make_address(),
+        amount=amount,
+        valid_until=TERMINATION,
+    )
+    claim_event = ClaimMade(
+        chain_id=SOURCE_CHAIN_ID,
+        block_number=BLOCK_NUMBER,
+        tx_hash=make_tx_hash(),
+        claim_id=CLAIM_ID,
+        request_id=REQUEST_ID,
+        fill_id=FILL_ID,
+        claimer=config.account.address,
+        claimer_stake=Wei(1_000),
+        last_challenger=NULL_ADDRESS,
+        challenger_stake_total=Wei(0),
+        termination=TERMINATION,
+    )
+    fill_event = RequestFilled(
+        chain_id=TARGET_CHAIN_ID,
+        block_number=BLOCK_NUMBER,
+        tx_hash=make_tx_hash(),
+        request_id=REQUEST_ID,
+        fill_id=FILL_ID,
+        source_chain_id=SOURCE_CHAIN_ID,
+        target_token_address=target_token,
+        filler=filler,
+        amount=amount,
+    )
+
+    context.match_checker = MagicMock()
+    context.match_checker.is_valid_pair.return_value = True
+
+    process_event(request_event, context)
+    process_event(claim_event, context)
+    process_event(fill_event, context)
+
+    request = context.requests.get(REQUEST_ID)
+    assert request is not None
+
+    # Before the fix, the claim event didn't change the requests state. So it
+    # remained in the pending state, which led to another try to claim the request
+    assert request.is_claimed
+
+    # It's also important that the fill information is still correctly attached to the
+    # request, even if it's received later
+    assert request.filler == fill_event.filler
+    assert request.fill_tx == fill_event.tx_hash
+    assert request.fill_id == fill_event.fill_id
