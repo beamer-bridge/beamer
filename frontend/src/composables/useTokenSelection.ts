@@ -11,10 +11,11 @@ export function useTokenSelection(
   connectedChainIdentifier: Ref<number | undefined>,
   provider: Ref<IEthereumProvider | undefined>,
 ) {
-  const tokens = computed(() =>
-    chains.value[connectedChainIdentifier.value ?? -1]?.tokens.map((token) =>
-      getTokenSelectorOption(token),
-    ),
+  const tokens = computed(
+    () =>
+      chains.value[connectedChainIdentifier.value ?? -1]?.tokens.map((token) =>
+        getTokenSelectorOption(token),
+      ) ?? [],
   );
 
   const _selectedToken = ref<SelectorOption<Token> | null>(null);

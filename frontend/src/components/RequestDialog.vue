@@ -1,31 +1,23 @@
 <template>
   <div class="request-dialog">
-    <FormKit
-      ref="requestForm"
-      v-slot="{ state: { valid } }"
-      form-class="flex flex-col items-center"
-      type="form"
-      :actions="false"
-      @submit="submitRequestTransaction"
-      @input="updateRequestAmount"
-    >
-      <RequestFormInputs />
+    <RequestFormInputs v-model="formResult" />
 
-      <Teleport v-if="signer" to="#action-button-portal">
-        <ActionButton v-if="transferFundsButtonVisible" :disabled="!valid" @click="submitForm">
-          Transfer Funds
-        </ActionButton>
-      </Teleport>
-    </FormKit>
+    <Teleport v-if="signer" to="#action-button-portal">
+      <ActionButton
+        v-if="transferFundsButtonVisible"
+        :disabled="!formValid"
+        @click="submitRequestTransaction"
+      >
+        Transfer Funds
+      </ActionButton>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { FormKitFrameworkContext } from '@formkit/core';
-import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
@@ -38,58 +30,55 @@ import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 import type { ChainWithTokens } from '@/types/config';
 import type { Token } from '@/types/data';
-import type { RequestFormResult } from '@/types/form';
+import type { RequestFormResult, ValidRequestFormResult } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
-const { provider, signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 
-const requestForm = ref<FormKitFrameworkContext>();
-const requestAmount: Ref<TokenAmount | undefined> = ref(undefined);
+const formResult: Ref<RequestFormResult> = ref({
+  amount: '',
+  sourceChain: null,
+  targetChain: null,
+  toAddress: '',
+  token: null,
+});
 
-const updateRequestAmount = (formValues: RequestFormResult) => {
-  requestAmount.value =
-    formValues.token && formValues.amount
-      ? new TokenAmount({
-          token: formValues.token.value,
-          amount: formValues.amount,
-        })
-      : undefined;
-};
+const formValid = computed(() => checkFormValidity(formResult.value));
 
-const submitForm = () => {
-  requestForm.value?.node.submit();
-};
-
-const submitRequestTransaction = async (formResult: RequestFormResult) => {
-  if (!provider.value || !signer.value) {
+const submitRequestTransaction = async () => {
+  if (!signer.value) {
     throw new Error('No signer available!');
   }
-  const sourceAmount = TokenAmount.parse(formResult.amount, formResult.token.value);
+  if (!checkFormValidity(formResult.value)) {
+    throw new Error('Form not valid!');
+  }
 
-  const targetConfiguration = configuration.chains[formResult.targetChain.value.identifier];
+  const sourceAmount = TokenAmount.parse(formResult.value.amount, formResult.value.token.value);
+
+  const targetConfiguration = configuration.chains[formResult.value.targetChain.value.identifier];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const targetToken = parseTokenFromChainConfiguration(
     targetConfiguration,
-    formResult.token.label,
+    formResult.value.token.label,
   )!;
-  const targetAmount = TokenAmount.parse(formResult.amount, targetToken);
+  const targetAmount = TokenAmount.parse(formResult.value.amount, targetToken);
   const validityPeriod = new UInt256('600');
-  const { rpcUrl, requestManagerAddress } = formResult.sourceChain.value;
+  const { rpcUrl, requestManagerAddress } = formResult.value.sourceChain.value;
   const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, targetAmount.uint256);
   const fees = TokenAmount.new(requestFee, sourceAmount.token);
 
   const transfer = reactive(
     Transfer.new(
-      formResult.sourceChain.value,
+      formResult.value.sourceChain.value,
       sourceAmount,
-      formResult.targetChain.value,
+      formResult.value.targetChain.value,
       targetAmount,
-      formResult.toAddress,
+      formResult.value.toAddress,
       validityPeriod,
       fees,
     ),
@@ -97,7 +86,13 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
 
   transferHistory.addTransfer(transfer);
   switchToActivities();
-  requestForm.value?.node.reset();
+  formResult.value = {
+    amount: '',
+    sourceChain: null,
+    targetChain: null,
+    toAddress: '',
+    token: null,
+  };
 
   try {
     await transfer.execute(signer.value, signerAddress.value);
@@ -106,6 +101,10 @@ const submitRequestTransaction = async (formResult: RequestFormResult) => {
     console.log(transfer);
   }
 };
+
+function checkFormValidity(formData: RequestFormResult): formData is ValidRequestFormResult {
+  return Object.values(formData).every((value) => !!value);
+}
 
 function parseTokenFromChainConfiguration(
   configuration: ChainWithTokens,
