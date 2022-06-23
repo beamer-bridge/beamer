@@ -26,6 +26,28 @@ export function useTokenBalance(
 
   let tokenContract: Contract;
 
+  async function updateTokenBalance(
+    provider: IEthereumProvider | undefined,
+    tokenAddress: string | undefined,
+    signerAddress: string | undefined,
+  ) {
+    if (!provider || !tokenAddress || !signerAddress) {
+      balance.value = BigNumber.from(0);
+      return;
+    }
+
+    try {
+      balance.value = await getTokenBalance(provider, tokenAddress, signerAddress);
+    } catch (exception: unknown) {
+      handleException(exception);
+    }
+  }
+
+  function handleException(exception: unknown) {
+    const errorMessage = (exception as { message?: string }).message;
+    error.value = errorMessage ?? 'Unknown Failure!';
+  }
+
   async function listenToTokenBalance() {
     error.value = undefined;
 
@@ -37,15 +59,11 @@ export function useTokenBalance(
     try {
       signerAddress.value = await signer.value.getAddress();
       decimals.value = await getTokenDecimals(provider.value, tokenAddress.value);
-      balance.value = await getTokenBalance(
-        provider.value,
-        tokenAddress.value,
-        signerAddress.value,
-      );
     } catch (exception: unknown) {
-      const errorMessage = (exception as { message?: string }).message;
-      error.value = errorMessage ?? 'Unknown Failure!';
+      handleException(exception);
     }
+
+    await updateTokenBalance(provider.value, tokenAddress.value, signerAddress.value);
 
     if (tokenContract) {
       tokenContract.removeAllListeners();
@@ -58,17 +76,13 @@ export function useTokenBalance(
     const sendFilter = tokenContract.filters.Transfer(signerAddress.value, undefined);
     const receiveFilter = tokenContract.filters.Transfer(undefined, signerAddress.value);
 
-    tokenContract.on(
-      sendFilter,
-      (_from: string, _to: string, amount: BigNumber) =>
-        (balance.value = balance.value.sub(amount)),
-    );
+    tokenContract.on(sendFilter, async () => {
+      await updateTokenBalance(provider.value, tokenAddress.value, signerAddress.value);
+    });
 
-    tokenContract.on(
-      receiveFilter,
-      (_from: string, _to: string, amount: BigNumber) =>
-        (balance.value = balance.value.add(amount)),
-    );
+    tokenContract.on(receiveFilter, async () => {
+      await updateTokenBalance(provider.value, tokenAddress.value, signerAddress.value);
+    });
   }
 
   watch([tokenAddress, provider, signer], listenToTokenBalance, { immediate: true });
