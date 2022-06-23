@@ -153,9 +153,6 @@ def _handle_latest_block_updated(
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
-    with beamer.metrics.update() as data:
-        data.requests_created.inc()
-
     # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, do not check token match file
     if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
         # Check if the address points to some contract
@@ -189,6 +186,12 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
         valid_until=event.valid_until,
     )
     context.requests.add(request.id, request)
+
+    # We only count valid requests from the agent's perspective to reason about
+    # the ratio of fills to valid requests
+    with beamer.metrics.update() as data:
+        data.requests_created.inc()
+
     return True, None
 
 
