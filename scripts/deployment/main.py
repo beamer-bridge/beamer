@@ -6,7 +6,7 @@ from typing import Any, Sequence, Union, cast
 
 import click
 from eth_account.signers.local import LocalAccount
-from eth_utils import encode_hex
+from eth_utils import encode_hex, to_wei
 from web3 import Web3
 from web3.contract import Contract
 from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
@@ -101,10 +101,10 @@ def deploy_beamer(
 
     resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     proof_submitter = deploy_contract(web3, (l2_config["proof_submitter"], l2_messenger.address))
-
-    claim_stake = l2_config["claim_stake"]
-    claim_period = l2_config["claim_period"]
-    challenge_period_extension = l2_config["challenge_period_extension"]
+    request_manager_arguments = l2_config["request_manager_arguments"]
+    claim_stake = to_wei(request_manager_arguments["claim_stake"], "ether")
+    claim_period = request_manager_arguments["claim_period"]
+    challenge_period_extension = request_manager_arguments["challenge_period_extension"]
 
     request_manager = deploy_contract(
         web3,
