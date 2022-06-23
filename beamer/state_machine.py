@@ -193,11 +193,6 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
 
 def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
-    with beamer.metrics.update() as data:
-        data.requests_filled.inc()
-        if event.filler == context.address:
-            data.requests_filled_by_agent.inc()
-
     request = context.requests.get(event.request_id)
     if request is None:
         return False, None
@@ -222,6 +217,11 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         )
     except TransitionNotAllowed:
         return False, None
+
+    with beamer.metrics.update() as data:
+        data.requests_filled.inc()
+        if event.filler == context.address:
+            data.requests_filled_by_agent.inc()
 
     log.info("Request filled", request=request)
     return True, None
