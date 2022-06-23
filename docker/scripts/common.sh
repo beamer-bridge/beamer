@@ -41,6 +41,7 @@ deploy_beamer() {
         --password '' \
         --config-file "${config_file}" \
         --output-dir "${output_dir}" \
-        --allow-same-chain
+        --allow-same-chain \
+        --deploy-mintable-token
     popd
 }

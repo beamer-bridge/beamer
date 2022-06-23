@@ -85,12 +85,16 @@ def deploy_beamer(
     l2_config: dict,
     resolver: Contract,
     allow_same_chain: bool,
+    deploy_mintable_token: bool,
 ) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
 
     web3 = make_web3(l2_config["rpc"], account)
     assert web3.eth.chain_id == l2_config["chain_id"]
 
-    token = deploy_contract(web3, ("MintableToken", int(1e18)))
+    deployed_contracts = []
+    if deploy_mintable_token:
+        token = deploy_contract(web3, ("MintableToken", int(1e18)))
+        deployed_contracts.append(token)
 
     l1_messenger = deploy_contract(resolver.web3, l2_config["l1_messenger"])
     l2_messenger = deploy_contract(web3, l2_config["l2_messenger"])
@@ -155,17 +159,16 @@ def deploy_beamer(
     )
 
     l1_contracts = {l1_messenger.name: l1_messenger}
-    l2_contracts = {
-        deployed.name: deployed
-        for deployed in (
-            token,
+    deployed_contracts.extend(
+        [
             request_manager,
             fill_manager,
             resolution_registry,
             proof_submitter,
             l2_messenger,
-        )
-    }
+        ]
+    )
+    l2_contracts = {deployed.name: deployed for deployed in deployed_contracts}
     return l1_contracts, l2_contracts
 
 
@@ -200,12 +203,18 @@ def deploy_beamer(
     show_default=True,
     help="Whether to allow source and target chains to be the same.",
 )
+@click.option(
+    "--deploy-mintable-token",
+    is_flag=True,
+    help="Whether to deploy MintableToken.sol on the rollups or not",
+)
 def main(
     keystore_file: Path,
     password: str,
     output_dir: Path,
     config_file: Path,
     allow_same_chain: bool,
+    deploy_mintable_token: bool,
 ) -> None:
 
     with open(config_file) as f:
@@ -231,7 +240,9 @@ def main(
         chain_id = l2_config["chain_id"]
         print(f"Deployment for {name}")
 
-        l1_data, l2_data = deploy_beamer(account, config, l2_config, resolver, allow_same_chain)
+        l1_data, l2_data = deploy_beamer(
+            account, config, l2_config, resolver, allow_same_chain, deploy_mintable_token
+        )
         deployment_data["L1"].update(collect_contracts_info(l1_data))
         deployment_data["L2"][chain_id] = collect_contracts_info(l2_data)
         for contract_name in l2_data:
