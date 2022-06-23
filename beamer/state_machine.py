@@ -247,6 +247,10 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     assert request is not None, "Request object missing upon ClaimMade event"
 
+    # If we receive a `ClaimMade` event, move forward in the state machine
+    if event.claimer == context.address:
+        request.try_to_claim()
+
     claim = context.claims.get(event.claim_id)
     if claim is None:
         challenge_back_off_timestamp = int(time.time())
