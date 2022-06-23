@@ -1,18 +1,17 @@
 <template>
-  <div ref="formElement" class="request-form-inputs flex flex-col">
+  <div class="request-form-inputs flex flex-col">
     <div class="mb-6">
       <div class="flex flex-row gap-5 items-stretch">
         <div class="h-18 flex flex-col justify-center">
           <span class="text-3xl">Send</span>
         </div>
         <div class="flex-1 flex flex-col items-end">
-          <FormKit
+          <TextInput
             v-model="selectedAmount"
-            type="text"
             name="amount"
             placeholder="0.00"
-            validation="required"
-            messages-class="hidden"
+            required
+            @input="updateValues"
           />
           <div>
             <div v-if="showTokenBalance" class="text-sm m-3 mr-5">
@@ -21,15 +20,14 @@
           </div>
         </div>
         <div class="flex-1 flex flex-col">
-          <FormKit
+          <Selector
             id="token"
             v-model="selectedToken"
-            type="selector"
             name="token"
             :options="tokens"
             placeholder="Token"
-            validation="required"
-            messages-class="hidden"
+            required
+            @input="updateValues"
           />
           <Tooltip
             class="self-end -mr-3"
@@ -48,16 +46,17 @@
       </div>
     </div>
     <div class="mb-6 flex flex-col">
-      <FormKit
+      <Selector
         v-model="selectedSourceChain"
-        type="selector"
         name="sourceChain"
         label="From"
         :options="sourceChains"
         placeholder="Source Rollup"
-        validation="required"
-        messages-class="hidden"
-        @input="switchChain"
+        required
+        @input="
+          updateValues();
+          switchChain($event);
+        "
       />
       <Tooltip
         class="self-end -mr-3"
@@ -76,26 +75,23 @@
         </button>
       </Tooltip>
     </div>
-    <div>
-      <FormKit
-        outer-class="mb-4"
-        type="selector"
-        name="targetChain"
-        label="To"
-        :options="targetChains"
-        placeholder="Target Rollup"
-        validation="required"
-        messages-class="hidden"
-      />
-      <FormKit
-        type="text"
-        outer-class="flex-1"
-        name="toAddress"
-        placeholder="Address"
-        validation="required"
-        messages-class="hidden"
-      />
-    </div>
+    <Selector
+      v-model="selectedTargetChain"
+      class="mb-4"
+      label="To"
+      name="targetChain"
+      :options="targetChains"
+      placeholder="Target Rollup"
+      required
+      @input="updateValues"
+    />
+    <TextInput
+      v-model="selectedTargetAddress"
+      name="toAddress"
+      placeholder="Address"
+      required
+      @input="updateValues"
+    />
     <div
       v-if="showRequestFee"
       class="flex flex-row justify-end gap-3 items-center text-base text-light mt-4"
@@ -124,10 +120,12 @@
 </template>
 
 <script setup lang="ts">
-import { FormKit } from '@formkit/vue';
 import { storeToRefs } from 'pinia';
-import { computed, ref } from 'vue';
+import type { WritableComputedRef } from 'vue';
+import { computed, ref, watch } from 'vue';
 
+import Selector from '@/components/inputs/Selector.vue';
+import TextInput from '@/components/inputs/TextInput.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
@@ -137,9 +135,21 @@ import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import type { Chain } from '@/types/data';
+import type { RequestFormResult, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
 
-const formElement = ref<HTMLElement>();
+interface Props {
+  modelValue: RequestFormResult;
+}
+
+interface Emits {
+  (e: 'update:modelValue', value: RequestFormResult): void;
+}
+
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 
@@ -147,6 +157,8 @@ const { provider, signer } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
+const selectedTargetChain = ref<SelectorOption<Chain> | null>(null);
+const selectedTargetAddress = ref('');
 
 const { selectedSourceChain, sourceChains, targetChains, switchChain } = useChainSelection(
   provider,
@@ -183,5 +195,30 @@ const {
 } = useFaucet(
   signer,
   computed(() => selectedSourceChain.value?.value.identifier),
+);
+
+const inputValues: WritableComputedRef<RequestFormResult> = computed({
+  get: () => ({
+    amount: selectedAmount.value,
+    sourceChain: selectedSourceChain.value,
+    targetChain: selectedTargetChain.value,
+    toAddress: selectedTargetAddress.value,
+    token: selectedToken.value,
+  }),
+  set: (formValues: RequestFormResult) => {
+    selectedAmount.value = formValues.amount;
+    selectedSourceChain.value = formValues.sourceChain;
+    selectedTargetChain.value = formValues.targetChain;
+    selectedTargetAddress.value = formValues.toAddress;
+    selectedToken.value = formValues.token;
+  },
+});
+
+const updateValues = () => emits('update:modelValue', inputValues.value);
+watch(
+  () => props.modelValue,
+  (value) => {
+    inputValues.value = value;
+  },
 );
 </script>

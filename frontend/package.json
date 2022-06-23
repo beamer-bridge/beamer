@@ -17,8 +17,6 @@
   "dependencies": {
     "@ethersproject/providers": "^5.5.2",
     "@fontsource/sora": "^4.5.5",
-    "@formkit/core": "^1.0.0-beta.2",
-    "@formkit/vue": "^1.0.0-beta.6",
     "@metamask/detect-provider": "^1.2.0",
     "@walletconnect/web3-provider": "^1.7.8",
     "autoprefixer": "^10",
