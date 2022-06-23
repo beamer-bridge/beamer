@@ -45,9 +45,9 @@ class Request(StateMachine):
     withdrawn = State("Withdrawn")
     ignored = State("Ignored")
 
-    fill = pending.to(filled) | filled.to(filled) | ignored.to(filled)
+    fill = pending.to(filled) | filled.to(filled) | ignored.to(filled) | claimed.to(claimed)
     try_to_fill = pending.to(filled)
-    try_to_claim = filled.to(claimed)
+    try_to_claim = filled.to(claimed) | pending.to(claimed) | claimed.to(claimed)
     l1_resolve = filled.to(l1_resolved) | claimed.to(l1_resolved) | l1_resolved.to(l1_resolved)
     withdraw = (
         claimed.to(withdrawn)
