@@ -4,11 +4,17 @@ digraph request_state_machine {
     pending -> filled [label = fill];
     pending -> filled [label = try_to_fill];
     pending -> ignored [label = ignore];
+    pending -> claimed [label = try_to_claim];
+
     filled -> claimed [label = try_to_claim];
+
     claimed -> withdrawn [label = withdraw];
     claimed -> l1_resolved [label = resolve];
+
     l1_resolved -> withdrawn [label = withdraw];
+
     filled -> withdrawn [label = withdraw];
     filled -> ignored [label = ignore];
+
     ignored -> withdrawn [label = withdraw];
 }
