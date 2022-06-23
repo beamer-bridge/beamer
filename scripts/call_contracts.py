@@ -309,5 +309,44 @@ def whitelist(
     print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
 
 
+@cli.command("update-fee")
+@click.argument(
+    "protocol-fee-ppm",
+    type=int,
+    required=True,
+    help="Protocol fee percentage described in parts per million",
+)
+@click.argument(
+    "lp-fee-ppm",
+    type=int,
+    required=True,
+    help="LP fee percentage described in parts per million",
+)
+@click.argument(
+    "min-lp-fee",
+    type=int,
+    required=True,
+    help="Minimum LP fee in Wei",
+)
+@pass_args
+def update_fee(
+    web3: Web3,
+    contracts: dict[str, Contract],
+    protocol_fee_ppm: int,
+    lp_fee_ppm: int,
+    min_lp_fee: int,
+) -> None:
+    """Update fee of Request Manager. Must be done by owner."""
+
+    request_manager = contracts["RequestManager"]
+
+    tx_hash = request_manager.functions.updateFeeData(
+        protocol_fee_ppm, lp_fee_ppm, min_lp_fee
+    ).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+
+
 if __name__ == "__main__":
     cli()
