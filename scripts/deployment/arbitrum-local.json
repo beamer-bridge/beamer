@@ -13,9 +13,11 @@
             "proof_submitter": "ArbitrumProofSubmitter",
             "l1_messenger": "ArbitrumL1Messenger",
             "l2_messenger": "ArbitrumL2Messenger",
-            "claim_stake": 4700000000000000,
-            "claim_period": 3600,
-            "challenge_period_extension": 3600
+            "request_manager_arguments": {
+                "claim_stake": 0.00047,
+                "claim_period": 3600,
+                "challenge_period_extension": 3600
+            }
         }
     ]
 }
