@@ -2,6 +2,7 @@ import type { Signer } from "ethers";
 import { BaseServiceV2, validators } from "@eth-optimism/common-ts";
 import { CrossChainMessenger, MessageStatus } from "@eth-optimism/sdk";
 import type { Provider } from "@ethersproject/abstract-provider";
+import { ppid } from "process";
 
 type MessageRelayerOptions = {
   l1RpcProvider: Provider
@@ -105,11 +106,23 @@ export class MessageRelayerService extends BaseServiceV2<
   }
 }
 
+async function returnOnPpidChange(startPpid: number) {
+  while (startPpid === ppid) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  console.log(`Relayer parent pid changed, shutting down. Old ppid: ${startPpid}, new ppid: ${ppid}`);
+  process.exit(1);
+}
+
 if (require.main === module) {
+  const startPpid = ppid;
   const service = new MessageRelayerService();
 
   try {
-    service.run();
+    Promise.any([
+      service.run(),
+      returnOnPpidChange(startPpid),
+    ]);
   } catch (err) {
     console.error(err);
     process.exit(1);
