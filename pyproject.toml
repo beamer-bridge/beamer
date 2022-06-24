@@ -32,6 +32,7 @@ shiv = "^1.0.1"
 Sphinx = "^5.0.2"
 furo = "^2022.6.21"
 sphinxcontrib-mermaid = "^0.7.1"
+sphinxcontrib-soliditydomain = {git = "https://github.com/beamer-bridge/sphinxcontrib-soliditydomain.git", rev = "main"}
 
 [tool.poetry.scripts]
 beamer-agent = 'beamer.cli:main'
