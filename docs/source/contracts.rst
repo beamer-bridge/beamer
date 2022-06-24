@@ -2,6 +2,8 @@ Beamer contracts
 ================
 
 
+.. _contracts-architecture:
+
 Architecture
 ------------
 
