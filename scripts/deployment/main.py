@@ -9,7 +9,8 @@ from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex
 from web3 import Web3
 from web3.contract import Contract
-from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
+from web3.gas_strategies.rpc import rpc_gas_price_strategy
+from web3.types import TxParams, Wei
 
 from beamer.util import account_from_keyfile, make_web3, transact
 
@@ -223,10 +224,10 @@ def main(
     account = account_from_keyfile(keystore_file, password)
     print("Deployer:", account.address)
 
-    time_based_gas_price_strategy = construct_time_based_gas_price_strategy(
-        max_wait_seconds=120, sample_size=50
-    )
-    web3_l1 = make_web3(config["L1"]["rpc"], account, time_based_gas_price_strategy)
+    def _margin_gas_price_strategy(web3: Web3, transaction_params: TxParams) -> Wei:
+        return Wei(int(rpc_gas_price_strategy(web3, transaction_params) * 1.5))
+
+    web3_l1 = make_web3(config["L1"]["rpc"], account, _margin_gas_price_strategy)
 
     resolver = deploy_contract(web3_l1, "Resolver")
 
