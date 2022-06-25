@@ -72,6 +72,10 @@ const props = defineProps<Props>();
   @apply mt-0 pl-8 border-0 text-2xl text-teal;
 }
 
+.selector.vs--disabled .vs__search {
+  background-color: inherit;
+}
+
 .selector .vs__dropdown-option {
   @apply px-8;
 }
@@ -102,6 +106,10 @@ const props = defineProps<Props>();
 
 .selector .vs__open-indicator {
   @apply fill-teal;
+}
+
+.selector.vs--disabled .vs__open-indicator {
+  background-color: inherit;
 }
 
 .selector .vs__fade-enter-active,
