@@ -153,8 +153,15 @@ class EventProcessor:
 
     def _thread_func(self) -> None:
         self._log.info("EventProcessor started")
+
         chain_id = self._context.web3_l1.eth.chain_id
         poll_frequency = POLL_FREQUENCY_MAINNET if chain_id == 1 else POLL_FREQUENCY_TESTNET
+
+        # Wait until all past events are fetched and in the queue
+        # so the agent can sync to the current state
+        while not self._synced and not self._stop:
+            self._have_new_events.wait(poll_frequency)
+            self._have_new_events.clear()
 
         while not self._stop:
             if self._have_new_events.wait(poll_frequency):
@@ -162,9 +169,8 @@ class EventProcessor:
             if self._events:
                 self._process_events()
 
-            if self._synced:
-                process_requests(self._context)
-                process_claims(self._context)
+            process_requests(self._context)
+            process_claims(self._context)
 
         self._log.info("EventProcessor stopped")
 
