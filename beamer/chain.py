@@ -35,6 +35,9 @@ _ERC20_ABI = _load_ERC20_abi()
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
 
+POLL_FREQUENCY_TESTNET = 1
+POLL_FREQUENCY_MAINNET = 5
+
 
 def _wrap_thread_func(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):  # type: ignore
@@ -57,6 +60,7 @@ class EventMonitor:
         deployment_block: BlockNumber,
         on_new_events: Callable[[list[Event]], None],
         on_sync_done: Callable[[], None],
+        poll_frequency: int,
     ):
         self._web3 = web3
         self._chain_id = ChainId(self._web3.eth.chain_id)
@@ -65,6 +69,7 @@ class EventMonitor:
         self._stop = False
         self._on_new_events = on_new_events
         self._on_sync_done = on_sync_done
+        self._poll_frequency = poll_frequency
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
@@ -87,6 +92,7 @@ class EventMonitor:
             "EventMonitor started",
             addresses=[c.address for c in self._contracts],
         )
+
         fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
         events = fetcher.fetch()
         if events:
@@ -98,7 +104,7 @@ class EventMonitor:
             if events:
                 self._on_new_events(events)
             # TODO: wait for new block instead of the sleep here
-            time.sleep(1)
+            time.sleep(self._poll_frequency)
         self._log.info("EventMonitor stopped")
 
 
@@ -147,8 +153,11 @@ class EventProcessor:
 
     def _thread_func(self) -> None:
         self._log.info("EventProcessor started")
+        chain_id = self._context.web3_l1.eth.chain_id
+        poll_frequency = POLL_FREQUENCY_MAINNET if chain_id == 1 else POLL_FREQUENCY_TESTNET
+
         while not self._stop:
-            if self._have_new_events.wait(1):
+            if self._have_new_events.wait(poll_frequency):
                 self._have_new_events.clear()
             if self._events:
                 self._process_events()

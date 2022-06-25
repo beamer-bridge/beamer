@@ -61,7 +61,7 @@ def test_cli(config, tmp_path, contracts):
             "--password",
             "",
             "--l1-rpc-url",
-            "",
+            config.l1_rpc_url,
             "--l2a-rpc-url",
             config.l2a_rpc_url,
             "--l2b-rpc-url",
