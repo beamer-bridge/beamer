@@ -21,7 +21,7 @@
     "@eth-optimism/common-ts": "0.2.6",
     "@eth-optimism/core-utils": "0.8.6",
     "@eth-optimism/sdk": "^1.1.8",
-    "ethers": "^5.6.8"
+    "ethers": "^5.6.9"
   },
   "devDependencies": {
     "@types/node": "^16.11.39",
