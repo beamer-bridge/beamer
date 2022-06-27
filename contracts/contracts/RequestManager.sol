@@ -101,6 +101,11 @@ contract RequestManager is Ownable {
         address claimReceiver
     );
 
+    event FinalizationTimeUpdated(
+        uint256 targetChainId,
+        uint256 finalizationTime
+    );
+
     // Constants
 
     /// The minimum amount of source chain's native token that the claimer needs to
@@ -693,6 +698,8 @@ contract RequestManager is Ownable {
             "Finalization time must be greater than 0"
         );
         finalizationTimes[targetChainId] = finalizationTime;
+
+        emit FinalizationTimeUpdated(targetChainId, finalizationTime);
     }
 
     /// Mark the contract as deprecated.
