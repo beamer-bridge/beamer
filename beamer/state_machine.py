@@ -146,7 +146,15 @@ def _timestamp_is_l1_finalized(
     timestamp: Timestamp, context: Context, target_chain_id: ChainId
 ) -> bool:
     # The entry in `finalization_times` must exist, because it is checked during request creation
-    target_chain_finalization = context.finalization_times[target_chain_id]
+    # target_chain_finalization = context.finalization_times[target_chain_id]
+
+    # FIXME: Remove this for the above once the contracts with the event are deployed
+    target_chain_finalization = context.finalization_times.get(target_chain_id)
+    if target_chain_finalization is None:
+        target_chain_finalization = context.request_manager.functions.finalizationTimes(
+            target_chain_id
+        ).call()
+
     return int(time.time()) > timestamp + target_chain_finalization
 
 
