@@ -103,7 +103,6 @@ class EventMonitor:
             events = fetcher.fetch()
             if events:
                 self._on_new_events(events)
-            # TODO: wait for new block instead of the sleep here
             time.sleep(self._poll_period)
         self._log.info("EventMonitor stopped")
 
