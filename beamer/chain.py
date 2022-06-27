@@ -35,8 +35,8 @@ _ERC20_ABI = _load_ERC20_abi()
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
 
-POLL_FREQUENCY_TESTNET = 1
-POLL_FREQUENCY_MAINNET = 5
+POLL_PERIOD_TESTNET = 1
+POLL_PERIOD_MAINNET = 5
 
 
 def _wrap_thread_func(func: Callable) -> Callable:
@@ -60,7 +60,7 @@ class EventMonitor:
         deployment_block: BlockNumber,
         on_new_events: Callable[[list[Event]], None],
         on_sync_done: Callable[[], None],
-        poll_frequency: int,
+        poll_period: int,
     ):
         self._web3 = web3
         self._chain_id = ChainId(self._web3.eth.chain_id)
@@ -69,7 +69,7 @@ class EventMonitor:
         self._stop = False
         self._on_new_events = on_new_events
         self._on_sync_done = on_sync_done
-        self._poll_frequency = poll_frequency
+        self._poll_period = poll_period
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
@@ -104,7 +104,7 @@ class EventMonitor:
             if events:
                 self._on_new_events(events)
             # TODO: wait for new block instead of the sleep here
-            time.sleep(self._poll_frequency)
+            time.sleep(self._poll_period)
         self._log.info("EventMonitor stopped")
 
 
@@ -155,16 +155,16 @@ class EventProcessor:
         self._log.info("EventProcessor started")
 
         chain_id = self._context.web3_l1.eth.chain_id
-        poll_frequency = POLL_FREQUENCY_MAINNET if chain_id == 1 else POLL_FREQUENCY_TESTNET
+        poll_period = POLL_PERIOD_MAINNET if chain_id == 1 else POLL_PERIOD_TESTNET
 
         # Wait until all past events are fetched and in the queue
         # so the agent can sync to the current state
         while not self._synced and not self._stop:
-            self._have_new_events.wait(poll_frequency)
+            self._have_new_events.wait(poll_period)
             self._have_new_events.clear()
 
         while not self._stop:
-            if self._have_new_events.wait(poll_frequency):
+            if self._have_new_events.wait(poll_period):
                 self._have_new_events.clear()
             if self._events:
                 self._process_events()
