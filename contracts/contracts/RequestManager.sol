@@ -72,6 +72,11 @@ contract RequestManager is Ownable {
         address claimReceiver
     );
 
+    event FinalizationTimeUpdated(
+        uint256 targetChainId,
+        uint256 finalizationTime
+    );
+
     // Constants
     uint256 public claimStake;
     uint256 public claimPeriod;
@@ -521,6 +526,8 @@ contract RequestManager is Ownable {
             "Finalization time must be greater than 0"
         );
         finalizationTimes[targetChainId] = finalizationTime;
+
+        emit FinalizationTimeUpdated(targetChainId, finalizationTime);
     }
 
     function deprecateContract() external onlyOwner {
