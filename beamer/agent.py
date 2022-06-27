@@ -5,12 +5,7 @@ import structlog
 from eth_typing import Address
 
 import beamer.metrics
-from beamer.chain import (
-    POLL_FREQUENCY_MAINNET,
-    POLL_FREQUENCY_TESTNET,
-    EventMonitor,
-    EventProcessor,
-)
+from beamer.chain import POLL_PERIOD_MAINNET, POLL_PERIOD_TESTNET, EventMonitor, EventProcessor
 from beamer.config import Config
 from beamer.contracts import make_contracts
 from beamer.state_machine import Context
@@ -66,7 +61,7 @@ class Agent:
         )
 
         chain_id = w3_l1.eth.chain_id
-        poll_frequency = POLL_FREQUENCY_MAINNET if chain_id == 1 else POLL_FREQUENCY_TESTNET
+        poll_period = POLL_PERIOD_MAINNET if chain_id == 1 else POLL_PERIOD_TESTNET
 
         self._event_processor = EventProcessor(self.context)
 
@@ -79,7 +74,7 @@ class Agent:
             ),
             on_new_events=self._event_processor.add_events,
             on_sync_done=self._event_processor.mark_sync_done,
-            poll_frequency=poll_frequency,
+            poll_period=poll_period,
         )
 
         self._event_monitor_l2b = EventMonitor(
@@ -88,7 +83,7 @@ class Agent:
             deployment_block=l2b_contracts_info["FillManager"].deployment_block,
             on_new_events=self._event_processor.add_events,
             on_sync_done=self._event_processor.mark_sync_done,
-            poll_frequency=poll_frequency,
+            poll_period=poll_period,
         )
 
     def start(self) -> None:
