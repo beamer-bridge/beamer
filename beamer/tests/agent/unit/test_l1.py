@@ -20,7 +20,7 @@ from beamer.tests.agent.utils import make_tx_hash
 @pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
 def test_handle_initiate_l1_resolution(timestamp):
     context, config = make_context()
-    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
+    context.finalization_times[TARGET_CHAIN_ID] = 1_000
 
     request = make_request()
     context.requests.add(request.id, request)
@@ -57,7 +57,7 @@ def test_handle_initiate_l1_resolution(timestamp):
 @pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
 def test_handle_initiate_l1_invalidation(timestamp):
     context, config = make_context()
-    context.request_manager.functions.finalizationTimes().call.return_value = 1_000  # type: ignore
+    context.finalization_times[TARGET_CHAIN_ID] = 1_000
 
     request = make_request()
     context.requests.add(request.id, request)

@@ -1,7 +1,7 @@
 import os
 import time
 from concurrent.futures import Executor, Future
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import structlog
@@ -21,6 +21,7 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
+    FinalizationTimeUpdated,
     HashInvalidated,
     InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
@@ -52,6 +53,7 @@ class Context:
     web3_l1: Web3
     task_pool: Executor
     l1_resolutions: dict[tuple[RequestId, ClaimId], Future]
+    finalization_times: dict[ChainId, int] = field(default_factory=dict)
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -92,6 +94,9 @@ def process_event(event: Event, context: Context) -> HandlerResult:
 
     elif isinstance(event, InitiateL1InvalidationEvent):
         return _handle_initiate_l1_invalidation(event, context)
+
+    elif isinstance(event, FinalizationTimeUpdated):
+        return _handle_finalization_time_updated(event, context)
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -138,10 +143,10 @@ def _proof_ready_for_l1_relay(request: Request) -> bool:
 
 
 def _timestamp_is_l1_finalized(
-    timestamp: Timestamp, request_manager: Contract, target_chain_id: ChainId
+    timestamp: Timestamp, context: Context, target_chain_id: ChainId
 ) -> bool:
-    target_chain_finalization = request_manager.functions.finalizationTimes(target_chain_id).call()
-
+    # The entry in `finalization_times` must exist, because it is checked during request creation
+    target_chain_finalization = context.finalization_times[target_chain_id]
     return int(time.time()) > timestamp + target_chain_finalization
 
 
@@ -378,9 +383,7 @@ def _handle_initiate_l1_resolution(
     assert request.fill_timestamp is not None, "Request not yet filled"
 
     # Check that message is finalized on L1
-    if not _timestamp_is_l1_finalized(
-        request.fill_timestamp, context.request_manager, request.target_chain_id
-    ):
+    if not _timestamp_is_l1_finalized(request.fill_timestamp, context, request.target_chain_id):
         return False, None
 
     # Check if L1 resolution is cheaper than the winning from challenge
@@ -427,7 +430,7 @@ def _handle_initiate_l1_invalidation(
 
     # Check that message is finalized on L1
     if not _timestamp_is_l1_finalized(
-        claim.invalidation_timestamp, context.request_manager, request.target_chain_id
+        claim.invalidation_timestamp, context, request.target_chain_id
     ):
         return False, None
 
@@ -457,4 +460,11 @@ def _handle_initiate_l1_invalidation(
 
         log.info("Initiated L1 invalidation", request=request, claim=claim)
 
+    return True, None
+
+
+def _handle_finalization_time_updated(
+    event: FinalizationTimeUpdated, context: Context
+) -> HandlerResult:
+    context.finalization_times[event.target_chain_id] = event.finalization_time
     return True, None

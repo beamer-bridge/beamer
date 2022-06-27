@@ -52,6 +52,12 @@ class TxEvent(Event):
 
 
 @dataclass(frozen=True)
+class FinalizationTimeUpdated(TxEvent):
+    target_chain_id: ChainId
+    finalization_time: int
+
+
+@dataclass(frozen=True)
 class RequestEvent(TxEvent):
     request_id: RequestId
 
@@ -134,6 +140,7 @@ _EVENT_TYPES = dict(
     RequestResolved=RequestResolved,
     FillHashInvalidated=FillHashInvalidated,
     HashInvalidated=HashInvalidated,
+    FinalizationTimeUpdated=FinalizationTimeUpdated,
 )
 
 
