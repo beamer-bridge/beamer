@@ -321,11 +321,11 @@ anymore. While this is the very use case for L1 resolution, Bob must make sure t
 source rollup before Charles wins the false claim and thus becomes able to withdraw the deposit.
 To find a value until when it is safe for Bob to fill the request, we consider the end of ``challengePeriod`` of Charles'
 false claim called ``false claim termination``. Transferring Bob's fill proof to the rollup A will take at least
-``finalization time[rollup B]``. We derive the following condition:
+``finality period[rollup B]``. We derive the following condition:
 
 ::
 
-    timestamp Bob's fill < false claim termination - finalization time[rollup B]
+    timestamp Bob's fill < false claim termination - finality period[rollup B]
 
 In any case, this condition will always be fulfilled if Bob fills the request before he challenges Charles' false claim.
 
@@ -372,9 +372,9 @@ message will store a flag in the ``resolution registry`` stating that the ``fill
 claim with the corresponding ``fill hash``.
 
 To make sure the proof arrives in time on rollup A, Bob will need to call the ``fill manager`` as soon as he notices a
-false claim for a non-filled request. It takes ``finalization time of rollup B`` after Bob's call to be able to send the
+false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call to be able to send the
 proof to the resolution registry, while the challenge period is defined to be
-``finalization time of rollup B + challenge period extension``.
+``finality period of rollup B + challenge period extension``.
 
 In the case where someone challenges Charles on the false claim at the same time as Bob sends the transaction for the
 proof on rollup B, Bob may not be able to challenge Charles. If so, Bob may not receive financial reward from having sent
