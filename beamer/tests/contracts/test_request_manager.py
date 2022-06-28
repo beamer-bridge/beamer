@@ -204,7 +204,7 @@ def test_claim_period_extension(
     token,
     claim_stake,
     claim_period,
-    finalization_time,
+    finality_period,
     challenge_period_extension,
 ):
     """Test the extension of the claim/challenge period"""
@@ -224,7 +224,7 @@ def test_claim_period_extension(
     challenge = request_manager.challengeClaim(
         claim_id, {"from": challenger, "value": claim_stake + 1}
     )
-    challenge_period = finalization_time + challenge_period_extension
+    challenge_period = finality_period + challenge_period_extension
 
     claim_termination = _get_claim_termination(claim_id)
     assert challenge.timestamp + challenge_period == claim_termination
@@ -329,7 +329,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
 
 
 def test_withdraw_with_challenge(
-    request_manager, token, claim_stake, finalization_time, challenge_period_extension
+    request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
     """Test withdraw when a claim was challenged, and the challenger won.
     In that case, the request funds must not be paid out to the challenger."""
@@ -368,7 +368,7 @@ def test_withdraw_with_challenge(
         request_manager.withdraw(claim_id, {"from": claimer})
 
     # Timetravel after challenge period
-    chain.mine(timedelta=finalization_time + challenge_period_extension)
+    chain.mine(timedelta=finality_period + challenge_period_extension)
 
     assert web3.eth.get_balance(request_manager.address) == 2 * claim_stake + 1
 
@@ -621,7 +621,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
 
 
 def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
-    request_manager, token, claim_stake, claim_period, finalization_time
+    request_manager, token, claim_stake, claim_period, finality_period
 ):
     """Test withdraw when a request was claimed twice. The first claim fails, while the second
     is successful and should be paid out the request funds."""
@@ -667,7 +667,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
     # Timetravel after claim period
-    chain.mine(timedelta=claim_period + finalization_time)
+    chain.mine(timedelta=claim_period + finality_period)
 
     assert token.balanceOf(request_manager.address) == transfer_amount
     assert web3.eth.get_balance(request_manager.address) == 3 * claim_stake + 1
@@ -986,7 +986,7 @@ def test_withdraw_l1_resolved_muliple_claims(
 
 
 def test_withdraw_two_challengers(
-    request_manager, token, claim_stake, finalization_time, challenge_period_extension
+    request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
     claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
 
@@ -1021,7 +1021,7 @@ def test_withdraw_two_challengers(
         request_manager.withdraw(claim_id, {"from": claimer})
 
     # Timetravel after claim period
-    chain.mine(timedelta=finalization_time + challenge_period_extension)
+    chain.mine(timedelta=finality_period + challenge_period_extension)
 
     # Take snapshot
     chain.snapshot()

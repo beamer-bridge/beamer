@@ -12,7 +12,7 @@
             "proof_submitter": "OptimismProofSubmitter",
             "l1_messenger": ["OptimismL1Messenger", "0xF10EEfC14eB5b7885Ea9F7A631a21c7a82cf5D76"],
             "l2_messenger": "OptimismL2Messenger",
-            "finalization_time": 604800,
+            "finality_period": 604800,
             "request_manager_arguments": {
                 "claim_stake": 0.00047,
                 "claim_period": 3600,
@@ -26,7 +26,7 @@
             "proof_submitter": "OptimismProofSubmitter",
             "l1_messenger": ["OptimismL1Messenger", "0xBa6f1aAF3F909F208b224F3985eCda745FA9101A"],
             "l2_messenger": "OptimismL2Messenger",
-            "finalization_time": 604800,
+            "finality_period": 604800,
             "request_manager_arguments": {
                 "claim_stake": 0.00047,
                 "claim_period": 3600,

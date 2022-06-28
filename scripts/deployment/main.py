@@ -118,7 +118,7 @@ def deploy_beamer(
         ),
     )
 
-    # Configure finalization times for each supported target chain
+    # Configure finality period for each supported target chain
     for other_l2_config in config["L2"]:
         if (
             allow_same_chain
@@ -126,8 +126,8 @@ def deploy_beamer(
             or other_l2_config["chain_id"] == GANACHE_CHAIN_ID
         ):
             transact(
-                request_manager.functions.setFinalizationTime(
-                    other_l2_config["chain_id"], other_l2_config["finalization_time"]
+                request_manager.functions.setFinalityPeriod(
+                    other_l2_config["chain_id"], other_l2_config["finality_period"]
                 )
             )
 

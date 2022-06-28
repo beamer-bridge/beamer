@@ -101,10 +101,7 @@ contract RequestManager is Ownable {
         address claimReceiver
     );
 
-    event FinalizationTimeUpdated(
-        uint256 targetChainId,
-        uint256 finalizationTime
-    );
+    event FinalityPeriodUpdated(uint256 targetChainId, uint256 finalityPeriod);
 
     // Constants
 
@@ -125,8 +122,8 @@ contract RequestManager is Ownable {
     ///    extension time.
     ///
     /// Note that in the first challenge round, i.e. the round initiated by the first
-    /// challenger, the termination time is extended additionally by the finalization
-    /// time of the target chain. This is done to allow for L1 resolution.
+    /// challenger, the termination time is extended additionally by the finality
+    /// period of the target chain. This is done to allow for L1 resolution.
     uint256 public challengePeriodExtension;
 
     /// The minimum validity period of a request.
@@ -150,9 +147,9 @@ contract RequestManager is Ownable {
     /// The resolution registry that is used to query for results of L1 resolution.
     ResolutionRegistry public resolutionRegistry;
 
-    /// Maps target rollup chain IDs to finalization times.
-    /// Finalization times are in seconds.
-    mapping(uint256 => uint256) public finalizationTimes;
+    /// Maps target rollup chain IDs to finality periods.
+    /// Finality periods are in seconds.
+    mapping(uint256 => uint256) public finalityPeriods;
 
     /// Maps request IDs to requests.
     mapping(uint256 => Request) public requests;
@@ -248,7 +245,7 @@ contract RequestManager is Ownable {
     ) external returns (uint256) {
         require(deprecated == false, "Contract is deprecated");
         require(
-            finalizationTimes[targetChainId] != 0,
+            finalityPeriods[targetChainId] != 0,
             "Target rollup not supported"
         );
         require(
@@ -428,7 +425,7 @@ contract RequestManager is Ownable {
 
         if (claimerStake > challengerStakeTotal) {
             if (challengerStakeTotal == 0) {
-                periodExtension += finalizationTimes[request.targetChainId];
+                periodExtension += finalityPeriods[request.targetChainId];
             }
             require(claim.claimer != msg.sender, "Cannot challenge own claim");
             nextActor = msg.sender;
@@ -683,23 +680,20 @@ contract RequestManager is Ownable {
         transferLimit = newTransferLimit;
     }
 
-    /// Set the finalization time for the given target chain.
+    /// Set the finality period for the given target chain.
     ///
     /// .. note:: This function can only be called by the contract owner.
     ///
     /// @param targetChainId The target chain ID.
-    /// @param finalizationTime Finalization time in seconds.
-    function setFinalizationTime(
-        uint256 targetChainId,
-        uint256 finalizationTime
-    ) external onlyOwner {
-        require(
-            finalizationTime > 0,
-            "Finalization time must be greater than 0"
-        );
-        finalizationTimes[targetChainId] = finalizationTime;
+    /// @param finalityPeriod Finality period in seconds.
+    function setFinalityPeriod(uint256 targetChainId, uint256 finalityPeriod)
+        external
+        onlyOwner
+    {
+        require(finalityPeriod > 0, "Finality period must be greater than 0");
+        finalityPeriods[targetChainId] = finalityPeriod;
 
-        emit FinalizationTimeUpdated(targetChainId, finalizationTime);
+        emit FinalityPeriodUpdated(targetChainId, finalityPeriod);
     }
 
     /// Mark the contract as deprecated.

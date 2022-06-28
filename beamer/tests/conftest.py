@@ -65,7 +65,7 @@ def claim_period():
 
 
 @pytest.fixture
-def finalization_time():
+def finality_period():
     return 200
 
 
@@ -85,7 +85,7 @@ def contracts(
     forward_state,
     claim_stake,
     claim_period,
-    finalization_time,
+    finality_period,
     challenge_period_extension,
 ):
     # L1 contracts
@@ -123,7 +123,7 @@ def contracts(
     resolution_registry.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
     resolver.addRegistry(l2_chain_id, resolution_registry.address, l1_messenger.address)
 
-    request_manager.setFinalizationTime(l2_chain_id, finalization_time)
+    request_manager.setFinalityPeriod(l2_chain_id, finality_period)
     return Contracts(
         l1_messenger=l1_messenger,
         l2_messenger=l2_messenger,

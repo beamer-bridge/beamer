@@ -21,7 +21,7 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
-    FinalizationTimeUpdated,
+    FinalityPeriodUpdated,
     HashInvalidated,
     InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
@@ -53,7 +53,7 @@ class Context:
     web3_l1: Web3
     task_pool: Executor
     l1_resolutions: dict[tuple[RequestId, ClaimId], Future]
-    finalization_times: dict[ChainId, int] = field(default_factory=dict)
+    finality_periods: dict[ChainId, int] = field(default_factory=dict)
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -95,8 +95,8 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, InitiateL1InvalidationEvent):
         return _handle_initiate_l1_invalidation(event, context)
 
-    elif isinstance(event, FinalizationTimeUpdated):
-        return _handle_finalization_time_updated(event, context)
+    elif isinstance(event, FinalityPeriodUpdated):
+        return _handle_finality_period_updated(event, context)
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -145,17 +145,17 @@ def _proof_ready_for_l1_relay(request: Request) -> bool:
 def _timestamp_is_l1_finalized(
     timestamp: Timestamp, context: Context, target_chain_id: ChainId
 ) -> bool:
-    # The entry in `finalization_times` must exist, because it is checked during request creation
-    # target_chain_finalization = context.finalization_times[target_chain_id]
+    # The entry in `finality_periods` must exist, because it is checked during request creation
+    # target_chain_finality = context.finality_periods[target_chain_id]
 
     # FIXME: Remove this for the above once the contracts with the event are deployed
-    target_chain_finalization = context.finalization_times.get(target_chain_id)
-    if target_chain_finalization is None:
-        target_chain_finalization = context.request_manager.functions.finalizationTimes(
+    target_chain_finality = context.finality_periods.get(target_chain_id)
+    if target_chain_finality is None:
+        target_chain_finality = context.request_manager.functions.finalityPeriods(
             target_chain_id
         ).call()
 
-    return int(time.time()) > timestamp + target_chain_finalization
+    return int(time.time()) > timestamp + target_chain_finality
 
 
 def _handle_latest_block_updated(
@@ -473,8 +473,8 @@ def _handle_initiate_l1_invalidation(
     return True, None
 
 
-def _handle_finalization_time_updated(
-    event: FinalizationTimeUpdated, context: Context
+def _handle_finality_period_updated(
+    event: FinalityPeriodUpdated, context: Context
 ) -> HandlerResult:
-    context.finalization_times[event.target_chain_id] = event.finalization_time
+    context.finality_periods[event.target_chain_id] = event.finality_period
     return True, None

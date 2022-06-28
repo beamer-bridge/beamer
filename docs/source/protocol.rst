@@ -11,7 +11,7 @@ Summary
 
     claimStake = k * avg\_gp\_l2a * (gas_{challenge} + gas_{withdraw})
     claimPeriod = max(offline rollup) = 1 day
-    challengePeriod = finalizationTime[targetRollup] + buffer = 8 days
+    challengePeriod = finalityPeriod[targetRollup] + buffer = 8 days
     challengePeriodExtension = 1 day
     minValidityPeriod = 5 minutes
     maxValidityPeriod = 52 weeks
@@ -85,7 +85,7 @@ challengePeriod
 
 The ``challengePeriod`` describes the initial period of a challenge. This period has to be long enough to allow for the
 L1 resolution proof to be transmitted from the target rollup to the source rollup. It takes at minimum
-``finalizationTime[targetRollup]`` for the proof to be available for transmission. For optimistic rollups this value is
+``finalityPeriod[targetRollup]`` for the proof to be available for transmission. For optimistic rollups this value is
 typically defined as 7 days but this might change in the future and differ for each rollup implementation. That each
 challenged claim can be L1 resolved is a hard requirement.
 
@@ -93,14 +93,14 @@ Additionally, the ``challengePeriod`` must include a time buffer after the final
 There must be enough time to actually execute L1 resolution before ``challengePeriod`` ends. The rationale for
 choosing the exact value of the buffer can be derived from ``claimPeriod``.
 
-.. math:: challengePeriod = finalizationTime[targetRollup] + buffer
+.. math:: challengePeriod = finalityPeriod[targetRollup] + buffer
 
 Proposed Values
 ^^^^^^^^^^^^^^^
 
 .. code::
 
-    finalizationTime[targetRollup] = 7 days for most rollups
+    finalityPeriod[targetRollup] = 7 days for most rollups
     buffer = 1 day
     challengePeriod = 8 days
 
@@ -113,8 +113,7 @@ thus there must be enough time left for him to do so. To decide on the value we 
 ``claimPeriod``. Note that the calculation for the new finalization of the current challenge is calculated as
 ``end time = max(current challenge end, time.now() + challengePeriodExtension)`` This is necessary to ensure that there
 is at least ``challengePeriodExtension`` for the participant to react, but it might be possible that there is more time
-left. This comes from the initial ``challengePeriod`` value which depends on the finalization period of the target
-rollup.
+left. This comes from the initial ``challengePeriod`` value which depends on the finality period of the target rollup.
 
 Proposed Value
 ^^^^^^^^^^^^^^
