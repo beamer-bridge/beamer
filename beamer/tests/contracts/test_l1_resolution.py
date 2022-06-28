@@ -87,8 +87,8 @@ def test_restricted_calls(contracts, resolver):
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolver.resolveNonFill(
-            0, 0, brownie.chain.id, brownie.chain.id, {"from": caller}
+        contracts.resolver.resolve(
+            0, 0, brownie.chain.id, brownie.chain.id, ADDRESS_ZERO, {"from": caller}
         )
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):

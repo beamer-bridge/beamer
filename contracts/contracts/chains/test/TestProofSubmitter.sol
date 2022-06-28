@@ -50,8 +50,8 @@ contract TestProofSubmitter is IProofSubmitter, RestrictedCalls {
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
-                Resolver.resolveNonFill,
-                (requestHash, fillId, block.chainid, sourceChainId)
+                Resolver.resolve,
+                (requestHash, fillId, block.chainid, sourceChainId, address(0))
             ),
             MESSAGE_GAS_LIMIT
         );

@@ -34,6 +34,8 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     /// Resolve the specified request.
     ///
     /// This marks the request identified by ``requestHash`` as filled by ``filler``.
+    /// If the ``filler`` is zero, the fill be marked invalid.
+    ///
     /// Information about the fill will be sent to the source chain's :sol:contract:`ResolutionRegistry`,
     /// using the messenger responsible for the source chain.
     ///
@@ -47,7 +49,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     /// @param fillId The fill ID.
     /// @param fillChainId The fill (target) chain ID.
     /// @param sourceChainId The source chain ID.
-    /// @param filler The address that filled the request.
+    /// @param filler The address that filled the request, or zero to invalidate the fill.
     function resolve(
         bytes32 requestHash,
         bytes32 fillId,
@@ -65,73 +67,28 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
             "No messenger available for source chain"
         );
 
-        IMessenger messenger = IMessenger(info.messenger);
-        messenger.sendMessage(
-            info.resolutionRegistry,
-            abi.encodeCall(
+        bytes memory message;
+
+        if (filler == address(0)) {
+            message = abi.encodeCall(
+                ResolutionRegistry.invalidateFill,
+                (requestHash, fillId, block.chainid)
+            );
+        } else {
+            message = abi.encodeCall(
                 ResolutionRegistry.resolveRequest,
                 (requestHash, fillId, block.chainid, filler)
-            ),
-            1_000_000
-        );
+            );
+        }
+
+        IMessenger messenger = IMessenger(info.messenger);
+        messenger.sendMessage(info.resolutionRegistry, message, 1_000_000);
 
         emit Resolution(
             sourceChainId,
             fillChainId,
             requestHash,
             filler,
-            fillId
-        );
-    }
-
-    /// Mark the fill as invalid.
-    ///
-    /// Callable only by the proof submitter contract via a messenger, this
-    /// marks the fill as invalid. Information about the invalid fill will be
-    /// sent to the source chain's :sol:contract:`ResolutionRegistry`,
-    /// using the messenger responsible for transferring messages to the source chain.
-    ///
-    /// .. note::
-    ///
-    ///     This function is callable only by the native L1 messenger contract,
-    ///     which simply delivers the message sent from the target chain by the
-    ///     Beamer's L2 :sol:interface:`messenger <IMessenger>` contract.
-    ///
-    /// @param requestHash The request hash.
-    /// @param fillId The fill ID.
-    /// @param fillChainId The fill (target) chain ID.
-    /// @param sourceChainId The source chain ID.
-    function resolveNonFill(
-        bytes32 requestHash,
-        bytes32 fillId,
-        uint256 fillChainId,
-        uint256 sourceChainId
-    ) external restricted(fillChainId, msg.sender) {
-        ResolutionInfos storage info = resolutionInfos[sourceChainId];
-        require(
-            info.resolutionRegistry != address(0),
-            "No registry available for source chain"
-        );
-        require(
-            info.messenger != address(0),
-            "No messenger available for source chain"
-        );
-
-        IMessenger messenger = IMessenger(info.messenger);
-        messenger.sendMessage(
-            info.resolutionRegistry,
-            abi.encodeCall(
-                ResolutionRegistry.invalidateFillHash,
-                (requestHash, fillId, block.chainid)
-            ),
-            1_000_000
-        );
-
-        emit Resolution(
-            sourceChainId,
-            fillChainId,
-            requestHash,
-            address(0),
             fillId
         );
     }
