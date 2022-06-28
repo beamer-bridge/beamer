@@ -1,5 +1,5 @@
 import type { Ref } from 'vue';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { ChainConfigMapping } from '@/types/config';
@@ -9,30 +9,19 @@ import type { SelectorOption } from '@/types/form';
 export function useChainSelection(
   provider: Ref<IEthereumProvider | undefined>,
   chains: Ref<ChainConfigMapping>,
+  ignoreChains: Ref<Chain[]>,
 ) {
-  const _selectedSourceChain = ref<SelectorOption<Chain> | null>(null);
-  const selectedSourceChain = computed({
-    get() {
-      return (
-        _selectedSourceChain.value ??
-        getChainSelectorOption(String(provider.value?.chainId.value), chains.value)
-      );
-    },
-    set(chain: SelectorOption<Chain> | null) {
-      _selectedSourceChain.value = chain;
-    },
+  const chainOptions = computed(() => {
+    const options = Object.keys(chains.value)
+      .map((chainId) => getChainSelectorOption(chainId, chains.value))
+      .filter((chainOption) => chainOption !== null) as SelectorOption<Chain>[];
+    return options.filter(
+      (chainOption) =>
+        !ignoreChains.value.find(
+          (ignoreChain) => ignoreChain.identifier === chainOption.value.identifier,
+        ),
+    );
   });
-
-  const sourceChains = computed(() =>
-    Object.keys(chains.value).map((chainId) => getChainSelectorOption(chainId, chains.value)),
-  );
-  const targetChains = computed(() =>
-    sourceChains.value.filter(
-      (chain) =>
-        chain?.value.identifier !== selectedSourceChain.value?.value.identifier ||
-        process.env.NODE_ENV === 'development',
-    ),
-  );
 
   const switchChain = async (chain: Ref<Chain>) => {
     if (provider.value && chain.value.identifier !== provider.value.chainId.value) {
@@ -51,10 +40,10 @@ export function useChainSelection(
     }
   };
 
-  return { selectedSourceChain, sourceChains, targetChains, switchChain };
+  return { chainOptions, switchChain };
 }
 
-function getChainSelectorOption(
+export function getChainSelectorOption(
   chainId: string,
   chains: ChainConfigMapping,
 ): SelectorOption<Chain> | null {

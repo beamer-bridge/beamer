@@ -1,6 +1,6 @@
 <template>
-  <div class="w-full h-full flex flex-col overflow-hidden">
-    <div class="tab-header w-full flex">
+  <div class="w-full h-full flex flex-col overflow-hidden rounded-lg">
+    <div class="tab-header w-full flex bg-teal">
       <div
         v-for="header of headers"
         :key="header.label"
@@ -13,9 +13,15 @@
       </div>
     </div>
 
-    <div class="tab-content w-full p-16" data-test="tab-content">
+    <div class="tab-content w-full" data-test="tab-content">
+      <!-- classes are applied here to provide a uniform styling to all components that are rendered inside the tabs -->
       <KeepAlive>
-        <component :is="activeTab.content" v-if="activeTab" :key="activeTab.label" />
+        <component
+          :is="activeTab.content"
+          v-if="activeTab"
+          :key="activeTab.label"
+          class="bg-teal p-16 h-full"
+        />
       </KeepAlive>
     </div>
   </div>

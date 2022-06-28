@@ -24,6 +24,10 @@ export class UInt256 implements Encodable<UInt256Data> {
   public encode(): UInt256Data {
     return this.asString;
   }
+
+  public add(value: UInt256): UInt256 {
+    return new UInt256(this.value.add(value.value).toString());
+  }
 }
 
 export type UInt256Data = string;

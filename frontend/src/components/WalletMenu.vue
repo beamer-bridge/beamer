@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full flex flex-col justify-center items-center bg-teal/30 p-16">
+  <div class="w-full h-full flex flex-col justify-center items-center bg-teal/30 p-16 rounded-lg">
     <button class="absolute top-0 right-0 m-10" data-test="close-button" @click="close">
       <img class="h-6 w-6" src="@/assets/images/close.svg" alt="close" />
     </button>

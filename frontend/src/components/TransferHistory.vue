@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-full pt-3">
+  <div class="relative w-full h-full pt-3" v-bind="$attrs">
     <!-- Top gradient to create phase out effect for scrolling content. -->
     <div
       class="absolute top-0 right-0 w-full h-10 z-10 bg-gradient-to-t from-transparent to-teal"
