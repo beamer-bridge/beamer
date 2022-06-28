@@ -246,7 +246,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
 def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     if request is None:
-        return False, None
+        return True, None
 
     try:
         request.withdraw()
@@ -261,7 +261,10 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     # RequestCreated event must arrive before ClaimMade
     # Additionally, a request should never be dropped before all claims are finalized
     request = context.requests.get(event.request_id)
-    assert request is not None, "Request object missing upon ClaimMade event"
+    if request is None:
+        # We might not find the request because we dropped it for some reason
+        # (e.g. an invalid token pair).
+        return True, None
 
     # If we receive a `ClaimMade` event, move forward in the state machine
     if event.claimer == context.address:
@@ -319,7 +322,7 @@ def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerR
     # Check if claim exists, it could happen that we ignored the request because of an
     # invalid token pair, and therefore also did not create the claim
     if claim is None:
-        return False, None
+        return True, None
 
     claim.withdraw()
     return True, None
@@ -329,9 +332,8 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     request = _find_request_by_request_hash(context, event.request_hash)
     if request is not None:
         request.l1_resolve(event.filler, event.fill_id)
-        return True, None
 
-    return False, None
+    return True, None
 
 
 def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
@@ -341,7 +343,7 @@ def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> Handle
     for claim in claims:
         claim.start_challenge(event.tx_hash, fill_block.timestamp)  # type: ignore
 
-    return len(claims) > 0, None
+    return True, None
 
 
 def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
@@ -383,7 +385,7 @@ def _handle_initiate_l1_resolution(
     request = context.requests.get(event.request_id)
     claim = context.claims.get(event.claim_id)
     if claim is None:
-        return False, None
+        return True, None
 
     # A request should never be dropped before all claims are finalized
     assert request is not None, "Request object missing"
@@ -428,7 +430,7 @@ def _handle_initiate_l1_invalidation(
 ) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
     if claim is None:
-        return False, None
+        return True, None
 
     # A request should never be dropped before all claims are finalized
     request = context.requests.get(claim.request_id)
