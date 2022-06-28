@@ -130,8 +130,8 @@ def test_handle_request_resolved():
         block_number=BLOCK_NUMBER,
     )
 
-    # Without a request, this must fail
-    assert process_event(event, context) == (False, None)
+    # Without a request, we simply drop the event
+    assert process_event(event, context) == (True, None)
 
     # Adding the request and claim to context
     context.requests.add(request.id, request)

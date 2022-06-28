@@ -31,8 +31,8 @@ def test_handle_initiate_l1_resolution(timestamp):
         claim_id=CLAIM_ID,
     )
 
-    # Without a claim, this must fail
-    assert process_event(event, context) == (False, None)
+    # Without a claim, we simply drop the event
+    assert process_event(event, context) == (True, None)
 
     claim = make_claim_challenged(request, claimer=config.account.address)
     context.claims.add(claim.id, claim)
@@ -67,8 +67,8 @@ def test_handle_initiate_l1_invalidation(timestamp):
         claim_id=CLAIM_ID,
     )
 
-    # Without a claim, this must fail
-    assert process_event(event, context) == (False, None)
+    # Without a claim, we simply drop the event
+    assert process_event(event, context) == (True, None)
 
     claim = make_claim_challenged(request, claimer=config.account.address)
     context.claims.add(claim.id, claim)
