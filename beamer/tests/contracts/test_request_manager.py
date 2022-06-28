@@ -315,7 +315,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     # Even if the requester calls withdraw, the deposit goes to the claimer
     withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
     assert "DepositWithdrawn" in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer) == transfer_amount
@@ -376,7 +376,7 @@ def test_withdraw_with_challenge(
     # Even if the requester calls withdraw, the challenge stakes go to the challenger
     # However, the request funds stay in the contract
     withdraw_tx = request_manager.withdraw(claim_id, {"from": challenger})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert "DepositWithdrawn" not in withdraw_tx.events
 
     assert token.balanceOf(requester) == 0
@@ -436,7 +436,7 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     # Even if the requester calls withdraw, the deposit goes to the claimer1
     withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
     assert "DepositWithdrawn" in withdraw1_tx.events
-    assert "ClaimWithdrawn" in withdraw1_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw1_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == transfer_amount
@@ -455,7 +455,7 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     with earnings(web3, deployer) as owner_earnings:
         withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
     assert "DepositWithdrawn" not in withdraw2_tx.events
-    assert "ClaimWithdrawn" in withdraw2_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw2_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == transfer_amount
@@ -521,7 +521,7 @@ def test_withdraw_second_claim_same_claimer_different_fill_ids(
 
     withdraw_tx = request_manager.withdraw(claim1_id, {"from": claimer})
     assert "DepositWithdrawn" in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     assert web3.eth.get_balance(claimer.address) == current_claimer_eth_balance + claim_stake
     assert token.balanceOf(claimer) == transfer_amount
@@ -535,7 +535,7 @@ def test_withdraw_second_claim_same_claimer_different_fill_ids(
     # Even though the challenge period of claim2 isn't over, the claim can be resolved now.
     withdraw_tx = request_manager.withdraw(claim2_id, {"from": claim_winner})
     assert "DepositWithdrawn" not in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     assert web3.eth.get_balance(claim_winner.address) == claim_winner_balance + 2 * claim_stake + 1
     assert web3.eth.get_balance(claim_loser.address) == claim_loser_balance
@@ -592,7 +592,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
     # Even if the requester calls withdraw, the deposit goes to the claimer1
     withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
     assert "DepositWithdrawn" in withdraw1_tx.events
-    assert "ClaimWithdrawn" in withdraw1_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw1_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == transfer_amount
@@ -693,7 +693,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
     # The other claim must be withdrawable, but mustn't transfer the request tokens again
     withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
-    assert "ClaimWithdrawn" in withdraw2_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw2_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == 0
@@ -720,7 +720,7 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
     chain.mine(timedelta=claim_period)
     withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "DepositWithdrawn" in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Claiming the same request again must fail
     with brownie.reverts("Deposit already withdrawn"):
@@ -760,7 +760,7 @@ def test_second_claim_after_withdraw(deployer, request_manager, token, claim_sta
     chain.mine(timedelta=claim_period / 2)
     withdraw_tx = request_manager.withdraw(claim1_id, {"from": claimer1})
     assert "DepositWithdrawn" in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert claimer1_eth_balance - claim_stake == web3.eth.get_balance(claimer1.address)
 
     # Withdrawing the second claim must now succeed immediately because the
@@ -768,14 +768,14 @@ def test_second_claim_after_withdraw(deployer, request_manager, token, claim_sta
     # period. The stakes go to the contract owner.
     with earnings(web3, deployer) as owner_earnings:
         withdraw_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert claimer2_eth_balance - claim_stake == web3.eth.get_balance(claimer2.address)
     assert owner_earnings() == claim_stake
 
     # Withdrawing the third claim must also succeed immediately.
     # Since the claimer is also the depositReceiver stakes go back to the claimer
     withdraw_tx = request_manager.withdraw(claim3_id, {"from": claimer1})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert claimer1_eth_balance == web3.eth.get_balance(claimer1.address)
 
 
@@ -879,7 +879,7 @@ def test_withdraw_without_challenge_with_resolution(
         claimer_eth_balance -= claim_stake
         owner_eth_balance += claim_stake
 
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     assert web3.eth.get_balance(request_manager.owner()) == owner_eth_balance
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance
@@ -962,22 +962,22 @@ def test_withdraw_l1_resolved_muliple_claims(
     # Valid claim will result in payout
     withdraw_tx = request_manager.withdraw(claim_id_1, {"from": first_claimer})
     assert "DepositWithdrawn" in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Wrong claimer, since it is not challenged stakes go to the contract owner
     withdraw_tx = request_manager.withdraw(claim_id_2, {"from": second_claimer})
     assert "DepositWithdrawn" not in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Another valid claim, deposit is already withdrawn but stakes go back to claimer
     withdraw_tx = request_manager.withdraw(claim_id_3, {"from": first_claimer})
     assert "DepositWithdrawn" not in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Wrong fill id, since it is not challenged stakes go to the contract owner
     withdraw_tx = request_manager.withdraw(claim_id_4, {"from": first_claimer})
     assert "DepositWithdrawn" not in withdraw_tx.events
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     assert web3.eth.get_balance(first_claimer.address) == first_claimer_eth_balance - claim_stake
     assert web3.eth.get_balance(second_claimer.address) == second_claimer_eth_balance - claim_stake

@@ -344,7 +344,7 @@ def test_withdraw_not_participant(request_manager, token, config):
     agent.start()
 
     # We wait enough time for agent to potentially withdraw
-    collector = EventCollector(request_manager, "ClaimWithdrawn")
+    collector = EventCollector(request_manager, "ClaimStakeWithdrawn")
     withdraw_event = collector.next_event(wait_time=2)
     assert withdraw_event is None
 

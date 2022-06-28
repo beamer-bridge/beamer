@@ -95,7 +95,7 @@ contract RequestManager is Ownable {
     /// of :sol:func:`withdraw` is allowed to withdraw their stake.
     ///
     /// .. seealso:: :sol:func:`withdraw`
-    event ClaimWithdrawn(
+    event ClaimStakeWithdrawn(
         uint256 claimId,
         uint256 indexed requestId,
         address claimReceiver
@@ -510,7 +510,7 @@ contract RequestManager is Ownable {
         (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
-        emit ClaimWithdrawn(claimId, claim.requestId, claimReceiver);
+        emit ClaimStakeWithdrawn(claimId, claim.requestId, claimReceiver);
 
         if (
             request.withdrawInfo.filler == address(0) &&
