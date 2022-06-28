@@ -44,7 +44,7 @@ def test_fee_split_works(deployer, request_manager, token, claim_stake, claim_pe
 
     # Even if the requester calls withdraw, the funds go to the claimer
     withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert request_manager.collectedProtocolFees(token) == protocol_fee
     assert token.balanceOf(request_manager) == protocol_fee
     assert token.balanceOf(claimer) == transfer_amount + lp_fee
@@ -201,13 +201,13 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     chain.mine(timedelta=claim_period)
 
     withdraw_tx = request_manager.withdraw(claim_id_1, {"from": claimer})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert request_manager.collectedProtocolFees(token) == protocol_fee_1
     assert token.balanceOf(request_manager) == amount + protocol_fee_1 + protocol_fee_2 + lp_fee_2
     assert token.balanceOf(claimer) == amount + lp_fee_1
 
     withdraw_tx = request_manager.withdraw(claim_id_2, {"from": claimer})
-    assert "ClaimWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert request_manager.collectedProtocolFees(token) == protocol_fee_1 + protocol_fee_2
     assert token.balanceOf(request_manager) == protocol_fee_1 + protocol_fee_2
     assert token.balanceOf(claimer) == amount * 2 + lp_fee_1 + lp_fee_2

@@ -17,7 +17,7 @@ import beamer.metrics
 from beamer.config import Config
 from beamer.events import (
     ClaimMade,
-    ClaimWithdrawn,
+    ClaimStakeWithdrawn,
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
@@ -77,8 +77,8 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, ClaimMade):
         return _handle_claim_made(event, context)
 
-    elif isinstance(event, ClaimWithdrawn):
-        return _handle_claim_withdrawn(event, context)
+    elif isinstance(event, ClaimStakeWithdrawn):
+        return _handle_claim_stake_withdrawn(event, context)
 
     elif isinstance(event, RequestResolved):
         return _handle_request_resolved(event, context)
@@ -316,7 +316,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     return True, events
 
 
-def _handle_claim_withdrawn(event: ClaimWithdrawn, context: Context) -> HandlerResult:
+def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
 
     # Check if claim exists, it could happen that we ignored the request because of an

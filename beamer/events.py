@@ -103,7 +103,7 @@ class ClaimMade(ClaimEvent):
 
 
 @dataclass(frozen=True)
-class ClaimWithdrawn(ClaimEvent):
+class ClaimStakeWithdrawn(ClaimEvent):
     request_id: RequestId
     claim_receiver: ChecksumAddress
 
@@ -136,7 +136,7 @@ _EVENT_TYPES = dict(
     RequestFilled=RequestFilled,
     DepositWithdrawn=DepositWithdrawn,
     ClaimMade=ClaimMade,
-    ClaimWithdrawn=ClaimWithdrawn,
+    ClaimStakeWithdrawn=ClaimStakeWithdrawn,
     RequestResolved=RequestResolved,
     FillHashInvalidated=FillHashInvalidated,
     HashInvalidated=HashInvalidated,
