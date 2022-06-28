@@ -1,19 +1,25 @@
-import type { Chain, Token } from './data';
+import type { Chain, Token } from '@/types/data';
 
-export type RequestFormResult = {
+export type RequestSource = {
   amount: string;
   sourceChain: SelectorOption<Chain> | null;
-  targetChain: SelectorOption<Chain> | null;
-  toAddress: string;
   token: SelectorOption<Token> | null;
 };
 
-export type ValidRequestFormResult = {
+export type ValidRequestSource = {
   amount: string;
   sourceChain: SelectorOption<Chain>;
+  token: SelectorOption<Token>;
+};
+
+export type RequestTarget = {
+  targetChain: SelectorOption<Chain> | null;
+  toAddress: string;
+};
+
+export type ValidRequestTarget = {
   targetChain: SelectorOption<Chain>;
   toAddress: string;
-  token: SelectorOption<Token>;
 };
 
 export type SelectorOption<T> = {

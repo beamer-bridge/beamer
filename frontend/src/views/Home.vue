@@ -12,7 +12,7 @@
         </div>
       </div>
 
-      <Card class="relative bg-teal mb-11 w-full h-[50rem]">
+      <div class="relative mb-11 w-full h-[62rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"
@@ -21,7 +21,7 @@
           :active-tab-label="activeTabLabel"
           @tab-changed="onTabChanged"
         />
-      </Card>
+      </div>
 
       <div id="action-button-portal" class="flex flex-col justify-center gap-5 h-28">
         <ActionButton v-if="!signer && !walletMenuIsOpen" class="bg-orange" @click="openWalletMenu"
@@ -38,7 +38,6 @@ import { computed, markRaw, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import ActionButton from '@/components/layout/ActionButton.vue';
-import Card from '@/components/layout/Card.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import TransferHistory from '@/components/TransferHistory.vue';

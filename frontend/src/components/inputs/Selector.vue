@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col gap-2 items-stretch">
-    <span v-if="label" class="text-2xl">{{ label }}</span>
+  <div class="flex flex-col gap-5 items-stretch">
+    <span v-if="label" class="text-3xl">{{ label }}</span>
     <v-select
       class="selector"
       :clearable="false"
@@ -117,5 +117,18 @@ export default {
 .selector .vs__fade-enter-from,
 .selector .vs__fade-leave-to {
   @apply rounded-xl opacity-0;
+}
+
+.selector.vs--disabled .vs__open-indicator,
+.selector.vs--disabled .vs__search {
+  @apply invisible;
+}
+
+.selector.vs--disabled .vs__selected {
+  @apply text-teal-light;
+}
+
+.selector.vs--disabled .vs__dropdown-toggle {
+  @apply bg-transparent border border-teal-light;
 }
 </style>
