@@ -29,7 +29,7 @@ def test_invalidation_before_and_after_resolution(contracts, token, resolution_r
     )
 
     assert not resolution_registry.invalidFillHashes(fill_hash)
-    resolution_registry.invalidateFillHash(
+    resolution_registry.invalidateFill(
         request_hash, FILL_ID, chain_id, {"from": contracts.l1_messenger}
     )
 
@@ -48,6 +48,6 @@ def test_invalidation_before_and_after_resolution(contracts, token, resolution_r
 
     # Invalidation of a resolved request should fail
     with brownie.reverts("Cannot invalidate resolved fillHashes"):
-        resolution_registry.invalidateFillHash(
+        resolution_registry.invalidateFill(
             request_hash, FILL_ID, chain_id, {"from": contracts.l1_messenger}
         )

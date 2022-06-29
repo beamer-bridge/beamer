@@ -23,7 +23,7 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
 
     /// Emitted when a fill hash has been invalidated.
     ///
-    /// .. seealso:: :sol:func:`invalidateFillHash`
+    /// .. seealso:: :sol:func:`invalidateFill`
     event FillHashInvalidated(bytes32 fillHash);
 
     /// Maps request hashes to fill infos.
@@ -73,7 +73,7 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
     /// @param requestHash The request hash.
     /// @param fillId The fill ID.
     /// @param resolutionChainId The resolution (L1) chain ID.
-    function invalidateFillHash(
+    function invalidateFill(
         bytes32 requestHash,
         bytes32 fillId,
         uint256 resolutionChainId
