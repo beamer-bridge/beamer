@@ -28,7 +28,7 @@ def get_relayer_executable() -> Optional[Path]:
         log.debug("Found relayer executable", relayer=maybe_relayer)
         return maybe_relayer.resolve()
 
-    log.warning("No relayer executable found")
+    log.warning("No relayer executable found", directory=bin_dir)
     return None
 
 
