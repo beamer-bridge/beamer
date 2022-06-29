@@ -12,7 +12,7 @@ import "./CrossDomainRestrictedCalls.sol";
 /// fill or non-fill proofs from the target L2 chain and forwarding them to
 /// the :sol:contract:`ResolutionRegistry` on the source L2 chain.
 contract Resolver is Ownable, CrossDomainRestrictedCalls {
-    struct ResolutionInfos {
+    struct SourceChainInfo {
         address resolutionRegistry;
         address messenger;
     }
@@ -28,8 +28,8 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         bytes32 fillId
     );
 
-    /// Maps source chain IDs to resolution infos.
-    mapping(uint256 => ResolutionInfos) public resolutionInfos;
+    /// Maps source chain IDs to source chain infos.
+    mapping(uint256 => SourceChainInfo) public sourceChainInfos;
 
     /// Resolve the specified request.
     ///
@@ -57,7 +57,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         uint256 sourceChainId,
         address filler
     ) external restricted(fillChainId, msg.sender) {
-        ResolutionInfos storage info = resolutionInfos[sourceChainId];
+        SourceChainInfo storage info = sourceChainInfos[sourceChainId];
         require(
             info.resolutionRegistry != address(0),
             "No registry available for source chain"
@@ -111,7 +111,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         address resolutionRegistry,
         address messenger
     ) external onlyOwner {
-        resolutionInfos[chainId] = ResolutionInfos(
+        sourceChainInfos[chainId] = SourceChainInfo(
             resolutionRegistry,
             messenger
         );
