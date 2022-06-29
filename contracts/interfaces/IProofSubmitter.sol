@@ -17,13 +17,13 @@ interface IProofSubmitter {
     /// @param l1Resolver The L1 :sol:contract:`Resolver`.
     /// @param sourceChainId The source chain ID.
     /// @param requestHash The request hash.
-    /// @param eligibleClaimer The filler.
+    /// @param filler The filler.
     /// @return The proof receipt.
     function submitProof(
         address l1Resolver,
         uint256 sourceChainId,
         bytes32 requestHash,
-        address eligibleClaimer
+        address filler
     ) external returns (ProofReceipt memory);
 
     /// Submit a non-fill proof.

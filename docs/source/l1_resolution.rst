@@ -19,8 +19,8 @@ submitted to the ``ResolutionRegistry`` contract on the source rollup.
 
 This process is started by the liquidity provider who fills an request. This
 writes a proof on that rollup. This proof includes information about the
-eligible claimer, the chain id of the source rollup and the request id. The
-proof is basically an encoded transaction to the resolver, which can be executed
+filler, the chain id of the source rollup and the request id. The proof is
+basically an encoded transaction to the resolver, which can be executed
 on L1.
 
 The central role for routing this information correctly has the ``Resolver``
@@ -30,8 +30,8 @@ on that chain.
 
 When a proof transaction sent by the target rollup is executed, the resolver can
 find the correct registry in the mapping and forward the information about the
-eligible claimer. This again happens in form of an transaction, that can be
-executed on the source rollup.
+filler. This again happens in form of an transaction, that can be executed on the
+source rollup.
 
 Trust
 -----
