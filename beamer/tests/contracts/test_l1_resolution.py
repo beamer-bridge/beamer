@@ -95,4 +95,4 @@ def test_restricted_calls(contracts, resolver):
         contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.invalidateFillHash(0, 0, 0, {"from": caller})
+        contracts.resolution_registry.invalidateFill(0, 0, 0, {"from": caller})

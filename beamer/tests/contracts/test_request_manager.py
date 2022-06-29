@@ -852,7 +852,7 @@ def test_withdraw_without_challenge_with_resolution(
     contracts.l1_messenger.setLastSender(contracts.resolver.address)
 
     if invalidate:
-        resolution_registry.invalidateFillHash(
+        resolution_registry.invalidateFill(
             request_hash, fill_id, chain.id, {"from": contracts.l1_messenger}
         )
     # Assert that invalidation works
