@@ -1,4 +1,5 @@
 import signal
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -9,7 +10,7 @@ import beamer.contracts
 import beamer.util
 from beamer.agent import Agent
 from beamer.config import Config
-from beamer.l1_resolution import relayer_executable_exists
+from beamer.l1_resolution import get_relayer_executable
 from beamer.typing import URL
 from beamer.util import account_from_keyfile
 
@@ -102,8 +103,9 @@ def main(
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
-    # TODO: use return value and exit if relayer is not available
-    relayer_executable_exists()
+    if get_relayer_executable() is None:
+        log.error("No relayer found")
+        sys.exit(1)
 
     account = account_from_keyfile(keystore_file, password)
     log.info(f"Using account {account.address}")
