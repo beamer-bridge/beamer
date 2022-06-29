@@ -543,12 +543,7 @@ contract RequestManager is Ownable {
         );
 
         bytes32 fillHash = BeamerUtils.createFillHash(
-            claim.requestId,
-            block.chainid,
-            request.targetChainId,
-            request.targetTokenAddress,
-            request.targetAddress,
-            request.amount,
+            requestHash,
             claim.fillId
         );
 
