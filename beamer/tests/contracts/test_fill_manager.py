@@ -78,7 +78,7 @@ def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
         amount,
     )
     with brownie.reverts("Fill hash valid"):
-        fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+        fill_manager.invalidateFill(request_hash, fill_id, chain_id)
 
 
 def test_invalidated_fill_hash_event(fill_manager):
@@ -86,7 +86,7 @@ def test_invalidated_fill_hash_event(fill_manager):
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
 
-    tx = fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+    tx = fill_manager.invalidateFill(request_hash, fill_id, chain_id)
 
     fill_hash = keccak(
         encode_abi_packed(
