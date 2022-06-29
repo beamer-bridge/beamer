@@ -1,0 +1,48 @@
+name: Agent Packaging
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'false'
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Bundle relayer
+        working-directory: relayer/
+        run: |
+          yarn install
+          yarn build
+          yarn add pkg
+          yarn run pkg -t node16-linux-x64 -o relayer-node16-linux-x64 build/src/service.js
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - uses: Gr1N/setup-poetry@v7
+
+      - name: Cache Python packages
+        id: cache-python-packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: poetry-${{ runner.os }}-${{ hashFiles('.github/workflows/agent-release.yml', 'poetry.lock') }}
+
+      - name: Build agent package
+        run: |
+          cp relayer/relayer-node16-linux-x64 beamer/data/relayers
+          poetry install
+          poetry build
+          poetry publish -u '__token__' -p ${{ secrets.PIP_PASSWORD }}
