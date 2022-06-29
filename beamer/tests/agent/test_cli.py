@@ -2,6 +2,7 @@ import json
 import pathlib
 import shutil
 import signal
+import sys
 
 import brownie
 import eth_account
@@ -9,6 +10,7 @@ import pytest
 from click.testing import CliRunner
 
 from beamer.cli import main
+from beamer.l1_resolution import _RELAYER_NAMES
 from beamer.util import TokenMatchChecker
 
 
@@ -38,6 +40,23 @@ def _generate_deployment_dir(output_dir, root, contracts):
     shutil.copy(src / "ResolutionRegistry.json", output_dir)
 
 
+@pytest.fixture
+def setup_relayer_executable():
+    target = pathlib.Path(__file__).parent.parent.parent.joinpath("data/relayers/")
+    target.mkdir(parents=True, exist_ok=True)
+
+    executable = target / _RELAYER_NAMES[sys.platform]
+    if executable.exists():
+        return
+
+    executable.write_text("text")
+
+    yield
+
+    executable.unlink()
+
+
+@pytest.mark.usefixtures("setup_relayer_executable")
 def test_cli(config, tmp_path, contracts):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
