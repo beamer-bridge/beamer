@@ -502,13 +502,13 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
-    func = context.fill_manager.functions.invalidateFillHash(
+    func = context.fill_manager.functions.invalidateFill(
         request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
     )
     try:
         receipt = transact(func)
     except TransactionFailed as exc:
-        log.error("Calling invalidateFillHash failed", claim=claim, cause=exc.cause())
+        log.error("Calling invalidateFill failed", claim=claim, cause=exc.cause())
         return
 
     log.debug("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())

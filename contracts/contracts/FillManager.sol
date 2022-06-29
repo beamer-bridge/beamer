@@ -31,7 +31,7 @@ contract FillManager is Ownable {
 
     /// Emitted when a fill hash has been invalidated.
     ///
-    /// .. seealso:: :sol:func:`invalidateFillHash`
+    /// .. seealso:: :sol:func:`invalidateFill`
     event HashInvalidated(
         bytes32 indexed requestHash,
         bytes32 indexed fillId,
@@ -138,7 +138,7 @@ contract FillManager is Ownable {
     /// @param requestHash The request hash.
     /// @param fillId The fill ID.
     /// @param sourceChainId The source chain ID.
-    function invalidateFillHash(
+    function invalidateFill(
         bytes32 requestHash,
         bytes32 fillId,
         uint256 sourceChainId

@@ -55,7 +55,7 @@ def test_l1_non_fill_proof(fill_manager, resolution_registry):
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
 
-    fill_manager.invalidateFillHash(request_hash, fill_id, chain_id)
+    fill_manager.invalidateFill(request_hash, fill_id, chain_id)
 
     fill_hash = keccak(
         encode_abi_packed(
