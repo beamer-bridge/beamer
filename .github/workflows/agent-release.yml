@@ -26,6 +26,7 @@ jobs:
           yarn build
           yarn add pkg
           yarn run pkg -t node16-linux-x64 -o relayer-node16-linux-x64 build/src/service.js
+          yarn run pkg -t node16-macos-x64 -o relayer-node16-macos-x64 build/src/service.js
 
       - uses: actions/setup-python@v4
         with:
@@ -43,6 +44,7 @@ jobs:
       - name: Build agent package
         run: |
           cp relayer/relayer-node16-linux-x64 beamer/data/relayers
+          cp relayer/relayer-node16-macos-x64 beamer/data/relayers
           poetry install
           poetry build
           poetry publish -u '__token__' -p ${{ secrets.PIP_PASSWORD }}
