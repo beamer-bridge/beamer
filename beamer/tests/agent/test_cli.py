@@ -2,7 +2,6 @@ import json
 import pathlib
 import shutil
 import signal
-import sys
 
 import brownie
 import eth_account
@@ -10,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 
 from beamer.cli import main
-from beamer.l1_resolution import _RELAYER_NAMES
+from beamer.l1_resolution import get_relayer_executable
 from beamer.util import TokenMatchChecker
 
 
@@ -42,18 +41,15 @@ def _generate_deployment_dir(output_dir, root, contracts):
 
 @pytest.fixture
 def setup_relayer_executable():
-    target = pathlib.Path(__file__).parent.parent.parent.joinpath("data/relayers/")
-    target.mkdir(parents=True, exist_ok=True)
-
-    executable = target / _RELAYER_NAMES[sys.platform]
-    if executable.exists():
+    relayer = get_relayer_executable()
+    if relayer.exists():
+        yield
         return
 
-    executable.write_text("text")
-
+    relayer.parent.mkdir(parents=True, exist_ok=True)
+    relayer.write_text("")
     yield
-
-    executable.unlink()
+    relayer.unlink()
 
 
 @pytest.mark.usefixtures("setup_relayer_executable")
