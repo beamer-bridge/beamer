@@ -103,7 +103,7 @@ def main(
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
-    if get_relayer_executable() is None:
+    if not get_relayer_executable().exists():
         log.error("No relayer found")
         sys.exit(1)
 
