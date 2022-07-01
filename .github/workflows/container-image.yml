@@ -12,6 +12,9 @@ env:
   IMAGE_NAME: beamer-bridge/beamer-agent
 
 jobs:
+  prepare-package:
+    uses: ./.github/workflows/prepare-package.yml
+
   build-and-push-image:
     runs-on: ubuntu-latest
     permissions:
@@ -19,8 +22,9 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: source-with-relayers
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.0.0
