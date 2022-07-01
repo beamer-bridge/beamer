@@ -1,4 +1,4 @@
-.PHONY: dist-exe container-image all lint black format docs clean
+.PHONY: dist-exe container-image relayers all lint black format docs clean
 
 CODE_DIRS = beamer/ scripts/
 CONTRACTS = "contracts/**/*.sol"
@@ -23,8 +23,15 @@ format: black
 dist-exe:
 	shiv -c beamer-agent -o dist/beamer-agent .
 
-container-image:
+container-image: relayers
 	docker image build -f docker/Dockerfile.agent -t beamer-agent .
+
+relayers:
+	yarn --cwd relayer install
+	yarn --cwd relayer build
+	yarn --cwd relayer add pkg
+	yarn --cwd relayer run pkg -t node16-linux-x64 -o relayer-node16-linux-x64 build/src/service.js
+	yarn --cwd relayer run pkg -t node16-macos-x64 -o relayer-node16-macos-x64 build/src/service.js
 
 docs:
 	make -C docs html
