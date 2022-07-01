@@ -6,27 +6,17 @@ on:
       - '*'
 
 jobs:
+  prepare-package:
+    uses: ./.github/workflows/prepare-package.yml
+
   package:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
-          submodules: 'false'
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Bundle relayer
-        working-directory: relayer/
-        run: |
-          yarn install
-          yarn build
-          yarn add pkg
-          yarn run pkg -t node16-linux-x64 -o relayer-node16-linux-x64 build/src/service.js
-          yarn run pkg -t node16-macos-x64 -o relayer-node16-macos-x64 build/src/service.js
+          name: source-with-relayers
 
       - uses: actions/setup-python@v4
         with:
