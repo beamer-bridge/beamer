@@ -10,8 +10,3 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/relayer/"
-    schedule:
-      interval: "weekly"
