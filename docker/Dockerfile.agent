@@ -1,6 +1,8 @@
 FROM python:3.9
 
 COPY . /src
+RUN mkdir -p /src/beamer/data/relayers
+COPY ./relayer/relayer-node16-*-x64 /src/beamer/data/relayers/
 RUN pip install shiv
 WORKDIR /src
 RUN mkdir -p dist && shiv -c beamer-agent -o dist/beamer-agent .
