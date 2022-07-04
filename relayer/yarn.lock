@@ -78,6 +78,18 @@
     chai "^4.3.4"
     ethers "^5.6.8"
 
+"@eth-optimism/core-utils@0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.9.0.tgz#2af57348148a5d262f252940c7b599480cede744"
+  integrity sha512-sCX30T005zEUI8ktyaWLXDAIaUP7aBobZQpyBJoxbbg5fOVtlwuuApxQWACPMLYK56qkYUOe6X3yII+37p92RQ==
+  dependencies:
+    "@ethersproject/abstract-provider" "^5.6.1"
+    "@ethersproject/providers" "^5.6.8"
+    "@ethersproject/transactions" "^5.6.2"
+    bufio "^1.0.7"
+    chai "^4.3.4"
+    ethers "^5.6.8"
+
 "@eth-optimism/sdk@^1.1.8":
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-1.1.8.tgz#e9bfdde3286e53b499efd63180a99f399969b88f"
