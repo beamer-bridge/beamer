@@ -23,9 +23,14 @@ jobs:
       packages: write
 
     steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'false'
+
       - uses: actions/download-artifact@v3
         with:
-          name: source-with-relayers
+          name: relayers
+          path: relayer/
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.0.0
