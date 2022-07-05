@@ -1,5 +1,6 @@
 import type { Signer } from "ethers";
 import { BaseServiceV2, validators } from "@eth-optimism/common-ts";
+import { getChainId } from "@eth-optimism/core-utils";
 import { CrossChainMessenger, MessageStatus } from "@eth-optimism/sdk";
 import type { Provider } from "@ethersproject/abstract-provider";
 import { ppid } from "process";
@@ -57,12 +58,11 @@ export class MessageRelayerService extends BaseServiceV2<
       this.options.l1RpcProvider
     );
 
-    const l1Network = await this.state.wallet.provider.getNetwork();
-    const l1ChainId = l1Network.chainId;
     this.state.messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.state.wallet,
       l2SignerOrProvider: this.options.l2RpcProvider,
-      l1ChainId,
+      l1ChainId: await getChainId(this.state.wallet.provider),
+      l2ChainId: await getChainId(this.options.l2RpcProvider),
     });
 
     const receipt = await this.state.messenger.l2Provider.getTransactionReceipt(this.options.fromL2TransactionHash);
