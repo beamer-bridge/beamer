@@ -314,19 +314,16 @@ def whitelist(
     "protocol-fee-ppm",
     type=int,
     required=True,
-    help="Protocol fee percentage described in parts per million",
 )
 @click.argument(
     "lp-fee-ppm",
     type=int,
     required=True,
-    help="LP fee percentage described in parts per million",
 )
 @click.argument(
     "min-lp-fee",
     type=int,
     required=True,
-    help="Minimum LP fee in Wei",
 )
 @pass_args
 def update_fee(
