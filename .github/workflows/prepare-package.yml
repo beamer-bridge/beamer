@@ -7,6 +7,7 @@ on:
 jobs:
   prepare-for-packaging:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -21,6 +22,6 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: source-with-relayers
-          path: .
+          name: relayers
+          path: relayer/relayer-node16-*
           retention-days: 1
