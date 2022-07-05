@@ -44,6 +44,7 @@ export class MessageRelayerService extends BaseServiceV2<
   constructor(options?: Partial<MessageRelayerOptions>) {
     super({
       name: "Message_Relayer",
+      version: "1.0.0",
       options,
       optionsSpec,
       metricsSpec: { },
