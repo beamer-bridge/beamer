@@ -47,26 +47,14 @@
     prom-client "^13.1.0"
     qs "^6.10.5"
 
-"@eth-optimism/contracts@0.5.27":
-  version "0.5.27"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.5.27.tgz#d607fdb324c068ce541bbc4c7499cb2c651d9917"
-  integrity sha512-wvGL5LcsycjuQZ4FYRT0A/3JGR6o1BKpEu5460whiWCMBrI3Jm+TuWXweHcAAwcOpRubhk5m04zr0AhrN4msqQ==
+"@eth-optimism/contracts@0.5.29":
+  version "0.5.29"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.5.29.tgz#e795ccd94cdbd3ac34d726456529ac892fd3dc77"
+  integrity sha512-uYUfxqPjEl1VABD5EUNA+NI5ZRmfQVEuIvAV1uUPvNP0w+GdsEeYrYIPhR6e+EhsUV2Ko4EKVAPYTYoJmI9GkQ==
   dependencies:
-    "@eth-optimism/core-utils" "0.8.6"
+    "@eth-optimism/core-utils" "0.9.0"
     "@ethersproject/abstract-provider" "^5.6.1"
     "@ethersproject/abstract-signer" "^5.6.2"
-
-"@eth-optimism/core-utils@0.8.6":
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.8.6.tgz#a449e9a36c57e00b11ab7231e9002482299f5266"
-  integrity sha512-SbjboVZFGOe2NhRAVz5UFRtRkvusImUtQcSe2Dk/Rv6FUl7s3ECsCsLGizQuKAlPg/lAis3TJVgPhG7k+HPRqA==
-  dependencies:
-    "@ethersproject/abstract-provider" "^5.6.1"
-    "@ethersproject/providers" "^5.6.8"
-    "@ethersproject/transactions" "^5.6.2"
-    bufio "^1.0.7"
-    chai "^4.3.4"
-    ethers "^5.6.8"
 
 "@eth-optimism/core-utils@0.9.0":
   version "0.9.0"
@@ -80,13 +68,13 @@
     chai "^4.3.4"
     ethers "^5.6.8"
 
-"@eth-optimism/sdk@^1.1.8":
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-1.1.8.tgz#e9bfdde3286e53b499efd63180a99f399969b88f"
-  integrity sha512-XeUf1h+M/H01uMIgRdy/C0clklydmLRPo/sAuekWNnWbDK3/kYXxp5+r6A5hPeEAmkyDbpDSc6zArA1UX6FQ+g==
+"@eth-optimism/sdk@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-1.2.0.tgz#20b0c7438d918110d67f5be3810e80b124033eba"
+  integrity sha512-xAx+Ks07TCxmLxYE++PPbAydCC/E28TeUlV623NaBA9DH9nfrhVwxv631HDim4L9Flo68VO7LaiOIx3yUI328Q==
   dependencies:
-    "@eth-optimism/contracts" "0.5.27"
-    "@eth-optimism/core-utils" "0.8.6"
+    "@eth-optimism/contracts" "0.5.29"
+    "@eth-optimism/core-utils" "0.9.0"
     lodash "^4.17.21"
     merkletreejs "^0.2.27"
     rlp "^2.2.7"
