@@ -252,7 +252,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     )
 
     config.l2b_rpc_url = l2b_rpc_url
-    config.fill_wait_time = 6
+    config.fill_wait_time = 5
 
     agent = beamer.agent.Agent(config)
     agent.start()
@@ -295,7 +295,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     claim = collector.next_event(0.1)
     assert claim is None
 
-    claim = collector.next_event()
+    claim = collector.next_event(20)
     if honest_claim:
         # No challenge received
         assert claim is None
