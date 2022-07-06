@@ -28,7 +28,8 @@ def main() -> None:
     request_amount = 123
 
     token = l2_contracts["MintableToken"]
-    token.functions.mint(deployer.address, request_amount).transact()
+    tx_hash = token.functions.mint(deployer.address, request_amount).transact()
+    web3.eth.wait_for_transaction_receipt(tx_hash)
 
     tx_hash = token.functions.approve(fill_manager.address, request_amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
