@@ -1,5 +1,6 @@
 import signal
 import sys
+from importlib.metadata import version
 from pathlib import Path
 from typing import Optional
 
@@ -102,6 +103,8 @@ def main(
     prometheus_metrics_port: Optional[int],
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
+
+    log.info("Running beamer bridge agent", version=version("beamer-bridge"))
 
     if not get_relayer_executable().exists():
         log.error("No relayer found")
