@@ -49,8 +49,18 @@ jobs:
             ~/.solcx
           key: poetry-1-${{ runner.os }}-${{ hashFiles('.github/workflows/backend.yml', 'poetry.lock') }}
 
-      - name: Install ganache
-        run: npm install ganache --global
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"k
 
       - name: Install dependencies
         run: poetry install
@@ -68,53 +78,12 @@ jobs:
         run: |
           poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
 
-      - name: Build docs
-        run: poetry run make docs
-
-      - name: Publish docs
-        if: ${{ github.ref_name == 'main' }}
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Cache Docker layers
+        uses: actions/cache@v2
         with:
-          publish_dir: ./docs/build/html
-          personal_token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          external_repository: beamer-bridge/docs
-          cname: docs.beamerbridge.com
-
-      - name: Install prettier for solidity
-        run: npm install prettier prettier-plugin-solidity --global
-
-      - name: Check formatting of contracts
-        run: prettier --list-different 'contracts/**/*.sol'
-
-      - name: Install solhint
-        run: npm install solhint --global
-
-      - name: Lint contracts
-        run: |
-          solhint 'contracts/**/*.sol'
-
-      - name: Lint beamer
-        run: poetry run make lint
-
-      - name: Run contract tests
-        run: poetry run brownie test -v -G beamer/tests/contracts
-
-      - name: Run agent tests
-        run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
-
-      - name: Load images from cache
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
 
       - name: Start local Optimism chain
         run: bash docker/optimism/optimism.sh up
-
-      - name: Deploy Beamer contracts on local Optimism
-        run: bash docker/optimism/optimism.sh deploy-beamer
-
-      - name: Optimism E2E test
-        run: bash docker/optimism/optimism.sh e2e-test
-
-      - name: Stop local Optimism chain
-        run: bash docker/optimism/optimism.sh down
