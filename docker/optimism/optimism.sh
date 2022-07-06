@@ -24,6 +24,7 @@ down() {
 up() {
     echo "Starting the end-to-end environment"
     docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
+    docker buildx bake ${docker_compose_file}
     docker compose ${docker_compose_file} up -d
 
     echo "Wait to make sure all services are up and running"
