@@ -23,7 +23,6 @@
     "@pinia/testing": "^0.0.12",
     "@walletconnect/web3-provider": "^1.7.8",
     "autoprefixer": "^10",
-    "daisyui": "^2.11.0",
     "ethers": "^5.5.1",
     "pinia": "^2.0.13",
     "pinia-plugin-persistedstate": "^1.5.2",

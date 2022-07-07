@@ -1,5 +1,7 @@
 <template>
-  <span class="btn-link" data-test="open-button" @click="openModal">Imprint</span>
+  <span class="hover:underline hover:cursor-pointer" data-test="open-button" @click="openModal"
+    >Imprint</span
+  >
 
   <div
     v-if="modalIsVisible"
@@ -94,12 +96,13 @@
         </div>
       </div>
 
-      <span
-        class="btn hover:bg-teal-light-35 place-self-end"
+      <button
+        class="border border-white rounded-md px-4 py-2 hover:bg-teal-light place-self-end"
         data-test="close-button"
         @click="closeModal"
-        >OK</span
       >
+        OK
+      </button>
     </div>
   </div>
 </template>
