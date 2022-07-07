@@ -1,12 +1,10 @@
 FROM python:3.9
 
 COPY . /src
-RUN mkdir -p /src/beamer/data/relayers
-COPY ./relayer/relayer-node16-*-x64 /src/beamer/data/relayers/
-RUN pip install shiv
 WORKDIR /src
-RUN mkdir -p dist && shiv -c beamer-agent -o dist/beamer-agent .
+RUN mkdir -p ./beamer/data/relayers
+RUN mv ./relayer/relayer-node16-*-x64 ./beamer/data/relayers/
+RUN pip install poetry
+RUN poetry install --no-dev --no-interaction --no-ansi -vvv
 
-FROM python:3.9-slim
-COPY --from=0 /src/dist/beamer-agent /usr/bin/beamer-agent
-ENTRYPOINT ["/usr/bin/beamer-agent"]
+ENTRYPOINT ["poetry", "run", "beamer-agent"]
