@@ -104,7 +104,7 @@ def main(
 ) -> None:
     beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
-    log.info("Running beamer bridge agent", version=version("beamer-bridge"))
+    log.info("Running beamer bridge agent", version=version("beamer"))
 
     if not get_relayer_executable().exists():
         log.error("No relayer found")

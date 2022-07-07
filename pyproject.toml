@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "beamer-bridge"
+name = "beamer"
 version = "0.1.0"
 description = "Bridging rollups with L1 guaranteed security"
 authors = ["Beamer Bridge Team <contact@beamerbridge.com>"]
@@ -8,9 +8,6 @@ readme = "README.md"
 homepage = "https://www.beamerbridge.com/"
 repository = "https://github.com/beamer-bridge/beamer"
 documentation = "https://docs.beamerbridge.com/"
-packages = [
-    { include = "beamer" },
-]
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.10"
