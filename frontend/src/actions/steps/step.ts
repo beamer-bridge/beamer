@@ -1,5 +1,29 @@
 import type { Encodable } from '@/types/encoding';
 
+/**
+ * A step is a metadata container that gets associated with an executable.
+ *
+ * A step maintains data that is associated with a specific execution of an
+ * executable (typically a function). It holds information like if it is
+ * currently active, already completed, if it has failed and if so with which
+ * error. On top of that it adds some logic that ensures the strict life-cycle
+ * of a step. This means the combination of a step and an executable can only
+ * run once.
+ *
+ * The purpose to associate a step with an executable can be diverse. Commonly
+ * it is used to observe, visualize and preserve the progress of an action that
+ * can consist of multiple of such steps.
+ *
+ * As steps are intended to be preserved to storage and get reloaded, it must
+ * follow the rules of encodable data. Therefore a step MUST NOT save any
+ * references to executables as they can not be serialized. Furthermore this
+ * separates logic and data properly.
+ *
+ * Steps are an important part for backwards compatibility of actions for the
+ * core business logic of the application. Thereby they MUST ALWAYS be
+ * optionally extended and NEVER introduce breaking changes to itself. Tests are
+ * an approach to ensure this.
+ */
 export class Step implements Encodable<StepData> {
   readonly identifier: string;
   readonly label: string;
@@ -18,8 +42,8 @@ export class Step implements Encodable<StepData> {
 
   /**
    * Convenience function to instantiate a step more easily.
-   * The constructor must follow some type restriction and therefore can't be
-   * beautified.
+   * The constructor must follow type restriction for encoding and therefore
+   * can't be beautified.
    */
   static new(identifier: string, label: string): Step {
     return new this({ identifier, label });

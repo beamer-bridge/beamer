@@ -31,6 +31,44 @@ const STEPS_DATA = [
   { identifier: 'waitForFulfillment', label: 'Request is being fulfilled' },
 ];
 
+/**
+ * A transfer is used to exchange tokens from one blockchain network to another.
+ *
+ * This class represents the central core business logic of the whole
+ * application. This means it must be the most protected, stable an reliable
+ * code of the whole application. After all everything this application does is
+ * related to transfers. In result all external dependencies should be kept as
+ * far away as possible from here. Everything this class depends on must be very
+ * stable. This stability can be achieved with different approaches
+ * (dependency-inversion, open-closed-principle, ...).
+ *
+ * A transfer itself only holds the data relevant for a specific transfer and
+ * defines the basic flow of the protocol. It MUST NEVER implement any details
+ * of the protocol which are focus of modules in more "fragile" dependency
+ * layers. You could argue a transfer does not even know about the concepts of
+ * blockchains. It simply defines the correct steps (order) to execute according
+ * to the protocol and binds it to data.
+ *
+ * As transfers are intended to be preserved to storage and get reloaded, it
+ * must follow the rules of encodable data. Due to language "restrictions"
+ * this lead to some boilerplate code which is willingly accepted.
+ *
+ * To ensure backwards compatibility it is important to only add new steps or
+ * adapt the logic of a step associated executable. If a step becomes obsolete
+ * it can be removed from the list of steps for new transfers, but the execution
+ * logic must remain for old transfers. This is important to ensure
+ * it will always be possible to execute transfers that got created in the past
+ * and get reloaded from user storage.
+ * Thereby it is also required that a transfer includes all necessary data that
+ * is relevant to execute it. The only no included elements are the environment,
+ * i.e. the connections to the network and the user wallet (a transfer can be
+ * executed with any wallet account). This includes configuration data of the
+ * application used for such connectivity (e.g. network connection information
+ * like RPC URLs)) as the configuration can change over time.
+ * The data of a transfer includes also all relevant information that are
+ * displayed to the user without much further doing and offline (e.g. fetching
+ * data from the blockchain must be avoided).
+ */
 export class Transfer extends MultiStepAction implements Encodable<TransferData> {
   readonly sourceChain: Chain;
   readonly sourceAmount: TokenAmount;
@@ -64,6 +102,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this._withdrawn = data.withdrawn ?? false;
   }
 
+  /**
+   * Convenience function to instance a new transfer more easily.
+   * The constructor must follow type restrictions and is meant to
+   * (re)instantiate transfer of all versions. This function only creates
+   * transfers of the latest version with minimal initial data.
+   */
   static new(
     sourceChain: Chain,
     sourceAmount: TokenAmount,
