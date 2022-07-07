@@ -1,14 +1,12 @@
 import './main.css';
 import '@fontsource/sora';
 import 'vue-select/dist/vue-select.css';
-import 'floating-vue/dist/style.css';
 
 import {
   createInput,
   defaultConfig as formkitConfig,
   plugin as formkitPlugin,
 } from '@formkit/vue';
-import FloatingVue from 'floating-vue';
 import { createPinia } from 'pinia';
 import piniaPersistState from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
@@ -34,6 +32,5 @@ createApp(App)
       },
     }),
   )
-  .use(FloatingVue)
   .use(pinia)
   .mount('#app');
