@@ -24,7 +24,13 @@ down() {
 up() {
     echo "Starting the end-to-end environment"
     docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
-    docker buildx bake ${docker_compose_file}
+    if [[ -z "${DOCKER_CACHE_DIR}" ]]; then
+        cache_options=""
+    else
+        cache_options="--set cache-from=${DOCKER_CACHE_DIR} --set cache-to=${DOCKER_CACHE_DIR}"
+    fi
+    echo "===>", ${cache_options}
+    docker buildx bake ${cache_options} ${docker_compose_file}
     docker compose ${docker_compose_file} up -d
 
     echo "Wait to make sure all services are up and running"

@@ -19,6 +19,7 @@ jobs:
     env:
       DOCKER_BUILDKIT: 1
       COMPOSE_DOCKER_CLI_BUILD: 1
+      DOCKER_CACHE_DIR: /tmp/.docker-cache
 
     steps:
       - uses: actions/checkout@v3
@@ -60,7 +61,8 @@ jobs:
           echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
           echo "Status:    ${{ steps.buildx.outputs.status }}"
           echo "Flags:     ${{ steps.buildx.outputs.flags }}"
-          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"k
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+          mkdir -p $DOCKER_CACHE_DIR
 
       - name: Install dependencies
         run: poetry install
@@ -79,11 +81,10 @@ jobs:
           poetry run brownie pm install OpenZeppelin/openzeppelin-contracts@4.5.0
 
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-buildx-
+          path: /tmp/.docker-cache
+          key: ${{ runner.os }}-docker
 
       - name: Start local Optimism chain
         run: bash docker/optimism/optimism.sh up
