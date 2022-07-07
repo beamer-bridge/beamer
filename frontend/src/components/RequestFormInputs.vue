@@ -185,18 +185,3 @@ const {
   computed(() => selectedSourceChain.value?.value.identifier),
 );
 </script>
-
-<style lang="css">
-.form-tooltip {
-  @apply tooltip tooltip-left md:tooltip-right tooltip-primary bg-transparent text-justify z-40;
-}
-
-.tooltip:before {
-  @apply p-4;
-}
-
-.tooltip:before,
-.tooltip:after {
-  @apply md:ml-20;
-}
-</style>
