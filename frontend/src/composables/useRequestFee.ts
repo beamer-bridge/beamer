@@ -1,5 +1,5 @@
 import type { Ref } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import { getRequestFee } from '@/services/transactions/request-manager';
 import { TokenAmount } from '@/types/token-amount';
@@ -11,11 +11,6 @@ export function useRequestFee(
 ) {
   const error = ref<string | undefined>(undefined);
   const amount = ref<TokenAmount | undefined>(undefined);
-
-  const available = computed(
-    () => !!rpcUrl.value && !!requestManagerAddress.value && !!requestAmount.value,
-  );
-  const formattedAmount = computed(() => amount.value?.format() ?? '');
 
   const updateRequestFeeAmount = async () => {
     error.value = '';
@@ -43,5 +38,5 @@ export function useRequestFee(
     immediate: true,
   });
 
-  return { available, amount, formattedAmount, error };
+  return { amount, error };
 }
