@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col text-2xl px-8">
+      <div class="flex flex-col text-2xl px-5">
         <div class="flex flex-row justify-between">
           <div class="flex flex-row gap-3">
             <span>Fees</span>

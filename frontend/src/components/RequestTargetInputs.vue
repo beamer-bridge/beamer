@@ -22,7 +22,12 @@
         />
       </div>
     </div>
-    <TextInput v-model="selectedTargetAddress" name="toAddress" placeholder="address" required />
+    <TextInput
+      v-model="selectedTargetAddress"
+      name="toAddress"
+      placeholder="Target Address"
+      required
+    />
   </div>
 </template>
 

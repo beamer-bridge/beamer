@@ -119,11 +119,7 @@ export default {
   @apply rounded-xl opacity-0;
 }
 
-.selector.vs--disabled .vs__open-indicator,
-.selector.vs--disabled .vs__search {
-  @apply invisible;
-}
-
+.selector.vs--disabled .vs__search::placeholder,
 .selector.vs--disabled .vs__selected {
   @apply text-teal-light;
 }
