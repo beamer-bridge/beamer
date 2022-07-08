@@ -24,7 +24,11 @@
       </div>
 
       <div id="action-button-portal" class="flex flex-col justify-center gap-5 h-28">
-        <ActionButton v-if="!signer && !walletMenuIsOpen" class="bg-orange" @click="openWalletMenu"
+        <ActionButton
+          v-if="!signer"
+          class="bg-orange disabled:hidden"
+          :disabled="walletMenuIsOpen"
+          @click="openWalletMenu"
           >Connect to Wallet
         </ActionButton>
       </div>
