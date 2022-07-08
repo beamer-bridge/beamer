@@ -6,6 +6,7 @@ import signal
 import brownie
 import eth_account
 import pytest
+import toml
 from click.testing import CliRunner
 
 from beamer.cli import main
@@ -56,7 +57,7 @@ def setup_relayer_executable():
 def test_cli(config, tmp_path, contracts):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
-    obj = eth_account.account.create_keyfile_json(acc.key, b"")
+    obj = eth_account.Account.encrypt(key, "test")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
     root = pathlib.Path(__file__).parents[3]
@@ -74,7 +75,7 @@ def test_cli(config, tmp_path, contracts):
             "--keystore-file",
             str(keyfile),
             "--password",
-            "",
+            "test",
             "--l1-rpc-url",
             config.l1_rpc_url,
             "--l2a-rpc-url",
@@ -85,6 +86,43 @@ def test_cli(config, tmp_path, contracts):
             str(deployment_dir),
             "--token-match-file",
             str(root / "beamer/data/tokens.example.json"),
+        ],
+    )
+    assert result.exit_code == 0
+
+
+@pytest.mark.usefixtures("setup_relayer_executable")
+def test_cli_config_file(config, tmp_path, contracts):
+    key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
+    acc = eth_account.Account.from_key(key)
+    obj = eth_account.Account.encrypt(key, "test")
+    keyfile = tmp_path / f"{acc.address}.json"
+    keyfile.write_text(json.dumps(obj))
+
+    root = pathlib.Path(__file__).parents[3]
+    deployment_dir = tmp_path / "deployment"
+    deployment_dir.mkdir()
+    _generate_deployment_dir(deployment_dir, root, contracts)
+
+    config_file = tmp_path / "agent.conf"
+    example_config = toml.load(str(root / "beamer/data/example-agent.conf"))
+    example_config["account"]["path"] = str(keyfile)
+    example_config["account"]["password"] = "test"
+    example_config["chains"]["l1"]["rpc-url"] = config.l1_rpc_url
+    example_config["chains"]["l2a"]["rpc-url"] = config.l2a_rpc_url
+    example_config["chains"]["l2b"]["rpc-url"] = config.l2b_rpc_url
+    example_config["deployment-dir"] = str(deployment_dir)
+    config_file.write_text(toml.dumps(example_config))
+
+    signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
+    signal.setitimer(signal.ITIMER_REAL, 2)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "-c",
+            str(config_file),
         ],
     )
     assert result.exit_code == 0
