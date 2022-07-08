@@ -90,14 +90,14 @@
             </Tooltip>
           </div>
           <div class="text-teal-light">
-            <span v-if="showRequestFee">{{ formattedRequestFeeAmount }}</span>
+            <span v-if="requestFeeAmount">{{ requestFeeAmount.format() }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
         </div>
         <div class="flex flex-row justify-between font-semibold">
           <span>Total</span>
           <div class="text-teal-light">
-            <span v-if="showRequestFee">{{ totalRequestAmount }}</span>
+            <span v-if="totalRequestAmount">{{ totalRequestAmount }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
         </div>
@@ -169,11 +169,7 @@ const selectedSourceChainIdentifier = computed(
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
-const {
-  available: showRequestFee,
-  formattedAmount: formattedRequestFeeAmount,
-  amount: requestFeeAmount,
-} = useRequestFee(
+const { amount: requestFeeAmount } = useRequestFee(
   computed(() => selectedSourceChain.value?.value.rpcUrl),
   computed(() => selectedSourceChain.value?.value.requestManagerAddress),
   computed(() =>

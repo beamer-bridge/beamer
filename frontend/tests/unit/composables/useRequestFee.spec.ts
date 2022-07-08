@@ -7,7 +7,6 @@ import * as requestManagerService from '@/services/transactions/request-manager'
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 import {
-  generateToken,
   generateTokenAmountData,
   generateUInt256Data,
   getRandomEthereumAddress,
@@ -28,37 +27,25 @@ describe('useRequestFee', () => {
     global.console.error = vi.fn();
   });
 
-  describe('available', () => {
-    it('should be false when there is no RPC URL', () => {
-      const { available } = useRequestFee(ref(undefined), REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
-
-      expect(available.value).toBe(false);
-    });
-
-    it('should be false when there is no request manager address', () => {
-      const { available } = useRequestFee(RPC_URL, ref(undefined), REQUEST_AMOUNT);
-
-      expect(available.value).toBe(false);
-    });
-
-    it('should be false when there is no request amount', () => {
-      const { available } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, ref(undefined));
-
-      expect(available.value).toBe(false);
-    });
-
-    it('should be true when RPC URL, request manager address and request amount are given', () => {
-      const { available } = useRequestFee(
-        ref('https://test.rpc'),
-        ref('0xRequestManager'),
-        ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>,
-      );
-
-      expect(available.value).toBe(true);
-    });
-  });
-
   describe('amount', () => {
+    it('should be undefined if the RPC URL is missing', () => {
+      const { amount } = useRequestFee(ref(undefined), REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
+
+      expect(amount.value).toBeUndefined();
+    });
+
+    it('should be undefined if the request manager address is missing', () => {
+      const { amount } = useRequestFee(RPC_URL, ref(undefined), REQUEST_AMOUNT);
+
+      expect(amount.value).toBeUndefined();
+    });
+
+    it('should be undefined if the request amount is missing', () => {
+      const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, ref(undefined));
+
+      expect(amount.value).toBeUndefined();
+    });
+
     it('should be fetched from request manager', async () => {
       Object.defineProperty(requestManagerService, 'getRequestFee', {
         value: vi.fn().mockResolvedValue(new UInt256('99999')),
@@ -88,24 +75,6 @@ describe('useRequestFee', () => {
       expect(amount.value).toEqual(
         new TokenAmount({ token: requestAmount.value.token, amount: '33' }),
       );
-    });
-  });
-
-  describe('formattedAmount', () => {
-    it('should display as a formatted token amount', async () => {
-      Object.defineProperty(requestManagerService, 'getRequestFee', {
-        value: vi.fn().mockResolvedValue(new UInt256('70100')),
-      });
-      const requestAmount = ref(
-        new TokenAmount(
-          generateTokenAmountData({ token: generateToken({ symbol: 'UTT', decimals: 3 }) }),
-        ),
-      ) as Ref<TokenAmount>;
-
-      const { formattedAmount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, requestAmount);
-      await flushPromises();
-
-      expect(formattedAmount.value).toEqual('70.1 UTT');
     });
   });
 
