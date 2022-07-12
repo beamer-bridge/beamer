@@ -43,8 +43,7 @@ class Agent:
         if not fill_manager.functions.allowedLPs(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted")
 
-        with open(config.token_match_file, "r") as f:
-            match_checker = TokenMatchChecker.from_file(f)
+        match_checker = config.token_match_checker
 
         self.context = Context(
             requests=Tracker(),

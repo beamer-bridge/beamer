@@ -22,6 +22,7 @@ from beamer.config import Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
 from beamer.typing import BlockNumber
+from beamer.util import TokenMatchChecker
 
 
 @dataclass(frozen=True)
@@ -139,6 +140,8 @@ def contracts(
 def config(request_manager, fill_manager, resolution_registry, token):
     root = pathlib.Path(__file__).parents[2]
     token_match_file = root / "beamer/data/tokens.example.json"
+    with open(token_match_file, "r") as f:
+        match_checker = TokenMatchChecker.from_file(f)
 
     contracts_info = dict(
         RequestManager=ContractInfo(
@@ -164,7 +167,7 @@ def config(request_manager, fill_manager, resolution_registry, token):
         l2a_rpc_url=url,
         l2b_rpc_url=url,
         deployment_info=deployment_info,
-        token_match_file=token_match_file,
+        token_match_checker=match_checker,
         account=account,
         fill_wait_time=0,
         prometheus_metrics_port=None,
