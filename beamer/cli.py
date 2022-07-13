@@ -115,13 +115,22 @@ def main(
 
     if config_file_path is not None:
         loaded_toml = toml.load(config_file_path)
+
+        if (l2a_rpc_url is None or token_match_file is None) and "source-chain" not in loaded_toml.keys():
+            raise click.UsageError(f"Missing key source-chain in config file.")
+        if (l2b_rpc_url is None or token_match_file is None) and "target-chain" not in loaded_toml.keys():
+            raise click.UsageError(f"Missing key target-chain in config file.")
+
+        l2a_chain_name = loaded_toml.get("source-chain", "")
+        l2b_chain_name = loaded_toml.get("target-chain", "")
+
         file_config = {
             "fill-wait-time": loaded_toml.get("fill-wait-time"),
             "log-level": loaded_toml.get("log-level"),
             "prometheus-port": loaded_toml.get("metrics", {}).get("prometheus-port"),
             "l1-rpc-url": loaded_toml.get("chains", {}).get("l1", {}).get("rpc-url"),
-            "l2a-rpc-url": loaded_toml.get("chains", {}).get("l2a", {}).get("rpc-url"),
-            "l2b-rpc-url": loaded_toml.get("chains", {}).get("l2b", {}).get("rpc-url"),
+            "l2a-rpc-url": loaded_toml.get("chains", {}).get(l2a_chain_name, {}).get("rpc-url"),
+            "l2b-rpc-url": loaded_toml.get("chains", {}).get(l2b_chain_name, {}).get("rpc-url"),
             "deployment-dir": loaded_toml.get("deployment-dir"),
             "account-path": loaded_toml.get("account", {}).get("path"),
             "account-password": loaded_toml.get("account", {}).get("password"),

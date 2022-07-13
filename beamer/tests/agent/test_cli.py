@@ -110,8 +110,8 @@ def test_cli_config_file(config, tmp_path, contracts):
     example_config["account"]["path"] = str(keyfile)
     example_config["account"]["password"] = "test"
     example_config["chains"]["l1"]["rpc-url"] = config.l1_rpc_url
-    example_config["chains"]["l2a"]["rpc-url"] = config.l2a_rpc_url
-    example_config["chains"]["l2b"]["rpc-url"] = config.l2b_rpc_url
+    example_config["chains"]["metis"]["rpc-url"] = config.l2a_rpc_url
+    example_config["chains"]["boba-rinkeby"]["rpc-url"] = config.l2b_rpc_url
     example_config["deployment-dir"] = str(deployment_dir)
     config_file.write_text(toml.dumps(example_config))
 
