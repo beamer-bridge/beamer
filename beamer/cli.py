@@ -1,8 +1,9 @@
+import json
 import signal
 import sys
 from importlib.metadata import version
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import click
 import structlog
@@ -107,67 +108,72 @@ def main(
     password: Optional[str]
 ) -> None:
 
-    default_fill_wait_time = 120
-    default_log_level = "info"
-
-    raw_config = dict()
+    raw_config: dict[str, Any] = dict()
+    raw_config["fill-wait-time"] = 120
+    raw_config["log-level"] = "info"
+    raw_config["prometheus-port"] = None
 
     if config_file_path is not None:
-        raw_config = toml.load(config_file_path)
+        loaded_toml = toml.load(config_file_path)
+        file_config = {
+            "fill-wait-time": loaded_toml.get("fill-wait-time"),
+            "log-level": loaded_toml.get("log-level"),
+            "prometheus-port": loaded_toml.get("metrics", {}).get("prometheus-port"),
+            "l1-rpc-url": loaded_toml.get("chains", {}).get("l1", {}).get("rpc-url"),
+            "l2a-rpc-url": loaded_toml.get("chains", {}).get("l2a", {}).get("rpc-url"),
+            "l2b-rpc-url": loaded_toml.get("chains", {}).get("l2b", {}).get("rpc-url"),
+            "deployment-dir": loaded_toml.get("deployment-dir"),
+            "account-path": loaded_toml.get("account", {}).get("path"),
+            "account-password": loaded_toml.get("account", {}).get("password"),
+            "tokens": loaded_toml.get("tokens", {}).values()
+        }
+        raw_config.update({k: v for k,v in file_config.items() if v is not None})
 
-    log_level = log_level or raw_config.get("log-level") or default_log_level
-    beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
+    argument_config = {
+        "fill-wait-time": fill_wait_time,
+        "log-level": log_level,
+        "prometheus-port": prometheus_metrics_port,
+        "l1-rpc-url": l1_rpc_url,
+        "l2a-rpc-url": l2a_rpc_url,
+        "l2b-rpc-url": l2b_rpc_url,
+        "deployment-dir": deployment_dir,
+        "account-path": keystore_file,
+        "account-password": password,
+    }
+    if token_match_file is not None:
+        with open(token_match_file, "r") as f:
+            argument_config["tokens"] = json.load(f)
+    raw_config.update({k: v for k,v in argument_config.items() if v is not None})
 
+    beamer.util.setup_logging(log_level=raw_config["log-level"].upper(), log_json=False)
     log.info("Running beamer bridge agent", version=version("beamer"))
 
-    fill_wait_time = fill_wait_time or raw_config.get("fill-wait-time") or default_fill_wait_time
-
-    l1_rpc_url=l1_rpc_url or raw_config.get("chains", {}).get("l1", {}).get("rpc-url")
-    l2a_rpc_url=l2a_rpc_url or raw_config.get("chains", {}).get("l2a", {}).get("rpc-url")
-    l2b_rpc_url=l2b_rpc_url or raw_config.get("chains", {}).get("l2b", {}).get("rpc-url")
-    deployment_dir = deployment_dir or raw_config.get("deployment-dir")
-    account_path = keystore_file or raw_config.get("account", {}).get("path")
-    password = password or raw_config.get("account", {}).get("password")
-
-    if l1_rpc_url is None:
-        raise click.UsageError("Provide l1 rpc url either via config file or argument.")
-    if l2a_rpc_url is None:
-        raise click.UsageError("Provide l2a rpc url either via config file or argument.")
-    if l2b_rpc_url is None:
-        raise click.UsageError("Provide l2b rpc url either via config file or argument.")
-    if deployment_dir is None:
-        raise click.UsageError("Provide deployment directory either via config file or argument.")
-    if account_path is None:
-        raise click.UsageError("Provide account keystore path either via config file or argument.")
-
-    if password is None:
-        password = click.prompt(
+    if raw_config["account-password"] is None:
+        raw_config["account-password"] = click.prompt(
             "The password needed to unlock the account",
             type=str,
             hide_input=True,
             confirmation_prompt=True,
         )
 
-    account = account_from_keyfile(account_path, password)
+    for key in argument_config.keys():
+        if key not in raw_config.keys():
+            raise click.UsageError(f"Provide {key} either via config file or argument.")
+
+    account = account_from_keyfile(raw_config["account-path"], raw_config["account-password"])
     log.info(f"Using account {account.address}")
 
-    deployment_info = beamer.contracts.load_deployment_info(Path(deployment_dir))
-
-    if token_match_file is not None:
-        with open(token_match_file, "r") as f:
-            match_checker = TokenMatchChecker.from_file(f)
-    else:
-        match_checker = TokenMatchChecker(raw_config.get("tokens").values())
+    deployment_info = beamer.contracts.load_deployment_info(Path(raw_config["deployment-dir"]))
 
     config = Config(
         account=account,
         deployment_info=deployment_info,
-        l1_rpc_url=l1_rpc_url or raw_config.get("chains").get("l1").get("rpc-url"),
-        l2a_rpc_url=l2a_rpc_url or raw_config.get("chains").get("l2a").get("rpc-url"),
-        l2b_rpc_url=l2b_rpc_url or raw_config.get("chains").get("l2b").get("rpc-url"),
-        token_match_checker=match_checker,
-        fill_wait_time=fill_wait_time,
-        prometheus_metrics_port=prometheus_metrics_port,
+        l1_rpc_url=raw_config["l1-rpc-url"],
+        l2a_rpc_url=raw_config["l2a-rpc-url"],
+        l2b_rpc_url=raw_config["l2b-rpc-url"],
+        token_match_checker=TokenMatchChecker(raw_config["tokens"]),
+        fill_wait_time=raw_config["fill-wait-time"],
+        prometheus_metrics_port=raw_config.get("prometheus-port"),
     )
 
     if not get_relayer_executable().exists():

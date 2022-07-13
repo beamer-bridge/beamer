@@ -88,6 +88,7 @@ def test_cli(config, tmp_path, contracts):
             str(root / "beamer/data/tokens.example.json"),
         ],
     )
+    print(result.output)
     assert result.exit_code == 0
 
 
