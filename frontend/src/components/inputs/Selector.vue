@@ -18,7 +18,7 @@
         name="searchFilter"
         placeholder="Search"
         :focus-on-mount="true"
-        class="flex-[0_0_4.5rem]"
+        class="flex-[0_0_4.5rem] !text-left"
         data-test="search-field"
       />
       <div
