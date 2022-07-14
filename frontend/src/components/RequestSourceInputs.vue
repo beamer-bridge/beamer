@@ -10,7 +10,7 @@
           show-outside-of-closest-reference-element
         >
           <button
-            class="text-orange text-md font-semibold mr-3 rounded-md hover:bg-teal-light/30 px-5 py-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+            class="text-orange text-base font-semibold mr-3 rounded-md hover:bg-teal-light/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
             :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
@@ -24,27 +24,28 @@
       <Selector
         v-model="selectedSourceChain"
         name="sourceChain"
+        label="From"
         :options="chainOptions"
         placeholder="Source Rollup"
         required
-        @input="switchChain"
       />
     </div>
     <div class="flex flex-col justify-between">
       <div class="flex flex-row gap-5">
-        <div class="flex-[3_3_0%] flex flex-col items-end">
+        <div class="flex-[9_9_0%] flex flex-col items-end">
           <TextInput v-model="selectedAmount" name="amount" placeholder="0.00" required />
           <div>
-            <div v-if="showTokenBalance" class="text-md py-2 mr-5">
+            <div v-if="showTokenBalance" class="text-base mr-5 mt-1">
               {{ formattedTokenBalance }} {{ selectedToken?.label }} available
             </div>
           </div>
         </div>
-        <div class="flex-[2_2_0%] flex flex-col">
+        <div class="flex-[7_7_0%] flex flex-col">
           <Selector
             id="token"
             v-model="selectedToken"
             name="token"
+            label="Token"
             :options="tokens"
             placeholder="Token"
             required
@@ -55,7 +56,7 @@
             show-outside-of-closest-reference-element
           >
             <button
-              class="text-orange text-md font-semibold mb-1 mr-3 rounded-md hover:bg-teal-light/30 px-5 py-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+              class="text-orange text-base font-semibold mr-3 my-1 rounded-md hover:bg-teal-light/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
               :disabled="!addTokenAvailable"
               @click="addTokenToProvider"
             >
@@ -161,6 +162,12 @@ const selectedSourceChain = computed({
 });
 
 const { chainOptions, switchChain } = useChainSelection(provider, chains, ref([]));
+
+watch(selectedSourceChain, (chainOption) => {
+  if (chainOption) {
+    switchChain(chainOption.value);
+  }
+});
 
 const selectedSourceChainIdentifier = computed(
   () => selectedSourceChain.value?.value.identifier ?? -1,

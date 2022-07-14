@@ -55,5 +55,6 @@ function getTokenSelectorOption(token: Token): SelectorOption<Token> {
   return {
     value: token,
     label: token.symbol,
+    imageUrl: token.imageUrl,
   };
 }

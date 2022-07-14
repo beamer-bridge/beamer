@@ -52,7 +52,7 @@ const headers = computed(() =>
     click: () => (activeTab.value = tab),
     classes: {
       'cursor-pointer': tab.label != activeTab.value.label,
-      'bg-teal-dark/40': tab.label != activeTab.value.label,
+      'bg-teal-very-dark/40': tab.label != activeTab.value.label,
       'text-teal-light': tab.label == activeTab.value.label,
       'text-teal-light/40': tab.label != activeTab.value.label,
     },

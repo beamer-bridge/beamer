@@ -1,24 +1,27 @@
 <template>
   <div class="flex flex-col gap-7">
-    <Selector
-      v-model="selectedTargetChain"
-      label="To"
-      name="targetChain"
-      :options="chainOptions"
-      placeholder="Target Rollup"
-      required
-    />
+    <div class="flex flex-col gap-5">
+      <span class="text-3xl">To</span>
+      <Selector
+        v-model="selectedTargetChain"
+        label="To"
+        name="targetChain"
+        :options="chainOptions"
+        placeholder="Target Rollup"
+        required
+      />
+    </div>
     <div class="flex flex-row gap-5">
-      <div class="flex-[3_3_0%] flex flex-col items-end">
+      <div class="flex-[9_9_0%] flex flex-col items-end">
         <TextInput :model-value="props.amount" placeholder="0.00" disabled />
       </div>
-      <div class="flex-[2_2_0%]">
+      <div class="flex-[7_7_0%]">
         <Selector
           id="token"
           :model-value="props.token"
           :options="[]"
           placeholder="Token"
-          disabled
+          :disabled="true"
         />
       </div>
     </div>
@@ -71,7 +74,6 @@ const ignoreChains = computed(() =>
   process.env.NODE_ENV === 'development' || !props.sourceChain ? [] : [props.sourceChain.value],
 );
 const { chainOptions } = useChainSelection(provider, chains, ignoreChains);
-watch(ignoreChains, console.log);
 
 const inputValues: WritableComputedRef<RequestTarget> = computed({
   get: () => ({

@@ -1,6 +1,4 @@
 <template>
-  <!-- <div class="flex justify-center items-center pt-12 pb-12">
-  </div> -->
   <img class="w-[30rem] absolute top-12 left-12" src="@/assets/images/logo.svg" alt="logo" />
   <router-view v-if="configurationLoaded" class="flex-auto z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
@@ -43,7 +41,11 @@ useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: theme('colors.light');
-  background: linear-gradient(180deg, theme('colors.teal-dark') 0%, theme('colors.teal') 100%);
+  background: linear-gradient(
+    180deg,
+    theme('colors.teal-very-dark') 0%,
+    theme('colors.teal') 100%
+  );
   width: 100%;
   min-height: 100vh;
   display: flex;

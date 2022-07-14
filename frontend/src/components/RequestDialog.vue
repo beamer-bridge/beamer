@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-transparent flex flex-col justify-between h-full">
+  <div class="relative bg-transparent flex flex-col justify-between h-full">
     <RequestSourceInputs v-model="requestSource" class="rounded-br-lg bg-teal px-16 py-10" />
     <div class="relative">
       <div class="absolute -top-18 flex flex-row w-full justify-center">
@@ -149,4 +149,11 @@ watch(chainId, (_, oldChainId) => {
     location.reload();
   }
 });
+</script>
+
+<script lang="ts">
+export default {
+  // Necessary because the fallthrough attributes from Tabs should not be used in this component
+  inheritAttrs: false,
+};
 </script>

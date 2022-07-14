@@ -9,12 +9,14 @@ export type Chain = {
   requestManagerAddress: EthereumAddress;
   fillManagerAddress: EthereumAddress;
   explorerTransactionUrl: string; // TODO: restrict more
+  imageUrl?: string; // TODO: restrict more
 };
 
 export type Token = {
   address: EthereumAddress;
   symbol: string;
   decimals: number;
+  imageUrl?: string; // TODO: restrict more
 };
 
 export const ETH: Token = {

@@ -23,15 +23,15 @@ export function useChainSelection(
     );
   });
 
-  const switchChain = async (chain: Ref<Chain>) => {
-    if (provider.value && chain.value.identifier !== provider.value.chainId.value) {
+  const switchChain = async (chain: Chain) => {
+    if (provider.value && chain.identifier !== provider.value.chainId.value) {
       try {
-        const isSuccessfulSwitch = await provider.value.switchChain(chain.value.identifier);
+        const isSuccessfulSwitch = await provider.value.switchChain(chain.identifier);
         if (isSuccessfulSwitch === null) {
           await provider.value.addChain({
-            chainId: chain.value.identifier,
-            name: chain.value.name,
-            rpcUrl: chain.value.rpcUrl,
+            chainId: chain.identifier,
+            name: chain.name,
+            rpcUrl: chain.rpcUrl,
           });
         }
       } catch (error) {
@@ -55,8 +55,9 @@ export function getChainSelectorOption(
       requestManagerAddress: chains[chainId].requestManagerAddress,
       fillManagerAddress: chains[chainId].fillManagerAddress,
       explorerTransactionUrl: chains[chainId].explorerTransactionUrl,
+      imageUrl: chains[chainId].imageUrl,
     };
-    return { value: chain, label: chain.name };
+    return { value: chain, label: chain.name, imageUrl: chain.imageUrl };
   }
   return null;
 }

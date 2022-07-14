@@ -1,130 +1,102 @@
 <template>
-  <div class="flex flex-col gap-5 items-stretch">
-    <span v-if="label" class="text-3xl">{{ label }}</span>
-    <v-select
-      class="selector"
-      :clearable="false"
-      :options="options"
-      v-bind="$attrs"
-      @update:model-value="$attrs.onInput"
-    >
-      <template
-        v-for="slotName in ['option', 'selected-option']"
-        :key="slotName"
-        #[slotName]="option: SelectorOption<unknown>"
-      >
-        <img v-if="option.imageUrl" class="vs__option-image" :src="option.imageUrl" />
-        <span>{{ option.label }}</span>
-      </template>
+  <div :class="selectorClasses" v-bind="$attrs" data-test="open-trigger" @click="openSelector">
+    <span v-if="modelValue === null" :class="placeholderClasses">{{ placeholder }}</span>
+    <template v-else>
+      <img v-if="modelValue.imageUrl" class="h-12" :src="modelValue.imageUrl" />
+      <div class="flex-1"></div>
+      <span>{{ modelValue.label }}</span>
+    </template>
 
-      <template #open-indicator="{ attributes }">
-        <svg v-bind="attributes" class="w-4 h-4" viewBox="0 0 21 9">
-          <path d="M20.9521 0H0.452148L10.4521 8.5L20.9521 0Z" />
-        </svg>
-      </template>
-    </v-select>
+    <img src="@/assets/images/caret-down.svg" class="h-[1.5rem] w-[1.5rem] ml-5" />
   </div>
+
+  <Transition>
+    <div v-if="opened" :class="selectionOverlayClasses" data-test="option-list">
+      <span class="text-3xl">{{ label }}</span>
+      <TextInput
+        v-model="searchFilter"
+        name="searchFilter"
+        placeholder="Search"
+        :focus-on-mount="true"
+        class="flex-[0_0_4.5rem]"
+        data-test="search-field"
+      />
+      <div
+        class="flex flex-col gap-5 w-full h-full overflow-y-scroll overflow-x-hidden no-scrollbar"
+      >
+        <div
+          v-for="option in filteredOptions"
+          :key="option.label"
+          :class="optionClasses"
+          data-test="option"
+          @click="selectOption(option)"
+        >
+          <img v-if="option.imageUrl" class="h-12" :src="option.imageUrl" />
+          <span>{{ option.label }}</span>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
-import vSelect from 'vue-select';
+import { computed, ref } from 'vue';
 
+import TextInput from '@/components/inputs/TextInput.vue';
 import type { SelectorOption } from '@/types/form';
 
 interface Props {
+  modelValue: SelectorOption<unknown> | null;
   readonly options: SelectorOption<unknown>[];
+  readonly placeholder: string;
+  readonly disabled?: boolean;
   readonly label?: string;
 }
 
-defineProps<Props>();
-</script>
+interface Emits {
+  (e: 'update:modelValue', value: SelectorOption<unknown>): void;
+}
 
-<script lang="ts">
-export default {
-  // Necessary because the fallthrough attributes should not be attached to the root element of this component, but the inner v-select
-  inheritAttrs: false,
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
+const opened = ref(false);
+const openSelector = () => {
+  if (!props.disabled) {
+    opened.value = true;
+  }
 };
+const closeSelector = () => (opened.value = false);
+
+const searchFilter = ref('');
+const filteredOptions = computed(() =>
+  props.options.filter((option) =>
+    option.label.toLowerCase().includes(searchFilter.value.toLowerCase()),
+  ),
+);
+
+const selectOption = (option: SelectorOption<unknown>) => {
+  emits('update:modelValue', option);
+  closeSelector();
+};
+
+const selectorConditionalClasses = computed(() =>
+  props.disabled
+    ? 'text-teal-light bg-transparent border-2 border-teal-light cursor-default'
+    : 'text-teal bg-teal-light cursor-text',
+);
+const selectorClasses = computed(
+  () => `flex flex-row items-center justify-end 
+  h-18 w-full px-8 rounded-xl shadow-inner 
+  text-2xl text-right ${selectorConditionalClasses.value}`,
+);
+const placeholderClasses = computed(() => `opacity-25 ${props.disabled ? '' : ' text-black'}`);
+const selectionOverlayClasses = `absolute top-0 bottom-0 right-0 left-0
+  bg-teal z-20 rounded-b-lg px-16 py-10 
+  flex flex-col gap-5 
+`;
+const optionClasses = `flex flex-row items-center gap-8 cursor-pointer 
+  flex-[0_0_4.5rem] w-full px-8 rounded-xl border border-teal-light text-mint text-2xl
+  hover:border-teal-dark hover:bg-teal-dark
+`;
 </script>
-
-<style lang="css">
-.selector .vs__dropdown-toggle {
-  @apply h-18 p-0 rounded-xl border-0 bg-teal-light shadow-inner transition-all;
-}
-
-.selector.vs--open .vs__dropdown-toggle {
-  @apply rounded-t-xl rounded-b-none;
-}
-
-.selector .vs__dropdown-menu {
-  @apply p-0 rounded-b-xl border-0 bg-teal-light shadow-inner-bottom min-w-fit;
-}
-
-.selector .vs__dropdown-option,
-.selector .vs__selected,
-.selector.vs--open .vs__search {
-  @apply h-18 w-full m-0 pl-8 py-3 border-0 text-2xl text-teal flex flex-row gap-2 items-center overflow-hidden text-left;
-}
-
-.selector .vs__search {
-  @apply mt-0 pl-8 border-0 text-2xl text-teal;
-}
-
-.selector.vs--disabled .vs__search {
-  background-color: inherit;
-}
-
-.selector .vs__dropdown-option {
-  @apply px-8;
-}
-
-.selector .vs__dropdown-option--highlight {
-  @apply bg-teal-very-light;
-}
-
-.selector .vs__selected-options {
-  @apply p-0 m-0 flex-nowrap;
-}
-
-.selector .vs__option-image {
-  @apply h-full;
-}
-
-.selector .vs__search::placeholder {
-  @apply opacity-25 text-black text-left pl-8;
-}
-
-.selector .vs__no-options {
-  @apply h-18 m-0 px-1 py-3 border-0 text-sm text-teal overflow-hidden;
-}
-
-.selector .vs__actions {
-  @apply py-0 pr-5 pl-[6px] pt-1;
-}
-
-.selector .vs__open-indicator {
-  @apply fill-teal;
-}
-
-.selector.vs--disabled .vs__open-indicator {
-  background-color: inherit;
-}
-
-.selector .vs__fade-enter-active,
-.selector .vs__fade-leave-active {
-  @apply transition-all;
-}
-
-.selector .vs__fade-enter-from,
-.selector .vs__fade-leave-to {
-  @apply rounded-xl opacity-0;
-}
-
-.selector.vs--disabled .vs__search::placeholder,
-.selector.vs--disabled .vs__selected {
-  @apply text-teal-light;
-}
-
-.selector.vs--disabled .vs__dropdown-toggle {
-  @apply bg-transparent border border-teal-light;
-}
-</style>
