@@ -8,6 +8,18 @@ html {
 }
 
 /* Global transitions */
+/* Default transitions */
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+
+/* Expand transitions */
 .expand-enter-active,
 .expand-leave-active {
     @apply transition-all;
