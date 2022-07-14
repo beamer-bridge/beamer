@@ -4,6 +4,22 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "_l3Resolver",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_proofSubmitter",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "_l1Resolver",
           "type": "address"
         },
