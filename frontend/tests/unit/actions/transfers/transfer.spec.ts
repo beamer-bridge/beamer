@@ -148,8 +148,9 @@ describe('transfer', () => {
       return expect(transfer.ensureTokenAllowance()).rejects.toThrow('Missing wallet connection!');
     });
 
-    it('calls the token utility function for the source token', async () => {
+    it('makes a call to set the allowance for the source token with minimum value of source amount plus fees ', async () => {
       const data = generateTransferData({
+        fees: generateTokenAmountData({ amount: '2' }),
         sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
         sourceAmount: generateTokenAmountData({
           token: generateToken({ address: '0xSourceToken' }),
@@ -166,7 +167,7 @@ describe('transfer', () => {
         signer,
         '0xSourceToken',
         '0xRequestManager',
-        new UInt256('1'),
+        new UInt256('3'),
       );
     });
   });
