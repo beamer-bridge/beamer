@@ -226,11 +226,13 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Missing wallet connection!');
     }
 
+    const totalAmount = this.sourceAmount.uint256.add(this.fees.uint256);
+
     await ensureTokenAllowance(
       signer,
       this.sourceAmount.token.address,
       this.sourceChain.requestManagerAddress,
-      this.sourceAmount.uint256,
+      totalAmount,
     );
   }
 
