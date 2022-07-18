@@ -1,9 +1,11 @@
+import functools
 import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, TextIO, Union, cast
+from typing import Any, List, Optional, TextIO, Type, Union, cast
 
+import lru
 import requests
 import structlog
 from eth_account import Account
@@ -13,8 +15,13 @@ from web3 import HTTPProvider, Web3
 from web3.contract import ContractConstructor, ContractFunction
 from web3.exceptions import ContractLogicError
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import construct_sign_and_send_raw_middleware, geth_poa_middleware
-from web3.types import GasPriceStrategy, TxParams
+from web3.middleware import (
+    construct_sign_and_send_raw_middleware,
+    construct_simple_cache_middleware,
+    geth_poa_middleware,
+)
+from web3.middleware.cache import SIMPLE_CACHE_RPC_WHITELIST
+from web3.types import GasPriceStrategy, RPCEndpoint, TxParams
 
 from beamer.typing import URL, ChainId, ChecksumAddress
 
@@ -92,6 +99,16 @@ def make_web3(
     # Add POA middleware for geth POA chains, no/op for other chains
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
+
+    # Cache data of 1000 least recently used blocks.
+    rpc_whitelist = set(SIMPLE_CACHE_RPC_WHITELIST)
+    rpc_whitelist.add(RPCEndpoint("eth_getBlockByNumber"))
+    cache_class = cast(Type[dict[Any, Any]], functools.partial(lru.LRU, 1000))
+    middleware = construct_simple_cache_middleware(
+        cache_class=cache_class, rpc_whitelist=rpc_whitelist
+    )
+    w3.middleware_onion.add(middleware)
+
     w3.eth.default_account = account.address
     return w3
 
