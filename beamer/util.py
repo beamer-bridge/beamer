@@ -1,7 +1,9 @@
 import functools
 import json
 import logging
+import random
 import sys
+import time
 from pathlib import Path
 from typing import Any, List, Optional, TextIO, Type, Union, cast
 
@@ -25,6 +27,8 @@ from web3.types import GasPriceStrategy, RPCEndpoint, TxParams
 
 from beamer.typing import URL, ChainId, ChecksumAddress
 
+log = structlog.get_logger(__name__)
+
 
 class TransactionFailed(Exception):
     def __repr__(self) -> str:
@@ -41,10 +45,23 @@ def transact(
     func: Union[ContractConstructor, ContractFunction],
     timeout: float = 120,
     poll_latency: float = 0.1,
+    attempts: int = 5,
     **kwargs: Any,
 ) -> Any:
     try:
-        txn_hash = func.transact(cast(Optional[TxParams], kwargs))
+        while attempts > 0:
+            try:
+                txn_hash = func.transact(cast(Optional[TxParams], kwargs))
+            except ValueError as exc:
+                attempts -= 1
+                if attempts > 0:
+                    log.error("transact failed, retrying", exc=exc)
+                    period = random.randint(5, 30) / 10.0
+                    time.sleep(period)
+                else:
+                    log.error("transact failed, giving up", exc=exc)
+            else:
+                break
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
