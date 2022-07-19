@@ -60,8 +60,6 @@ HandlerResult = tuple[bool, Optional[list[Event]]]
 
 
 def process_event(event: Event, context: Context) -> HandlerResult:
-    log.debug("Processing event", _event=event)
-
     if isinstance(event, LatestBlockUpdatedEvent):
         return _handle_latest_block_updated(event, context)
 
@@ -239,7 +237,6 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         if event.filler == context.address:
             data.requests_filled_by_agent.inc()
 
-    log.info("Request filled", request=request)
     return True, None
 
 
@@ -253,7 +250,6 @@ def _handle_deposit_withdrawn(event: DepositWithdrawn, context: Context) -> Hand
     except TransitionNotAllowed:
         return False, None
 
-    log.info("Deposit withdrawn", request=request)
     return True, None
 
 
@@ -312,7 +308,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
             )
         )
 
-    log.info("Request claimed", request=request, claim_id=event.claim_id)
+    log.debug("Request claimed", request=request, claim_id=event.claim_id)
     return True, events
 
 
