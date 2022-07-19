@@ -220,12 +220,8 @@ class EventProcessor:
 
 
 def process_requests(context: Context) -> None:
-    log.debug("Processing requests", num_requests=len(context.requests))
-
     to_remove = []
     for request in context.requests:
-        log.debug("Processing request", request=request)
-
         if request.is_pending:
             fill_request(request, context)
 
@@ -243,12 +239,8 @@ def process_requests(context: Context) -> None:
 
 
 def process_claims(context: Context) -> None:
-    log.debug("Processing claims", num_claims=len(context.claims))
-
     to_remove = []
     for claim in context.claims:
-        log.debug("Processing claim", claim=claim)
-
         request = context.requests.get(claim.request_id)
         # As per definition an invalid or expired request cannot be claimed
         # This gives us a chronological order. The agent should never garbage collect
@@ -305,7 +297,7 @@ def fill_request(request: Request, context: Context) -> None:
     address = w3.eth.default_account
     balance = token.functions.balanceOf(address).call()
     if balance < request.amount:
-        log.debug("Unable to fill request", balance=balance, request_amount=request.amount)
+        log.info("Unable to fill request", balance=balance, request_amount=request.amount)
         return
 
     func = token.functions.approve(context.fill_manager.address, request.amount)
@@ -329,7 +321,7 @@ def fill_request(request: Request, context: Context) -> None:
         return
 
     request.try_to_fill()
-    log.debug(
+    log.info(
         "Filled request",
         request=request,
         txn_hash=receipt.transactionHash.hex(),
@@ -363,7 +355,7 @@ def claim_request(request: Request, context: Context) -> None:
         return
 
     request.try_to_claim()
-    log.debug(
+    log.info(
         "Claimed request",
         request=request,
         txn_hash=receipt.transactionHash.hex(),
@@ -420,7 +412,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
 
     claim.transaction_pending = True
 
-    log.debug(
+    log.info(
         "Challenged claim",
         claim=claim,
         txn_hash=receipt.transactionHash.hex(),
@@ -498,7 +490,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
         return
 
     claim.transaction_pending = True
-    log.debug("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
+    log.info("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
@@ -511,4 +503,4 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         log.error("Calling invalidateFill failed", claim=claim, cause=exc.cause())
         return
 
-    log.debug("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())
+    log.info("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())
