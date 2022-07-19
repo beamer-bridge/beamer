@@ -33,6 +33,12 @@ class Event:
 class LatestBlockUpdatedEvent(Event):
     block_data: BlockData
 
+    def __repr__(self) -> str:
+        chain_id = self.chain_id
+        number = self.block_data["number"]
+        hash_ = self.block_data["hash"].hex()
+        return f"<LatestBlockUpdatedEvent chain_id={chain_id} block_number={number} hash={hash_}>"
+
 
 @dataclass(frozen=True)
 class InitiateL1ResolutionEvent(Event):
