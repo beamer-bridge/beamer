@@ -1,5 +1,6 @@
 from typing import Optional
 
+import structlog
 from eth_abi.packed import encode_abi_packed
 from eth_typing import ChecksumAddress
 from eth_utils import keccak, to_canonical_address
@@ -23,6 +24,7 @@ class Request(StateMachine):
         valid_until: int,
     ) -> None:
         super().__init__()
+        self._log = structlog.get_logger(type(self).__name__)
         self.id = request_id
         self.source_chain_id = source_chain_id
         self.target_chain_id = target_chain_id
@@ -56,6 +58,9 @@ class Request(StateMachine):
         | ignored.to(withdrawn)
     )
     ignore = pending.to(ignored) | filled.to(ignored)
+
+    def on_enter_state(self, _state: State) -> None:
+        self._log.debug("Request changed state", request=self)
 
     def on_fill(
         self,
