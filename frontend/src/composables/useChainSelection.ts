@@ -27,7 +27,7 @@ export function useChainSelection(
     if (provider.value && chain.identifier !== provider.value.chainId.value) {
       try {
         const isSuccessfulSwitch = await provider.value.switchChain(chain.identifier);
-        if (isSuccessfulSwitch === null) {
+        if (isSuccessfulSwitch === false) {
           await provider.value.addChain({
             chainId: chain.identifier,
             name: chain.name,

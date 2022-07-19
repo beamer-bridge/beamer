@@ -9,7 +9,9 @@ export interface IEthereumProvider {
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   connectContract(contract: Contract): Contract;
-  switchChain(newChainId: number): Promise<boolean | null>;
+  // Returns false in case the provider does not have the chain.
+  // Throws if the user rejects.
+  switchChain(newChainId: number): Promise<boolean>;
   addChain(chainData: ChainData): Promise<boolean>;
   getChainId(): Promise<number>;
   addToken(tokenData: TokenData): Promise<void>;

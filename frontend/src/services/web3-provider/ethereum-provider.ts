@@ -27,7 +27,7 @@ export abstract class EthereumProvider implements IEthereumProvider {
     this.listenToEvents();
   }
 
-  abstract switchChain(newChainId: number): Promise<boolean | null>;
+  abstract switchChain(newChainId: number): Promise<boolean>;
 
   async addChain(chainData: ChainData): Promise<boolean> {
     try {
