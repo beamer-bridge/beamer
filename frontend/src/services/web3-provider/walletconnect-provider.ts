@@ -29,14 +29,14 @@ export class WalletConnectProvider extends EthereumProvider {
     super(_provider);
   }
 
-  async switchChain(newChainId: number): Promise<boolean | null> {
+  async switchChain(newChainId: number): Promise<boolean> {
     const newChainIdHex = hexValue(newChainId);
     try {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
-    } catch (switchError: unknown) {
-      if ((switchError as Error).message == 'User rejected the request.') throw switchError;
-      return null;
+    } catch (error: unknown) {
+      if ((error as Error).message.startsWith('Unrecognized chain ID')) return false;
+      throw error;
     }
   }
 }

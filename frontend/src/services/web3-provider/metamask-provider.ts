@@ -34,17 +34,18 @@ export class MetaMaskProvider extends EthereumProvider implements ISigner {
     }
   }
 
-  async switchChain(newChainId: number): Promise<boolean | null> {
+  async switchChain(newChainId: number): Promise<boolean> {
     const unrecognizedChainErrorCode = 4902;
     const newChainIdHex = hexValue(newChainId);
     try {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
-    } catch (switchError) {
-      if ((switchError as { code: number })?.code === unrecognizedChainErrorCode) {
-        return null;
+    } catch (error) {
+      if ((error as { code: number })?.code === unrecognizedChainErrorCode) {
+        return false;
       }
-      throw switchError;
+      console.error(error);
+      throw error;
     }
   }
 }
