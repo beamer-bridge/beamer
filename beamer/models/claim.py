@@ -1,5 +1,6 @@
 from typing import Optional
 
+import structlog
 from eth_typing import ChecksumAddress as Address
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
@@ -17,6 +18,7 @@ class Claim(StateMachine):
         challenge_back_off_timestamp: int,
     ) -> None:
         super().__init__()
+        self._log = structlog.get_logger(type(self).__name__)
         self._latest_claim_made = claim_made
         self._challenger_stakes: dict[Address, int] = {}
         self.challenge_back_off_timestamp = challenge_back_off_timestamp
@@ -60,6 +62,9 @@ class Claim(StateMachine):
         | withdrawn.to(withdrawn)
     )
     ignore = claimer_winning.to(ignored) | ignored.to(ignored)
+
+    def on_enter_state(self, _state: State) -> None:
+        self._log.debug("Claim changed state", claim=self)
 
     @property
     def id(self) -> ClaimId:
