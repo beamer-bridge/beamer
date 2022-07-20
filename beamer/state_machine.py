@@ -221,6 +221,9 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         log.warn("Fill not matching request. Ignoring.", request=request, fill=event)
         return True, None
 
+    if request.is_withdrawn:
+        return True, None
+
     try:
         fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
         request.fill(
