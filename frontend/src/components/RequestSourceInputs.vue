@@ -147,28 +147,18 @@ const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
 
-const _selectedSourceChain = ref<SelectorOption<Chain> | null>(
-  getChainSelectorOption(String(provider.value?.chainId.value), chains.value),
-);
 const selectedSourceChain = computed({
   get() {
-    return (
-      _selectedSourceChain.value ??
-      getChainSelectorOption(String(provider.value?.chainId.value), chains.value)
-    );
+    return getChainSelectorOption(String(provider.value?.chainId.value), chains.value);
   },
-  set(chain: SelectorOption<Chain> | null) {
-    _selectedSourceChain.value = chain;
+  async set(chain: SelectorOption<Chain> | null) {
+    if (chain) {
+      await provider.value?.switchChainSafely(chain.value);
+    }
   },
 });
 
-const { chainOptions, switchChain } = useChainSelection(provider, chains, ref([]));
-
-watch(selectedSourceChain, (chainOption) => {
-  if (chainOption) {
-    switchChain(chainOption.value);
-  }
-});
+const { chainOptions } = useChainSelection(chains, ref([]));
 
 const selectedSourceChainIdentifier = computed(
   () => selectedSourceChain.value?.value.identifier ?? -1,

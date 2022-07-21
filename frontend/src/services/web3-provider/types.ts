@@ -2,6 +2,8 @@ import type { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/prov
 import type { Contract } from 'ethers';
 import type { Ref, ShallowRef } from 'vue';
 
+import type { Chain } from '@/types/data';
+
 export interface IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
   signerAddress: ShallowRef<string | undefined>;
@@ -9,10 +11,7 @@ export interface IEthereumProvider {
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   connectContract(contract: Contract): Contract;
-  // Returns false in case the provider does not have the chain.
-  // Throws if the user rejects.
-  switchChain(newChainId: number): Promise<boolean>;
-  addChain(chainData: ChainData): Promise<boolean>;
+  switchChainSafely(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
   addToken(tokenData: TokenData): Promise<void>;
 }

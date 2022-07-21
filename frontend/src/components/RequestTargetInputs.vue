@@ -43,7 +43,6 @@ import Selector from '@/components/inputs/Selector.vue';
 import TextInput from '@/components/inputs/TextInput.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { Chain, Token } from '@/types/data';
 import type { RequestTarget, SelectorOption } from '@/types/form';
 
@@ -62,9 +61,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
-const ethereumProvider = useEthereumProvider();
 
-const { provider } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
 const selectedTargetChain = ref<SelectorOption<Chain> | null>(null);
@@ -73,7 +70,7 @@ const selectedTargetAddress = ref('');
 const ignoreChains = computed(() =>
   process.env.NODE_ENV === 'development' || !props.sourceChain ? [] : [props.sourceChain.value],
 );
-const { chainOptions } = useChainSelection(provider, chains, ignoreChains);
+const { chainOptions } = useChainSelection(chains, ignoreChains);
 
 const inputValues: WritableComputedRef<RequestTarget> = computed({
   get: () => ({

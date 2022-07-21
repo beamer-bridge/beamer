@@ -34,7 +34,7 @@ export class MetaMaskProvider extends EthereumProvider implements ISigner {
     }
   }
 
-  async switchChain(newChainId: number): Promise<boolean> {
+  protected async switchChain(newChainId: number): Promise<boolean> {
     const unrecognizedChainErrorCode = 4902;
     const newChainIdHex = hexValue(newChainId);
     try {
@@ -44,7 +44,6 @@ export class MetaMaskProvider extends EthereumProvider implements ISigner {
       if ((error as { code: number })?.code === unrecognizedChainErrorCode) {
         return false;
       }
-      console.error(error);
       throw error;
     }
   }
