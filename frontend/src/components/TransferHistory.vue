@@ -16,27 +16,22 @@
         <span>Nothing here yet.</span>
       </div>
 
-      <LazyWrapper
-        v-for="group of groupedAndSortedTransfers"
-        :key="group.label"
-        :root-element="listElement"
-        :threshold="0.0"
-        class="mb-12"
-        data-test="transfer-group"
-      >
-        <div v-if="group.transfers.length > 0" class="text-2xl text-center">
-          {{ group.label }}
-        </div>
-
-        <LazyWrapper :threshold="0.0">
-          <TransferComponent
-            v-for="(transfer, groupTransferIndex) of group.transfers"
-            :key="transfer.requestInformation?.identifier?.asString ?? groupTransferIndex"
-            :transfer="transfer"
-            class="my-3"
-          />
+      <template v-for="group of groupedAndSortedTransfers" :key="group.label">
+        <LazyWrapper :root-element="listElement" :threshold="0.0">
+          <div v-if="group.transfers.length > 0" class="text-2xl text-center">
+            {{ group.label }}
+          </div>
         </LazyWrapper>
-      </LazyWrapper>
+        <LazyWrapper
+          v-for="(transfer, groupTransferIndex) of group.transfers"
+          :key="transfer.requestInformation?.identifier?.asString ?? groupTransferIndex"
+          :threshold="0.0"
+          :root-element="listElement"
+        >
+          <TransferComponent :transfer="transfer" class="my-3" data-test="transfer" />
+        </LazyWrapper>
+        <div v-if="group.transfers.length > 0" class="h-12"></div>
+      </template>
     </div>
 
     <!-- Bottom gradient to create phase out effect for scrolling content. -->

@@ -70,9 +70,9 @@ describe('TransferHistory.vue', () => {
       }),
     });
     const wrapper = await createWrapper();
-    const transferGroups = wrapper.findAll('[data-test="transfer-group"]');
+    const transfers = wrapper.findAll('[data-test="transfer"]');
 
-    expect(transferGroups).toHaveLength(2);
+    expect(transfers).toHaveLength(2);
     expect(wrapper.text()).toContain('window one');
     expect(wrapper.text()).toContain('window two');
   });
