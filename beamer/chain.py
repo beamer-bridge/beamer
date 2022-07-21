@@ -177,6 +177,7 @@ class EventProcessor:
         iteration = 0
         created_events: list[Event] = []
         while True:
+            t1 = time.time()
             with self._lock:
                 events = self._events[:]
 
@@ -200,11 +201,13 @@ class EventProcessor:
                 del self._events[: len(events)]
                 self._events.extend(unprocessed)
 
+            t2 = time.time()
             self._log.debug(
                 "Finished iteration",
                 iteration=iteration,
                 any_state_changed=any_state_changed,
                 num_events=len(self._events),
+                duration=round((t2 - t1) * 1e3, 3),
             )
             iteration += 1
             if not any_state_changed:
