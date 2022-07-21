@@ -5,6 +5,7 @@
         <span class="text-3xl">From</span>
 
         <Tooltip
+          v-if="faucetEnabled"
           class="self-end -mr-3"
           hint="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your connected wallet"
           show-outside-of-closest-reference-element
@@ -193,6 +194,7 @@ const { available: showTokenBalance, formattedBalance: formattedTokenBalance } =
 );
 
 const {
+  enabled: faucetEnabled,
   available: faucetAvailable,
   active: faucetRequestActive,
   run: runFaucetRequest,

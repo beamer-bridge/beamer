@@ -9,17 +9,15 @@ export function useFaucet(
   signer: Ref<JsonRpcSigner | undefined>,
   chainId: Ref<number | undefined>,
 ) {
-  const faucetEnabled = computed(() => import.meta.env.VITE_FAUCET_ENABLED === 'true');
+  const enabled = computed(() => import.meta.env.VITE_FAUCET_ENABLED === 'true');
   const faucetUsedForChain: Record<string, boolean> = reactive({});
   const faucetUsed = computed(() =>
     chainId.value ? faucetUsedForChain[chainId.value as unknown as number] : false,
   );
-  const available = computed(
-    () => faucetEnabled.value && !faucetUsed.value && signer.value && chainId.value,
-  );
+  const available = computed(() => !faucetUsed.value && signer.value && chainId.value);
 
   const executeFaucetRequest = async () => {
-    if (!faucetEnabled.value) {
+    if (!enabled.value) {
       throw new Error('Faucet is not enabled!');
     }
 
@@ -37,5 +35,5 @@ export function useFaucet(
 
   const { active, error, run } = useAsynchronousTask(executeFaucetRequest);
 
-  return { available, active, error, run };
+  return { enabled, available, active, error, run };
 }
