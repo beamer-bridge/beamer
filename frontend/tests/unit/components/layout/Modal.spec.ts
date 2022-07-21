@@ -1,11 +1,16 @@
 import { mount } from '@vue/test-utils';
 
-import ImprintModal from '@/components/ImprintModal.vue';
+import Modal from '@/components/layout/Modal.vue';
 
 function createWrapper() {
-  return mount(ImprintModal, { shallow: true });
+  return mount(Modal, {
+    shallow: true,
+    props: {
+      triggerText: 'trigger',
+    },
+  });
 }
-describe('ImprintModal.vue', () => {
+describe('Modal.vue', () => {
   /*
    * Having this ugly open-and-close test is not so nice. Unfortunately because
    * the opening state variable can't be modified, this is the "only" way to

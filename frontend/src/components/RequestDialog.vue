@@ -16,13 +16,17 @@
   </div>
 
   <Teleport v-if="signer" to="#action-button-portal">
-    <ActionButton
-      v-if="transferFundsButtonVisible"
-      :disabled="!formValid"
-      @click="submitRequestTransaction"
-    >
-      Transfer Funds
-    </ActionButton>
+    <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
+      <div v-if="DISCLAIMER_REQUIRED" class="relative">
+        <div class="absolute -top-11 -left-44 w-96 m-auto flex flex-row gap-5">
+          <input v-model="disclaimerChecked" type="checkbox" :class="checkboxClasses" />
+          <span class="text-lg">I agree to the <TermsModal /></span>
+        </div>
+      </div>
+      <ActionButton class="w-full" :disabled="!formValid" @click="submitRequestTransaction">
+        Transfer Funds
+      </ActionButton>
+    </div>
   </Teleport>
 </template>
 
@@ -35,6 +39,7 @@ import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
+import TermsModal from '@/components/TermsModal.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { switchToActivities } from '@/router/navigation';
 import { getRequestFee } from '@/services/transactions/request-manager';
@@ -61,6 +66,7 @@ const EMPTY_TARGET_DATA: RequestTarget = {
   targetChain: null,
   toAddress: '',
 };
+const DISCLAIMER_REQUIRED = process.env.NODE_ENV === 'production';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
@@ -71,15 +77,25 @@ const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
 
+const disclaimerChecked = ref(false);
+
+const disclaimerValid = computed(() => disclaimerChecked.value || !DISCLAIMER_REQUIRED);
 const formValid = computed(
-  () => checkSourceValidity(requestSource.value) && checkTargetValidity(requestTarget.value),
+  () =>
+    checkSourceValidity(requestSource.value) &&
+    checkTargetValidity(requestTarget.value) &&
+    disclaimerValid.value,
 );
 
 const submitRequestTransaction = async () => {
   if (!signer.value) {
     throw new Error('No signer available!');
   }
-  if (!checkSourceValidity(requestSource.value) || !checkTargetValidity(requestTarget.value)) {
+  if (
+    !checkSourceValidity(requestSource.value) ||
+    !checkTargetValidity(requestTarget.value) ||
+    !disclaimerValid.value
+  ) {
     throw new Error('Form not valid!');
   }
 
@@ -149,6 +165,11 @@ watch(chainId, (_, oldChainId) => {
     location.reload();
   }
 });
+
+const checkboxClasses = `appearance-none h-7 w-7 bg-teal-light shadow-inner rounded-md 
+hover:opacity-90 
+checked:after:content-['\\2713'] checked:after:text-teal 
+checked:after:text-4xl checked:after:leading-7`;
 </script>
 
 <script lang="ts">
