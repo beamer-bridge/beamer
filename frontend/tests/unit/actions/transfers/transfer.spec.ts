@@ -442,7 +442,7 @@ describe('transfer', () => {
       const provider = new MockedEthereumProvider({ signer: undefined });
 
       return expect(transfer.withdraw(provider)).rejects.toThrow(
-        'Can not withdraw without connected wallet!',
+        'Cannot withdraw without connected wallet!',
       );
     });
 
@@ -452,10 +452,24 @@ describe('transfer', () => {
         sourceChain: generateChain({ identifier: 1 }),
       });
       const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      provider.switchChainSafely = vi.fn().mockResolvedValue(true);
 
       await transfer.withdraw(provider);
 
-      expect(provider.switchChain).toHaveBeenCalledOnce();
+      expect(provider.switchChainSafely).toHaveBeenCalledOnce();
+    });
+
+    it('fails when the chain switch was not successful', () => {
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
+        sourceChain: generateChain({ identifier: 1 }),
+      });
+      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      provider.switchChainSafely = vi.fn().mockResolvedValue(false);
+
+      return expect(transfer.withdraw(provider)).rejects.toThrow(
+        'Cannot withdraw without switching to the chain where the tokens are!',
+      );
     });
 
     it('uses the correct parameters to make the withdraw', async () => {

@@ -184,13 +184,16 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     if (!provider?.signer?.value) {
-      throw new Error('Can not withdraw without connected wallet!');
+      throw new Error('Cannot withdraw without connected wallet!');
     }
 
     const currentChainIdentifier = await provider.getChainId();
 
     if (currentChainIdentifier !== this.sourceChain.identifier) {
-      provider.switchChain(this.sourceChain.identifier);
+      const switched = await provider.switchChainSafely(this.sourceChain);
+      if (!switched) {
+        throw new Error('Cannot withdraw without switching to the chain where the tokens are!');
+      }
       return; // For now we must bail out here so the page can reload.
     }
 

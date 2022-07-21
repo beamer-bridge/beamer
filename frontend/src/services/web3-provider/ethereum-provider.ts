@@ -6,6 +6,8 @@ import { hexValue } from 'ethers/lib/utils';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
+import type { Chain } from '@/types/data';
+
 import type { ChainData, Eip1193Provider, IEthereumProvider, TokenData } from './types';
 
 export abstract class EthereumProvider implements IEthereumProvider {
@@ -27,9 +29,36 @@ export abstract class EthereumProvider implements IEthereumProvider {
     this.listenToEvents();
   }
 
-  abstract switchChain(newChainId: number): Promise<boolean>;
+  async switchChainSafely(newChain: Chain): Promise<boolean> {
+    if (newChain.identifier !== this.chainId.value) {
+      try {
+        const isSuccessfulSwitch = await this.switchChain(newChain.identifier);
+        if (!isSuccessfulSwitch) {
+          await this.addChain({
+            chainId: newChain.identifier,
+            name: newChain.name,
+            rpcUrl: newChain.rpcUrl,
+          });
+        }
+        // As different wallets handle the add and switch chain methods quite differently
+        // (e.g. after an add the switch is not performed automatically),
+        // this is the safest way to ensure we are on the correct chain.
+        if (newChain.identifier !== this.chainId.value) {
+          return false;
+        }
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    }
+    return true;
+  }
 
-  async addChain(chainData: ChainData): Promise<boolean> {
+  // Returns false in case the provider does not have the chain.
+  // Throws if the user rejects.
+  protected abstract switchChain(newChainId: number): Promise<boolean>;
+
+  protected async addChain(chainData: ChainData): Promise<boolean> {
     try {
       const { chainId, name, rpcUrl } = chainData;
       const chainIdHexValue = hexValue(chainId);
