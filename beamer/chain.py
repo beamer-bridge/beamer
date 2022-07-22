@@ -307,7 +307,7 @@ def fill_request(request: Request, context: Context) -> None:
     try:
         transact(func)
     except TransactionFailed as exc:
-        log.error("approve failed", request_id=request.id, cause=exc.cause())
+        log.error("approve failed", request_id=request.id, exc=exc)
         return
 
     func = context.fill_manager.functions.fillRequest(
@@ -320,7 +320,7 @@ def fill_request(request: Request, context: Context) -> None:
     try:
         receipt = transact(func)
     except TransactionFailed as exc:
-        log.error("fillRequest failed", request_id=request.id, cause=exc.cause())
+        log.error("fillRequest failed", request_id=request.id, exc=exc)
         return
 
     request.try_to_fill()
@@ -352,7 +352,7 @@ def claim_request(request: Request, context: Context) -> None:
             "claimRequest failed",
             request_id=request.id,
             fill_id=request.fill_id,
-            cause=exc.cause(),
+            exc=exc,
             stake=stake,
         )
         return
@@ -410,7 +410,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     try:
         receipt = transact(func, value=stake)
     except TransactionFailed as exc:
-        log.error("challengeClaim failed", claim=claim, cause=exc.cause(), stake=stake)
+        log.error("challengeClaim failed", claim=claim, exc=exc, stake=stake)
         return False
 
     claim.transaction_pending = True
@@ -484,12 +484,12 @@ def _withdraw(claim: Claim, context: Context) -> None:
         receipt = transact(func)
     except TransactionFailed as exc:
         # Ignore the exception when the claim has been withdrawn already
-        if "Claim already withdrawn" in exc.cause():
+        if "Claim already withdrawn" in str(exc):
             claim.transaction_pending = True
             log.warning("Claim already withdrawn", claim=claim)
             return
 
-        log.error("Withdraw failed", claim=claim, cause=exc.cause())
+        log.error("Withdraw failed", claim=claim, exc=exc)
         return
 
     claim.transaction_pending = True
@@ -503,7 +503,7 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     try:
         receipt = transact(func)
     except TransactionFailed as exc:
-        log.error("Calling invalidateFill failed", claim=claim, cause=exc.cause())
+        log.error("Calling invalidateFill failed", claim=claim, exc=exc)
         return
 
     log.info("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())
