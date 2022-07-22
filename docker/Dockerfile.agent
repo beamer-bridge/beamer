@@ -1,9 +1,12 @@
 FROM python:3.9
 
-COPY . /src
-WORKDIR /src
+COPY README.md pyproject.toml poetry.lock /src/
+COPY beamer /src/beamer
+
 RUN mkdir -p ./beamer/data/relayers
-RUN mv ./relayer/relayer-node16-*-x64 ./beamer/data/relayers/
+COPY ./relayer/relayer-node16-*-x64 ./beamer/data/relayers/
+
+WORKDIR /src
 RUN pip install poetry
 RUN poetry install --no-dev --no-interaction --no-ansi -vvv
 
