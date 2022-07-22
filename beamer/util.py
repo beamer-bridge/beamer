@@ -32,13 +32,10 @@ log = structlog.get_logger(__name__)
 
 class TransactionFailed(Exception):
     def __repr__(self) -> str:
-        return "TransactionFailed(%r)" % self.__cause__
+        return "TransactionFailed(%r)" % (self.args if self.args else self.__cause__)
 
     def __str__(self) -> str:
-        return "transaction failed: %s" % self.cause()
-
-    def cause(self) -> str:
-        return str(self.__cause__)
+        return "transaction failed: %s" % (self.args if self.args else self.__cause__)
 
 
 def transact(
