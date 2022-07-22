@@ -24,7 +24,7 @@ dist-exe:
 	shiv -c beamer-agent -o dist/beamer-agent .
 
 container-image: relayers
-	docker image build -f docker/Dockerfile.agent -t beamer-agent .
+	DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.agent -t beamer-agent .
 
 relayers:
 	yarn --cwd relayer install
