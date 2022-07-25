@@ -34,7 +34,7 @@ types-requests = "^2.28.3"
 pdbpp = "^0.10.3"
 pytest-cov = "^3.0.0"
 shiv = "^1.0.1"
-Sphinx = "^5.0.2"
+Sphinx = "^5.1.0"
 furo = "^2022.6.21"
 sphinxcontrib-mermaid = "^0.7.1"
 sphinxcontrib-soliditydomain = {git = "https://github.com/beamer-bridge/sphinxcontrib-soliditydomain.git", rev = "main"}
