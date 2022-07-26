@@ -54,6 +54,7 @@ import { switchToActivities } from '@/router/navigation';
 import { getRequestFee } from '@/services/transactions/request-manager';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useSettings } from '@/stores/settings';
 import { useTransferHistory } from '@/stores/transfer-history';
 import type { ChainWithTokens } from '@/types/config';
 import type { Token } from '@/types/data';
@@ -82,11 +83,10 @@ const ethereumProvider = useEthereumProvider();
 const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
+const { disclaimerChecked } = storeToRefs(useSettings());
 
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
-
-const disclaimerChecked = ref(false);
 
 const disclaimerValid = computed(() => disclaimerChecked.value || !DISCLAIMER_REQUIRED);
 const formValid = computed(

@@ -11,17 +11,30 @@ describe('settings store', () => {
     setActivePinia(pinia);
   });
   describe('Settings initial value', () => {
-    it('initialize settings store with undefined values', () => {
+    it('initialize settings store connectedWallet with undefined', () => {
       const settings = useSettings();
       expect(settings.$state.connectedWallet).toBeUndefined();
     });
+
+    it('initialize settings store disclaimerChecked with false', () => {
+      const settings = useSettings();
+      expect(settings.$state.disclaimerChecked).toBe(false);
+    });
   });
 
-  describe('set connected wallet', () => {
+  describe('connected wallet', () => {
     it('can set a connected wallet', () => {
       const settings = useSettings();
       settings.connectedWallet = WalletType.MetaMask;
       expect(settings.$state.connectedWallet).toBe(WalletType.MetaMask);
+    });
+  });
+
+  describe('disclaimer checked', () => {
+    it('can set the disclaimer checked', () => {
+      const settings = useSettings();
+      settings.disclaimerChecked = true;
+      expect(settings.$state.disclaimerChecked).toBe(true);
     });
   });
 });
