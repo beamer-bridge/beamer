@@ -19,7 +19,16 @@
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <div v-if="DISCLAIMER_REQUIRED" class="relative">
         <div class="absolute -top-11 -left-44 w-96 m-auto flex flex-row gap-5">
-          <input v-model="disclaimerChecked" type="checkbox" :class="checkboxClasses" />
+          <!--  
+            There seems to be a problem with tailwind and escaping the backslash in the TS variable. 
+            For this reason the content rule is added separately here in the HTML.
+          -->
+          <input
+            v-model="disclaimerChecked"
+            type="checkbox"
+            class="checked:after:content-['\2713']"
+            :class="checkboxClasses"
+          />
           <span class="text-lg">I agree to the <TermsModal /></span>
         </div>
       </div>
@@ -178,10 +187,10 @@ watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
   if (!toAddress || toAddress === prevSignerAddress)
     requestTarget.value = { ...requestTarget.value, toAddress: currSignerAddress ?? '' };
 });
+
 const checkboxClasses = `appearance-none h-7 w-7 bg-sea-green shadow-inner rounded-md 
 hover:opacity-90 
-checked:after:content-['\\2713'] checked:after:text-teal 
-checked:after:text-4xl checked:after:leading-7`;
+checked:after:text-teal checked:after:text-4xl checked:after:leading-7`;
 </script>
 
 <script lang="ts">
