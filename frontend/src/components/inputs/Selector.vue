@@ -13,7 +13,7 @@
   <Transition>
     <div v-if="opened" :class="selectionOverlayClasses" data-test="option-list">
       <span class="text-3xl">{{ label }}</span>
-      <TextInput
+      <Input
         v-model="searchFilter"
         name="searchFilter"
         placeholder="Search"
@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
-import TextInput from '@/components/inputs/TextInput.vue';
+import Input from '@/components/inputs/Input.vue';
 import type { SelectorOption } from '@/types/form';
 
 interface Props {

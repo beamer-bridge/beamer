@@ -34,7 +34,13 @@
     <div class="flex flex-col justify-between">
       <div class="flex flex-row gap-5">
         <div class="flex-[9_9_0%] flex flex-col items-end">
-          <TextInput v-model="selectedAmount" name="amount" placeholder="0.00" required />
+          <Input
+            v-model="selectedAmount"
+            name="amount"
+            type="number"
+            placeholder="0.00"
+            required
+          />
           <div>
             <div v-if="showTokenBalance" class="text-base mr-5 mt-1">
               {{ formattedTokenBalance }} {{ selectedToken?.label }} available
@@ -113,8 +119,8 @@ import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, watch } from 'vue';
 
+import Input from '@/components/inputs/Input.vue';
 import Selector from '@/components/inputs/Selector.vue';
-import TextInput from '@/components/inputs/TextInput.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';

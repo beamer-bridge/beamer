@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 
+import Input from '@/components/inputs/Input.vue';
 import Selector from '@/components/inputs/Selector.vue';
-import TextInput from '@/components/inputs/TextInput.vue';
 import type { SelectorOption } from '@/types/form';
 
 const testOptions: SelectorOption<number>[] = [];
@@ -70,7 +70,7 @@ describe('Selector.vue', () => {
 
     await trigger.trigger('click');
     const optionList = wrapper.get('[data-test="option-list"');
-    const searchField = optionList.findComponent(TextInput);
+    const searchField = optionList.findComponent(Input);
     await searchField.vm.$emit('update:modelValue', testOptions[0].label);
 
     const optionElements = wrapper.findAll('[data-test="option"]');
