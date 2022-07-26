@@ -1,8 +1,9 @@
 <template>
   <input
     ref="textElement"
+    data-test="input"
+    v-bind="{ type }"
     :value="modelValue"
-    type="text"
     :class="inputClasses"
     @input="updateValue"
   />
@@ -14,13 +15,17 @@ import { onMounted, ref } from 'vue';
 interface Props {
   modelValue: string;
   focusOnMount?: boolean;
+  type?: string;
 }
 
 interface Emits {
   (e: 'update:modelValue', value: string): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  type: 'text',
+});
+
 const emits = defineEmits<Emits>();
 
 const updateValue = (event: Event) => {
@@ -39,3 +44,17 @@ const inputClasses = `h-18 w-full px-8 rounded-xl bg-teal-light shadow-inner tex
   disabled:text-teal-light disabled:bg-transparent disabled:border-2 
   disabled:border-teal-light disabled:placeholder:text-teal-light`;
 </script>
+
+<style scoped>
+/* Removal of browsers default input controls (+/-) */
+/* Chrome, Safari, Edge, Opera */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Firefox */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+</style>
