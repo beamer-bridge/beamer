@@ -5,7 +5,7 @@
         v-for="header of headers"
         :key="header.label"
         class="flex grow items-center justify-center text-3xl"
-        :class="header.classes"
+        :class="header.label === activeTab.label ? activeHeaderClasses : inactiveHeaderClasses"
         data-test="tab-header"
         @click="header.click"
       >
@@ -50,14 +50,10 @@ const headers = computed(() =>
   props.tabs.map((tab) => ({
     label: tab.label,
     click: () => (activeTab.value = tab),
-    classes: {
-      'cursor-pointer': tab.label != activeTab.value.label,
-      'bg-teal-very-dark/40': tab.label != activeTab.value.label,
-      'text-teal-light': tab.label == activeTab.value.label,
-      'text-teal-light/40': tab.label != activeTab.value.label,
-    },
   })),
 );
+const activeHeaderClasses = 'text-sea-green';
+const inactiveHeaderClasses = 'text-sea-green/40 bg-black/40 cursor-pointer';
 
 watch(
   () => props.activeTabLabel,

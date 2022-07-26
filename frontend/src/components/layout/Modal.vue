@@ -12,12 +12,12 @@
     class="fixed top-0 left-0 w-full h-full z-10 flex justify-center items-center bg-black/40"
   >
     <div
-      class="box max-w-5xl max-h-[95vh] flex flex-col overflow-auto p-14 rounded-[1rem] text-left text-light text-base bg-dark"
+      class="box max-w-5xl max-h-[95vh] flex flex-col overflow-auto p-14 rounded-[1rem] text-left text-white text-base bg-teal"
       data-test="content-box"
     >
       <slot />
       <button
-        class="border border-white rounded-md px-4 py-2 hover:bg-teal-light place-self-end"
+        class="border border-white rounded-md px-4 py-2 hover:bg-sea-green place-self-end"
         data-test="close-button"
         @click="closeModal"
       >
@@ -58,6 +58,6 @@ function closeModal() {
 }
 
 .box::-webkit-scrollbar-thumb {
-  @apply bg-teal-light-35;
+  @apply bg-sea-green-35;
 }
 </style>

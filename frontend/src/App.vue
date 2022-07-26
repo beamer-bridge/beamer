@@ -7,7 +7,7 @@
     </div>
   </div>
   <feedback v-if="enableFeedback"></feedback>
-  <footer class="my-8 text-lg text-center text-teal-light">
+  <footer class="my-8 text-lg text-center text-sea-green">
     Powered by Beamer &bull;
     <imprint-modal />
   </footer>
@@ -40,12 +40,8 @@ useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
   font-family: 'Sora', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: theme('colors.light');
-  background: linear-gradient(
-    180deg,
-    theme('colors.teal-very-dark') 0%,
-    theme('colors.teal') 100%
-  );
+  color: theme('colors.white');
+  background: linear-gradient(180deg, theme('colors.black') 0%, theme('colors.teal') 100%);
   width: 100%;
   min-height: 100vh;
   display: flex;

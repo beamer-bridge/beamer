@@ -7,7 +7,7 @@
     <button
       v-for="walletOption of walletOptions"
       :key="walletOption.name"
-      class="w-[25rem] flex flex-col items-center my-5 py-5 bg-teal-light rounded-lg text-black gap-2"
+      class="w-[25rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
       @click="walletOption.connect"
     >
       <img class="h-20 w-20" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />

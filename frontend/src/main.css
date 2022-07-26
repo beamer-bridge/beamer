@@ -32,7 +32,7 @@ html {
 
 /* Custom styles for Floating Vue library */
 .v-popper__popper.v-popper--theme-tooltip .v-popper__inner {
-    @apply max-w-lg px-10 py-7 rounded-xl bg-teal-light shadow text-teal text-lg;
+    @apply max-w-lg px-10 py-7 rounded-xl bg-sea-green shadow text-teal text-lg;
 }
 
 .v-popper__popper.v-popper--theme-tooltip .v-popper__arrow-container {

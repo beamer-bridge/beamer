@@ -175,10 +175,9 @@ watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
   if (!toAddress || toAddress === prevSignerAddress)
     requestTarget.value = { ...requestTarget.value, toAddress: currSignerAddress ?? '' };
 });
-
-const checkboxClasses = `appearance-none h-7 w-7 bg-teal-light shadow-inner rounded-md
-hover:opacity-90
-checked:after:content-['\\2713'] checked:after:text-teal
+const checkboxClasses = `appearance-none h-7 w-7 bg-sea-green shadow-inner rounded-md 
+hover:opacity-90 
+checked:after:content-['\\2713'] checked:after:text-teal 
 checked:after:text-4xl checked:after:leading-7`;
 </script>
 

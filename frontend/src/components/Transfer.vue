@@ -1,6 +1,6 @@
 <template>
   <Expandable
-    class="bg-teal-light rounded-[2rem] p-6 mb-5 gap-5 text-black"
+    class="bg-sea-green rounded-[2rem] p-6 mb-5 gap-5 text-black"
     :is-expanded="isExpanded"
   >
     <template #header>
@@ -81,7 +81,7 @@ const progressSteps = computed(() =>
 
 const statusBackgroundColorClass = computed(() => {
   const { active, completed, failed } = props.transfer;
-  return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-green-lime' : 'bg-grey';
+  return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-lime' : 'bg-grey';
 });
 
 const { provider } = useEthereumProvider();

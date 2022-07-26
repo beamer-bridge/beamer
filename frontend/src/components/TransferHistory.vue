@@ -11,7 +11,7 @@
     >
       <div
         v-if="transfers.length === 0"
-        class="text-2xl w-full h-full flex justify-center items-center text-teal-light/40"
+        class="text-2xl w-full h-full flex justify-center items-center text-sea-green/40"
       >
         <span>Nothing here yet.</span>
       </div>
@@ -41,7 +41,7 @@
   <SafeTeleport to="#action-button-portal">
     <ActionButton
       v-if="newTransferButtonVisible"
-      class="bg-green-lime"
+      class="bg-lime"
       data-test="switch-to-request-button"
       @click="switchToRequestDialog"
     >

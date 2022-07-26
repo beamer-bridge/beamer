@@ -39,10 +39,10 @@ onMounted(() => {
   }
 });
 
-const inputClasses = `h-18 w-full px-8 rounded-xl bg-teal-light shadow-inner text-teal 
+const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner text-teal 
   text-2xl text-right outline-none placeholder:opacity-25 placeholder:text-black 
-  disabled:text-teal-light disabled:bg-transparent disabled:border-2 
-  disabled:border-teal-light disabled:placeholder:text-teal-light`;
+  disabled:text-sea-green disabled:bg-transparent disabled:border-2 
+  disabled:border-sea-green disabled:placeholder:text-sea-green`;
 </script>
 
 <style scoped>
