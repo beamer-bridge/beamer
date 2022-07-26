@@ -1,13 +1,15 @@
 <template>
   <div class="home flex justify-center">
     <div class="w-[40rem] flex flex-col xl:justify-center xl:items-center">
-      <div class="text-center text-orange-dark p-2 text-lg h-12">
+      <div class="text-center text-red p-2 text-lg h-12">
         {{ errorMessage }}
       </div>
 
       <div class="h-14">
         <div v-if="signer" class="flex flex-row gap-4 justify-center items-center">
-          <div class="h-7 w-7 rounded-50 border-4 border-solid border-teal-light bg-green"></div>
+          <div
+            class="h-7 w-7 rounded-50 border-[3px] border-solid border-sea-green bg-green"
+          ></div>
           <span class="text-lg">You are currently connected</span>
         </div>
       </div>

@@ -11,7 +11,7 @@
           show-outside-of-closest-reference-element
         >
           <button
-            class="text-orange text-base font-semibold mr-3 rounded-md hover:bg-teal-light/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+            class="text-orange text-base font-semibold mr-3 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
             :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
@@ -61,7 +61,7 @@
             show-outside-of-closest-reference-element
           >
             <button
-              class="text-orange text-base font-semibold mr-3 my-1 rounded-md hover:bg-teal-light/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+              class="text-orange text-base font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
               :disabled="!addTokenAvailable"
               @click="addTokenToProvider"
             >
@@ -95,7 +95,7 @@
               </template>
             </Tooltip>
           </div>
-          <div class="text-teal-light">
+          <div class="text-sea-green">
             <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
             <span v-else-if="requestFeeAmount">{{ requestFeeAmount.format() }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
@@ -103,7 +103,7 @@
         </div>
         <div class="flex flex-row justify-between font-semibold">
           <span>Total</span>
-          <div class="text-teal-light">
+          <div class="text-sea-green">
             <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
             <span v-else-if="totalRequestAmount">{{ totalRequestAmount }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>

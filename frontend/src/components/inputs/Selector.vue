@@ -82,8 +82,8 @@ const selectOption = (option: SelectorOption<unknown>) => {
 
 const selectorConditionalClasses = computed(() =>
   props.disabled
-    ? 'text-teal-light bg-transparent border-2 border-teal-light cursor-default'
-    : 'text-teal bg-teal-light cursor-text',
+    ? 'text-sea-green bg-transparent border-2 border-sea-green cursor-default'
+    : 'text-teal bg-sea-green cursor-text',
 );
 const selectorClasses = computed(
   () => `flex flex-row items-center justify-end 
@@ -96,7 +96,7 @@ const selectionOverlayClasses = `absolute top-0 bottom-0 right-0 left-0
   flex flex-col gap-5 
 `;
 const optionClasses = `flex flex-row items-center gap-8 cursor-pointer 
-  flex-[0_0_4.5rem] w-full px-8 rounded-xl border border-teal-light text-mint text-2xl
+  flex-[0_0_4.5rem] w-full px-8 rounded-xl border border-sea-green text-mint text-2xl
   hover:border-teal-dark hover:bg-teal-dark
 `;
 </script>
