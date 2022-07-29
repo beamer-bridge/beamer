@@ -1,5 +1,4 @@
 import os
-import pathlib
 from dataclasses import dataclass
 
 import brownie
@@ -22,6 +21,7 @@ from beamer.config import Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
 from beamer.typing import BlockNumber
+from beamer.util import TokenMatchChecker
 
 
 @dataclass(frozen=True)
@@ -137,9 +137,6 @@ def contracts(
 
 @pytest.fixture
 def config(request_manager, fill_manager, resolution_registry, token):
-    root = pathlib.Path(__file__).parents[2]
-    token_match_file = root / "beamer/data/tokens.example.json"
-
     contracts_info = dict(
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(1),
@@ -164,10 +161,11 @@ def config(request_manager, fill_manager, resolution_registry, token):
         l2a_rpc_url=url,
         l2b_rpc_url=url,
         deployment_info=deployment_info,
-        token_match_file=token_match_file,
+        token_match_checker=TokenMatchChecker([]),
         account=account,
         fill_wait_time=0,
         prometheus_metrics_port=None,
+        log_level="debug",
     )
     beamer.metrics.init(config)
     return config

@@ -52,11 +52,68 @@ def setup_relayer_executable():
     relayer.unlink()
 
 
+_CONFIG_FILE = """
+source-chain = "foo"
+target-chain = "bar"
+deployment-dir = "{deployment_dir}"
+
+[account]
+path = "{path}"
+password = "test"
+
+[chains.l1]
+rpc-url = "{l1_rpc_url}"
+
+[chains.foo]
+rpc-url = "{foo_rpc_url}"
+
+[chains.bar]
+rpc-url = "{bar_rpc_url}"
+
+[tokens]
+"""
+
+
+def _generate_options(keyfile, deployment_dir, config):
+    return (
+        "--account-path",
+        str(keyfile),
+        "--account-password",
+        "test",
+        "--chain",
+        f"l1={config.l1_rpc_url}",
+        "--chain",
+        f"l2a={config.l2a_rpc_url}",
+        "--chain",
+        f"l2b={config.l2b_rpc_url}",
+        "--deployment-dir",
+        str(deployment_dir),
+        "--source-chain",
+        "l2a",
+        "--target-chain",
+        "l2b",
+    )
+
+
+def _generate_options_config(keyfile, deployment_dir, config):
+    content = _CONFIG_FILE.format(
+        path=str(keyfile),
+        l1_rpc_url=config.l1_rpc_url,
+        foo_rpc_url=config.l2a_rpc_url,
+        bar_rpc_url=config.l2b_rpc_url,
+        deployment_dir=deployment_dir,
+    )
+    config_file = keyfile.parent / "agent.conf"
+    config_file.write_text(content)
+    return "-c", str(config_file)
+
+
+@pytest.mark.parametrize("generate_options", (_generate_options, _generate_options_config))
 @pytest.mark.usefixtures("setup_relayer_executable")
-def test_cli(config, tmp_path, contracts):
+def test_cli(config, tmp_path, contracts, generate_options):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
-    obj = eth_account.account.create_keyfile_json(acc.key, b"")
+    obj = eth_account.Account.encrypt(key, "test")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
     root = pathlib.Path(__file__).parents[3]
@@ -67,26 +124,10 @@ def test_cli(config, tmp_path, contracts):
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
 
+    options = generate_options(keyfile, deployment_dir, config)
     runner = CliRunner()
-    result = runner.invoke(
-        main,
-        [
-            "--keystore-file",
-            str(keyfile),
-            "--password",
-            "",
-            "--l1-rpc-url",
-            config.l1_rpc_url,
-            "--l2a-rpc-url",
-            config.l2a_rpc_url,
-            "--l2b-rpc-url",
-            config.l2b_rpc_url,
-            "--deployment-dir",
-            str(deployment_dir),
-            "--token-match-file",
-            str(root / "beamer/data/tokens.example.json"),
-        ],
-    )
+    result = runner.invoke(main, options)
+    print(result.output)
     assert result.exit_code == 0
 
 
