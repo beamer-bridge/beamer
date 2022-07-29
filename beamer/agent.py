@@ -11,7 +11,7 @@ from beamer.contracts import make_contracts
 from beamer.state_machine import Context
 from beamer.tracker import Tracker
 from beamer.typing import ChainId
-from beamer.util import TokenMatchChecker, make_web3
+from beamer.util import make_web3
 
 log = structlog.get_logger(__name__)
 
@@ -43,15 +43,12 @@ class Agent:
         if not fill_manager.functions.allowedLPs(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted")
 
-        with open(config.token_match_file, "r") as f:
-            match_checker = TokenMatchChecker.from_file(f)
-
         self.context = Context(
             requests=Tracker(),
             claims=Tracker(),
             request_manager=request_manager,
             fill_manager=fill_manager,
-            match_checker=match_checker,
+            match_checker=config.token_match_checker,
             address=config.account.address,
             latest_blocks={},
             config=config,
