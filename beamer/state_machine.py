@@ -164,7 +164,7 @@ def _handle_latest_block_updated(
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
-    # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, do not check token match file
+    # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, ignore the token configuration
     if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
         # Check if the address points to some contract
         if context.fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):

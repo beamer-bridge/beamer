@@ -7,13 +7,11 @@ from typing import Optional
 import click
 import structlog
 
+import beamer.config
 import beamer.contracts
 import beamer.util
 from beamer.agent import Agent
-from beamer.config import Config
 from beamer.l1_resolution import get_relayer_executable
-from beamer.typing import URL
-from beamer.util import account_from_keyfile
 
 log = structlog.get_logger(__name__)
 
@@ -26,52 +24,31 @@ def _sigint_handler(agent: Agent) -> None:
 
 @click.command()
 @click.option(
-    "--keystore-file",
+    "--config",
+    "-c",
+    "config_path",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    required=True,
-    metavar="FILE",
-    help="The file that stores the key for the account to be used.",
-)
-@click.password_option(required=True, help="The password needed to unlock the account.")
-@click.option(
-    "--l1-rpc-url",
-    type=str,
-    required=True,
-    metavar="URL",
-    help="The URL of the L1 chain RPC server (e.g. http://10.0.0.3:8545).",
+    metavar="PATH",
+    help="Path to the agent's config file.",
 )
 @click.option(
-    "--l2a-rpc-url",
-    type=str,
-    required=True,
-    metavar="URL",
-    help="The URL of the source L2 chain RPC server (e.g. http://10.0.0.2:8545).",
+    "--account-path",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    metavar="PATH",
+    help="Path to the account keyfile.",
 )
-@click.option(
-    "--l2b-rpc-url",
-    type=str,
-    required=True,
-    metavar="URL",
-    help="The URL of the target L2 chain RPC server (e.g. http://10.0.0.3:8545).",
+@click.password_option(
+    "--account-password", type=str, prompt=False, help="The password needed to unlock the account."
 )
 @click.option(
     "--deployment-dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
-    required=True,
     metavar="DIR",
     help="The directory containing contract deployment files.",
 )
 @click.option(
-    "--token-match-file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
-    required=True,
-    metavar="FILE",
-    help="The file containing token matching information.",
-)
-@click.option(
     "--fill-wait-time",
     type=int,
-    default=120,
     help="Time in seconds to wait for a fill event before challenging a false claim.",
 )
 @click.option(
@@ -82,47 +59,59 @@ def _sigint_handler(agent: Agent) -> None:
     help="The log level.",
 )
 @click.option(
-    "--prometheus-metrics-port",
+    "--metrics-prometheus-port",
     type=int,
     default=None,
     metavar="PORT",
     show_default=True,
     help="Provide Prometheus metrics on PORT.",
 )
+@click.option(
+    "--chain",
+    type=str,
+    multiple=True,
+    metavar="NAME=URL",
+    help="Associate a JSON-RPC endpoint URL with chain NAME. Example: foo=http://foo.bar:8545.",
+)
+@click.option("--source-chain", type=str, metavar="NAME", help="Name of the source chain.")
+@click.option("--target-chain", type=str, metavar="NAME", help="Name of the target chain.")
 @click.version_option()
 def main(
-    keystore_file: Path,
-    password: str,
-    l1_rpc_url: URL,
-    l2a_rpc_url: URL,
-    l2b_rpc_url: URL,
-    deployment_dir: Path,
-    token_match_file: Path,
-    fill_wait_time: int,
-    log_level: str,
-    prometheus_metrics_port: Optional[int],
+    config_path: Path,
+    account_path: Optional[Path],
+    account_password: Optional[str],
+    deployment_dir: Optional[Path],
+    fill_wait_time: Optional[int],
+    log_level: Optional[str],
+    chain: tuple[str],
+    source_chain: Optional[str],
+    target_chain: Optional[str],
+    metrics_prometheus_port: Optional[int],
 ) -> None:
-    beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
+    options = {
+        "fill-wait-time": fill_wait_time,
+        "log-level": log_level,
+        "deployment-dir": deployment_dir,
+        "metrics.prometheus-port": metrics_prometheus_port,
+        "source-chain": source_chain,
+        "target-chain": target_chain,
+        "account.path": account_path,
+        "account.password": account_password,
+    }
 
+    for chainspec in chain:
+        name, rpc_url = chainspec.split("=", 1)
+        options[f"chains.{name}.rpc-url"] = rpc_url
+
+    config = beamer.config.load(config_path, options)
+
+    beamer.util.setup_logging(log_level=config.log_level.upper(), log_json=False)
     log.info("Running beamer bridge agent", version=version("beamer"))
+    log.info(f"Using account {config.account.address}")
 
     if not get_relayer_executable().exists():
         log.error("No relayer found")
         sys.exit(1)
-
-    account = account_from_keyfile(keystore_file, password)
-    log.info(f"Using account {account.address}")
-    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
-    config = Config(
-        account=account,
-        deployment_info=deployment_info,
-        l1_rpc_url=l1_rpc_url,
-        l2a_rpc_url=l2a_rpc_url,
-        l2b_rpc_url=l2b_rpc_url,
-        token_match_file=token_match_file,
-        fill_wait_time=fill_wait_time,
-        prometheus_metrics_port=prometheus_metrics_port,
-    )
 
     signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(agent))
     agent = Agent(config)
