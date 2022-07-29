@@ -7,7 +7,7 @@
       "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
       "rpcUrl": "https://rinkeby.boba.network/",
       "name": "Boba Rinkeby",
-      "imageUrl": "src/assets/images/boba.svg",
+      "imageUrl": "/images/boba.svg",
       "tokens": [
         {
           "address": "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6",
@@ -23,7 +23,7 @@
       "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
       "rpcUrl": "https://stardust.metis.io/?owner=588",
       "name": "Metis Stardust",
-      "imageUrl": "src/assets/images/metis.png",
+      "imageUrl": "/images/metis.png",
       "tokens": [
         {
           "address": "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D",
