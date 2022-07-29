@@ -5,7 +5,7 @@ import random
 import sys
 import time
 from pathlib import Path
-from typing import Any, List, Optional, TextIO, Type, Union, cast
+from typing import Any, List, Optional, Type, Union, cast
 
 import lru
 import requests
@@ -177,8 +177,3 @@ class TokenMatchChecker:
         source_token = source_chain_id, source_token_address
         target_token = target_chain_id, target_token_address
         return target_token in self._tokens.get(source_token, frozenset())
-
-    @staticmethod
-    def from_file(f: TextIO) -> "TokenMatchChecker":
-        tokens = json.load(f)
-        return TokenMatchChecker(tokens)
