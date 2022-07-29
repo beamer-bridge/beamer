@@ -11,7 +11,12 @@
   </div>
 
   <Transition>
-    <div v-if="opened" :class="selectionOverlayClasses" data-test="option-list">
+    <div
+      v-if="opened"
+      :class="selectionOverlayClasses"
+      data-test="option-list"
+      @keyup.esc="closeSelector"
+    >
       <span class="text-3xl">{{ label }}</span>
       <Input
         v-model="searchFilter"
@@ -27,7 +32,10 @@
         <div
           v-for="option in filteredOptions"
           :key="option.label"
-          :class="optionClasses"
+          :class="[
+            optionClasses,
+            option.label === modelValue?.label ? highlightedOptionClasses : '',
+          ]"
           data-test="option"
           @click="selectOption(option)"
         >
@@ -99,4 +107,5 @@ const optionClasses = `flex flex-row items-center gap-8 cursor-pointer
   flex-[0_0_4.5rem] w-full px-8 rounded-xl border border-sea-green text-mint text-2xl
   hover:border-teal-dark hover:bg-teal-dark
 `;
+const highlightedOptionClasses = `!text-sea-green font-semibold bg-teal-dark`;
 </script>

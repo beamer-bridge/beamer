@@ -116,4 +116,18 @@ describe('Selector.vue', () => {
 
     expect(optionList.text()).toContain(label);
   });
+
+  it('should close the selector by escape key', async () => {
+    const wrapper = createWrapper();
+    const trigger = wrapper.find('[data-test="open-trigger"]');
+
+    await trigger.trigger('click');
+
+    let optionList = wrapper.find('[data-test="option-list"');
+    await optionList.trigger('keyup.esc');
+
+    optionList = wrapper.find('[data-test="option-list"');
+
+    expect(optionList.exists()).toBe(false);
+  });
 });
