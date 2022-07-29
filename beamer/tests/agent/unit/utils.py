@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Tuple
 from unittest.mock import MagicMock
 
@@ -139,9 +138,10 @@ def make_context() -> Tuple[Context, Config]:
         l1_rpc_url=URL(""),
         l2a_rpc_url=URL(""),
         l2b_rpc_url=URL(""),
-        token_match_file=Path(),
+        token_match_checker=checker,
         fill_wait_time=1,
         prometheus_metrics_port=None,
+        log_level="debug",
     )
 
     context = Context(
