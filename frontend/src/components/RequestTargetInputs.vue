@@ -65,8 +65,8 @@ const configuration = useConfiguration();
 
 const { chains } = storeToRefs(configuration);
 
-const selectedTargetChain = ref<SelectorOption<Chain> | null>(null);
-const selectedTargetAddress = ref('');
+const selectedTargetChain = ref<SelectorOption<Chain> | null>(props.modelValue.targetChain);
+const selectedTargetAddress = ref(props.modelValue.toAddress);
 
 const ignoreChains = computed(() =>
   process.env.NODE_ENV === 'development' || !props.sourceChain ? [] : [props.sourceChain.value],
