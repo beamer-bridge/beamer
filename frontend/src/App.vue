@@ -3,7 +3,7 @@
   <router-view v-if="configurationLoaded" class="flex-auto z-10" />
   <div v-else class="flex-auto flex flex-col items-center justify-center">
     <div class="w-48 h-48">
-      <spinner></spinner>
+      <spinner size="48"></spinner>
     </div>
   </div>
   <feedback v-if="enableFeedback"></feedback>

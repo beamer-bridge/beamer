@@ -97,4 +97,13 @@ describe('useRequestFee', () => {
       expect(error.value).toBe('');
     });
   });
+
+  it('should delay execution of task when initialized as a debounced task', async () => {
+    const delayInMillis = 500;
+    useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT, true, delayInMillis);
+    await flushPromises();
+    expect(requestManagerService.getRequestFee).not.toHaveBeenCalled();
+    await new Promise((r) => setTimeout(r, delayInMillis));
+    expect(requestManagerService.getRequestFee).toHaveBeenCalledOnce();
+  });
 });
