@@ -17,6 +17,7 @@ structlog = "^22.1.0"
 python-statemachine = "^0.8.0"
 prometheus-client = "^0.14.1"
 lru-dict = "1.1.7"
+toml = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -38,6 +39,7 @@ Sphinx = "^5.1.1"
 furo = "^2022.6.21"
 sphinxcontrib-mermaid = "^0.7.1"
 sphinxcontrib-soliditydomain = {git = "https://github.com/beamer-bridge/sphinxcontrib-soliditydomain.git", rev = "main"}
+types-toml = "^0.10.8"
 
 [tool.poetry.scripts]
 beamer-agent = 'beamer.cli:main'
