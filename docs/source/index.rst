@@ -6,6 +6,7 @@ Welcome to Beamer's documentation!
 
    whitepaper.rst
    agent.rst
+   configuration.rst
    running.rst
    contracts.rst
    contracts-api-reference.rst
