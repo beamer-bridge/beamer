@@ -7,31 +7,23 @@ an agent requires the following:
 
  * An account that is sufficiently funded on both L2 chains.
 
-   Related options: ``--keystore-file``, ``--password``
+   Related options: ``--account-path``, ``--account-password``
 
    .. :note: The same address is being used for both chains.
 
- * URL of the L1 chain's RPC server.
+ * Names and RPC endpoints of the L1 chain, source and target chains.
 
-   Related options: ``--l1-rpc-url``
+   Related options: ``--source-chain``, ``--target-chain``, ``--chain``
 
- * URL of the source L2 chain's RPC server.
-
-   Related options: ``--l2a-rpc-url``
-
- * URL of the target L2 chain's RPC server.
-
-   Related options: ``--l2b-rpc-url``
+   .. :note: The ``--chain`` option can be given multiple times to define multiple chains.
 
  * A directory containing Beamer contracts' deployment information.
    See  :ref:`deployment-info`.
 
    Related options: ``--deployment-dir``
 
- * A file containing information on matching token contracts.
-   See  :ref:`token-match-file`.
 
-   Related options: ``--token-match-file``
+For a detailed explanation of configuration options, see :ref:`config`.
 
 
 .. _deployment-info:
@@ -62,42 +54,6 @@ The rest of the files contain contract ABI information which is needed by the ag
 
 .. _deployment on Rinkeby: https://github.com/beamer-bridge/beamer/tree/main/deployments/rinkeby
 
-
-.. _token-match-file:
-
-The token match file
---------------------
-
-An example token match file is a JSON file that specifies the relation between tokens
-on various chains. For example, the following::
-
-	[
-		[
-			["28", "0xfE7B1466A7A7F2C1DaE2c557207A8FF524e160AE"],
-			["588", "0xfE7B1466A7A7F2C1DaE2c557207A8FF524e160AE"]
-		],
-		[
-			["41", "0x1231EB253849c1Ae2355888B1be2dcc7C12F8101"],
-			["17", "0x9adC0f0a7c0C7dBC536A0719b8395F8BDd1fD176"],
-			["23", "0xcaf202511B457702E00Da61336Da050B319103ee"]
-		],
-	]
-
-describes two token groups, where all the token inside the same group are
-considered equivalent.  As an example, a group may contain DAI on Boba and DAI
-on Metis, but if it contains those two, it should not contain USDC, regardless
-of the chain, because USDC is not equivalent to DAI.
-
-Each token is represented as list of two elements, ``[chain_id, token_address]``,
-and a list of such lists forms a group. On the topmost level we simply have a list
-of all groups.
-
-In the example above, we have two tokens in the first group, one on chain 28
-and the other on chain 588.  The second group consists of three tokens.
-
-For an in-repo example, see
-https://github.com/beamer-bridge/beamer/blob/main/beamer/data/tokens.example.json.
-
 .. _agent-container:
 
 Running an agent container
@@ -105,13 +61,14 @@ Running an agent container
 
 To run an agent container simply do::
 
-    docker run ghcr.io/beamer-bridge/beamer-agent --keystore-file <keyfile> \
-                                                  --password <keyfile-password> \
-                                                  --l1-rpc-url <l1-rpc-url> \
-                                                  --l2a-rpc-url <source-l2-rpc-url> \
-                                                  --l2b-rpc-url <target-l2-rpc-url> \
+    docker run ghcr.io/beamer-bridge/beamer-agent --account-path <path> \
+                                                  --account-password <password> \
+                                                  --chain l1=<l1-rpc-url> \
+                                                  --chain source=<source-l2-rpc-url> \
+                                                  --chain target=<target-l2-rpc-url> \
                                                   --deployment-dir <contract-deployment-dir> \
-                                                  --token-match-file <token-match-file>
+                                                  --source-chain source \
+                                                  --target-chain target
 
 .. _agent-from-source:
 
@@ -136,10 +93,11 @@ and install ``beamer-agent``::
 
 While still inside the virtual environment, run::
 
-    beamer-agent --keystore-file <keyfile> \
-                 --password <keyfile-password> \
-                 --l1-rpc-url <l1-rpc-url> \
-                 --l2a-rpc-url <source-l2-rpc-url> \
-                 --l2b-rpc-url <target-l2-rpc-url> \
+    beamer-agent --account-path <path> \
+                 --account-password <password> \
+                 --chain l1=<l1-rpc-url> \
+                 --chain source=<source-l2-rpc-url> \
+                 --chain target=<target-l2-rpc-url> \
                  --deployment-dir <contract-deployment-dir> \
-                 --token-match-file <token-match-file>
+                 --source-chain source \
+                 --target-chain target
