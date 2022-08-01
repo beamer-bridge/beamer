@@ -15,9 +15,7 @@
             :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
-            <div v-if="faucetRequestActive" class="h-5 w-5">
-              <spinner></spinner>
-            </div>
+            <spinner v-if="faucetRequestActive" size="6" border="2"></spinner>
             <template v-else>Get Test Tokens</template>
           </button>
         </Tooltip>
@@ -98,14 +96,16 @@
             </Tooltip>
           </div>
           <div class="text-teal-light">
-            <span v-if="requestFeeAmount">{{ requestFeeAmount.format() }}</span>
+            <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
+            <span v-else-if="requestFeeAmount">{{ requestFeeAmount.format() }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
         </div>
         <div class="flex flex-row justify-between font-semibold">
           <span>Total</span>
           <div class="text-teal-light">
-            <span v-if="totalRequestAmount">{{ totalRequestAmount }}</span>
+            <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
+            <span v-else-if="totalRequestAmount">{{ totalRequestAmount }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
         </div>
@@ -173,7 +173,7 @@ const selectedSourceChainIdentifier = computed(
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
-const { amount: requestFeeAmount } = useRequestFee(
+const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
   computed(() => selectedSourceChain.value?.value.rpcUrl),
   computed(() => selectedSourceChain.value?.value.requestManagerAddress),
   computed(() =>
@@ -181,6 +181,7 @@ const { amount: requestFeeAmount } = useRequestFee(
       ? TokenAmount.parse(selectedAmount.value, selectedToken.value.value)
       : undefined,
   ),
+  true,
 );
 
 const { available: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
