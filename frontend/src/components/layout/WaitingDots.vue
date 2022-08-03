@@ -1,5 +1,5 @@
 <template>
-  <span>{{ currentFrame }}</span>
+  <span class="font-mono">{{ currentFrame }}</span>
 </template>
 
 <script setup lang="ts">

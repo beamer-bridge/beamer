@@ -15,8 +15,9 @@
 
     <template #body>
       <div class="flex flex-col gap-5 items-center text-lg" data-test="body">
-        <TransferSummary v-bind="summary" />
-        <TransferStatus v-bind="status" />
+        <TransferSummary v-bind="summary">
+          <TransferStatus v-bind="status" />
+        </TransferSummary>
         <TransferWithdrawer
           v-if="transfer.expired"
           v-bind="withdrawProperties"

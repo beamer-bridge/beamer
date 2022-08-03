@@ -3,20 +3,24 @@
     <div>
       {{ date.toLocaleString() }}<br />
       You sent {{ amount }}&nbsp;{{ tokenSymbol }}<br />
-      from {{ sourceChainName }} to {{ targetChainName }}<br />
-      Target address:&nbsp;
+      from {{ sourceChainName }}<br />
+      to {{ targetChainName }}<br /><br />
+      Target address:<br />
       <EthereumAddress :address="targetAccount" />
     </div>
 
-    <a
-      v-if="requestTransactionUrl"
-      class="underline"
-      target="_blank"
-      :href="requestTransactionUrl"
-      data-test="explorer-link"
-    >
-      See transfer on the Explorer
-    </a>
+    <div>
+      <slot />
+      <a
+        v-if="requestTransactionUrl"
+        class="underline hover:opacity-90"
+        target="_blank"
+        :href="requestTransactionUrl"
+        data-test="explorer-link"
+      >
+        See transfer on the Explorer
+      </a>
+    </div>
   </div>
 </template>
 
