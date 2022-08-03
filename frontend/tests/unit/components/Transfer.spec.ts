@@ -36,6 +36,7 @@ function createWrapper(options?: { transfer?: Transfer }) {
           template: '<div><slot name="header" /><slot name="body" /></div>',
         },
       },
+      renderStubDefaultSlot: true,
     },
   });
 }

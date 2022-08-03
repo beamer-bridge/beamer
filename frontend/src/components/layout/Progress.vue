@@ -43,20 +43,20 @@ li {
 
 li::before {
   content: '';
-  @apply absolute left-0 rounded-full w-7 h-7 text-center border-[2px] border-teal;
+  @apply absolute left-0 rounded-full w-7 h-7 text-center border-2 border-teal;
 }
 
 li.completed::before {
-  @apply bg-green;
+  @apply bg-green border-sea-green;
 }
 
 li.failed::before {
-  @apply bg-red;
+  @apply bg-red border-sea-green;
 }
 
 li:not(:last-of-type)::after {
   content: '';
-  @apply absolute left-[0.8rem] border-teal border-[1px] top-[1.7rem] h-[1.45rem];
+  @apply absolute left-[0.8rem] border-teal border top-[1.7rem] h-[1.45rem];
 }
 
 li.hasError::after {
