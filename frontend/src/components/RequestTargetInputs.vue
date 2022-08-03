@@ -73,6 +73,15 @@ const ignoreChains = computed(() =>
 );
 const { chainOptions } = useChainSelection(chains, ignoreChains);
 
+watch(
+  () => props.sourceChain,
+  (newSourceChain) => {
+    if (newSourceChain?.value.identifier === selectedTargetChain.value?.value.identifier) {
+      selectedTargetChain.value = null;
+    }
+  },
+);
+
 const inputValues: WritableComputedRef<RequestTarget> = computed({
   get: () => ({
     targetChain: selectedTargetChain.value,
