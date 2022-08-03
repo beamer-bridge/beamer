@@ -70,7 +70,7 @@ const DISCLAIMER_REQUIRED = process.env.NODE_ENV === 'production';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
-const { signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 
@@ -142,7 +142,10 @@ const submitRequestTransaction = async () => {
 };
 
 function checkSourceValidity(sourceData: RequestSource): sourceData is ValidRequestSource {
-  return Object.values(sourceData).every((value) => !!value);
+  return (
+    Object.values(sourceData).every((value) => !!value) &&
+    sourceData.sourceChain?.value.identifier === provider.value?.chainId.value
+  );
 }
 function checkTargetValidity(targetData: RequestTarget): targetData is ValidRequestTarget {
   return Object.values(targetData).every((value) => !!value);

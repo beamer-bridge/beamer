@@ -153,15 +153,31 @@ const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
 
+const providerChainOption = computed(() =>
+  getChainSelectorOption(String(provider.value?.chainId.value), chains.value),
+);
+
+const _selectedSourceChain = ref<SelectorOption<Chain> | null>(null);
 const selectedSourceChain = computed({
   get() {
-    return getChainSelectorOption(String(provider.value?.chainId.value), chains.value);
+    return providerChainOption.value ?? _selectedSourceChain.value;
   },
   async set(chain: SelectorOption<Chain> | null) {
+    _selectedSourceChain.value = chain;
     if (chain) {
       await provider.value?.switchChainSafely(chain.value);
     }
   },
+});
+
+// Need to switch chain in case the user selected one before connecting a wallet
+watch(providerChainOption, (_newProviderChainOption, previousProviderChainOption) => {
+  if (provider.value && !previousProviderChainOption && _selectedSourceChain.value) {
+    const switchSuccessful = provider.value.switchChainSafely(_selectedSourceChain.value.value);
+    if (!switchSuccessful) {
+      _selectedSourceChain.value = null;
+    }
+  }
 });
 
 const { chainOptions } = useChainSelection(chains, ref([]));
