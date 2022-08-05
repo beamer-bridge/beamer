@@ -33,6 +33,8 @@
           type="text"
           placeholder="Target Address"
           required
+          :align-right="true"
+          :valid="!v$.toAddress.$error"
         />
         <InputErrorMessage class="text-right">
           <!-- Nasty temporary solution until containers are refactored to support flexible height -->

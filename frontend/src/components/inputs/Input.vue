@@ -4,18 +4,20 @@
     data-test="input"
     v-bind="{ type }"
     :value="modelValue"
-    :class="inputClasses"
+    :class="classes"
     @input="updateValue"
   />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 interface Props {
   modelValue: string;
   focusOnMount?: boolean;
   type?: string;
+  valid?: boolean;
+  alignRight?: boolean;
 }
 
 interface Emits {
@@ -24,6 +26,8 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
+  valid: true,
+  alignRight: false,
 });
 
 const emits = defineEmits<Emits>();
@@ -39,10 +43,14 @@ onMounted(() => {
   }
 });
 
-const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner text-teal 
-  text-2xl text-right outline-none placeholder:opacity-25 placeholder:text-black 
+const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner
+  text-2xl outline-none placeholder:opacity-25 placeholder:text-black 
   disabled:text-sea-green disabled:bg-transparent disabled:border-2 
   disabled:border-sea-green disabled:placeholder:text-sea-green`;
+const inputComputedClasses = computed(() => {
+  return [props.valid ? 'text-teal' : `text-red`, props.alignRight ? 'text-right' : 'text-left'];
+});
+const classes = computed(() => [inputClasses, inputComputedClasses.value]);
 </script>
 
 <style scoped>
