@@ -28,18 +28,28 @@
         placeholder="Source Rollup"
         required
       />
+      <InputValidationMessage
+        v-if="v$.sourceChain.$error"
+        :message="v$.sourceChain.$errors[0].$message"
+      />
     </div>
     <div class="flex flex-col justify-between">
       <div class="flex flex-row gap-5">
-        <div class="flex-[9_9_0%] flex flex-col items-end">
+        <div class="flex-[9_9_0%] flex flex-col items-start">
+          <!-- Todo: refactor keydown event to a reusable directive -->
           <Input
             v-model="selectedAmount"
             name="amount"
             type="number"
             placeholder="0.00"
             required
+            :valid="isSelectedAmountValid"
+            @keydown="(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()"
           />
-          <div>
+          <InputValidationMessage v-if="!isSelectedAmountValid">
+            {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
+          </InputValidationMessage>
+          <div v-else class="self-end">
             <div v-if="showTokenBalance" class="text-base mr-5 mt-1">
               {{ formattedTokenBalance }} {{ selectedToken?.label }} available
             </div>
@@ -105,7 +115,9 @@
           <span>Total</span>
           <div class="text-sea-green">
             <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
-            <span v-else-if="totalRequestAmount">{{ totalRequestAmount }}</span>
+            <span v-else-if="totalRequestTokenAmount"
+              >{{ totalRequestTokenAmount.format() }}
+            </span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
         </div>
@@ -115,12 +127,15 @@
 </template>
 
 <script setup lang="ts">
+import { useVuelidate } from '@vuelidate/core';
+import { helpers, required, sameAs } from '@vuelidate/validators';
 import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import Input from '@/components/inputs/Input.vue';
 import Selector from '@/components/inputs/Selector.vue';
+import InputValidationMessage from '@/components/layout/InputValidationMessage.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
@@ -133,6 +148,7 @@ import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { Chain } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
+import { isMatchingDecimals, maxTokenAmount, minTokenAmount } from '@/validation/validators';
 
 interface Props {
   modelValue: RequestSource;
@@ -189,22 +205,27 @@ const selectedSourceChainIdentifier = computed(
 const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
   useTokenSelection(chains, selectedSourceChainIdentifier, provider);
 
+const selectedTokenAmount = computed(() => {
+  if (
+    selectedToken.value &&
+    selectedAmount.value &&
+    isMatchingDecimals(selectedToken.value.value.decimals)(selectedAmount.value)
+  ) {
+    return TokenAmount.parse(selectedAmount.value, selectedToken.value.value);
+  } else return undefined;
+});
 const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
   computed(() => selectedSourceChain.value?.value.rpcUrl),
   computed(() => selectedSourceChain.value?.value.requestManagerAddress),
-  computed(() =>
-    selectedAmount.value && selectedToken.value
-      ? TokenAmount.parse(selectedAmount.value, selectedToken.value.value)
-      : undefined,
-  ),
+  selectedTokenAmount,
   true,
 );
 
-const { available: showTokenBalance, formattedBalance: formattedTokenBalance } = useTokenBalance(
-  provider,
-  signer,
-  selectedTokenAddress,
-);
+const {
+  available: showTokenBalance,
+  formattedBalance: formattedTokenBalance,
+  balance,
+} = useTokenBalance(provider, signer, selectedTokenAddress);
 
 const {
   enabled: faucetEnabled,
@@ -216,17 +237,21 @@ const {
   computed(() => selectedSourceChain.value?.value.identifier),
 );
 
-const totalRequestAmount = computed(() => {
-  if (!props.modelValue.token || !requestFeeAmount.value) {
-    return '';
+const totalRequestTokenAmount = computed(() => {
+  if (
+    !selectedToken.value ||
+    !selectedTokenAmount.value ||
+    !requestFeeAmount.value ||
+    requestFeeLoading.value
+  ) {
+    return null;
   }
-  const sourceAmount = TokenAmount.parse(props.modelValue.amount, props.modelValue.token.value);
-  const total = requestFeeAmount.value?.uint256.add(sourceAmount.uint256);
+  const total = requestFeeAmount.value.uint256.add(selectedTokenAmount.value.uint256);
   const totalAmount = new TokenAmount({
     amount: total.asString,
-    token: props.modelValue.token.value,
+    token: selectedToken.value.value,
   });
-  return totalAmount.format();
+  return totalAmount;
 });
 
 const inputValues: WritableComputedRef<RequestSource> = computed({
@@ -242,6 +267,101 @@ const inputValues: WritableComputedRef<RequestSource> = computed({
   },
 });
 
+const computedRules = computed(() => {
+  const sourceChainRules = {
+    $autoDirty: true,
+    required,
+  };
+  const tokenRules = {
+    $autoDirty: true,
+    required,
+  };
+  const requestFeeLoadingRules = {
+    $autoDirty: true,
+    sameAs: sameAs(false),
+  };
+
+  if (selectedToken.value) {
+    const selectedTokenValue = selectedToken.value.value;
+    const selectedTokenDecimals = selectedTokenValue.decimals;
+    const selectedAmountRules = {
+      $autoDirty: true,
+      required: helpers.withMessage('Amount is required', required),
+      isMatchingDecimals: helpers.withMessage(
+        'Decimals out of boundary',
+        isMatchingDecimals(selectedTokenDecimals),
+      ),
+    };
+    if (selectedTokenAmount.value) {
+      const min = TokenAmount.parse(
+        ['0.', '0'.repeat(selectedTokenDecimals - 1), '1'].join(''),
+        selectedTokenValue,
+      );
+      const selectedTokenAmountRules = {
+        $autoDirty: true,
+        minValue: helpers.withMessage(`Amount must be a positive number`, minTokenAmount(min)),
+      };
+      const totalRequestTokenAmountRules = {
+        $autoDirty: true,
+        maxValue: helpers.withMessage('Insufficient funds', (value: TokenAmount) => {
+          if (!value || !selectedToken.value) return true;
+          // Due to reactivity issues `max` has to be initialized here
+          const max = new TokenAmount({
+            amount: balance.value.toString(),
+            token: selectedToken.value.value,
+          });
+          return maxTokenAmount(max)(value);
+        }),
+      };
+      return {
+        sourceChain: sourceChainRules,
+        token: tokenRules,
+        selectedAmount: selectedAmountRules,
+        selectedTokenAmount: selectedTokenAmountRules,
+        totalRequestTokenAmount: totalRequestTokenAmountRules,
+        requestFeeLoading: requestFeeLoadingRules,
+        $validationGroups: {
+          amount: ['selectedTokenAmount', 'selectedAmount', 'totalRequestTokenAmount'],
+        },
+      };
+    }
+
+    return {
+      sourceChain: sourceChainRules,
+      token: tokenRules,
+      selectedAmount: selectedAmountRules,
+      requestFeeLoading: requestFeeLoadingRules,
+      $validationGroups: {
+        amount: ['selectedAmount'],
+      },
+    };
+  }
+  return {
+    sourceChain: sourceChainRules,
+    token: tokenRules,
+  };
+});
+
+const state = {
+  sourceChain: selectedSourceChain,
+  token: selectedToken,
+  selectedAmount,
+  selectedTokenAmount,
+  totalRequestTokenAmount,
+  requestFeeLoading,
+};
+
+const v$ = useVuelidate(computedRules, state);
+
+defineExpose({ v$ });
+
+const isSelectedAmountValid = computed(() => {
+  return !v$.value.$validationGroups?.amount || !v$.value.$validationGroups.amount.$error;
+});
+
+watch(selectedToken, () => {
+  if (selectedAmount.value) v$.value.$touch();
+});
 watch(inputValues, (value) => emits('update:modelValue', value));
 watch(
   () => props.modelValue,

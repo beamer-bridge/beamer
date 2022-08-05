@@ -19,6 +19,8 @@ export function useTransferRequest() {
     requestTarget: Ref<ValidRequestTarget>,
     targetToken: Token | undefined,
   ) => {
+    if (!targetToken) return null;
+
     creating.value = true;
 
     const sourceAmount = TokenAmount.parse(
