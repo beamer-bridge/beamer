@@ -25,27 +25,48 @@
         />
       </div>
     </div>
-    <Input
-      v-model="selectedTargetAddress"
-      name="toAddress"
-      type="text"
-      placeholder="Target Address"
-      required
-    />
+    <div class="flex flex-col items-end">
+      <div class="relative w-full items-end">
+        <Input
+          v-model="selectedTargetAddress"
+          name="toAddress"
+          type="text"
+          placeholder="Target Address"
+          required
+        />
+        <InputErrorMessage class="text-right">
+          <!-- Nasty temporary solution until containers are refactored to support flexible height -->
+          <div v-if="v$.toAddress.$errors.length">
+            {{ v$.toAddress.$errors[0].$message }}
+          </div>
+          <div v-else>&nbsp;</div>
+        </InputErrorMessage>
+        <Transition>
+          <div
+            v-if="!v$.toAddress.$error"
+            class="checkmark after:content-['\2713'] absolute -right-14 -top-2 2xl:-right-11 2xl:top-1 text-[30px] text-green"
+          ></div>
+        </Transition>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useVuelidate } from '@vuelidate/core';
+import { helpers, required } from '@vuelidate/validators';
 import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import Input from '@/components/inputs/Input.vue';
 import Selector from '@/components/inputs/Selector.vue';
+import InputErrorMessage from '@/components/layout/InputValidationMessage.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useConfiguration } from '@/stores/configuration';
 import type { Chain, Token } from '@/types/data';
 import type { RequestTarget, SelectorOption } from '@/types/form';
+import { isValidEthAddress, notSameAsChain } from '@/validation/validators';
 
 interface Props {
   modelValue: RequestTarget;
@@ -93,6 +114,42 @@ const inputValues: WritableComputedRef<RequestTarget> = computed({
   },
 });
 
+const computedRules = computed(() => {
+  const toAddressRules = {
+    $autoDirty: true,
+    required: helpers.withMessage('Destination address is required', required),
+    isValidEthAddress: helpers.withMessage('Invalid ETH address', isValidEthAddress),
+  };
+  const targetChainRules = {
+    $autoDirty: true,
+    required,
+  };
+
+  if (selectedTargetChain.value && props.sourceChain?.value) {
+    const sourceChainTemporary = props.sourceChain.value;
+    return {
+      targetChain: {
+        ...targetChainRules,
+        notSameAsSourceChain: (chain: SelectorOption<Chain>) =>
+          notSameAsChain(sourceChainTemporary)(chain?.value),
+      },
+      toAddress: toAddressRules,
+    };
+  }
+
+  return {
+    targetChain: targetChainRules,
+    toAddress: toAddressRules,
+  };
+});
+
+const state = {
+  targetChain: selectedTargetChain,
+  toAddress: selectedTargetAddress,
+};
+
+const v$ = useVuelidate(computedRules, state);
+
 watch(inputValues, (value) => emits('update:modelValue', value));
 watch(
   () => props.modelValue,
@@ -101,3 +158,4 @@ watch(
   },
 );
 </script>
+<style></style>

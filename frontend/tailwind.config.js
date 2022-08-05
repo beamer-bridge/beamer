@@ -17,6 +17,7 @@ module.exports = {
       red: '#FF0420',
       orange: '#F5AC37',
       grey: '#C4C4C4',
+      'red-fire': '#EF4C13',
       transparent: 'transparent',
     },
     boxShadow: {
