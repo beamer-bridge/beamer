@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.3 (2022-08-05)
+
+* agent: fix location of relayer binaries in the container image
+
 ## v0.1.2 (2022-08-05)
 
 * agent: added support for specifying a configuration file
