@@ -43,8 +43,7 @@
             type="number"
             placeholder="0.00"
             required
-            :valid="isSelectedAmountValid"
-            @keydown="(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()"
+            :valid="v$.amount && !v$.amount.$error"
           />
           <InputValidationMessage v-if="!isSelectedAmountValid">
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
