@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
+import type { Token } from '@/types/data';
 
 export const useConfiguration = defineStore('configuration', {
   state: (): BeamerConfig => ({
@@ -12,6 +13,17 @@ export const useConfiguration = defineStore('configuration', {
     },
   },
   getters: {
+    getTokenForChain:
+      (state) =>
+      (chainId: number, tokenSymbol: string): Token | undefined => {
+        const chain = state.chains[chainId];
+        return chain.tokens.find((token) => token.symbol === tokenSymbol);
+      },
+    getChain:
+      (state) =>
+      (chainId: number): ChainWithTokens | undefined => {
+        return state.chains[chainId];
+      },
     isSupportedChain: (state) => {
       return (chainId: number): boolean => chainId in state.chains;
     },

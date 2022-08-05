@@ -40,8 +40,9 @@
           >
         </div>
       </div>
-      <ActionButton class="w-full" :disabled="!formValid" @click="submitRequestTransaction">
-        Transfer Funds
+      <ActionButton class="w-full" :disabled="creatingTransaction" @click="submitForm">
+        <span v-if="!creatingTransaction"> Transfer Funds </span>
+        <spinner v-else size="8" border="4"></spinner>
       </ActionButton>
     </div>
   </Teleport>
@@ -50,29 +51,25 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
+import Spinner from '@/components/Spinner.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
+import { useTransferRequest } from '@/composables/useTransferRequest';
 import { switchToActivities } from '@/router/navigation';
-import { getRequestFee } from '@/services/transactions/request-manager';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
 import { useTransferHistory } from '@/stores/transfer-history';
-import type { ChainWithTokens } from '@/types/config';
-import type { Token } from '@/types/data';
 import type {
   RequestSource,
   RequestTarget,
   ValidRequestSource,
   ValidRequestTarget,
 } from '@/types/form';
-import { TokenAmount } from '@/types/token-amount';
-import { UInt256 } from '@/types/uint-256';
 
 const EMPTY_SOURCE_DATA: RequestSource = {
   amount: '',
@@ -85,94 +82,49 @@ const EMPTY_TARGET_DATA: RequestTarget = {
 };
 const DISCLAIMER_REQUIRED = process.env.NODE_ENV === 'production';
 
-const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
+const {
+  create: createTransfer,
+  execute: executeTransfer,
+  creating: creatingTransaction,
+} = useTransferRequest();
+const { getTokenForChain } = useConfiguration();
 const { disclaimerChecked } = storeToRefs(useSettings());
 
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
 
 const disclaimerValid = computed(() => disclaimerChecked.value || !DISCLAIMER_REQUIRED);
-const formValid = computed(
-  () =>
-    checkSourceValidity(requestSource.value) &&
-    checkTargetValidity(requestTarget.value) &&
-    disclaimerValid.value,
-);
 
-const submitRequestTransaction = async () => {
-  if (!signer.value) {
-    throw new Error('No signer available!');
-  }
-  if (
-    !checkSourceValidity(requestSource.value) ||
-    !checkTargetValidity(requestTarget.value) ||
-    !disclaimerValid.value
-  ) {
+const submitForm = async () => {
+  if (!disclaimerValid.value) {
     throw new Error('Form not valid!');
   }
+  const validRequestSource = requestSource as Ref<ValidRequestSource>;
+  const validRequestTarget = requestTarget as Ref<ValidRequestTarget>;
 
-  const sourceAmount = TokenAmount.parse(
-    requestSource.value.amount,
-    requestSource.value.token.value,
+  const transfer = await createTransfer(
+    validRequestSource,
+    validRequestTarget,
+    getTokenForChain(
+      validRequestTarget.value.targetChain.value.identifier,
+      validRequestSource.value.token.label,
+    ),
   );
 
-  const targetConfiguration =
-    configuration.chains[requestTarget.value.targetChain.value.identifier];
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const targetToken = parseTokenFromChainConfiguration(
-    targetConfiguration,
-    requestSource.value.token.label,
-  )!;
-  const targetAmount = TokenAmount.parse(requestSource.value.amount, targetToken);
-  const validityPeriod = new UInt256('600');
-  const { rpcUrl, requestManagerAddress } = requestSource.value.sourceChain.value;
-  const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, targetAmount.uint256);
-  const fees = TokenAmount.new(requestFee, sourceAmount.token);
+  transferHistory.addTransfer(transfer);
+  switchToActivities();
 
-  const transfer = reactive(
-    Transfer.new(
-      requestSource.value.sourceChain.value,
-      sourceAmount,
-      requestTarget.value.targetChain.value,
-      targetAmount,
-      requestTarget.value.toAddress,
-      validityPeriod,
-      fees,
-    ),
-  ) as Transfer;
+  await executeTransfer(signer, signerAddress, transfer);
 
   transferHistory.addTransfer(transfer);
   switchToActivities();
   resetForm();
-
-  try {
-    await transfer.execute(signer.value, signerAddress.value);
-  } catch (error) {
-    console.error(error);
-    console.log(transfer);
-  }
+  // Todo: reset validation
 };
-
-function checkSourceValidity(sourceData: RequestSource): sourceData is ValidRequestSource {
-  return (
-    Object.values(sourceData).every((value) => !!value) &&
-    sourceData.sourceChain?.value.identifier === provider.value?.chainId.value
-  );
-}
-function checkTargetValidity(targetData: RequestTarget): targetData is ValidRequestTarget {
-  return Object.values(targetData).every((value) => !!value);
-}
-
-function parseTokenFromChainConfiguration(
-  configuration: ChainWithTokens,
-  tokenName: string,
-): Token | undefined {
-  return configuration.tokens.find((token) => token.symbol === tokenName);
-}
 
 function resetForm() {
   requestSource.value = EMPTY_SOURCE_DATA;
