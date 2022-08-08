@@ -17,10 +17,8 @@ export function useTransferRequest() {
   const create = async (
     requestSource: Ref<ValidRequestSource>,
     requestTarget: Ref<ValidRequestTarget>,
-    targetToken: Token | undefined,
+    targetToken: Token,
   ) => {
-    if (!targetToken) return null;
-
     creating.value = true;
 
     const sourceAmount = TokenAmount.parse(
