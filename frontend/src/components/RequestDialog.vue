@@ -1,12 +1,17 @@
 <template>
   <div class="relative bg-transparent flex flex-col justify-between h-full">
-    <RequestSourceInputs v-model="requestSource" class="rounded-br-lg bg-teal px-16 py-10" />
+    <RequestSourceInputs
+      ref="requestSourceInputsRef"
+      v-model="requestSource"
+      class="rounded-br-lg bg-teal px-16 py-10"
+    />
     <div class="relative">
       <div class="absolute -top-18 flex flex-row w-full justify-center">
         <img class="h-36 w-36" src="@/assets/images/Signet.svg" />
       </div>
     </div>
     <RequestTargetInputs
+      ref="requestTargetInputsRef"
       v-model="requestTarget"
       :amount="requestSource.amount"
       :source-chain="requestSource.sourceChain"
@@ -40,7 +45,7 @@
           >
         </div>
       </div>
-      <ActionButton class="w-full" :disabled="creatingTransaction" @click="submitForm">
+      <ActionButton class="w-full" :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
         <spinner v-else size="8" border="4"></spinner>
       </ActionButton>
@@ -49,9 +54,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Validation } from '@vuelidate/core';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
@@ -83,7 +89,7 @@ const EMPTY_TARGET_DATA: RequestTarget = {
 const DISCLAIMER_REQUIRED = process.env.NODE_ENV === 'production';
 
 const ethereumProvider = useEthereumProvider();
-const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 const {
@@ -99,31 +105,43 @@ const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
 
 const disclaimerValid = computed(() => disclaimerChecked.value || !DISCLAIMER_REQUIRED);
 
+const requestSourceInputsRef = ref<{ v$: Validation }>();
+const requestTargetInputsRef = ref<{ v$: Validation }>();
+
+const formValid = computed(() => {
+  if (!requestSourceInputsRef.value || !requestTargetInputsRef.value) return false;
+
+  return !requestSourceInputsRef.value.v$.$invalid && !requestTargetInputsRef.value.v$.$invalid;
+});
+
+const submitDisabled = computed(() => {
+  return !formValid.value || creatingTransaction.value;
+});
+
 const submitForm = async () => {
-  if (!disclaimerValid.value) {
+  if (!formValid.value && !disclaimerValid.value) {
     throw new Error('Form not valid!');
   }
+
   const validRequestSource = requestSource as Ref<ValidRequestSource>;
   const validRequestTarget = requestTarget as Ref<ValidRequestTarget>;
-
-  const transfer = await createTransfer(
-    validRequestSource,
-    validRequestTarget,
-    getTokenForChain(
-      validRequestTarget.value.targetChain.value.identifier,
-      validRequestSource.value.token.label,
-    ),
+  const targetToken = getTokenForChain(
+    validRequestTarget.value.targetChain.value.identifier,
+    validRequestSource.value.token.label,
   );
 
-  transferHistory.addTransfer(transfer);
-  switchToActivities();
+  if (!targetToken) throw new Error('Invalid target token!');
 
-  await executeTransfer(signer, signerAddress, transfer);
+  const transfer = await createTransfer(validRequestSource, validRequestTarget, targetToken);
 
   transferHistory.addTransfer(transfer);
+
   switchToActivities();
   resetForm();
-  // Todo: reset validation
+  await nextTick();
+  resetFormValidation();
+
+  await executeTransfer(signer, signerAddress, transfer);
 };
 
 function resetForm() {
@@ -132,6 +150,11 @@ function resetForm() {
     ...EMPTY_TARGET_DATA,
     toAddress: requestTarget.value.toAddress === signerAddress.value ? signerAddress.value : '',
   };
+}
+
+function resetFormValidation() {
+  if (requestSourceInputsRef.value) requestSourceInputsRef.value.v$.$reset();
+  if (requestTargetInputsRef.value) requestTargetInputsRef.value.v$.$reset();
 }
 
 watch(chainId, (_, oldChainId) => {

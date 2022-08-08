@@ -152,6 +152,8 @@ const state = {
 
 const v$ = useVuelidate(computedRules, state);
 
+defineExpose({ v$ });
+
 watch(inputValues, (value) => emits('update:modelValue', value));
 watch(
   () => props.modelValue,
