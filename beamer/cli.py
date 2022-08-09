@@ -54,9 +54,7 @@ def _sigint_handler(agent: Agent) -> None:
 @click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
-    default="info",
-    show_default=True,
-    help="The log level.",
+    help="The log level. Default: info",
 )
 @click.option(
     "--metrics-prometheus-port",
