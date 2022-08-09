@@ -3,17 +3,26 @@ from concurrent.futures import ThreadPoolExecutor
 
 import structlog
 from eth_typing import Address
+from web3 import Web3
 
 import beamer.metrics
 from beamer.chain import POLL_PERIOD_MAINNET, POLL_PERIOD_TESTNET, EventMonitor, EventProcessor
 from beamer.config import Config
-from beamer.contracts import make_contracts
+from beamer.contracts import ContractInfo, make_contracts
 from beamer.state_machine import Context
 from beamer.tracker import Tracker
 from beamer.typing import ChainId
 from beamer.util import make_web3
 
 log = structlog.get_logger(__name__)
+
+
+def _get_contracts_info(config: Config, web3: Web3) -> dict[str, ContractInfo]:
+    chain_id = ChainId(web3.eth.chain_id)
+    info = config.deployment_info.get(chain_id)
+    if info is None:
+        raise RuntimeError(f"Deployment info for chain ID {chain_id} not available")
+    return info
 
 
 class Agent:
@@ -30,8 +39,8 @@ class Agent:
         w3_l2a = make_web3(config.l2a_rpc_url, config.account)
         w3_l2b = make_web3(config.l2b_rpc_url, config.account)
 
-        l2a_contracts_info = config.deployment_info[ChainId(w3_l2a.eth.chain_id)]
-        l2b_contracts_info = config.deployment_info[ChainId(w3_l2b.eth.chain_id)]
+        l2a_contracts_info = _get_contracts_info(config, w3_l2a)
+        l2b_contracts_info = _get_contracts_info(config, w3_l2b)
 
         l2a_contracts = make_contracts(w3_l2a, l2a_contracts_info)
         l2b_contracts = make_contracts(w3_l2b, l2b_contracts_info)
