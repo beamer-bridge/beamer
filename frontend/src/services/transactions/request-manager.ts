@@ -104,23 +104,40 @@ export async function getRequestData(
     throw new Error('No request known for this identifier!');
   }
 }
-
-export async function checkIfRequestHasExpired(
+type RequestExpiryInfo = {
+  validityExpired: boolean;
+  noActiveClaims: boolean;
+  notWithdrawnBySomeoneElse: boolean;
+  timeToExpiredMillis: number;
+};
+export async function getRequestExpiryInfo(
   rpcUrl: string,
   requestManagerAddress: string,
   requestIdentifier: UInt256,
   requestAccount: string,
-): Promise<boolean> {
-  const request = await getRequestData(rpcUrl, requestManagerAddress, requestIdentifier);
+): Promise<RequestExpiryInfo> {
+  const { validUntil, activeClaims, withdrawInfo } = await getRequestData(
+    rpcUrl,
+    requestManagerAddress,
+    requestIdentifier,
+  );
   const provider = new JsonRpcProvider(rpcUrl);
   const block = await provider.getBlock('latest');
-  const validityExpired = request.validUntil.lt(block.timestamp);
-  const noActiveClaims = request.activeClaims.eq(0);
+  const validityExpired = validUntil.lt(block.timestamp);
+  const noActiveClaims = activeClaims.eq(0);
   const notWithdrawnBySomeoneElse =
-    request.withdrawInfo.filler.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
-    request.withdrawInfo.filler.toLowerCase() == requestAccount.toLowerCase();
+    withdrawInfo.filler.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
+    withdrawInfo.filler.toLowerCase() == requestAccount.toLowerCase();
 
-  return validityExpired && noActiveClaims && notWithdrawnBySomeoneElse;
+  const timeNow = BigNumber.from(Date.now());
+  const timeToExpiredMillis = Math.max(validUntil.mul(1000).sub(timeNow).toNumber(), 0);
+
+  return {
+    validityExpired,
+    noActiveClaims,
+    notWithdrawnBySomeoneElse,
+    timeToExpiredMillis,
+  };
 }
 
 export function failWhenRequestExpires(
@@ -130,27 +147,69 @@ export function failWhenRequestExpires(
   requestAccount: string,
 ): Cancelable<void> {
   const provider = new JsonRpcProvider(rpcUrl);
+  const contract = getContract(rpcUrl, requestManagerAddress);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const promise = new Promise<void>((_, reject) => {
-    const checkExpiration = async () => {
-      const hasExpired = await checkIfRequestHasExpired(
+    const cleanUpAndReject = () => {
+      provider.removeAllListeners();
+      contract.removeAllListeners();
+      reject(new RequestExpiredError());
+    };
+
+    const attachClaimWithdrawnListener = async () => {
+      const eventFilter = contract.filters.ClaimStakeWithdrawn(
+        undefined,
+        BigNumber.from(requestIdentifier.asString),
+      );
+
+      contract.on(eventFilter, async () => {
+        const { activeClaims } = await getRequestData(
+          rpcUrl,
+          requestManagerAddress,
+          requestIdentifier,
+        );
+        if (activeClaims.eq(0)) cleanUpAndReject();
+      });
+    };
+
+    const configureListeners = async () => {
+      const requestExpiryInfo = await getRequestExpiryInfo(
         rpcUrl,
         requestManagerAddress,
         requestIdentifier,
         requestAccount,
       );
 
-      if (hasExpired) {
-        provider.removeAllListeners();
-        reject(new RequestExpiredError());
+      // If not expired by sequencer clock
+      if (!requestExpiryInfo.validityExpired) {
+        // And expired by our clock
+        if (requestExpiryInfo.timeToExpiredMillis === 0)
+          // wait on new blocks until expired by sequencer clock
+          provider.once('block', configureListeners);
+        // sleep until expired by our clock
+        else timeout = setTimeout(configureListeners, requestExpiryInfo.timeToExpiredMillis);
+      } else {
+        if (!requestExpiryInfo.notWithdrawnBySomeoneElse) return cleanUpAndReject();
+        if (!requestExpiryInfo.noActiveClaims) {
+          return attachClaimWithdrawnListener();
+        }
+
+        return cleanUpAndReject();
       }
     };
 
-    checkExpiration();
-    provider.on('block', checkExpiration);
+    configureListeners();
   });
 
-  const cancel = () => provider.removeAllListeners();
+  const cancel = () => {
+    provider.removeAllListeners();
+    contract.removeAllListeners();
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
   return { promise, cancel };
 }
 
