@@ -166,6 +166,17 @@ def _make_topics_to_abi(contract: Contract) -> dict[bytes, ABIEvent]:
     return event_abis
 
 
+def _convert_bytes(kwargs: dict) -> None:
+    for name, type_ in (
+        ("fill_id", FillId),
+        ("fill_hash", FillHash),
+        ("request_hash", RequestHash),
+    ):
+        value = kwargs.get(name)
+        if value is not None:
+            kwargs[name] = type_(value)
+
+
 def _decode_event(
     codec: ABICodec, log_entry: LogReceipt, chain_id: ChainId, event_abis: dict[bytes, ABIEvent]
 ) -> Optional[Event]:
@@ -177,6 +188,7 @@ def _decode_event(
         kwargs["chain_id"] = chain_id
         kwargs["block_number"] = log_entry["blockNumber"]
         kwargs["tx_hash"] = log_entry["transactionHash"]
+        _convert_bytes(kwargs)
         return _EVENT_TYPES[data.event](**kwargs)
     return None
 
