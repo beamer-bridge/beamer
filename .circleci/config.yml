@@ -1,0 +1,13 @@
+version: 2.1
+
+executors:
+  python:
+    docker:
+      - image: cimg/python:3.9.13
+    working_directory: ~/beamer
+
+  node:
+    docker:
+      - image: cimg/node:16.16
+    working_directory: ~/beamer
+
