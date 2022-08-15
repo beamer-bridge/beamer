@@ -20,3 +20,26 @@ jobs:
           root: "~"
           paths:
             - beamer
+
+  install-python:
+    executor: python
+    environment:
+      SHELL: "/bin/bash"
+    steps:
+      - attach_workspace:
+          at: "~"
+      - run: pip install -U poetry
+      - restore_cache:
+          keys:
+            - beamer-dependencies-v1-{{ checksum "poetry.lock" }}
+            - beamer-dependencies-v1
+      - run: poetry install
+      - save_cache:
+          key:
+            beamer-dependencies-v1-{{ checksum "poetry.lock" }}
+          paths:
+            - "~/.cache/pypoetry/virtualenvs"
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - ".cache/pypoetry/virtualenvs"
