@@ -1,0 +1,13 @@
+version: 2.1
+
+jobs:
+  echo-beamer:
+    docker:
+      - image: cimg/python:3.9.13
+    steps:
+      - run: echo "beamer bridge to the moon"
+
+workflows:
+  empty:
+    jobs:
+      - echo-beamer
