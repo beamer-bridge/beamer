@@ -83,3 +83,18 @@ jobs:
       - initialize-environment
       - run: make lint
 
+workflows:
+  backend:
+    jobs:
+      - checkout
+      - install-npm-packages
+      - install-python:
+          requires:
+            - checkout
+      - create-relayers:
+          requires:
+            - checkout
+      - lint:
+          requires:
+            - install-python
+            - install-npm-packages
