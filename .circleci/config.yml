@@ -76,3 +76,10 @@ jobs:
           root: "~"
           paths:
             - ".nvm"
+
+  lint:
+    executor: python
+    steps:
+      - initialize-environment
+      - run: make lint
+
