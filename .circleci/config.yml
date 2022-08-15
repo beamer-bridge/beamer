@@ -43,3 +43,14 @@ jobs:
           root: "~"
           paths:
             - ".cache/pypoetry/virtualenvs"
+
+  create-relayers:
+    executor: node
+    steps:
+      - attach_workspace:
+          at: "~"
+      - run: make relayers
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - "relayer"
