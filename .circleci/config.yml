@@ -54,3 +54,16 @@ jobs:
           root: "."
           paths:
             - "relayer"
+
+  install-npm-packages:
+    executor: node
+    steps:
+      - attach_workspace:
+          at: "~"
+      - run: npm install prettier prettier-plugin-solidity --location=global
+      - run: npm install solhint --location=global
+      - run: npm install ganache --location=global
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - ".nvm"
