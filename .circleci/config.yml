@@ -1,5 +1,14 @@
 version: 2.1
 
+commands:
+  initialize-environment:
+    steps:
+      - attach_workspace:
+          at: "~"
+      - run:
+         name: Configuring virtual environment activation
+         command: echo 'export PATH=$(poetry env info -p)/bin:~/.nvm/versions/node/v16.16.0/bin:${PATH}' >> ${BASH_ENV}
+
 executors:
   python:
     docker:
