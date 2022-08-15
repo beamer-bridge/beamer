@@ -11,3 +11,12 @@ executors:
       - image: cimg/node:16.16
     working_directory: ~/beamer
 
+jobs:
+  checkout:
+    executor: python
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: "~"
+          paths:
+            - beamer
