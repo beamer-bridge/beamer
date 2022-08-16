@@ -29,7 +29,15 @@
             class="checked:after:content-['\2713']"
             :class="checkboxClasses"
           />
-          <span class="text-lg">I agree to the <TermsModal /></span>
+          <span class="text-lg"
+            >I agree to the
+            <a
+              href="https://beamerbridge.com/terms.html"
+              target="_blank"
+              class="underline hover:opacity-90"
+              >Terms & Conditions</a
+            ></span
+          >
         </div>
       </div>
       <ActionButton class="w-full" :disabled="!formValid" @click="submitRequestTransaction">
@@ -48,7 +56,6 @@ import { Transfer } from '@/actions/transfers';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
-import TermsModal from '@/components/TermsModal.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { switchToActivities } from '@/router/navigation';
 import { getRequestFee } from '@/services/transactions/request-manager';

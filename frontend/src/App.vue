@@ -9,7 +9,9 @@
   <feedback v-if="enableFeedback"></feedback>
   <footer class="my-8 text-lg text-center text-sea-green">
     Powered by Beamer &bull;
-    <imprint-modal />
+    <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
+      >Imprint</a
+    >
   </footer>
 </template>
 
@@ -19,7 +21,6 @@ import type { Ref } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
-import ImprintModal from '@/components/ImprintModal.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
