@@ -1,6 +1,12 @@
 import { UInt256 } from '@/types/uint-256';
 import { generateUInt256Data } from '~/utils/data_generators';
 
+function createUInt256Pair(numberOne: string, numberTwo: string) {
+  return [
+    new UInt256(generateUInt256Data(numberOne)),
+    new UInt256(generateUInt256Data(numberTwo)),
+  ];
+}
 describe('UInt256', () => {
   describe('parse()', () => {
     it('correctly parses integer number according to decimals', () => {
@@ -61,6 +67,54 @@ describe('UInt256', () => {
       const newEncodedData = newNumber.encode();
 
       expect(encodedData).toMatch(newEncodedData);
+    });
+  });
+
+  describe('add()', () => {
+    it('returns sum of two numbers', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '-50');
+      expect(numberOne.add(numberTwo).asString).toBe('50');
+    });
+  });
+
+  describe('isZero()', () => {
+    it('returns true if number instance is equal to zero', () => {
+      const zeroNumber = new UInt256(generateUInt256Data('0'));
+      expect(zeroNumber.isZero()).toBe(true);
+    });
+    it('returns false if number instance is not equal to zero', () => {
+      const nonZeroNumber = new UInt256(generateUInt256Data('100'));
+      expect(nonZeroNumber.isZero()).toBe(false);
+    });
+  });
+
+  describe('lte()', () => {
+    it('returns true if number instance is less than provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('99', '100');
+      expect(numberOne.lte(numberTwo)).toBe(true);
+    });
+    it('returns false if number instance is greater than provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '99');
+      expect(numberOne.lte(numberTwo)).toBe(false);
+    });
+    it('returns true if number instance is equal to provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '100');
+      expect(numberOne.lte(numberTwo)).toBe(true);
+    });
+  });
+
+  describe('gte()', () => {
+    it('returns true if number instance is greater than provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '99');
+      expect(numberOne.gte(numberTwo)).toBe(true);
+    });
+    it('returns false if number instance is less than provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('99', '100');
+      expect(numberOne.gte(numberTwo)).toBe(false);
+    });
+    it('returns true if number instance is equal to provided number', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '100');
+      expect(numberOne.gte(numberTwo)).toBe(true);
     });
   });
 });

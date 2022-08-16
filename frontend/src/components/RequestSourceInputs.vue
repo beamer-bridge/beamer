@@ -28,22 +28,24 @@
         placeholder="Source Rollup"
         required
       />
-      <InputValidationMessage
-        v-if="v$.sourceChain.$error"
-        :message="v$.sourceChain.$errors[0].$message"
-      />
+      <InputValidationMessage v-if="v$.selectedSourceChain.$error">
+        {{ v$.selectedSourceChain.$errors[0].$message }}
+      </InputValidationMessage>
     </div>
     <div class="flex flex-col justify-between">
       <div class="flex flex-row gap-5">
         <div class="flex-[9_9_0%] flex flex-col items-start">
-          <!-- Todo: refactor keydown event to a reusable directive -->
           <Input
             v-model="selectedAmount"
             name="amount"
-            type="number"
+            type="text"
+            pattern="^[0-9]*[.,]?[0-9]*$"
+            inputmode="decimal"
+            autocomplete="off"
+            autocorrect="off"
             placeholder="0.00"
             required
-            :valid="v$.amount && !v$.amount.$error"
+            :valid="isSelectedAmountValid"
           />
           <InputValidationMessage v-if="!isSelectedAmountValid">
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
@@ -126,8 +128,6 @@
 </template>
 
 <script setup lang="ts">
-import { useVuelidate } from '@vuelidate/core';
-import { helpers, required, sameAs } from '@vuelidate/validators';
 import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, watch } from 'vue';
@@ -140,6 +140,7 @@ import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
 import { useRequestFee } from '@/composables/useRequestFee';
+import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
 import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
@@ -147,7 +148,7 @@ import { useEthereumProvider } from '@/stores/ethereum-provider';
 import type { Chain } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
-import { isMatchingDecimals, maxTokenAmount, minTokenAmount } from '@/validation/validators';
+import { isUnsignedNumeric, makeMatchingDecimalsValidator } from '@/validation/validators';
 
 interface Props {
   modelValue: RequestSource;
@@ -208,10 +209,13 @@ const selectedTokenAmount = computed(() => {
   if (
     selectedToken.value &&
     selectedAmount.value &&
-    isMatchingDecimals(selectedToken.value.value.decimals)(selectedAmount.value)
+    isUnsignedNumeric(selectedAmount.value) &&
+    makeMatchingDecimalsValidator(selectedToken.value.value.decimals)(selectedAmount.value)
   ) {
     return TokenAmount.parse(selectedAmount.value, selectedToken.value.value);
-  } else return undefined;
+  } else {
+    return undefined;
+  }
 });
 const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
   computed(() => selectedSourceChain.value?.value.rpcUrl),
@@ -243,7 +247,7 @@ const totalRequestTokenAmount = computed(() => {
     !requestFeeAmount.value ||
     requestFeeLoading.value
   ) {
-    return null;
+    return undefined;
   }
   const total = requestFeeAmount.value.uint256.add(selectedTokenAmount.value.uint256);
   const totalAmount = new TokenAmount({
@@ -266,92 +270,15 @@ const inputValues: WritableComputedRef<RequestSource> = computed({
   },
 });
 
-const computedRules = computed(() => {
-  const sourceChainRules = {
-    $autoDirty: true,
-    required,
-  };
-  const tokenRules = {
-    $autoDirty: true,
-    required,
-  };
-  const requestFeeLoadingRules = {
-    $autoDirty: true,
-    sameAs: sameAs(false),
-  };
-
-  if (selectedToken.value) {
-    const selectedTokenValue = selectedToken.value.value;
-    const selectedTokenDecimals = selectedTokenValue.decimals;
-    const selectedAmountRules = {
-      $autoDirty: true,
-      required: helpers.withMessage('Amount is required', required),
-      isMatchingDecimals: helpers.withMessage(
-        'Decimals out of boundary',
-        isMatchingDecimals(selectedTokenDecimals),
-      ),
-    };
-    if (selectedTokenAmount.value) {
-      const min = TokenAmount.parse(
-        ['0.', '0'.repeat(selectedTokenDecimals - 1), '1'].join(''),
-        selectedTokenValue,
-      );
-      const selectedTokenAmountRules = {
-        $autoDirty: true,
-        minValue: helpers.withMessage(`Amount must be a positive number`, minTokenAmount(min)),
-      };
-      const totalRequestTokenAmountRules = {
-        $autoDirty: true,
-        maxValue: helpers.withMessage('Insufficient funds', (value: TokenAmount) => {
-          if (!value || !selectedToken.value) return true;
-          // Due to reactivity issues `max` has to be initialized here
-          const max = new TokenAmount({
-            amount: balance.value.toString(),
-            token: selectedToken.value.value,
-          });
-          return maxTokenAmount(max)(value);
-        }),
-      };
-      return {
-        sourceChain: sourceChainRules,
-        token: tokenRules,
-        selectedAmount: selectedAmountRules,
-        selectedTokenAmount: selectedTokenAmountRules,
-        totalRequestTokenAmount: totalRequestTokenAmountRules,
-        requestFeeLoading: requestFeeLoadingRules,
-        $validationGroups: {
-          amount: ['selectedTokenAmount', 'selectedAmount', 'totalRequestTokenAmount'],
-        },
-      };
-    }
-
-    return {
-      sourceChain: sourceChainRules,
-      token: tokenRules,
-      selectedAmount: selectedAmountRules,
-      requestFeeLoading: requestFeeLoadingRules,
-      $validationGroups: {
-        amount: ['selectedAmount'],
-      },
-    };
-  }
-  return {
-    sourceChain: sourceChainRules,
-    token: tokenRules,
-  };
-});
-
-const state = {
-  sourceChain: selectedSourceChain,
-  token: selectedToken,
+const v$ = useRequestSourceInputValidations({
+  selectedSourceChain,
+  selectedToken,
   selectedAmount,
   selectedTokenAmount,
   totalRequestTokenAmount,
   requestFeeLoading,
-};
-
-const v$ = useVuelidate(computedRules, state);
-
+  balance,
+});
 defineExpose({ v$ });
 
 const isSelectedAmountValid = computed(() => {
@@ -359,7 +286,9 @@ const isSelectedAmountValid = computed(() => {
 });
 
 watch(selectedToken, () => {
-  if (selectedAmount.value) v$.value.$touch();
+  if (selectedAmount.value) {
+    v$.value.$touch();
+  }
 });
 watch(inputValues, (value) => emits('update:modelValue', value));
 watch(

@@ -7,6 +7,8 @@ function createWrapper(options?: {
   focusOnMount?: boolean;
   attachToBody?: boolean;
   type?: string;
+  valid?: boolean;
+  alignRight?: boolean;
 }) {
   return mount(Input, {
     shallow: true,
@@ -14,6 +16,8 @@ function createWrapper(options?: {
       modelValue: options?.modelValue ?? '',
       type: options?.type ?? undefined,
       focusOnMount: options?.focusOnMount ?? false,
+      valid: options?.valid ?? undefined,
+      alignRight: options?.alignRight ?? undefined,
     },
     attachTo: options?.attachToBody ? document.body : undefined,
   });
@@ -57,5 +61,27 @@ describe('Input.vue', () => {
     const inputElement = wrapper.get('input[type="text"]').element;
 
     expect(inputElement).toBe(document.activeElement);
+  });
+
+  describe('validation', () => {
+    it('is marked as valid by default', () => {
+      const wrapper = createWrapper();
+      expect(wrapper.props()).toContain({ valid: true });
+    });
+    it('is marked as invalid when `valid` prop is set to false', () => {
+      const wrapper = createWrapper({ valid: false });
+      expect(wrapper.props()).toContain({ valid: false });
+    });
+  });
+
+  describe('text align', () => {
+    it('is aligned to left by default', () => {
+      const wrapper = createWrapper();
+      expect(wrapper.props()).toContain({ alignRight: false });
+    });
+    it('is aligned to right when `alignRight` props is set to true', () => {
+      const wrapper = createWrapper({ alignRight: true });
+      expect(wrapper.props()).toContain({ alignRight: true });
+    });
   });
 });
