@@ -1,50 +1,46 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
 import type { Ref } from 'vue';
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
+import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
-import type { Token } from '@/types/data';
-import type { ValidRequestSource, ValidRequestTarget } from '@/types/form';
+import type { Chain, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export function useTransferRequest() {
-  const executing = ref(false);
-  const creating = ref(false);
-
-  // TODO: separate params instead of using complete objects
-  const create = async (
-    requestSource: Ref<ValidRequestSource>,
-    requestTarget: Ref<ValidRequestTarget>,
-    targetToken: Token,
-  ) => {
-    creating.value = true;
-
-    const sourceAmount = TokenAmount.parse(
-      requestSource.value.amount,
-      requestSource.value.token.value,
-    );
-    const targetAmount = TokenAmount.parse(requestSource.value.amount, targetToken);
+  const create = async (options: {
+    sourceChain: Chain;
+    sourceAmount: string;
+    targetChain: Chain;
+    toAddress: string;
+    sourceToken: Token;
+    targetToken: Token;
+  }): Promise<Transfer> => {
+    const sourceTokenAmount = TokenAmount.parse(options.sourceAmount, options.sourceToken);
+    const targetTokenAmount = TokenAmount.parse(options.sourceAmount, options.targetToken);
 
     const validityPeriod = new UInt256('600');
-    const { rpcUrl, requestManagerAddress } = requestSource.value.sourceChain.value;
-    const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, targetAmount.uint256);
-    const fees = TokenAmount.new(requestFee, sourceAmount.token);
+    const { rpcUrl, requestManagerAddress } = options.sourceChain;
+    const requestFee = await getRequestFee(
+      rpcUrl,
+      requestManagerAddress,
+      targetTokenAmount.uint256,
+    );
+    const fees = TokenAmount.new(requestFee, sourceTokenAmount.token);
 
     const transfer = reactive(
       Transfer.new(
-        requestSource.value.sourceChain.value,
-        sourceAmount,
-        requestTarget.value.targetChain.value,
-        targetAmount,
-        requestTarget.value.toAddress,
+        options.sourceChain,
+        sourceTokenAmount,
+        options.targetChain,
+        targetTokenAmount,
+        options.toAddress,
         validityPeriod,
         fees,
       ),
     ) as Transfer;
-
-    creating.value = false;
 
     return transfer;
   };
@@ -53,11 +49,8 @@ export function useTransferRequest() {
     signer: Ref<JsonRpcSigner | undefined>,
     signerAddress: Ref<string>,
     transfer: Transfer,
-  ) => {
-    executing.value = true;
-
+  ): Promise<void> => {
     if (!signer.value) {
-      executing.value = false;
       throw new Error('No signer available!');
     }
 
@@ -66,10 +59,16 @@ export function useTransferRequest() {
     } catch (error) {
       console.error(error);
       console.log(transfer);
-    } finally {
-      executing.value = false;
     }
   };
 
-  return { create, execute, creating, executing };
+  const { active: createActive, run: createAsync } = useAsynchronousTask(create);
+  const { active: executeActive, run: executeAsync } = useAsynchronousTask(execute);
+
+  return {
+    create: createAsync,
+    execute: executeAsync,
+    creating: createActive,
+    executing: executeActive,
+  };
 }

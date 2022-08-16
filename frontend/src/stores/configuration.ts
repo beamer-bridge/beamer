@@ -17,7 +17,9 @@ export const useConfiguration = defineStore('configuration', {
       (state) =>
       (chainId: number, tokenSymbol: string): Token | undefined => {
         const chain = state.chains[chainId];
-        if (!chain) return;
+        if (!chain) {
+          return;
+        }
 
         return chain.tokens.find((token) => token.symbol === tokenSymbol);
       },

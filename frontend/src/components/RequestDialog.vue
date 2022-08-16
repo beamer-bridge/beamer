@@ -109,17 +109,19 @@ const requestSourceInputsRef = ref<{ v$: Validation }>();
 const requestTargetInputsRef = ref<{ v$: Validation }>();
 
 const formValid = computed(() => {
-  if (!requestSourceInputsRef.value || !requestTargetInputsRef.value) return false;
+  if (!requestSourceInputsRef.value || !requestTargetInputsRef.value) {
+    return false;
+  }
 
   return !requestSourceInputsRef.value.v$.$invalid && !requestTargetInputsRef.value.v$.$invalid;
 });
 
 const submitDisabled = computed(() => {
-  return !formValid.value || creatingTransaction.value;
+  return !formValid.value || creatingTransaction.value || !disclaimerValid.value;
 });
 
 const submitForm = async () => {
-  if (!formValid.value && !disclaimerValid.value) {
+  if (submitDisabled.value) {
     throw new Error('Form not valid!');
   }
 
@@ -130,9 +132,18 @@ const submitForm = async () => {
     validRequestSource.value.token.label,
   );
 
-  if (!targetToken) throw new Error('Invalid target token!');
+  if (!targetToken) {
+    throw new Error('Invalid target token!');
+  }
 
-  const transfer = await createTransfer(validRequestSource, validRequestTarget, targetToken);
+  const transfer = await createTransfer({
+    sourceChain: validRequestSource.value.sourceChain.value,
+    sourceAmount: validRequestSource.value.amount,
+    targetChain: validRequestTarget.value.targetChain.value,
+    toAddress: validRequestTarget.value.toAddress,
+    sourceToken: validRequestSource.value.token.value,
+    targetToken,
+  });
 
   transferHistory.addTransfer(transfer);
 
@@ -153,8 +164,12 @@ function resetForm() {
 }
 
 function resetFormValidation() {
-  if (requestSourceInputsRef.value) requestSourceInputsRef.value.v$.$reset();
-  if (requestTargetInputsRef.value) requestTargetInputsRef.value.v$.$reset();
+  if (requestSourceInputsRef.value) {
+    requestSourceInputsRef.value.v$.$reset();
+  }
+  if (requestTargetInputsRef.value) {
+    requestTargetInputsRef.value.v$.$reset();
+  }
 }
 
 watch(chainId, (_, oldChainId) => {
