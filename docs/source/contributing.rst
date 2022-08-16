@@ -43,9 +43,10 @@ Deploy the contracts on the local ganache test chain::
                                       --config-file scripts/deployment/ganache-local.json \
                                       --deploy-mintable-token
 
-Generate the token match file::
+Generate a config file with token definition::
 
-    jq '[[["1337", .L2."1337".MintableToken.address]]]' < deployments/ganache-local/deployment.json > test-tokens.json
+    TOKEN_ADDR=$(jq -r '.L2."1337".MintableToken.address' < deployments/ganache-local/deployment.json)
+    echo -e "[tokens]\nTST = [[\"1337\", \"$TOKEN_ADDR\"]]"  > agent-ganache-local.conf
 
 Mint some test tokens::
 
@@ -65,13 +66,13 @@ Whitelist the agent's address::
 
 Start ``beamer-agent``::
 
-    beamer-agent --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
-                 --password '' \
-                 --l1-rpc-url http://localhost:8545 \
-                 --l2a-rpc-url http://localhost:8545 \
-                 --l2b-rpc-url http://localhost:8545 \
+    beamer-agent --account-path 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                 --account-password '' \
+                 --config agent-ganache-local.conf \
+                 --chain l1=http://localhost:8545 \
+                 --source-chain=l1 \\
+                 --target-chain=l1 \\
                  --deployment-dir deployments/ganache-local \
-                 --token-match-file test-tokens.json \
                  --log-level debug
 
 Submit a request::
@@ -84,7 +85,7 @@ Submit a request::
                                      --amount 1 \
                                      --target-address 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc \
                                      --target-chain-id 1337 \
-                                     --target-token-address $(jq -r '.[0][0][1]' < test-tokens.json)
+                                     --target-token-address $TOKEN_ADDR
 
 
 Working with a local Optimism instance
@@ -136,7 +137,7 @@ Measuring gas costs
 
 To measure gas costs, simply invoke the following command::
 
-   brownie test -G
+   brownie test -G beamer/tests/contracts
 
 A difference between two brownie gas profiles can be shown by using the
 following command::
