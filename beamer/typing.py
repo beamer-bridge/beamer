@@ -30,7 +30,6 @@ class RequestHash(_HexBytes):
 ChainId = NewType("ChainId", int)
 ClaimId = NewType("ClaimId", int)
 RequestId = NewType("RequestId", int)
-PrivateKey = NewType("PrivateKey", bytes)
 TokenAmount = NewType("TokenAmount", int)
 URL = NewType("URL", str)
 Termination = NewType("Termination", int)
