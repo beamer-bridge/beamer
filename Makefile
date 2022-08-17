@@ -11,6 +11,7 @@ lint:
 	flake8 $(CODE_DIRS)
 	isort $(CODE_DIRS) --diff --check-only
 	pylint $(CODE_DIRS)
+	solhint $(CONTRACTS)
 	npx prettier --list-different $(CONTRACTS)
 
 black:
