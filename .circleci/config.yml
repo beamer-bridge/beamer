@@ -89,6 +89,12 @@ jobs:
       - initialize-environment
       - run: poetry run brownie test -v -G beamer/tests/contracts
 
+  test-agents:
+    executor: python
+    steps:
+      - initialize-environment
+      - run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
+
 workflows:
   backend:
     jobs:
@@ -108,3 +114,8 @@ workflows:
           requires:
             - install-python
             - install-npm-packages
+      - test-agents:
+          requires:
+            - install-python
+            - install-npm-packages
+            - create-relayers
