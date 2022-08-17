@@ -83,6 +83,12 @@ jobs:
       - initialize-environment
       - run: make lint
 
+  test-contracts:
+    executor: python
+    steps:
+      - initialize-environment
+      - run: poetry run brownie test -v -G beamer/tests/contracts
+
 workflows:
   backend:
     jobs:
@@ -95,6 +101,10 @@ workflows:
           requires:
             - checkout
       - lint:
+          requires:
+            - install-python
+            - install-npm-packages
+      - test-contracts:
           requires:
             - install-python
             - install-npm-packages
