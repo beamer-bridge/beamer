@@ -120,7 +120,7 @@ if (require.main === module) {
   const service = new MessageRelayerService();
 
   try {
-    Promise.any([
+    Promise.race([
       service.run(),
       returnOnPpidChange(startPpid),
     ]);
