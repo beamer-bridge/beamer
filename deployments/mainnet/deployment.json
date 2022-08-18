@@ -8,48 +8,48 @@
       "deployment_args": []
     },
     "OptimismL1Messenger": {
-      "address": "0x913b5aC7E1124Ea3429593193bf44eB967FB7658",
-      "deployment_block": 15082755,
+      "address": "0xf7727b0b71f001D54FBE8b78c3c1077373D1Ee36",
+      "deployment_block": 15321413,
       "deployment_args": [
-        "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1"
+        "0x6D4528d192dB72E282265D6092F4B872f9Dff69e"
       ]
     }
   },
   "L2": {
     "288": {
       "RequestManager": {
-        "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
-        "deployment_block": 712242,
+        "address": "0x8D7ca47D7d0D9951CEdFC1E6eDA598268dAADE78",
+        "deployment_block": 769274,
         "deployment_args": [
           470000000000000,
           3600,
           3600,
-          "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F"
+          "0xd0322d3699DE95dd19D262eDd115648729bE60dB"
         ]
       },
       "FillManager": {
-        "address": "0x85267688CE7677D69d75F288Ff3064431030aF9F",
-        "deployment_block": 712244,
+        "address": "0x4e32CEc57BCaE80928f58D3dbD84550D397F5416",
+        "deployment_block": 769275,
         "deployment_args": [
           "0x5193a6309FF3e72855dcC0c9d5C51fBBD2439c32",
-          "0xF9e693fC08C3Cb2db5b1EeB987612460B40e3e2b"
+          "0xb7A3d96542E12ec447B2590bA423E72E511a3a1A"
         ]
       },
       "ResolutionRegistry": {
-        "address": "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F",
-        "deployment_block": 712240,
+        "address": "0xd0322d3699DE95dd19D262eDd115648729bE60dB",
+        "deployment_block": 769272,
         "deployment_args": []
       },
       "OptimismProofSubmitter": {
-        "address": "0xF9e693fC08C3Cb2db5b1EeB987612460B40e3e2b",
-        "deployment_block": 712241,
+        "address": "0xb7A3d96542E12ec447B2590bA423E72E511a3a1A",
+        "deployment_block": 769273,
         "deployment_args": [
-          "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A"
+          "0x6dcC1c3e3Ca73e1602ecFdF682B6cab7152Ca96C"
         ]
       },
       "OptimismL2Messenger": {
-        "address": "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
-        "deployment_block": 712239,
+        "address": "0x6dcC1c3e3Ca73e1602ecFdF682B6cab7152Ca96C",
+        "deployment_block": 769271,
         "deployment_args": []
       }
     },
