@@ -4,6 +4,7 @@ from pathlib import Path
 
 import click
 import eth_account
+from eth_utils import to_checksum_address
 
 
 @click.command()
@@ -13,17 +14,20 @@ import eth_account
     metavar="KEY",
     help="Specify the private key to use instead of generating one.",
 )
+@click.option(
+    "--password", type=str, required=True, help="Choose a password to encrypt the keystore file"
+)
 @click.argument(
     "output",
     type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
 )
-def main(key: str, output: Path) -> None:
+def main(key: str, password: str, output: Path) -> None:
     if key is None:
         key = random.randbytes(32)
-    account = eth_account.Account.from_key(key)
-    obj = eth_account.account.create_keyfile_json(account.key, b"")
+
+    obj = eth_account.Account.encrypt(key, password)
     output.write_text(json.dumps(obj))
-    print(account.address)
+    print(to_checksum_address(obj["address"]))
 
 
 if __name__ == "__main__":
