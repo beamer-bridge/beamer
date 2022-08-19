@@ -85,6 +85,12 @@ export class MessageRelayerService extends BaseServiceV2<
     const message = messages[0];
     const status = await this.state.messenger.getMessageStatus(message);
 
+    this.logger.info(`message status: ${MessageStatus[status]}`);
+    if (status === MessageStatus.RELAYED) {
+      this.logger.info("message already relayed, exiting");
+      return;
+    }
+
     if (status === MessageStatus.IN_CHALLENGE_PERIOD ||
       status === MessageStatus.STATE_ROOT_NOT_PUBLISHED) {
       throw new Error("tx not yet finalized");
@@ -123,7 +129,7 @@ if (require.main === module) {
     Promise.race([
       service.run(),
       returnOnPpidChange(startPpid),
-    ]);
+    ]).then(() => process.exit());
   } catch (err) {
     console.error(err);
     process.exit(1);
