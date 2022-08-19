@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "yarn configure && vite build",
     "preview": "vite preview",
     "configure": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\", \"target\": \"es2021\"}' ts-node ./src/config/configure.ts && npx prettier --write src/config/**/*.json",
     "check-types": "tsc --noEmit",
@@ -13,7 +13,8 @@
     "lint": "yarn check-types && yarn eslint",
     "lint:fix": "yarn check-types; yarn eslint:fix",
     "test:unit": "vitest run --dir=./tests/unit",
-    "test:coverage": "vitest run --dir=./tests --coverage"
+    "test:coverage": "vitest run --dir=./tests --coverage",
+    "postinstall": "yarn configure"
   },
   "dependencies": {
     "@ethersproject/providers": "^5.5.2",
