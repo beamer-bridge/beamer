@@ -1,0 +1,8 @@
+{
+  "identifier": 10,
+  "explorerTransactionUrl": "https://optimistic.etherscan.io/tx/",
+  "rpcUrl": "https://mainnet.optimism.io",
+  "name": "Optimism Mainnet",
+  "imageUrl": "/images/optimism.png",
+  "tokenSymbols": ["USDC"]
+}
