@@ -1,0 +1,8 @@
+{
+  "identifier": 288,
+  "explorerTransactionUrl": "https://bobascan.com/tx/",
+  "rpcUrl": "https://replica.boba.network",
+  "name": "Boba Mainnet",
+  "imageUrl": "/images/boba.svg",
+  "tokenSymbols": ["USDC"]
+}
