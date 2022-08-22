@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-import type { BeamerConfig } from '@/types/config';
-
 import { ChainMetadata } from './chains/chain';
 import { DeploymentInfo } from './deployment';
 import { TokenMetadata } from './tokens/token';
@@ -54,13 +52,6 @@ export const readDeploymentFolder = (
     .map((folderName) => path.join(rootFolderPath, folderName, 'deployment.json'));
 
   return deploymentFilePaths.map((filePath) => DeploymentInfo.readFromFile(filePath));
-};
-
-export const writeAppConfigFile = (filePath: string, config: BeamerConfig): void => {
-  fs.writeFileSync(filePath, JSON.stringify(config));
-};
-export const readAppConfigFile = (filePath: string): BeamerConfig => {
-  return readFileJsonContent(filePath) as BeamerConfig;
 };
 
 export const getEnvironmentForFolder = (folderName: string): Environment => {

@@ -1,7 +1,7 @@
 /tests/output/
 /coverage/
 /public/config.*.json
-/src/config/tokens/TST.json
+/config/tokens/TST.json
 
 .DS_Store
 node_modules

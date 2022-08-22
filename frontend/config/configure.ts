@@ -19,8 +19,8 @@ import {
 
 const CHAINS_DIR = path.join(__dirname, 'chains');
 const TOKENS_DIR = path.join(__dirname, 'tokens');
-const DEPLOYMENT_DIR = path.join(__dirname, '../../../deployments');
-const OUTPUT_DIR = path.join(__dirname, '../../public');
+const DEPLOYMENT_DIR = path.join(__dirname, '../../deployments');
+const OUTPUT_DIR = path.join(__dirname, '../public');
 
 const ajv = new Ajv();
 addFormats(ajv);

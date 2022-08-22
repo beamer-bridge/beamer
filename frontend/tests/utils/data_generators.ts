@@ -1,3 +1,7 @@
+import { ChainMetadata } from 'config/chains/chain';
+import { DeploymentInfo } from 'config/deployment';
+import { TokenMetadata } from 'config/tokens/token';
+
 import type { StepData } from '@/actions/steps';
 import type {
   FulfillmentInformation,
@@ -5,7 +9,7 @@ import type {
   TransferData,
 } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
-import type { ChainWithTokens } from '@/types/config';
+import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { TokenAmountData } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
@@ -180,4 +184,66 @@ export function generateTransfer(options?: {
   const data = generateTransferData({ ...transferData, steps });
 
   return new Transfer(data);
+}
+
+export function generateChainMetadata(
+  partialChainMetadata?: Partial<ChainMetadata>,
+): ChainMetadata {
+  return new ChainMetadata({
+    identifier: getRandomNumber(),
+    name: getRandomChainName(),
+    rpcUrl: getRandomUrl('rpc'),
+    explorerTransactionUrl: getRandomUrl('explorer'),
+    tokenSymbols: [getRandomTokenSymbol()],
+    ...partialChainMetadata,
+  });
+}
+
+export function generateTokenMetadata(
+  partialTokenMetadata?: Partial<TokenMetadata>,
+): TokenMetadata {
+  return new TokenMetadata({
+    addresses: {
+      [getRandomNumber()]: getRandomEthereumAddress(),
+    },
+    symbol: getRandomTokenSymbol(),
+    decimals: getRandomNumber(0, 18),
+    ...partialTokenMetadata,
+  });
+}
+export function getDeploymentFolderName() {
+  const folderNames = ['mainnet', 'ganache-local', getRandomString(ALPHABET_CHARACTERS, 10)];
+  return folderNames[Math.floor(Math.random() * folderNames.length)];
+}
+
+export function generateDeploymentInfo(
+  partialDeploymentInfo?: Partial<DeploymentInfo>,
+): DeploymentInfo {
+  return new DeploymentInfo({
+    beamer_commit: getRandomString(ALPHABET_CHARACTERS, 40),
+    deployer: getRandomEthereumAddress(),
+    L1: {
+      [getRandomString(ALPHABET_CHARACTERS, 10)]: {
+        address: getRandomEthereumAddress(),
+      },
+    },
+    L2: {
+      [getRandomNumber()]: {
+        [getRandomString(ALPHABET_CHARACTERS, 10)]: {
+          address: getRandomEthereumAddress(),
+        },
+      },
+    },
+    folderName: getDeploymentFolderName(),
+    ...partialDeploymentInfo,
+  });
+}
+
+export function generateBeamerConfig(partialBeamerConfig?: Partial<BeamerConfig>): BeamerConfig {
+  return {
+    chains: {
+      [getRandomNumber()]: generateChainWithTokens(),
+    },
+    ...partialBeamerConfig,
+  };
 }
