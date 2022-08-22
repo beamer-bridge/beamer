@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "yarn configure && vite build",
     "preview": "vite preview",
-    "configure": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\", \"target\": \"es2021\"}' ts-node ./src/config/configure.ts && npx prettier --write src/config/**/*.json",
+    "configure": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\", \"target\": \"es2021\"}' ts-node ./config/configure.ts && npx prettier --write config/**/*.json",
     "check-types": "tsc --noEmit",
     "eslint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings 0 .",
     "eslint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix .",
