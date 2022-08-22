@@ -6,13 +6,14 @@ import { defineConfig } from 'vite';
 const source_directory = path.resolve(__dirname, 'src');
 const test_directory = path.resolve(__dirname, 'tests');
 const test_output_directory = path.resolve(test_directory, 'output');
-
+const config_directory = path.resolve(__dirname, 'config');
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
       '@': source_directory,
       '~': test_directory,
+      config: config_directory,
     },
   },
   test: {
