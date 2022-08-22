@@ -19,7 +19,7 @@ PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
 KEYFILE=$(mktemp -d)/${ADDRESS}.json
 echo Beamer deployer\'s keyfile: ${KEYFILE}
 
-poetry run python ${ROOT}/scripts/generate_account.py --key ${PRIVKEY} ${KEYFILE}
+poetry run python ${ROOT}/scripts/generate_account.py --key ${PRIVKEY} --password '' ${KEYFILE}
 
 down() {
     echo "Shutting down the end-to-end environment"

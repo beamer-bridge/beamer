@@ -25,7 +25,7 @@ ensure_keyfile_exists() {
     keyfile=$2
     root=$(get_root_dir)
     [ -f $keyfile ] || {
-        poetry run python ${root}/scripts/generate_account.py --key ${privkey} ${keyfile}
+        poetry run python ${root}/scripts/generate_account.py --key ${privkey} --password '' ${keyfile}
     }
 }
 
