@@ -34,6 +34,7 @@ module.exports = {
     'simple-import-sort/exports': 'warn',
     'vue/multi-word-component-names': 'off',
     '@typescript-eslint/consistent-type-imports': 'warn',
+    curly: 'error',
   },
   globals: {
     defineProps: 'readonly',

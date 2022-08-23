@@ -35,7 +35,9 @@ export class WalletConnectProvider extends EthereumProvider {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
     } catch (error: unknown) {
-      if ((error as Error).message.startsWith('Unrecognized chain ID')) return false;
+      if ((error as Error).message.startsWith('Unrecognized chain ID')) {
+        return false;
+      }
       throw error;
     }
   }

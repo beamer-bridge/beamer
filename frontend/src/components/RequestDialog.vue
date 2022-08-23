@@ -191,8 +191,9 @@ watch(chainId, (_, oldChainId) => {
 watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
   const toAddress = requestTarget.value.toAddress;
 
-  if (!toAddress || toAddress === prevSignerAddress)
+  if (!toAddress || toAddress === prevSignerAddress) {
     requestTarget.value = { ...requestTarget.value, toAddress: currSignerAddress ?? '' };
+  }
 });
 
 const checkboxClasses = `appearance-none h-7 w-7 bg-sea-green shadow-inner rounded-md 

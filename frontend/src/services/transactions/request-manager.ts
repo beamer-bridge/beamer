@@ -169,7 +169,9 @@ export function failWhenRequestExpires(
           requestManagerAddress,
           requestIdentifier,
         );
-        if (activeClaims.eq(0)) cleanUpAndReject();
+        if (activeClaims.eq(0)) {
+          cleanUpAndReject();
+        }
       });
     };
 
@@ -184,13 +186,18 @@ export function failWhenRequestExpires(
       // If not expired by sequencer clock
       if (!requestExpiryInfo.validityExpired) {
         // And expired by our clock
-        if (requestExpiryInfo.timeToExpiredMillis === 0)
+        if (requestExpiryInfo.timeToExpiredMillis === 0) {
           // wait on new blocks until expired by sequencer clock
           provider.once('block', configureListeners);
+        }
         // sleep until expired by our clock
-        else timeout = setTimeout(configureListeners, requestExpiryInfo.timeToExpiredMillis);
+        else {
+          timeout = setTimeout(configureListeners, requestExpiryInfo.timeToExpiredMillis);
+        }
       } else {
-        if (!requestExpiryInfo.notWithdrawnBySomeoneElse) return cleanUpAndReject();
+        if (!requestExpiryInfo.notWithdrawnBySomeoneElse) {
+          return cleanUpAndReject();
+        }
         if (!requestExpiryInfo.noActiveClaims) {
           return attachClaimWithdrawnListener();
         }
