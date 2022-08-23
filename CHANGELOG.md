@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.4 (2022-08-23)
+
+* agent: fix incorrect log level handling
+* relayer: fixed incorrect exception handling
+* relayer: don't try to relay an already relayed message
+* scripts: generate_account.py got a new required option, --password
+
 ## v0.1.3 (2022-08-05)
 
 * agent: fix location of relayer binaries in the container image
