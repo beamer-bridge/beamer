@@ -1,0 +1,37 @@
+{
+    "L1": {
+        "name": "mainnet",
+        "rpc": "",
+        "chain_id": 1
+    },
+    "L2": [
+        {
+            "name": "Optimism",
+            "rpc": "",
+            "chain_id": 10,
+            "proof_submitter": "OptimismProofSubmitter",
+            "l1_messenger": ["OptimismL1Messenger", "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1"],
+            "l2_messenger": "OptimismL2Messenger",
+            "finality_period": 604800,
+            "request_manager_arguments": {
+                "claim_stake": 0.0015,
+                "claim_period": 86400,
+                "challenge_period_extension": 86400
+            }
+        },
+        {
+            "name": "Boba",
+            "rpc": "",
+            "chain_id": 288,
+            "proof_submitter": "OptimismProofSubmitter",
+            "l1_messenger": ["OptimismL1Messenger", "0x6D4528d192dB72E282265D6092F4B872f9Dff69e"],
+            "l2_messenger": "OptimismL2Messenger",
+            "finality_period": 604800,
+            "request_manager_arguments": {
+                "claim_stake": 0.0015,
+                "claim_period": 86400,
+                "challenge_period_extension": 86400
+            }
+        }
+    ]
+}
