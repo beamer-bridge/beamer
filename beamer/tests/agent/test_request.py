@@ -73,7 +73,7 @@ def test_read_timeout_send_transaction(request_manager, token, config):
     )
 
     requester, target = alloc_accounts(2)
-    make_request(request_manager, token, requester, target, 1, validity_period=3600)
+    make_request(request_manager, token, requester, target, 1, validity_period=1800)
 
     agent = Agent(config)
     agent.start()
