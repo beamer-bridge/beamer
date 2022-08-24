@@ -14,7 +14,7 @@ Summary
     challengePeriod = finalityPeriod[targetRollup] + buffer = 8 days
     challengePeriodExtension = 1 day
     minValidityPeriod = 5 minutes
-    maxValidityPeriod = 52 weeks
+    maxValidityPeriod = 30 minutes
 
 claimStake
 ----------
@@ -142,4 +142,4 @@ Proposed Values
 .. code::
 
     minValidityPeriod = 5 minutes
-    maxValidityPeriod = 52 weeks
+    maxValidityPeriod = 30 minutes
