@@ -2,7 +2,7 @@
   "chains": {
     "288": {
       "identifier": 288,
-      "requestManagerAddress": "0x8D7ca47D7d0D9951CEdFC1E6eDA598268dAADE78",
+      "requestManagerAddress": "0xB7481d9C9D46766FA193Ea8d1e8fC6FB6BBcc537",
       "fillManagerAddress": "0x4e32CEc57BCaE80928f58D3dbD84550D397F5416",
       "explorerTransactionUrl": "https://bobascan.com/tx/",
       "rpcUrl": "https://replica.boba.network",
@@ -19,7 +19,7 @@
     },
     "10": {
       "identifier": 10,
-      "requestManagerAddress": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
+      "requestManagerAddress": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
       "fillManagerAddress": "0x85267688CE7677D69d75F288Ff3064431030aF9F",
       "explorerTransactionUrl": "https://optimistic.etherscan.io/tx/",
       "rpcUrl": "https://opt-mainnet.g.alchemy.com/v2/umLO_ve2OzJ_7rAVebkVbUsuM37cCFoN",
