@@ -47,7 +47,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const isExpanded = ref(props.transfer.active);
-const formattedAmount = computed(() => props.transfer.sourceAmount.format({ decimalPlaces: 2 }));
+const formattedAmount = computed(() => props.transfer.sourceAmount.format());
 
 const requestTransactionUrl = computed(() => {
   const { explorerTransactionUrl } = props.transfer.sourceChain;

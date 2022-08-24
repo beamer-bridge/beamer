@@ -33,10 +33,18 @@ export class TokenAmount implements Encodable<TokenAmountData> {
   public format(options?: { decimalPlaces?: number; withSymbol?: boolean }): string {
     let formattedAmount = this.decimalAmount;
 
-    if (options?.decimalPlaces) {
+    if (!this.amount.isZero()) {
       const beforeDot = formattedAmount.split('.')[0];
-      const totalLength = beforeDot.length + options.decimalPlaces + 1;
+      const smallerThanOne = beforeDot === '0';
+      const reducedDecimalSize = 5 - beforeDot.length >= 2 ? 5 - beforeDot.length : 2;
+      const decimalPlaces = options?.decimalPlaces ?? (smallerThanOne ? 8 : reducedDecimalSize);
+      const totalLength = beforeDot.length + decimalPlaces + 1;
       formattedAmount = formattedAmount.slice(0, totalLength);
+
+      const formattedAfterDot = formattedAmount.split('.')[1];
+      if (smallerThanOne && /^0+$/.test(formattedAfterDot)) {
+        formattedAmount = '<' + formattedAmount.slice(0, totalLength - 1) + '1';
+      }
     }
 
     if (options?.withSymbol ?? true) {
@@ -44,6 +52,10 @@ export class TokenAmount implements Encodable<TokenAmountData> {
     }
 
     return formattedAmount;
+  }
+
+  public formatFullValue(): string {
+    return this.format({ decimalPlaces: this.token.decimals });
   }
 
   public encode(): TokenAmountData {

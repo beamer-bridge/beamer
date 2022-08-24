@@ -52,14 +52,14 @@ describe('TokenAmount', () => {
   });
 
   describe('format()', () => {
-    it('per defaults formats all decimals and and token symbol', () => {
-      const token = generateToken({ decimals: 4, symbol: 'TTT' });
-      const amount = new TokenAmount({ amount: '12345', token });
+    it('per default formats 4 decimals and token symbol for values with 1 pre-decimal digit', () => {
+      const token = generateToken({ decimals: 6, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '1234567', token });
 
       expect(amount.format()).toBe('1.2345 TTT');
     });
 
-    it('can shorten decimals decimal places', () => {
+    it('can shorten number of visible decimal places', () => {
       const token = generateToken({ decimals: 4, symbol: 'TTT' });
       const amount = new TokenAmount({ amount: '12345', token });
 
@@ -71,6 +71,50 @@ describe('TokenAmount', () => {
       const amount = new TokenAmount({ amount: '12345', token });
 
       expect(amount.format({ withSymbol: false })).toBe('1.2345');
+    });
+
+    it('per default shows 3 decimal places for values with 2 pre-decimal digits', () => {
+      const token = generateToken({ decimals: 4, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '123456', token });
+
+      expect(amount.format()).toBe('12.345 TTT');
+    });
+
+    it('per default shows 2 decimal places for values with more than 2 pre-decimal digits', () => {
+      const token = generateToken({ decimals: 4, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '1234567', token });
+
+      expect(amount.format()).toBe('123.45 TTT');
+    });
+
+    it('per default limits to 8 decimal places for values smaller 1', () => {
+      const token = generateToken({ decimals: 18, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '123456789012345678', token });
+
+      expect(amount.format()).toBe('0.12345678 TTT');
+    });
+
+    it('can show all decimal places for values smaller 1', () => {
+      const token = generateToken({ decimals: 18, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '123456789012345678', token });
+
+      expect(amount.format({ decimalPlaces: 18 })).toBe('0.123456789012345678 TTT');
+    });
+
+    it('shows a smaller sign if value is smaller than visible in defined decimals', () => {
+      const token = generateToken({ decimals: 18, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '1', token });
+
+      expect(amount.format()).toBe('<0.00000001 TTT');
+    });
+  });
+
+  describe('formatFullValue()', () => {
+    it('shows complete amount with all digits', () => {
+      const token = generateToken({ decimals: 18, symbol: 'TTT' });
+      const amount = new TokenAmount({ amount: '123456123456789012345678', token });
+
+      expect(amount.formatFullValue()).toBe('123456.123456789012345678 TTT');
     });
   });
 

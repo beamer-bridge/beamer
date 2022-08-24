@@ -27,7 +27,6 @@ export function useTokenSelection(
       _selectedToken.value = token;
     },
   });
-  const selectedTokenAddress = computed(() => selectedToken.value?.value.address);
 
   const addTokenToProvider = async () => {
     if (!provider.value || !selectedToken.value) {
@@ -44,7 +43,6 @@ export function useTokenSelection(
 
   return {
     selectedToken,
-    selectedTokenAddress,
     tokens,
     addTokenToProvider,
     addTokenAvailable,
