@@ -18,12 +18,12 @@
   "L2": {
     "288": {
       "RequestManager": {
-        "address": "0x8D7ca47D7d0D9951CEdFC1E6eDA598268dAADE78",
-        "deployment_block": 769274,
+        "address": "0xB7481d9C9D46766FA193Ea8d1e8fC6FB6BBcc537",
+        "deployment_block": 785558,
         "deployment_args": [
-          470000000000000,
-          3600,
-          3600,
+          1500000000000000,
+          86400,
+          86400,
           "0xd0322d3699DE95dd19D262eDd115648729bE60dB"
         ]
       },
@@ -55,12 +55,12 @@
     },
     "10": {
       "RequestManager": {
-        "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
-        "deployment_block": 13891895,
+        "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
+        "deployment_block": 20408774,
         "deployment_args": [
-          470000000000000,
-          3600,
-          3600,
+          1500000000000000,
+          86400,
+          86400,
           "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F"
         ]
       },
