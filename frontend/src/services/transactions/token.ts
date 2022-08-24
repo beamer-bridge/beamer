@@ -3,7 +3,9 @@ import { BigNumber, Contract } from 'ethers';
 
 import StandardToken from '@/assets/StandardToken.json';
 import type { IEthereumProvider } from '@/services/web3-provider';
-import type { UInt256 } from '@/types/uint-256';
+import type { Token } from '@/types/data';
+import { TokenAmount } from '@/types/token-amount';
+import { UInt256 } from '@/types/uint-256';
 
 export async function ensureTokenAllowance(
   signer: JsonRpcSigner,
@@ -32,10 +34,11 @@ export async function getTokenDecimals(
 
 export async function getTokenBalance(
   provider: IEthereumProvider,
-  tokenAddress: string,
+  token: Token,
   accountAddress: string,
-): Promise<BigNumber> {
-  const tokenContract = new Contract(tokenAddress, StandardToken.abi);
+): Promise<TokenAmount> {
+  const tokenContract = new Contract(token.address, StandardToken.abi);
   const connectedContract = provider.connectContract(tokenContract);
-  return await connectedContract.balanceOf(accountAddress);
+  const balance: BigNumber = await connectedContract.balanceOf(accountAddress);
+  return TokenAmount.new(new UInt256(balance.toString()), token);
 }

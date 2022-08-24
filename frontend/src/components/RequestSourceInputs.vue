@@ -52,7 +52,7 @@
           </InputValidationMessage>
           <div v-else class="self-end">
             <div v-if="showTokenBalance" class="text-base mr-5 mt-1">
-              {{ formattedTokenBalance }} {{ selectedToken?.label }} available
+              {{ formattedTokenBalance }} available
             </div>
           </div>
         </div>
@@ -202,8 +202,11 @@ const selectedSourceChainIdentifier = computed(
   () => selectedSourceChain.value?.value.identifier ?? -1,
 );
 
-const { selectedToken, selectedTokenAddress, tokens, addTokenToProvider, addTokenAvailable } =
-  useTokenSelection(chains, selectedSourceChainIdentifier, provider);
+const { selectedToken, tokens, addTokenToProvider, addTokenAvailable } = useTokenSelection(
+  chains,
+  selectedSourceChainIdentifier,
+  provider,
+);
 
 const selectedTokenAmount = computed(() => {
   if (
@@ -228,7 +231,11 @@ const {
   available: showTokenBalance,
   formattedBalance: formattedTokenBalance,
   balance,
-} = useTokenBalance(provider, signer, selectedTokenAddress);
+} = useTokenBalance(
+  provider,
+  signer,
+  computed(() => selectedToken?.value?.value ?? undefined),
+);
 
 const {
   enabled: faucetEnabled,

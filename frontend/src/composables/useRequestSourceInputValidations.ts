@@ -1,7 +1,6 @@
 import type { ValidationArgs } from '@vuelidate/core';
 import { useVuelidate } from '@vuelidate/core';
 import { helpers, minValue, numeric, required, sameAs } from '@vuelidate/validators';
-import type { BigNumber } from 'ethers';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
 import { computed } from 'vue';
 
@@ -33,7 +32,7 @@ type ValidationRules = ValidationArgs<{
 
 export const useRequestSourceInputValidations = (
   options: ValidationState & {
-    balance: Ref<BigNumber>;
+    balance: Ref<TokenAmount | undefined>;
   },
 ) => {
   const computedRules: ComputedRef<ValidationRules> = computed(() => {
@@ -79,15 +78,11 @@ export const useRequestSourceInputValidations = (
 
         const totalRequestTokenAmountRules = {
           maxValue: helpers.withMessage('Insufficient funds', (value: TokenAmount) => {
-            if (!value || !options.selectedToken.value) {
+            if (!value || !options.selectedToken.value || !options.balance.value) {
               return true;
             }
             // Due to reactivity issues `max` has to be initialized here
-            const max = new TokenAmount({
-              amount: options.balance.value.toString(),
-              token: options.selectedToken.value.value,
-            });
-            return makeMaxTokenAmountValidator(max)(value);
+            return makeMaxTokenAmountValidator(options.balance.value)(value);
           }),
         };
         Object.assign(rules, { totalRequestTokenAmount: totalRequestTokenAmountRules });
