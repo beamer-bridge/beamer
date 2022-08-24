@@ -176,7 +176,7 @@ def make_request(
     requester,
     target_address,
     amount,
-    validity_period=3600,
+    validity_period=1800,
     target_chain_id=None,
     fee_data=(0, 0, 0),
 ) -> RequestId:
