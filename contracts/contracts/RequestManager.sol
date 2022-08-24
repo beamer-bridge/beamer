@@ -130,7 +130,7 @@ contract RequestManager is Ownable {
     uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
 
     /// The maximum validity period of a request.
-    uint256 public constant MAX_VALIDITY_PERIOD = 52 weeks;
+    uint256 public constant MAX_VALIDITY_PERIOD = 30 minutes;
 
     // Variables
 
