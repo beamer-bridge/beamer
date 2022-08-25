@@ -51,8 +51,19 @@
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
           <div v-else class="self-end">
-            <div v-if="showTokenBalance" class="text-base mr-5 mt-1">
-              {{ formattedTokenBalance }} available
+            <div v-if="showTokenBalance && balance" class="text-base mr-5 mt-1">
+              <div v-if="balance.uint256.isZero()">{{ formattedTokenBalance }} available</div>
+              <Tooltip
+                v-else
+                :hint="`You have ${balance.formatFullValue()} in your wallet. Click to use all.`"
+                show-outside-of-closest-reference-element
+                @click="balance && setSelectedAmount(balance)"
+              >
+                <span :class="{ underline: formattedTokenBalance?.includes('<') }">
+                  {{ formattedTokenBalance }}
+                </span>
+                available
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -291,7 +302,9 @@ defineExpose({ v$ });
 const isSelectedAmountValid = computed(() => {
   return !v$.value.$validationGroups?.amount || !v$.value.$validationGroups.amount.$error;
 });
-
+const setSelectedAmount = (amount: TokenAmount) => {
+  selectedAmount.value = amount.decimalAmount;
+};
 watch(selectedToken, () => {
   if (selectedAmount.value) {
     v$.value.$touch();
