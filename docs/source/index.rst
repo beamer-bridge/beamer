@@ -13,4 +13,5 @@ Welcome to Beamer's documentation!
    protocol.rst
    l1_resolution.rst
    contributing.rst
+   faq.rst
    glossary.rst
