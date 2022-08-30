@@ -23,7 +23,7 @@
         name="searchFilter"
         placeholder="Search"
         :focus-on-mount="true"
-        class="flex-[0_0_4.5rem] !text-left"
+        class="flex-[0_0_4.5rem]"
         data-test="search-field"
       />
       <div
@@ -42,6 +42,9 @@
           <img v-if="option.imageUrl" class="h-12" :src="option.imageUrl" />
           <span>{{ option.label }}</span>
         </div>
+      </div>
+      <div class="items-end">
+        <div class="text-5xl cursor-pointer text-sea-green" @click="closeSelector">&lt;</div>
       </div>
     </div>
   </Transition>
