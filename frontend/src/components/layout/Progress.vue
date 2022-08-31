@@ -7,7 +7,9 @@
     >
       {{ step.label }}
       <WaitingDots v-if="step.active" />
-      <span v-if="step.errorMessage" class="text-red"> <br />{{ step.errorMessage }} </span>
+      <span v-if="step.errorMessage" class="error-message text-red">
+        <br />{{ step.errorMessage }}
+      </span>
     </li>
   </ul>
 </template>
@@ -61,5 +63,9 @@ li:not(:last-of-type)::after {
 
 li.hasError::after {
   @apply h-[3.2rem];
+}
+
+li > span.error-message {
+  word-break: break-word;
 }
 </style>
