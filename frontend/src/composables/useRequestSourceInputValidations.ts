@@ -36,7 +36,7 @@ export const useRequestSourceInputValidations = (
   },
 ) => {
   const computedRules: ComputedRef<ValidationRules> = computed(() => {
-    const amountValidationGroup: string[] = [];
+    const amountValidationGroup: string[] = ['selectedAmount'];
     const rules = {
       selectedSourceChain: {
         required,
@@ -46,6 +46,10 @@ export const useRequestSourceInputValidations = (
       },
       $validationGroups: {
         amount: amountValidationGroup,
+      },
+      selectedAmount: {
+        numeric: helpers.withMessage('Must be a positive number', numeric),
+        minValue: helpers.withMessage('Must be a positive number', minValue(0)),
       },
     };
 
@@ -58,10 +62,8 @@ export const useRequestSourceInputValidations = (
           `Max. number of decimals: ${selectedTokenDecimals}`,
           makeMatchingDecimalsValidator(selectedTokenDecimals),
         ),
-        numeric: helpers.withMessage('Must be a positive number', numeric),
-        minValue: helpers.withMessage('Must be a positive number', minValue(0)),
       };
-      Object.assign(rules, { selectedAmount: selectedAmountRules });
+      Object.assign(rules.selectedAmount, selectedAmountRules);
 
       if (options.selectedTokenAmount.value) {
         const min = TokenAmount.parse(
