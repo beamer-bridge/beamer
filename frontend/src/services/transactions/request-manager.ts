@@ -71,15 +71,15 @@ export async function getRequestIdentifier(
 ): Promise<UInt256> {
   const provider = new JsonRpcProvider(rpcUrl);
   const contract = getContract(rpcUrl, requestManagerAddress);
-  const transaction = await provider.getTransaction(transactionHash);
-  const receipt = await transaction.wait();
-  const event = contract.interface.parseLog(receipt.logs[0]);
-
-  if (event) {
-    return new UInt256(event.args.requestId);
-  } else {
-    throw new Error("Request Failed. Couldn't retrieve Request ID");
+  const receipt = await provider.waitForTransaction(transactionHash, 1);
+  if (receipt) {
+    const event = contract.interface.parseLog(receipt.logs[0]);
+    if (event) {
+      return new UInt256(event.args.requestId);
+    }
   }
+
+  throw new Error("Request Failed. Couldn't retrieve Request ID");
 }
 
 type RequestData = {
