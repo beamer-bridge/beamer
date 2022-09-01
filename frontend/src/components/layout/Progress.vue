@@ -30,39 +30,48 @@ interface Props {
 defineProps<Props>();
 </script>
 
-<style scoped>
-/* 
+<style lang="scss" scoped>
+/*
 Please note that the used numeric values here are based on `rem` to scale with
 the application, but are very fixed an not variable. If any of these value gets
 touched, it is likely to break somewhere else. Using variables and calculation
 only barely helps with this problem. As this is a very specialized custom
 component, this inflexibility can be tolerated for now.
 */
+$ballHeight: 1.75rem;
+$ballWidth: 1.75rem;
+$ballBorderWidth: 2px;
+$liMarginY: 1.25rem;
 
 li {
-  @apply relative my-5 pl-10;
+  margin-top: $liMarginY;
+  margin-bottom: $liMarginY;
+  @apply relative pl-10;
 }
 
 li::before {
   content: '';
-  @apply absolute left-0 rounded-full w-7 h-7 text-center border-2 border-teal;
+  width: $ballWidth;
+  height: $ballHeight;
+  border: $ballBorderWidth solid;
+  @apply absolute left-0 rounded-full text-center border-teal;
 }
 
 li.completed::before {
-  @apply bg-green border-sea-green;
+  @apply bg-green border-sea-green-35;
 }
 
 li.failed::before {
-  @apply bg-red border-sea-green;
+  @apply bg-red border-sea-green-35;
 }
 
 li:not(:last-of-type)::after {
   content: '';
-  @apply absolute left-[0.8rem] border-teal border top-[1.7rem] h-[1.45rem];
+  @apply absolute left-[0.75rem] border-teal border top-[1.7rem] h-[1.45rem];
 }
 
 li.hasError::after {
-  @apply h-[3.2rem];
+  height: calc(100% - $ballHeight + $liMarginY + $ballBorderWidth);
 }
 
 li > span.error-message {
