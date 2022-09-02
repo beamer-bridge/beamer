@@ -8,14 +8,14 @@
 import { computed, onMounted, onUnmounted, ref, unref } from 'vue';
 
 interface Props {
-  minimumHeight?: string;
+  minimumHeight?: number;
   rootElement?: HTMLElement | null;
   rootMargin?: string;
   threshold?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  minimumHeight: '20px',
+  minimumHeight: 20,
   rootElement: undefined,
   rootMargin: '60px',
   threshold: 0.5,
@@ -35,7 +35,11 @@ function onIntersectionChange(entries: Array<{ isIntersecting: boolean }>) {
   minimumHeight.value = isVisible.value ? props.minimumHeight : element.value?.clientHeight;
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Waiting for dom updates to finish so element.clientHeight is set properly
+  // nextTick() was not working
+  await new Promise((r) => setTimeout(r, 1));
+
   if (observerAvailable) {
     const { rootElement: root, rootMargin, threshold } = props;
 
