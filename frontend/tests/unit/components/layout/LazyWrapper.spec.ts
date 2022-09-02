@@ -1,15 +1,20 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 
 import LazyWrapper from '@/components/layout/LazyWrapper.vue';
 
-function createWrapper(options?: {
+async function resolveTimeouts() {
+  vi.advanceTimersByTime(1);
+  await flushPromises();
+}
+
+async function createWrapper(options?: {
   slot?: string;
-  minimumHeight?: string;
+  minimumHeight?: number;
   rootElement?: HTMLElement | null;
   rootMargin?: string;
   threshold?: number;
 }) {
-  return mount(LazyWrapper, {
+  const wrapper = mount(LazyWrapper, {
     shallow: true,
     slots: {
       default: options?.slot ?? '',
@@ -21,22 +26,30 @@ function createWrapper(options?: {
       threshold: options?.threshold,
     },
   });
+
+  await resolveTimeouts();
+
+  return wrapper;
 }
 
 describe('LazyWrapper.vue', () => {
-  it('always shows the slot if browser does not support intersection observers', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  it('always shows the slot if browser does not support intersection observers', async () => {
     Object.defineProperty(global, 'window', {
       writable: true,
       value: {},
     });
     expect(global.window).not.toHaveProperty('IntersectionObserver');
 
-    const wrapper = createWrapper({ slot: 'test content' });
+    const wrapper = await createWrapper({ slot: 'test content' });
 
     expect(wrapper.text()).toBe('test content');
   });
 
-  it('creates observer with expected properties', () => {
+  it('creates observer with expected properties', async () => {
     const observerConstrutor = vi.fn().mockImplementation(() => ({ observe: vi.fn() }));
 
     Object.defineProperty(global.window, 'IntersectionObserver', {
@@ -44,7 +57,7 @@ describe('LazyWrapper.vue', () => {
       value: observerConstrutor,
     });
 
-    createWrapper({
+    await createWrapper({
       rootElement: null,
       rootMargin: '2px',
       threshold: 1.0,
@@ -58,7 +71,7 @@ describe('LazyWrapper.vue', () => {
     });
   });
 
-  it('starts to observe top element', () => {
+  it('starts to observe top element', async () => {
     const observe = vi.fn();
 
     Object.defineProperty(global.window, 'IntersectionObserver', {
@@ -66,19 +79,19 @@ describe('LazyWrapper.vue', () => {
       value: vi.fn().mockImplementation(() => ({ observe })),
     });
 
-    createWrapper();
+    await createWrapper();
 
     expect(observe).toHaveBeenCalledOnce();
     expect(observe).toHaveBeenLastCalledWith(expect.any(HTMLElement));
   });
 
-  it('hides slot per default', () => {
+  it('hides slot per default', async () => {
     Object.defineProperty(global.window, 'IntersectionObserver', {
       writable: true,
       value: vi.fn().mockImplementation(() => ({ observe: vi.fn() })),
     });
 
-    const wrapper = createWrapper({ slot: 'test content' });
+    const wrapper = await createWrapper({ slot: 'test content' });
 
     expect(wrapper.text()).toBe('');
   });
@@ -94,7 +107,8 @@ describe('LazyWrapper.vue', () => {
       }),
     });
 
-    const wrapper = createWrapper({ slot: 'test content' });
+    const wrapper = await createWrapper({ slot: 'test content' });
+
     expect(wrapper.text()).toBe('');
 
     observerCallback([{ isIntersecting: true }]);
