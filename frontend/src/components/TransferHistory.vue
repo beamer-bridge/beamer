@@ -17,7 +17,7 @@
           <span>Nothing here yet.</span>
         </div>
 
-        <template v-for="group of groupedAndSortedTransfers" :key="group.label">
+        <template v-for="(group, groupIndex) of groupedAndSortedTransfers" :key="group.label">
           <LazyWrapper :root-element="listElement" :threshold="0.0">
             <div v-if="group.transfers.length > 0" class="text-2xl text-center">
               {{ group.label }}
@@ -25,7 +25,10 @@
           </LazyWrapper>
           <LazyWrapper
             v-for="(transfer, groupTransferIndex) of group.transfers"
-            :key="transfer.requestInformation?.identifier?.asString ?? groupTransferIndex"
+            :key="
+              transfer.requestInformation?.identifier?.asString ??
+              `${groupIndex}-${groupTransferIndex}`
+            "
             :threshold="0.0"
             :root-element="listElement"
           >
