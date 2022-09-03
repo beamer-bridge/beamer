@@ -50,7 +50,13 @@ class Request(StateMachine):
     fill = pending.to(filled) | filled.to(filled) | ignored.to(filled) | claimed.to(claimed)
     try_to_fill = pending.to(filled)
     try_to_claim = filled.to(claimed) | pending.to(claimed) | claimed.to(claimed)
-    l1_resolve = filled.to(l1_resolved) | claimed.to(l1_resolved) | l1_resolved.to(l1_resolved)
+    l1_resolve = (
+        filled.to(l1_resolved)
+        | claimed.to(l1_resolved)
+        | l1_resolved.to(l1_resolved)
+        | withdrawn.to(withdrawn)
+        | ignored.to(ignored)
+    )
     withdraw = (
         claimed.to(withdrawn)
         | filled.to(withdrawn)
