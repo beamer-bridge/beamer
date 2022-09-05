@@ -330,8 +330,10 @@ def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
     request = _find_request_by_request_hash(context, event.request_hash)
     if request is not None:
-        request.l1_resolve(event.filler, event.fill_id)
-
+        try:
+            request.l1_resolve(event.filler, event.fill_id)
+        except TransitionNotAllowed:
+            return False, None
     return True, None
 
 
