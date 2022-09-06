@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.5 (2022-09-06)
+
+* agent: fix handling of L1 resolution events when syncing
+* contracts: max request validity period has been set to 30 minutes
+* deployments: updated mainnet deployment
+* frontend: input validation logic added
+* frontend: updated mainnet config
+* frontend: fixed token amount abbreviations
+* frontend: added tooltip for displaying exact token amount balance
+* frontend: added "use max" feature on click of token amount balance
+* frontend: fixed error message overflow
+* frontend: fixed gap issue on transfer progress line
+
 ## v0.1.4 (2022-08-23)
 
 * agent: fix incorrect log level handling
