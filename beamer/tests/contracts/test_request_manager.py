@@ -40,12 +40,18 @@ def test_request_invalid_target_chain(request_manager, token):
     assert request_manager.requestCounter() == 1
 
 
-def test_claim(token, request_manager, claim_stake):
+def test_claim(token, request_manager, claim_stake, deployer):
     """Test that making a claim creates correct claim and emits event"""
     (requester,) = alloc_accounts(1)
     request_id = make_request(
         request_manager, token=token, requester=requester, target_address=requester, amount=1
     )
+
+    with brownie.reverts("Ownable: caller is not the owner"):
+        request_manager.addAllowedLp(requester, {"from": requester})
+
+    whitelist_tx = request_manager.addAllowedLp(requester, {"from": deployer})
+    assert "LpAdded" in whitelist_tx.events
 
     claim_tx = request_manager.claimRequest(
         request_id, FILL_ID, {"from": requester, "value": claim_stake}
@@ -65,6 +71,13 @@ def test_claim(token, request_manager, claim_stake):
     assert claim_event["challengerStakeTotal"] == 0
     assert claim_event["termination"] == expected_termination
     assert claim_event["fillId"] == to_hex(FILL_ID)
+
+    blacklist_tx = request_manager.removeAllowedLp(requester, {"from": deployer})
+    assert "LpRemoved" in blacklist_tx.events
+    with brownie.reverts("Sender not whitelisted"):
+        request_manager.claimRequest(
+            request_id, FILL_ID, {"from": requester, "value": claim_stake}
+        )
 
 
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
