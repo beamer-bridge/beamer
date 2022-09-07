@@ -9,6 +9,7 @@ from typing import Any, List, Optional
 import brownie
 import requests
 import web3
+
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak, to_canonical_address
 
@@ -26,6 +27,14 @@ def _alloc_account():
 
 def alloc_accounts(n):
     return tuple(_alloc_account() for _ in range(n))
+
+
+def alloc_whitelisted_accounts(n, contracts):
+    accounts = tuple(_alloc_account() for _ in range(n))
+    for account in accounts:
+        for contract in contracts:
+            contract.addAllowedLp(account)
+    return accounts
 
 
 class Timeout(Exception):
