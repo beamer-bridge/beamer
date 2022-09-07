@@ -2,28 +2,32 @@ import brownie
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 
-from beamer.tests.util import alloc_accounts, create_request_hash
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_hash
 
 
-def test_fill_request(fill_manager, token, deployer):
+def test_fill_request(fill_manager, token):
     chain_id = brownie.web3.eth.chain_id
     amount = 100
-    filler, receiver = alloc_accounts(2)
+    (receiver,) = alloc_accounts(1)
+    (filler,) = alloc_whitelisted_accounts(1, {fill_manager})
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        fill_manager.addAllowedLp(deployer, {"from": filler})
+        fill_manager.addAllowedLp(filler, {"from": receiver})
 
-    whitelist_tx = fill_manager.addAllowedLp(deployer, {"from": deployer})
+    whitelist_tx = fill_manager.addAllowedLp(receiver)
     assert "LpAdded" in whitelist_tx.events
+    blacklist_tx = fill_manager.removeAllowedLp(receiver)
+    assert "LpRemoved" in blacklist_tx.events
 
-    token.approve(fill_manager.address, amount, {"from": deployer})
+    token.mint(filler, amount)
+    token.approve(fill_manager.address, amount, {"from": filler})
     fill_manager.fillRequest(
         1,
         chain_id,
         token.address,
         receiver,
         amount,
-        {"from": deployer},
+        {"from": filler},
     )
 
     with brownie.reverts("Already filled"):
@@ -33,10 +37,10 @@ def test_fill_request(fill_manager, token, deployer):
             token.address,
             receiver,
             amount,
-            {"from": deployer},
+            {"from": filler},
         )
 
-    blacklist_tx = fill_manager.removeAllowedLp(deployer, {"from": deployer})
+    blacklist_tx = fill_manager.removeAllowedLp(filler)
     assert "LpRemoved" in blacklist_tx.events
 
     with brownie.reverts("Sender not whitelisted"):
@@ -46,18 +50,18 @@ def test_fill_request(fill_manager, token, deployer):
             token.address,
             receiver,
             amount,
-            {"from": deployer},
+            {"from": filler},
         )
 
 
-def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
+def test_invalidate_valid_fill_hash(fill_manager, token):
     chain_id = brownie.web3.eth.chain_id
     amount = 100
     (receiver,) = alloc_accounts(1)
+    (filler,) = alloc_whitelisted_accounts(1, {fill_manager})
+    token.mint(filler, amount)
+    token.approve(fill_manager.address, amount, {"from": filler})
 
-    fill_manager.addAllowedLp(deployer, {"from": deployer})
-
-    token.approve(fill_manager.address, amount, {"from": deployer})
     request_id = 1
     tx = fill_manager.fillRequest(
         request_id,
@@ -65,7 +69,7 @@ def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
         token.address,
         receiver,
         amount,
-        {"from": deployer},
+        {"from": filler},
     )
     fill_id = tx.return_value
     request_hash = create_request_hash(
