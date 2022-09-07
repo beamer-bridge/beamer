@@ -11,10 +11,10 @@ def test_fill_request(fill_manager, token, deployer):
     filler, receiver = alloc_accounts(2)
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        fill_manager.addAllowedLP(deployer, {"from": filler})
+        fill_manager.addAllowedLp(deployer, {"from": filler})
 
-    whitelist_tx = fill_manager.addAllowedLP(deployer, {"from": deployer})
-    assert "LPAdded" in whitelist_tx.events
+    whitelist_tx = fill_manager.addAllowedLp(deployer, {"from": deployer})
+    assert "LpAdded" in whitelist_tx.events
 
     token.approve(fill_manager.address, amount, {"from": deployer})
     fill_manager.fillRequest(
@@ -36,7 +36,7 @@ def test_fill_request(fill_manager, token, deployer):
             {"from": deployer},
         )
 
-    fill_manager.removeAllowedLP(deployer, {"from": deployer})
+    fill_manager.removeAllowedLp(deployer, {"from": deployer})
     with brownie.reverts("Sender not whitelisted"):
         fill_manager.fillRequest(
             1,
@@ -47,8 +47,8 @@ def test_fill_request(fill_manager, token, deployer):
             {"from": deployer},
         )
 
-    blacklist_tx = fill_manager.removeAllowedLP(deployer, {"from": deployer})
-    assert "LPRemoved" in blacklist_tx.events
+    blacklist_tx = fill_manager.removeAllowedLp(deployer, {"from": deployer})
+    assert "LpRemoved" in blacklist_tx.events
 
 
 def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
@@ -56,7 +56,7 @@ def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
     amount = 100
     (receiver,) = alloc_accounts(1)
 
-    fill_manager.addAllowedLP(deployer, {"from": deployer})
+    fill_manager.addAllowedLp(deployer, {"from": deployer})
 
     token.approve(fill_manager.address, amount, {"from": deployer})
     request_id = 1

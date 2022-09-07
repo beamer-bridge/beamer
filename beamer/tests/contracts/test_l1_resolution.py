@@ -17,7 +17,7 @@ def test_l1_resolution_correct_hash(fill_manager, deployer, resolution_registry,
     filler, receiver = alloc_accounts(2)
     chain_id = brownie.web3.eth.chain_id
 
-    fill_manager.addAllowedLP(filler, {"from": deployer})
+    fill_manager.addAllowedLp(filler, {"from": deployer})
 
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})

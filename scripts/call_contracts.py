@@ -337,7 +337,7 @@ def whitelist(
         print(f"Address '{to_checksum_address(address)}' is already whitelisted.")
         return
 
-    tx_hash = fill_manager.functions.addAllowedLP(address).transact()
+    tx_hash = fill_manager.functions.addAllowedLp(address).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
     print(f"Transaction sent, tx_hash: {tx_hash.hex()}")

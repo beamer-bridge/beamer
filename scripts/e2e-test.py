@@ -34,7 +34,7 @@ def main() -> None:
     tx_hash = token.functions.approve(fill_manager.address, request_amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
 
-    tx_hash = fill_manager.functions.addAllowedLP(deployer.address).transact()
+    tx_hash = fill_manager.functions.addAllowedLp(deployer.address).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
 
     tx_hash = fill_manager.functions.fillRequest(
