@@ -2,14 +2,20 @@ import brownie
 from brownie import chain
 
 from beamer.tests.constants import FILL_ID, RM_R_FIELD_LP_FEE, RM_R_FIELD_PROTOCOL_FEE
-from beamer.tests.util import alloc_accounts, make_request, temp_fee_data
+from beamer.tests.util import (
+    alloc_accounts,
+    alloc_whitelisted_accounts,
+    make_request,
+    temp_fee_data,
+)
 
 # Using this makes sure that we get nonzero fees when making requests.
 _NONZERO_FEE_DATA = 14_000, 15_000, 5e18
 
 
-def test_fee_split_works(deployer, request_manager, token, claim_stake, claim_period):
-    requester, claimer = alloc_accounts(2)
+def test_fee_split_works(request_manager, token, claim_stake, claim_period):
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     transfer_amount = 23_000_000
 
     request_manager.updateFeeData(*_NONZERO_FEE_DATA)
@@ -37,7 +43,7 @@ def test_fee_split_works(deployer, request_manager, token, claim_stake, claim_pe
 
     # Update fees, which should not have any effect on the fee amounts that
     # were computed when the request was made.
-    request_manager.updateFeeData(17e9, 145_000, 21_000, {"from": deployer})
+    request_manager.updateFeeData(17e9, 145_000, 21_000)
 
     # Timetravel after claim period
     chain.mine(timedelta=claim_period)
@@ -60,7 +66,8 @@ def test_protocol_fee_withdrawable_by_owner(
     deployer, request_manager, token, claim_stake, claim_period
 ):
     owner = deployer
-    requester, claimer = alloc_accounts(2)
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     amount = 23_000_000
     request_id = make_request(
         request_manager, token, requester, requester, amount, fee_data=_NONZERO_FEE_DATA
@@ -161,7 +168,8 @@ def test_insufficient_lp_fee(request_manager, token):
 
 
 def test_different_fees(request_manager, token, claim_period, claim_stake):
-    (requester, claimer) = alloc_accounts(2)
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     amount = 9e18
     fee_data_1 = 7_000, 8_000, 6e18
     fee_data_2 = 31_000, 4_000, 1
