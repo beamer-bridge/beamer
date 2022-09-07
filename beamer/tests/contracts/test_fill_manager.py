@@ -36,7 +36,9 @@ def test_fill_request(fill_manager, token, deployer):
             {"from": deployer},
         )
 
-    fill_manager.removeAllowedLp(deployer, {"from": deployer})
+    blacklist_tx = fill_manager.removeAllowedLp(deployer, {"from": deployer})
+    assert "LpRemoved" in blacklist_tx.events
+
     with brownie.reverts("Sender not whitelisted"):
         fill_manager.fillRequest(
             1,
@@ -46,9 +48,6 @@ def test_fill_request(fill_manager, token, deployer):
             amount,
             {"from": deployer},
         )
-
-    blacklist_tx = fill_manager.removeAllowedLp(deployer, {"from": deployer})
-    assert "LpRemoved" in blacklist_tx.events
 
 
 def test_invalidate_valid_fill_hash(fill_manager, token, deployer):
