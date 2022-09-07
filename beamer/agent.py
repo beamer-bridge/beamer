@@ -49,8 +49,10 @@ class Agent:
         resolution_registry = l2a_contracts["ResolutionRegistry"]
         fill_manager = l2b_contracts["FillManager"]
 
-        if not fill_manager.functions.allowedLPs(config.account.address).call():
-            raise RuntimeError("Agent address is not whitelisted")
+        if not fill_manager.functions.allowedLps(config.account.address).call():
+            raise RuntimeError("Agent address is not whitelisted on FillManager")
+        if not request_manager.functions.allowedLps(config.account.address).call():
+            raise RuntimeError("Agent address is not whitelisted on RequestManager")
 
         self.context = Context(
             requests=Tracker(),
