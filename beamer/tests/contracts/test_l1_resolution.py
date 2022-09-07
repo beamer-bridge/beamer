@@ -6,18 +6,17 @@ from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
 from beamer.tests.constants import FILL_ID_EMPTY
-from beamer.tests.util import alloc_accounts, create_request_hash
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_hash
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("forward_state", [True])
-def test_l1_resolution_correct_hash(fill_manager, deployer, resolution_registry, token, amount):
+def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, amount):
     requested_amount = 100
     request_id = 23
-    filler, receiver = alloc_accounts(2)
+    (receiver,) = alloc_accounts(1)
+    (filler,) = alloc_whitelisted_accounts(1, {fill_manager})
     chain_id = brownie.web3.eth.chain_id
-
-    fill_manager.addAllowedLp(filler, {"from": deployer})
 
     token.mint(filler, amount, {"from": filler})
     token.approve(fill_manager.address, amount, {"from": filler})
