@@ -98,7 +98,6 @@ def contracts(
     l2_messenger.setForwardState(forward_state)
     proof_submitter = deployer.deploy(TestProofSubmitter, l2_messenger.address)
     fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
-    fill_manager.addAllowedLp(_LOCAL_ACCOUNT)
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
@@ -109,6 +108,10 @@ def contracts(
         challenge_period_extension,
         resolution_registry.address,
     )
+
+    # Add allowed LPs
+    fill_manager.addAllowedLp(_LOCAL_ACCOUNT)
+    request_manager.addAllowedLp(_LOCAL_ACCOUNT)
 
     # Explicitly allow calls between contracts. The chain of trust:
     #
