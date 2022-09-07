@@ -8,6 +8,7 @@ from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION
 from beamer.tests.util import (
     alloc_accounts,
+    alloc_whitelisted_accounts,
     create_fill_hash,
     create_request_hash,
     earnings,
@@ -43,18 +44,19 @@ def test_request_invalid_target_chain(request_manager, token):
 def test_claim(token, request_manager, claim_stake, deployer):
     """Test that making a claim creates correct claim and emits event"""
     (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(
         request_manager, token=token, requester=requester, target_address=requester, amount=1
     )
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        request_manager.addAllowedLp(requester, {"from": requester})
+        request_manager.addAllowedLp(claimer, {"from": requester})
 
-    whitelist_tx = request_manager.addAllowedLp(requester, {"from": deployer})
+    whitelist_tx = request_manager.addAllowedLp(claimer, {"from": deployer})
     assert "LpAdded" in whitelist_tx.events
 
     claim_tx = request_manager.claimRequest(
-        request_id, FILL_ID, {"from": requester, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
     )
     claim_id = claim_tx.return_value
     expected_termination = (
@@ -65,52 +67,53 @@ def test_claim(token, request_manager, claim_stake, deployer):
     claim_event = claim_tx.events["ClaimMade"]
     assert claim_event["requestId"] == request_id
     assert claim_event["claimId"] == claim_id
-    assert claim_event["claimer"] == requester
+    assert claim_event["claimer"] == claimer
     assert claim_event["claimerStake"] == claim_stake
     assert claim_event["lastChallenger"] == brownie.ZERO_ADDRESS
     assert claim_event["challengerStakeTotal"] == 0
     assert claim_event["termination"] == expected_termination
     assert claim_event["fillId"] == to_hex(FILL_ID)
 
-    blacklist_tx = request_manager.removeAllowedLp(requester, {"from": deployer})
+    blacklist_tx = request_manager.removeAllowedLp(claimer, {"from": deployer})
     assert "LpRemoved" in blacklist_tx.events
+
     with brownie.reverts("Sender not whitelisted"):
-        request_manager.claimRequest(
-            request_id, FILL_ID, {"from": requester, "value": claim_stake}
-        )
+        request_manager.claimRequest(request_id, FILL_ID, {"from": claimer, "value": claim_stake})
 
 
 def test_claim_with_different_stakes(token, request_manager, claim_stake):
     """Test that only claims with the correct stake can be submitted"""
     (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(
-        request_id, FILL_ID, {"from": requester, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
     )
     assert "ClaimMade" in claim.events
 
     with brownie.reverts("Invalid stake amount"):
         request_manager.claimRequest(
-            request_id, FILL_ID, {"from": requester, "value": claim_stake - 1}
+            request_id, FILL_ID, {"from": claimer, "value": claim_stake - 1}
         )
 
     with brownie.reverts("Invalid stake amount"):
         request_manager.claimRequest(
-            request_id, FILL_ID, {"from": requester, "value": claim_stake + 1}
+            request_id, FILL_ID, {"from": claimer, "value": claim_stake + 1}
         )
 
     with brownie.reverts("Invalid stake amount"):
-        request_manager.claimRequest(request_id, FILL_ID, {"from": requester})
+        request_manager.claimRequest(request_id, FILL_ID, {"from": claimer})
 
 
 def test_claim_challenge(request_manager, token, claim_stake):
     """Test challenging a claim"""
     requester, challenger = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(
-        request_id, FILL_ID, {"from": requester, "value": claim_stake}
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
     )
 
     with brownie.reverts("Not enough stake provided"):
@@ -120,7 +123,7 @@ def test_claim_challenge(request_manager, token, claim_stake):
 
     with brownie.reverts("Cannot challenge own claim"):
         request_manager.challengeClaim(
-            claim.return_value, {"from": requester, "value": claim_stake + 1}
+            claim.return_value, {"from": claimer, "value": claim_stake + 1}
         )
 
     with brownie.reverts("Not enough stake provided"):
@@ -140,7 +143,8 @@ def test_claim_challenge(request_manager, token, claim_stake):
 
 def test_claim_counter_challenge(request_manager, token, claim_stake):
     """Test counter-challenging a challenge"""
-    claimer, challenger, requester = alloc_accounts(3)
+    challenger, requester = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(
@@ -183,7 +187,8 @@ def test_claim_counter_challenge(request_manager, token, claim_stake):
 
 def test_claim_two_challengers(request_manager, token, claim_stake):
     """Test that two different challengers can challenge"""
-    claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
+    first_challenger, second_challenger, requester = alloc_accounts(3)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(
@@ -221,7 +226,8 @@ def test_claim_period_extension(
     challenge_period_extension,
 ):
     """Test the extension of the claim/challenge period"""
-    claimer, challenger, requester = alloc_accounts(3)
+    challenger, requester = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 1)
 
     claim = request_manager.claimRequest(
@@ -292,13 +298,16 @@ def test_withdraw_nonexistent_claim(request_manager):
 
 def test_claim_nonexistent_request(request_manager):
     """Test claiming a non-existent request"""
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     with brownie.reverts("requestId not valid"):
-        request_manager.claimRequest(1234, FILL_ID, {"from": alloc_accounts(1)[0]})
+        request_manager.claimRequest(1234, FILL_ID, {"from": claimer})
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
     """Test withdraw when a claim was not challenged"""
-    requester, claimer = alloc_accounts(2)
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -347,7 +356,8 @@ def test_withdraw_with_challenge(
     """Test withdraw when a claim was challenged, and the challenger won.
     In that case, the request funds must not be paid out to the challenger."""
 
-    requester, claimer, challenger = alloc_accounts(3)
+    requester, challenger = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     transfer_amount = 23
 
     claimer_eth_balance = web3.eth.get_balance(claimer.address)
@@ -408,7 +418,8 @@ def test_withdraw_with_challenge(
 
 def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake, claim_period):
     """Test withdraw when a request was claimed twice"""
-    requester, claimer1, claimer2 = alloc_accounts(3)
+    (requester,) = alloc_accounts(1)
+    claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -492,7 +503,8 @@ def test_withdraw_second_claim_same_claimer_different_fill_ids(
     If the fill id is different the challenger must win,
     even though the claimer was successful with a different claim and fill id.
     """
-    requester, claimer, challenger = alloc_accounts(3)
+    requester, challenger = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     transfer_amount = 23
 
     token.mint(requester, transfer_amount, {"from": requester})
@@ -556,7 +568,8 @@ def test_withdraw_second_claim_same_claimer_different_fill_ids(
 
 def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_stake, claim_period):
     """Test withdraw when a request was claimed twice and challenged"""
-    requester, claimer1, claimer2, challenger = alloc_accounts(4)
+    requester, challenger = alloc_accounts(2)
+    claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -638,7 +651,8 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 ):
     """Test withdraw when a request was claimed twice. The first claim fails, while the second
     is successful and should be paid out the request funds."""
-    requester, claimer1, claimer2, challenger = alloc_accounts(4)
+    requester, challenger = alloc_accounts(2)
+    claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -721,7 +735,8 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
 
 def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period):
     """Test that the same account can not claim a already withdrawn fill again"""
-    requester, claimer = alloc_accounts(2)
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 23)
 
     claim_tx = request_manager.claimRequest(
@@ -743,7 +758,8 @@ def test_claim_after_withdraw(request_manager, token, claim_stake, claim_period)
 def test_second_claim_after_withdraw(deployer, request_manager, token, claim_stake, claim_period):
     """Test that one can withdraw a claim immediately after the request
     deposit has been withdrawn via another claim."""
-    requester, claimer1, claimer2 = alloc_accounts(3)
+    (requester,) = alloc_accounts(1)
+    claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     request_id = make_request(request_manager, token, requester, requester, 23)
 
     claimer1_eth_balance = web3.eth.get_balance(claimer1.address)
@@ -810,7 +826,8 @@ def test_withdraw_without_challenge_with_resolution(
     In the invalid - honest claimer case, honest claimer reverts the
     invalidation in the resolution registry
     """
-    requester, claimer = alloc_accounts(2)
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     transfer_amount = 23
 
     if l1_filler is None:
@@ -906,13 +923,14 @@ def test_withdraw_without_challenge_with_resolution(
 def test_withdraw_l1_resolved_muliple_claims(
     contracts, request_manager, resolution_registry, token, claim_stake
 ):
-    requester, first_claimer, second_claimer = alloc_accounts(3)
+    (requester,) = alloc_accounts(1)
+    claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
     token.mint(requester, transfer_amount, {"from": requester})
 
     # Initial balances
-    first_claimer_eth_balance = web3.eth.get_balance(first_claimer.address)
-    second_claimer_eth_balance = web3.eth.get_balance(second_claimer.address)
+    first_claimer_eth_balance = web3.eth.get_balance(claimer1.address)
+    second_claimer_eth_balance = web3.eth.get_balance(claimer2.address)
     owner_eth_balance = web3.eth.get_balance(request_manager.owner())
 
     request_id = make_request(request_manager, token, requester, requester, transfer_amount)
@@ -922,25 +940,25 @@ def test_withdraw_l1_resolved_muliple_claims(
 
     # Claim 1: valid claim
     claim_tx_1 = request_manager.claimRequest(
-        request_id, fill_id, {"from": first_claimer, "value": claim_stake}
+        request_id, fill_id, {"from": claimer1, "value": claim_stake}
     )
     claim_id_1 = claim_tx_1.return_value
 
     # Claim 2: claimer is not the filler, invalid claim
     claim_tx_2 = request_manager.claimRequest(
-        request_id, fill_id, {"from": second_claimer, "value": claim_stake}
+        request_id, fill_id, {"from": claimer2, "value": claim_stake}
     )
     claim_id_2 = claim_tx_2.return_value
 
     # Claim 3: another valid claim
     claim_tx_3 = request_manager.claimRequest(
-        request_id, fill_id, {"from": first_claimer, "value": claim_stake}
+        request_id, fill_id, {"from": claimer1, "value": claim_stake}
     )
     claim_id_3 = claim_tx_3.return_value
 
     # Claim 4: claimer is the filler but fill id is wrong, invalid claim
     claim_tx_4 = request_manager.claimRequest(
-        request_id, b"wrong fill id", {"from": first_claimer, "value": claim_stake}
+        request_id, b"wrong fill id", {"from": claimer1, "value": claim_stake}
     )
     claim_id_4 = claim_tx_4.return_value
 
@@ -948,13 +966,13 @@ def test_withdraw_l1_resolved_muliple_claims(
 
     # Before L1 resolution, all claims are still running and cannot be withdrawn
     with brownie.reverts("Claim period not finished"):
-        request_manager.withdraw(claim_id_1, {"from": first_claimer})
+        request_manager.withdraw(claim_id_1, {"from": claimer1})
     with brownie.reverts("Claim period not finished"):
-        request_manager.withdraw(claim_id_2, {"from": second_claimer})
+        request_manager.withdraw(claim_id_2, {"from": claimer2})
     with brownie.reverts("Claim period not finished"):
-        request_manager.withdraw(claim_id_3, {"from": first_claimer})
+        request_manager.withdraw(claim_id_3, {"from": claimer1})
     with brownie.reverts("Claim period not finished"):
-        request_manager.withdraw(claim_id_4, {"from": first_claimer})
+        request_manager.withdraw(claim_id_4, {"from": claimer1})
 
     # Start L1 resolution
     request_hash = create_request_hash(
@@ -968,32 +986,32 @@ def test_withdraw_l1_resolved_muliple_claims(
 
     # Register a L1 resolution
     resolution_registry.resolveRequest(
-        request_hash, fill_id, web3.eth.chain_id, first_claimer, {"from": contracts.l1_messenger}
+        request_hash, fill_id, web3.eth.chain_id, claimer1, {"from": contracts.l1_messenger}
     )
 
     # The claim period is not over, but the resolution must allow withdrawal now
     # Valid claim will result in payout
-    withdraw_tx = request_manager.withdraw(claim_id_1, {"from": first_claimer})
+    withdraw_tx = request_manager.withdraw(claim_id_1, {"from": claimer1})
     assert "DepositWithdrawn" in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Wrong claimer, since it is not challenged stakes go to the contract owner
-    withdraw_tx = request_manager.withdraw(claim_id_2, {"from": second_claimer})
+    withdraw_tx = request_manager.withdraw(claim_id_2, {"from": claimer2})
     assert "DepositWithdrawn" not in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Another valid claim, deposit is already withdrawn but stakes go back to claimer
-    withdraw_tx = request_manager.withdraw(claim_id_3, {"from": first_claimer})
+    withdraw_tx = request_manager.withdraw(claim_id_3, {"from": claimer1})
     assert "DepositWithdrawn" not in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
     # Wrong fill id, since it is not challenged stakes go to the contract owner
-    withdraw_tx = request_manager.withdraw(claim_id_4, {"from": first_claimer})
+    withdraw_tx = request_manager.withdraw(claim_id_4, {"from": claimer1})
     assert "DepositWithdrawn" not in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
 
-    assert web3.eth.get_balance(first_claimer.address) == first_claimer_eth_balance - claim_stake
-    assert web3.eth.get_balance(second_claimer.address) == second_claimer_eth_balance - claim_stake
+    assert web3.eth.get_balance(claimer1.address) == first_claimer_eth_balance - claim_stake
+    assert web3.eth.get_balance(claimer2.address) == second_claimer_eth_balance - claim_stake
     # Two of the claims were invalid, thus stakes went to the contract owner
     assert web3.eth.get_balance(request_manager.owner()) == owner_eth_balance + 2 * claim_stake
 
@@ -1001,7 +1019,8 @@ def test_withdraw_l1_resolved_muliple_claims(
 def test_withdraw_two_challengers(
     request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
-    claimer, first_challenger, second_challenger, requester = alloc_accounts(4)
+    first_challenger, second_challenger, requester = alloc_accounts(3)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
 
     request_id = make_request(request_manager, token, requester, requester, 1)
     claim = request_manager.claimRequest(
