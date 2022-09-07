@@ -4,6 +4,7 @@ pragma solidity ^0.8.12;
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/IERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
+import "./LpWhitelist.sol";
 import "../interfaces/IProofSubmitter.sol";
 import "./BeamerUtils.sol";
 
@@ -14,7 +15,7 @@ import "./BeamerUtils.sol";
 /// a claim that a request was filled.
 ///
 /// It is the only contract that agents need to interact with on the target chain.
-contract FillManager is Ownable {
+contract FillManager is Ownable, LpWhitelist {
     using SafeERC20 for IERC20;
 
     /// Emitted when a request has been filled.
@@ -38,18 +39,6 @@ contract FillManager is Ownable {
         bytes32 indexed fillHash
     );
 
-    /// Emitted when a liquidity provider has been added to the set of allowed
-    /// liquidity providers.
-    ///
-    /// .. seealso:: :sol:func:`addAllowedLP`
-    event LPAdded(address lp);
-
-    /// Emitted when a liquidity provider has been removed from the set of allowed
-    /// liquidity providers.
-    ///
-    /// .. seealso:: :sol:func:`removeAllowedLP`
-    event LPRemoved(address lp);
-
     /// The L1 :sol:contract:`Resolver` contract to be used for L1 resolution.
     address public l1Resolver;
 
@@ -61,9 +50,6 @@ contract FillManager is Ownable {
 
     /// Maps request hashes to fill hashes.
     mapping(bytes32 => bytes32) public fills;
-
-    /// The set of liquidity providers that are allowed to fill requests.
-    mapping(address => bool) public allowedLPs;
 
     /// Constructor.
     ///
@@ -93,8 +79,7 @@ contract FillManager is Ownable {
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount
-    ) external returns (bytes32) {
-        require(allowedLPs[msg.sender], "Sender not whitelisted");
+    ) external onlyWhitelist returns (bytes32) {
         bytes32 requestHash = BeamerUtils.createRequestHash(
             requestId,
             sourceChainId,
@@ -152,29 +137,5 @@ contract FillManager is Ownable {
             fillId
         );
         emit HashInvalidated(requestHash, fillId, fillHash);
-    }
-
-    /// Add a liquidity provider to the set of allowed liquidity providers.
-    ///
-    /// Only allowed liquidity providers can fill requests.
-    ///
-    /// .. note:: This function can only be called by the contract owner.
-    ///
-    /// @param newLP The liquidity provider.
-    function addAllowedLP(address newLP) public onlyOwner {
-        allowedLPs[newLP] = true;
-
-        emit LPAdded(newLP);
-    }
-
-    /// Remove a liquidity provider from the set of allowed liquidity providers.
-    ///
-    /// .. note:: This function can only be called by the contract owner.
-    ///
-    /// @param oldLP The liquidity provider.
-    function removeAllowedLP(address oldLP) public onlyOwner {
-        delete allowedLPs[oldLP];
-
-        emit LPRemoved(oldLP);
     }
 }

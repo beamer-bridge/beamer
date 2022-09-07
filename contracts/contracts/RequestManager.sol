@@ -5,7 +5,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
-
+import "./LpWhitelist.sol";
 import "./BeamerUtils.sol";
 import "./ResolutionRegistry.sol";
 
@@ -16,7 +16,7 @@ import "./ResolutionRegistry.sol";
 /// tokens until they are withdrawn.
 ///
 /// It is the only contract that agents need to interact with on the source chain.
-contract RequestManager is Ownable {
+contract RequestManager is Ownable, LpWhitelist {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -342,6 +342,7 @@ contract RequestManager is Ownable {
         external
         payable
         validRequestId(requestId)
+        onlyWhitelist
         returns (uint256)
     {
         Request storage request = requests[requestId];
