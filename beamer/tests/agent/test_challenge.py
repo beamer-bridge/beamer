@@ -257,7 +257,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     agent = beamer.agent.Agent(config)
     agent.start()
 
-    fill_manager.addAllowedLP(charlie.address)
+    fill_manager.addAllowedLp(charlie.address)
 
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1

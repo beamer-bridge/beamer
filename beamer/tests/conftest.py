@@ -98,7 +98,7 @@ def contracts(
     l2_messenger.setForwardState(forward_state)
     proof_submitter = deployer.deploy(TestProofSubmitter, l2_messenger.address)
     fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
-    fill_manager.addAllowedLP(_LOCAL_ACCOUNT)
+    fill_manager.addAllowedLp(_LOCAL_ACCOUNT)
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
