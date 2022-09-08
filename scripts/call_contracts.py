@@ -214,6 +214,40 @@ def claim_request(
 
 
 @click.option(
+    "--claim-id",
+    type=int,
+    help="Claim id to claim",
+)
+@cli.command("challenge")
+@pass_args
+def challenge_claim(
+    web3: Web3,
+    contracts: dict[str, Contract],
+    claim_id: int,
+) -> None:
+    """Challenge a Beamer claim"""
+
+    request_manager = contracts["RequestManager"]
+    claim = request_manager.functions.claims(claim_id).call()
+    highest_stake = max(claim[2], claim[5])
+    # it seems that challengersStakes is only included in the tuple
+    # if there is at least one entry in the mapping
+    # indexing with -2 always returns the termination timestamp
+    valid_until = claim[-2]
+    current_time = web3.eth.get_block("latest").get("timestamp")
+    if current_time >= valid_until:
+        print("Request already expired")
+        return
+
+    tx_hash = request_manager.functions.challengeClaim(claim_id).transact(
+        {"value": highest_stake + 1}
+    )
+    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+
+    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+
+
+@click.option(
     "--request-id",
     type=int,
     help="Request id of expired request",
