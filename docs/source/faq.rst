@@ -44,6 +44,7 @@ FAQ
   At this stage, the user is done and receives their assets on target rollup.
 
   For agents
+
   3. The agent initiates the claim on Rollup 1
   4. If no one challenges the claim, the agent can withdraw the assets on Rollup 1"
 
@@ -81,7 +82,7 @@ FAQ
 * How can I track my transfer?
 
   While initiating a transfer, you will see the progress on our dApp. You can
-  also click ""See transfer on the Explorer"" to check the status of your
+  also click "See transfer on the Explorer" to check the status of your
   transfer.
 
   Alternatively, you can check your outgoing transfers on the respective rollup explorers.
