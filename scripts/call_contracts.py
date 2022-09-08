@@ -194,7 +194,7 @@ def claim_request(
     request_manager = contracts["RequestManager"]
     claim_stake = request_manager.functions.claimStake().call()
     request = request_manager.functions.requests(request_id).call()
-    deposit_receiver = request[6]
+    deposit_receiver = request[6][0]
     valid_until = request[8]
     current_time = web3.eth.get_block("latest").get("timestamp")
 
