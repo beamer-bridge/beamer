@@ -423,7 +423,8 @@ def _handle_initiate_l1_resolution(
 
         log.info("Initiated L1 resolution", request=request, claim=claim)
 
-    return True, None
+        return True, None
+    return False, None
 
 
 def _handle_initiate_l1_invalidation(
