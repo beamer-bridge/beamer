@@ -9,7 +9,6 @@ import "../../RestrictedCalls.sol";
 
 contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
     IMessenger private messenger;
-    uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
 
     constructor(address messenger_) {
         messenger = IMessenger(messenger_);
@@ -33,8 +32,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             abi.encodeCall(
                 Resolver.resolve,
                 (requestHash, fillId, block.chainid, sourceChainId, filler)
-            ),
-            MESSAGE_GAS_LIMIT
+            )
         );
 
         return ProofReceipt(fillId, fillHash);
@@ -51,8 +49,7 @@ contract OptimismProofSubmitter is IProofSubmitter, RestrictedCalls {
             abi.encodeCall(
                 Resolver.resolve,
                 (requestHash, fillId, block.chainid, sourceChainId, address(0))
-            ),
-            MESSAGE_GAS_LIMIT
+            )
         );
     }
 }

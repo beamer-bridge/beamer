@@ -82,7 +82,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         }
 
         IMessenger messenger = IMessenger(info.messenger);
-        messenger.sendMessage(info.resolutionRegistry, message, 1_000_000);
+        messenger.sendMessage(info.resolutionRegistry, message);
 
         emit Resolution(
             sourceChainId,

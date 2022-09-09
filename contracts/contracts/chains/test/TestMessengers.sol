@@ -6,6 +6,8 @@ import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
 
 contract TestMessengerBase is IMessenger, RestrictedCalls {
+    uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
+
     address public lastSender;
     bool public forwardMessages;
 
@@ -13,14 +15,13 @@ contract TestMessengerBase is IMessenger, RestrictedCalls {
         return lastSender;
     }
 
-    function sendMessage(
-        address target,
-        bytes calldata message,
-        uint32 gasLimit
-    ) external restricted(block.chainid, msg.sender) {
+    function sendMessage(address target, bytes calldata message)
+        external
+        restricted(block.chainid, msg.sender)
+    {
         if (forwardMessages) {
             lastSender = msg.sender;
-            (bool success, ) = target.call{gas: gasLimit}(message);
+            (bool success, ) = target.call{gas: MESSAGE_GAS_LIMIT}(message);
             require(success, "sendMessage: tx failed");
         }
     }
