@@ -20,4 +20,3 @@ Interfaces
 ----------
 
 .. autosolinterface:: IMessenger
-.. autosolinterface:: IProofSubmitter
