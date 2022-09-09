@@ -1,7 +1,11 @@
 import type { Ref } from 'vue';
 
 import type { EthereumProvider } from '@/services/web3-provider';
-import { createMetaMaskProvider, createWalletConnectProvider } from '@/services/web3-provider';
+import {
+  createMetaMaskProvider,
+  createWalletConnectProvider,
+  onboardMetaMask,
+} from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
 
 export function useWallet(
@@ -9,13 +13,15 @@ export function useWallet(
   connectedWallet: Ref<WalletType | undefined>,
   rpcUrls: Ref<{ [chainId: number]: string }>,
 ) {
-  async function connectMetaMask() {
+  async function connectMetaMask(withOnboarding?: boolean) {
     const metaMaskProvider = await createMetaMaskProvider();
 
     if (metaMaskProvider) {
       metaMaskProvider.requestSigner();
       provider.value = metaMaskProvider;
       connectedWallet.value = WalletType.MetaMask;
+    } else if (withOnboarding) {
+      onboardMetaMask();
     }
   }
 
