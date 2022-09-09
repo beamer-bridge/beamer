@@ -62,6 +62,17 @@ describe('useWallets', () => {
 
       expect(connectedWallet.value).toBe('metamask');
     });
+    describe('when onboarding is enabled', () => {
+      it('starts onboarding process when metamask instance is not found', async () => {
+        Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+          value: vi.fn().mockResolvedValue(undefined),
+        });
+
+        const { connectMetaMask } = useWallet(ref(undefined), ref(undefined), ref({}));
+        await connectMetaMask(true);
+        expect(web3ProviderService.onboardMetaMask).toHaveBeenCalledOnce();
+      });
+    });
   });
 
   describe('connectWalletConnect()', () => {

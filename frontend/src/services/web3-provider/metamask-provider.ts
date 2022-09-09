@@ -1,5 +1,6 @@
 import type { ExternalProvider } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
+import MetaMaskOnboarding from '@metamask/onboarding';
 import { hexValue } from 'ethers/lib/utils';
 
 import type { Eip1193Provider, ISigner } from '@/services/web3-provider';
@@ -13,6 +14,12 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
     return metaMaskProvider;
   }
   return undefined;
+}
+
+export async function onboardMetaMask() {
+  const onboarding = new MetaMaskOnboarding();
+  onboarding.startOnboarding();
+  return onboarding;
 }
 
 export class MetaMaskProvider extends EthereumProvider implements ISigner {
