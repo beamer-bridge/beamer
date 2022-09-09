@@ -35,7 +35,7 @@ const walletOptions = [
     name: 'MetaMask',
     icon: new URL('../assets/images/metamask.svg', import.meta.url).href,
     description: 'Connect using browser wallet',
-    connect: connectMetaMask,
+    connect: () => connectMetaMask(true),
   },
   {
     name: 'WalletConnect',
