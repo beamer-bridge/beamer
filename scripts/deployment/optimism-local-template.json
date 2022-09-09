@@ -10,7 +10,6 @@
             "rpc": "http://localhost:8545",
             "chain_id": 17,
             "finality_period": 3600,
-            "proof_submitter": "OptimismProofSubmitter",
             "l1_messenger": ["OptimismL1Messenger", ${l1_messenger_args}],
             "l2_messenger": "OptimismL2Messenger",
             "request_manager_arguments": {

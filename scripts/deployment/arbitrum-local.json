@@ -10,7 +10,6 @@
             "rpc": "http://localhost:8547",
             "chain_id": 421612,
             "finality_period": 3600,
-            "proof_submitter": "ArbitrumProofSubmitter",
             "l1_messenger": "ArbitrumL1Messenger",
             "l2_messenger": "ArbitrumL2Messenger",
             "request_manager_arguments": {
