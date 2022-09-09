@@ -18,19 +18,20 @@
 </template>
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
+import { isMobile } from '@/utils/userAgent';
 
 const { provider, signer } = storeToRefs(useEthereumProvider());
 const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
 const { connectMetaMask, connectWalletConnect } = useWallet(provider, connectedWallet, rpcUrls);
 
-const walletOptions = [
+const walletOptions = ref([
   {
     name: 'MetaMask',
     icon: new URL('../assets/images/metamask.svg', import.meta.url).href,
@@ -43,8 +44,22 @@ const walletOptions = [
     description: 'Connect using mobile wallet',
     connect: connectWalletConnect,
   },
-];
+]);
 
+onMounted(() => {
+  // Use stripped down option list for mobile devices
+  if (isMobile(window.navigator.userAgent)) {
+    const metaMaskAvailable = window.ethereum && window.ethereum.isMetaMask;
+
+    if (metaMaskAvailable) {
+      walletOptions.value = walletOptions.value.filter((option) => option.name === 'MetaMask');
+    } else {
+      walletOptions.value = walletOptions.value.filter(
+        (option) => option.name === 'WalletConnect',
+      );
+    }
+  }
+});
 const emit = defineEmits<{
   (event: 'close'): void;
 }>();
