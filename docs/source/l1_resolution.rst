@@ -17,7 +17,7 @@ The proof of request fulfillment will always be written by the ``FillManager``
 contract on the target rollup and, in case a L1 resolution is triggered, must be
 submitted to the ``ResolutionRegistry`` contract on the source rollup.
 
-This process is started by the liquidity provider who fills an request. This
+This process is started by the liquidity provider who fills a request. This
 writes a proof on that rollup. This proof includes information about the
 filler, the chain id of the source rollup and the request id. The proof is
 basically an encoded transaction to the resolver, which can be executed
@@ -30,20 +30,20 @@ on that chain.
 
 When a proof transaction sent by the target rollup is executed, the resolver can
 find the correct registry in the mapping and forward the information about the
-filler. This again happens in form of an transaction, that can be executed on the
+filler. This again happens in form of a transaction, that can be executed on the
 source rollup.
 
 Trust
 -----
 
 To make sure that the resolved information is correct, only trusted contracts
-must be allowed to take part in the message forwarding scheme. Otherwise bad
+must be allowed to take part in the message forwarding scheme. Otherwise, bad
 actors could freely write invalid proofs on the target rollup or even on the L1
 chain.
 
 Avoiding this requires whitelisting valid senders in all contracts on the path
 of information.
 
-* On the target rollup, the ``ProofSubmitter`` must only be callable by the ``FillManager`` contract.
-* On L1, the resolver must only accept messages send by a whitelisted proof submitter for the given chain id.
-* On the source rollup the registry must only accept transactions that have been sent by the L1 resolver.
+* On the target rollup, the ``Messenger`` must only be callable by the ``FillManager`` contract.
+* On L1, the resolver must only accept messages send by a whitelisted L2 messenger for the given chain id.
+* On the source rollup the registry must only accept transactions that have been sent by the L1 messenger.

@@ -39,7 +39,6 @@ The directory typically looks like this::
 		├── deployment.json
 		├── FillManager.json
 		├── MintableToken.json
-		├── OptimismProofSubmitter.json
 		├── RequestManager.json
 		├── ResolutionRegistry.json
 		└── Resolver.json

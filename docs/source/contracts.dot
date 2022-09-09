@@ -17,16 +17,13 @@ digraph "Beamer contracts" {
         RequestManager [label="RequestManager"]
         FillManager [label="FillManager"]
         L2Messenger [label="L2Messenger", color="purple"]
-        ProofSubmitter [label="ProofSubmitter", color="purple"]
         ResolutionRegistry [label="ResolutionRegistry", rank=2]
     }
     
     {
         # restricted calls
         edge [color=red]
-        FillManager -> ProofSubmitter [label="submitProof()"]
-        FillManager -> ProofSubmitter [headlabel="submitNonFillProof()"]
-        ProofSubmitter ->L2Messenger [headlabel="sendMessage()"]
+        FillManager -> L2Messenger [headlabel="sendMessage()"]
         Resolver -> L1Messenger [xlabel="sendMessage()"]
     }
 
