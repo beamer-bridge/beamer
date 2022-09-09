@@ -11,7 +11,6 @@ from brownie import (
     Resolver,
     TestL1Messenger,
     TestL2Messenger,
-    TestProofSubmitter,
     accounts,
 )
 
@@ -31,7 +30,6 @@ class Contracts:
     request_manager: RequestManager
     l1_messenger: TestL1Messenger
     l2_messenger: TestL2Messenger
-    proof_submitter: TestProofSubmitter
     resolution_registry: ResolutionRegistry
 
 
@@ -96,8 +94,7 @@ def contracts(
     # L2b contracts
     l2_messenger = deployer.deploy(TestL2Messenger)
     l2_messenger.setForwardState(forward_state)
-    proof_submitter = deployer.deploy(TestProofSubmitter, l2_messenger.address)
-    fill_manager = deployer.deploy(FillManager, resolver.address, proof_submitter.address)
+    fill_manager = deployer.deploy(FillManager, resolver.address, l2_messenger.address)
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)
@@ -115,13 +112,12 @@ def contracts(
 
     # Explicitly allow calls between contracts. The chain of trust:
     #
-    # fill_manager -> proof_submitter -> L2 messenger -> L1 resolver ->
+    # fill_manager -> L2 messenger -> L1 resolver ->
     # L1 messenger -> resolution registry
     l1_chain_id = l2_chain_id = brownie.chain.id
 
-    proof_submitter.addCaller(l2_chain_id, fill_manager.address)
-    l2_messenger.addCaller(l2_chain_id, proof_submitter.address)
-    resolver.addCaller(l2_chain_id, l2_messenger.address, proof_submitter.address)
+    l2_messenger.addCaller(l2_chain_id, fill_manager.address)
+    resolver.addCaller(l2_chain_id, l2_messenger.address, fill_manager.address)
     l1_messenger.addCaller(l1_chain_id, resolver.address)
     resolution_registry.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
     resolver.addRegistry(l2_chain_id, resolution_registry.address, l1_messenger.address)
@@ -131,7 +127,6 @@ def contracts(
         l1_messenger=l1_messenger,
         l2_messenger=l2_messenger,
         resolver=resolver,
-        proof_submitter=proof_submitter,
         fill_manager=fill_manager,
         request_manager=request_manager,
         resolution_registry=resolution_registry,
@@ -219,11 +214,6 @@ def resolver(contracts):
 @pytest.fixture
 def resolution_registry(contracts):
     return contracts.resolution_registry
-
-
-@pytest.fixture
-def optimism_proof_submitter(contracts):
-    return contracts.proof_submitter
 
 
 @pytest.fixture
