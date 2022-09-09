@@ -5,8 +5,9 @@ import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
 import "./LpWhitelist.sol";
-import "../interfaces/IProofSubmitter.sol";
+import "../interfaces/IMessenger.sol";
 import "./BeamerUtils.sol";
+import "./Resolver.sol";
 
 /// The fill manager.
 ///
@@ -39,14 +40,14 @@ contract FillManager is Ownable, LpWhitelist {
         bytes32 indexed fillHash
     );
 
+    // The messenger to send messages to L1
+    //
+    // It is used to send proofs to L1. The specific implementation of the
+    // :sol:interface:`IMessenger` interface is chain-dependent.
+    IMessenger private messenger;
+
     /// The L1 :sol:contract:`Resolver` contract to be used for L1 resolution.
     address public l1Resolver;
-
-    /// The proof submitter contract to be used for submitting L1 proofs.
-    ///
-    /// The specific implementation of the :sol:interface:`IProofSubmitter` interface
-    /// is chain-dependent.
-    IProofSubmitter public proofSubmitter;
 
     /// Maps request hashes to fill hashes.
     mapping(bytes32 => bytes32) public fills;
@@ -54,10 +55,10 @@ contract FillManager is Ownable, LpWhitelist {
     /// Constructor.
     ///
     /// @param _l1Resolver The L1 resolver contract.
-    /// @param _proofSubmitter The proof submitter.
-    constructor(address _l1Resolver, address _proofSubmitter) {
+    /// @param _messenger The messenger.
+    constructor(address _l1Resolver, address _messenger) {
         l1Resolver = _l1Resolver;
-        proofSubmitter = IProofSubmitter(_proofSubmitter);
+        messenger = IMessenger(_messenger);
     }
 
     /// Fill the specified request.
@@ -94,22 +95,29 @@ contract FillManager is Ownable, LpWhitelist {
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
-        IProofSubmitter.ProofReceipt memory proofReceipt = proofSubmitter
-            .submitProof(l1Resolver, sourceChainId, requestHash, msg.sender);
-        require(proofReceipt.fillId != 0, "Submitting proof data failed");
+        bytes32 fillId = blockhash(block.number - 1);
+        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
 
-        fills[requestHash] = proofReceipt.fillHash;
+        messenger.sendMessage(
+            l1Resolver,
+            abi.encodeCall(
+                Resolver.resolve,
+                (requestHash, fillId, block.chainid, sourceChainId, msg.sender)
+            )
+        );
+
+        fills[requestHash] = fillHash;
 
         emit RequestFilled(
             requestId,
-            proofReceipt.fillId,
+            fillId,
             sourceChainId,
             targetTokenAddress,
             msg.sender,
             amount
         );
 
-        return proofReceipt.fillId;
+        return fillId;
     }
 
     /// Invalidate the specified fill.
@@ -130,11 +138,12 @@ contract FillManager is Ownable, LpWhitelist {
     ) external {
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         require(fills[requestHash] != fillHash, "Fill hash valid");
-        proofSubmitter.submitNonFillProof(
+        messenger.sendMessage(
             l1Resolver,
-            sourceChainId,
-            requestHash,
-            fillId
+            abi.encodeCall(
+                Resolver.resolve,
+                (requestHash, fillId, block.chainid, sourceChainId, address(0))
+            )
         );
         emit HashInvalidated(requestHash, fillId, fillHash);
     }
