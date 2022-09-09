@@ -8,6 +8,8 @@ import "./ICrossDomainMessenger.sol";
 import "./Lib_PredeployAddresses.sol";
 
 abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
+    uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
+
     ICrossDomainMessenger public messenger;
 
     function originalSender() external view returns (address) {
@@ -18,12 +20,11 @@ abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
         return address(messenger);
     }
 
-    function sendMessage(
-        address target,
-        bytes calldata message,
-        uint32 gasLimit
-    ) external restricted(block.chainid, msg.sender) {
-        messenger.sendMessage(target, message, gasLimit);
+    function sendMessage(address target, bytes calldata message)
+        external
+        restricted(block.chainid, msg.sender)
+    {
+        messenger.sendMessage(target, message, MESSAGE_GAS_LIMIT);
     }
 }
 

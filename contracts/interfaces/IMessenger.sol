@@ -15,12 +15,7 @@ interface IMessenger {
     ///
     /// @param target The message recipient.
     /// @param message The message.
-    /// @param gasLimit The transaction's gas limit.
-    function sendMessage(
-        address target,
-        bytes calldata message,
-        uint32 gasLimit
-    ) external;
+    function sendMessage(address target, bytes calldata message) external;
 
     /// Get the original sender of the last message.
     function originalSender() external view returns (address);
