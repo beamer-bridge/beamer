@@ -69,16 +69,15 @@ def test_l1_non_fill_proof(fill_manager, resolution_registry):
     assert resolution_registry.invalidFillHashes(fill_hash)
 
 
-def test_restricted_calls(contracts, resolver):
+def test_restricted_calls(contracts, resolver, resolution_registry):
     """Test that important contract calls cannot be invoked by a random caller."""
     (caller,) = alloc_accounts(1)
 
-    # fill_manager -> proof_submitter -> messenger1 -> L1 resolver ->
+    # fill_manager -> messenger1 -> L1 resolver ->
     # messenger2 -> resolution registry
+
     with brownie.reverts("RestrictedCalls: unknown caller"):
-        contracts.proof_submitter.submitProof(
-            resolver, brownie.chain.id, 0, caller, {"from": caller}
-        )
+        contracts.l2_messenger.sendMessage(resolver.address, b"")
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
         contracts.resolver.resolve(
@@ -89,6 +88,9 @@ def test_restricted_calls(contracts, resolver):
         contracts.resolver.resolve(
             0, 0, brownie.chain.id, brownie.chain.id, ADDRESS_ZERO, {"from": caller}
         )
+
+    with brownie.reverts("RestrictedCalls: unknown caller"):
+        contracts.l1_messenger.sendMessage(resolution_registry.address, b"")
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
         contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})
