@@ -89,20 +89,20 @@ Second concern: claim and challenge
 Bob will only fill a request if he is guaranteed by the protocol to receive the tokens locked by Alice on rollup A,
 this is our second concern. When filling the request, Bob submits the following parameters:
 
-- request ID
 - source chain ID
 - target token address
 - recipient address
 - amount
+- nonce
 
 These parameters are useful to let other liquidity providers (or any observer) know that a request they saw on rollup A
-is properly filled. The hash of these parameters, as well as the rollup B's chain ID, constitutes the ``request hash``
+is properly filled. The hash of these parameters, as well as the rollup B's chain ID, constitutes the ``request ID``
 that can later serve to prove that the request was properly filled.
 
 ::
 
-    request hash = Hash(request ID, source chain ID, target chain ID,
-                        target token address, recipient address, amount)
+    request ID = Hash(source chain ID, target chain ID,
+                        target token address, recipient address, amount, nonce)
 
 When filling the request, a ``fill ID`` is also computed, that serves to identify a fill. Detailed information on the
 ``fill ID`` can be found in section :ref:``fill_id``.
@@ -232,7 +232,7 @@ L1 resolutions
 When Bob filled Alice's request, a proof was sent by the ``fill manager`` contract on rollup B to the outbox of
 rollup B on L1. This proof is a call to a ``resolver`` contract on L1 and contains the following fields:
 
-- fill hash = Hash(request hash, fill ID)
+- fill hash = Hash(request ID, fill ID)
 - rollup B's chain ID
 - rollup A's chain ID
 - Bob's address
@@ -362,9 +362,9 @@ was not the correct filler. However, Alice's request might not be able to be fil
 Instead of proving that someone other than Charles filled a request, Bob will need to prove that Charles did not fill
 the request as claimed. For that, Bob needs to create and submit an ``L1 non-fill proof`` from rollup B to rollup A.
 
-When called, the fill manager contract on rollup B recomputes the fill hash from the request hash, and fill ID which
-were made public during the claim, and checks that no fills exists for the corresponding request hash and fill hash.
-It then submits a proof to the outbox of rollup B indicating that the fill hash is invalid, i.e. that the request hash
+When called, the fill manager contract on rollup B recomputes the fill hash from the request ID and fill ID which
+were made public during the claim, and checks that no fills exists for the corresponding request ID and fill hash.
+It then submits a proof to the outbox of rollup B indicating that the fill hash is invalid, i.e. that the request ID
 cannot be mapped to the fill hash.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
