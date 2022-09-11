@@ -3,12 +3,12 @@ from typing import Optional
 import structlog
 from eth_abi.packed import encode_abi_packed
 from eth_typing import ChecksumAddress
-from eth_utils import keccak, to_canonical_address
+from eth_utils import keccak
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
 from web3.types import Timestamp
 
-from beamer.typing import ChainId, FillHash, FillId, RequestHash, RequestId, TokenAmount
+from beamer.typing import ChainId, FillHash, FillId, Nonce, RequestId, TokenAmount
 
 
 class Request(StateMachine):
@@ -21,6 +21,7 @@ class Request(StateMachine):
         target_token_address: ChecksumAddress,
         target_address: ChecksumAddress,
         amount: TokenAmount,
+        nonce: Nonce,
         valid_until: int,
     ) -> None:
         super().__init__()
@@ -32,6 +33,7 @@ class Request(StateMachine):
         self.target_token_address = target_token_address
         self.target_address = target_address
         self.amount = amount
+        self.nonce = nonce
         self.valid_until = valid_until
         self.filler: Optional[ChecksumAddress] = None
         self.fill_tx: Optional[HexBytes] = None
@@ -86,31 +88,13 @@ class Request(StateMachine):
         self.l1_resolution_filler = l1_filler
         self.l1_resolution_fill_id = l1_fill_id
 
-    @property
-    def request_hash(self) -> RequestHash:
-        return RequestHash(
-            keccak(
-                encode_abi_packed(
-                    ["uint256", "uint256", "uint256", "address", "address", "uint256"],
-                    [
-                        self.id,
-                        self.source_chain_id,
-                        self.target_chain_id,
-                        to_canonical_address(self.target_token_address),
-                        to_canonical_address(self.target_address),
-                        self.amount,
-                    ],
-                )
-            )
-        )
-
     def fill_hash_with_fill_id(self, fill_id: FillId) -> FillHash:
         return FillHash(
             keccak(
                 encode_abi_packed(
                     ["bytes32", "bytes32"],
                     [
-                        self.request_hash,
+                        self.id,
                         fill_id,
                     ],
                 )
@@ -119,4 +103,4 @@ class Request(StateMachine):
 
     def __repr__(self) -> str:
         state = self.current_state.identifier
-        return f"<Request id={self.id} state={state} filler={self.filler}>"
+        return f"<Request id={self.id!r} state={state} filler={self.filler}>"
