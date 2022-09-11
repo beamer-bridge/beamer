@@ -254,9 +254,11 @@ contract RequestManager is Ownable, LpWhitelist {
 
         IERC20 token = IERC20(sourceTokenAddress);
 
-        uint256 lpFee = lpFee(amount);
-        uint256 protocolFee = protocolFee(amount);
-        uint256 totalTokenAmount = amount + lpFee + protocolFee;
+        uint256 lpFeeTokenAmount = lpFee(amount);
+        uint256 protocolFeeTokenAmount = protocolFee(amount);
+        uint256 totalTokenAmount = amount +
+            lpFeeTokenAmount +
+            protocolFeeTokenAmount;
 
         require(
             token.allowance(msg.sender, address(this)) >= totalTokenAmount,
@@ -273,8 +275,8 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.amount = amount;
         newRequest.withdrawInfo = BeamerUtils.FillInfo(address(0), bytes32(0));
         newRequest.validUntil = block.timestamp + validityPeriod;
-        newRequest.lpFee = lpFee;
-        newRequest.protocolFee = protocolFee;
+        newRequest.lpFee = lpFeeTokenAmount;
+        newRequest.protocolFee = protocolFeeTokenAmount;
 
         emit RequestCreated(
             counter,
