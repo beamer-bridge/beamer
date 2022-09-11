@@ -153,4 +153,4 @@ class Claim(StateMachine):
 
     def __repr__(self) -> str:
         state = self.current_state.identifier
-        return f"<Claim id={self.id} state={state} request_id={self.request_id}>"
+        return f"<Claim id={self.id} state={state} request_id={self.request_id!r}>"

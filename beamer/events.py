@@ -17,7 +17,7 @@ from beamer.typing import (
     ClaimId,
     FillHash,
     FillId,
-    RequestHash,
+    Nonce,
     RequestId,
     Termination,
     TokenAmount,
@@ -75,6 +75,7 @@ class RequestCreated(RequestEvent):
     target_token_address: ChecksumAddress
     target_address: ChecksumAddress
     amount: TokenAmount
+    nonce: Nonce
     valid_until: Termination
 
 
@@ -116,7 +117,7 @@ class ClaimStakeWithdrawn(ClaimEvent):
 
 @dataclass(frozen=True)
 class RequestResolved(TxEvent):
-    request_hash: RequestHash
+    request_id: RequestId
     filler: ChecksumAddress
     fill_id: FillId
 
@@ -128,7 +129,7 @@ class FillHashInvalidated(TxEvent):
 
 @dataclass(frozen=True)
 class HashInvalidated(TxEvent):
-    request_hash: RequestHash
+    request_id: RequestId
     fill_id: FillId
     fill_hash: FillHash
 
@@ -170,7 +171,7 @@ def _convert_bytes(kwargs: dict) -> None:
     for name, type_ in (
         ("fill_id", FillId),
         ("fill_hash", FillHash),
-        ("request_hash", RequestHash),
+        ("request_id", RequestId),
     ):
         value = kwargs.get(name)
         if value is not None:

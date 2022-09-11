@@ -311,11 +311,11 @@ def fill_request(request: Request, context: Context) -> None:
         return
 
     func = context.fill_manager.functions.fillRequest(
-        requestId=request.id,
         sourceChainId=request.source_chain_id,
         targetTokenAddress=request.target_token_address,
         targetReceiverAddress=request.target_address,
         amount=request.amount,
+        nonce=request.nonce,
     )
     try:
         receipt = transact(func)
@@ -498,7 +498,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     func = context.fill_manager.functions.invalidateFill(
-        request.request_hash, claim.latest_claim_made.fill_id, request.source_chain_id
+        request.id, claim.latest_claim_made.fill_id, request.source_chain_id
     )
     try:
         receipt = transact(func)

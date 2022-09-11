@@ -34,7 +34,7 @@ from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, FillHash, RequestHash, RequestId
+from beamer.typing import ChainId, ClaimId, FillHash, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -115,15 +115,6 @@ def _find_claims_by_fill_hash(context: Context, fill_hash: FillHash) -> list[Cla
     return matching_claims
 
 
-def _find_request_by_request_hash(
-    context: Context, request_hash: RequestHash
-) -> Optional[Request]:
-    for request in context.requests:
-        if request.request_hash == request_hash:
-            return request
-    return None
-
-
 def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
     return (
         not claim.is_invalidated_l1_resolved
@@ -194,6 +185,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
         target_token_address=event.target_token_address,
         target_address=event.target_address,
         amount=event.amount,
+        nonce=event.nonce,
         valid_until=event.valid_until,
     )
     context.requests.add(request.id, request)
@@ -328,7 +320,7 @@ def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) 
 
 
 def _handle_request_resolved(event: RequestResolved, context: Context) -> HandlerResult:
-    request = _find_request_by_request_hash(context, event.request_hash)
+    request = context.requests.get(event.request_id)
     if request is not None:
         try:
             request.l1_resolve(event.filler, event.fill_id)
