@@ -33,7 +33,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address, make_tx_hash
 from beamer.tests.constants import FILL_ID
-from beamer.typing import FillId, Termination, TokenAmount
+from beamer.typing import FillId, Nonce, Termination, TokenAmount
 
 
 def test_skip_not_self_filled():
@@ -124,7 +124,7 @@ def test_handle_request_resolved():
     event = RequestResolved(
         chain_id=TARGET_CHAIN_ID,
         tx_hash=HexBytes(""),
-        request_hash=request.request_hash,
+        request_id=request.id,
         filler=filler,
         fill_id=fill_id,
         block_number=BLOCK_NUMBER,
@@ -311,6 +311,7 @@ def test_handling_claim_during_sync(_mocked_metrics):
     target_token = make_address()
     filler = make_address()
     amount = TokenAmount(123456)
+    nonce = Nonce(100)
 
     request_event = RequestCreated(
         chain_id=SOURCE_CHAIN_ID,
@@ -322,6 +323,7 @@ def test_handling_claim_during_sync(_mocked_metrics):
         target_token_address=target_token,
         target_address=make_address(),
         amount=amount,
+        nonce=nonce,
         valid_until=TERMINATION,
     )
     claim_event = ClaimMade(

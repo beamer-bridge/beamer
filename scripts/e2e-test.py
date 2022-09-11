@@ -3,7 +3,7 @@ import sys
 import time
 from pathlib import Path
 
-from beamer.tests.util import create_request_hash
+from beamer.tests.util import create_request_id
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3
 from scripts._util import contracts_for_web3
@@ -24,7 +24,7 @@ def main() -> None:
 
     fill_manager = l2_contracts["FillManager"]
 
-    request_id = random.randint(1, sys.maxsize)
+    nonce = random.randint(1, sys.maxsize)
     request_amount = 123
 
     token = l2_contracts["MintableToken"]
@@ -38,16 +38,12 @@ def main() -> None:
     web3.eth.wait_for_transaction_receipt(tx_hash)
 
     tx_hash = fill_manager.functions.fillRequest(
-        request_id,
-        chain_id,
-        token.address,
-        deployer.address,
-        request_amount,
+        chain_id, token.address, deployer.address, request_amount, nonce
     ).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
 
-    request_hash = create_request_hash(
-        request_id, chain_id, chain_id, token.address, deployer.address, request_amount
+    request_id = create_request_id(
+        chain_id, chain_id, token.address, deployer.address, request_amount, nonce
     )
 
     # A fill has been done, and the proof has been submitted.  As the message
@@ -59,10 +55,10 @@ def main() -> None:
     for _ in range(50):
         time.sleep(1)
         print("Waiting for resolution data...")
-        if resolution_registry.functions.fillers(request_hash).call()[0] == deployer.address:
+        if resolution_registry.functions.fillers(request_id).call()[0] == deployer.address:
             break
 
-    assert resolution_registry.functions.fillers(request_hash).call()[0] == deployer.address
+    assert resolution_registry.functions.fillers(request_id).call()[0] == deployer.address
 
 
 if __name__ == "__main__":

@@ -214,58 +214,53 @@ def make_request(
             validity_period,
             {"from": requester},
         )
-    return request_tx.return_value
+    return RequestId(request_tx.return_value)
 
 
-def create_request_hash(
-    request_id, source_chain_id, target_chain_id, target_token_address, receiver_address, amount
+def create_request_id(
+    source_chain_id, target_chain_id, target_token_address, receiver_address, amount, nonce
 ):
     return keccak(
         encode_abi_packed(
-            ["uint256", "uint256", "uint256", "address", "address", "uint256"],
+            ["uint256", "uint256", "address", "address", "uint256", "uint256"],
             [
-                request_id,
                 source_chain_id,
                 target_chain_id,
                 to_canonical_address(target_token_address),
                 to_canonical_address(receiver_address),
                 amount,
+                nonce,
             ],
         )
     )
 
 
 def create_fill_hash(
-    request_id,
     source_chain_id,
     target_chain_id,
     target_token_address,
     receiver_address,
     amount,
+    nonce,
     fill_id,
 ):
-    return create_fill_hash_from_request_hash(
-        create_request_hash(
-            request_id,
-            source_chain_id,
-            target_chain_id,
-            target_token_address,
-            receiver_address,
-            amount,
+    return create_fill_hash_from_request_id(
+        create_request_id(
+            source_chain_id, target_chain_id, target_token_address, receiver_address, amount, nonce
         ),
         fill_id,
     )
 
 
-def create_fill_hash_from_request_hash(
-    request_hash,
+def create_fill_hash_from_request_id(
+    request_id,
     fill_id,
 ):
     return keccak(
         encode_abi_packed(
             ["bytes32", "bytes32"],
             [
-                request_hash,
+                request_id,
                 fill_id,
             ],
         )
