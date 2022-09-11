@@ -138,11 +138,8 @@ contract RequestManager is Ownable, LpWhitelist {
     /// cannot be used to create new requests.
     bool public deprecated;
 
-    /// The request counter, used to generate request IDs.
-    uint256 public requestCounter;
-
-    /// The claim counter, used to generate claim IDs.
-    uint256 public claimCounter;
+    /// The counter, used to generate request and claim IDs.
+    uint256 public counter;
 
     /// The resolution registry that is used to query for results of L1 resolution.
     ResolutionRegistry public resolutionRegistry;
@@ -192,16 +189,13 @@ contract RequestManager is Ownable, LpWhitelist {
 
     /// Check whether a given request ID is valid.
     modifier validRequestId(uint256 requestId) {
-        require(
-            requestId <= requestCounter && requestId > 0,
-            "requestId not valid"
-        );
+        require(requestId <= counter && requestId > 0, "requestId not valid");
         _;
     }
 
     /// Check whether a given claim ID is valid.
     modifier validClaimId(uint256 claimId) {
-        require(claimId <= claimCounter && claimId > 0, "claimId not valid");
+        require(claimId <= counter && claimId > 0, "claimId not valid");
         _;
     }
 
@@ -269,8 +263,8 @@ contract RequestManager is Ownable, LpWhitelist {
             "Insufficient allowance"
         );
 
-        requestCounter += 1;
-        Request storage newRequest = requests[requestCounter];
+        counter += 1;
+        Request storage newRequest = requests[counter];
         newRequest.sender = msg.sender;
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
@@ -283,7 +277,7 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.protocolFee = protocolFee;
 
         emit RequestCreated(
-            requestCounter,
+            counter,
             targetChainId,
             sourceTokenAddress,
             targetTokenAddress,
@@ -294,7 +288,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
         token.safeTransferFrom(msg.sender, address(this), totalTokenAmount);
 
-        return requestCounter;
+        return counter;
     }
 
     /// Withdraw funds deposited with an expired request.
@@ -356,9 +350,9 @@ contract RequestManager is Ownable, LpWhitelist {
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
         request.activeClaims += 1;
-        claimCounter += 1;
+        counter += 1;
 
-        Claim storage claim = claims[claimCounter];
+        Claim storage claim = claims[counter];
         claim.requestId = requestId;
         claim.claimer = msg.sender;
         claim.claimerStake = claimStake;
@@ -370,7 +364,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
         emit ClaimMade(
             requestId,
-            claimCounter,
+            counter,
             claim.claimer,
             claim.claimerStake,
             claim.lastChallenger,
@@ -379,7 +373,7 @@ contract RequestManager is Ownable, LpWhitelist {
             fillId
         );
 
-        return claimCounter;
+        return counter;
     }
 
     /// Challenge an existing claim.
