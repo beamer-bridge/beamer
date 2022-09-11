@@ -16,13 +16,13 @@ from beamer.state_machine import Context
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
 from beamer.tracker import Tracker
-from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId, Termination, TokenAmount
+from beamer.typing import URL, ChainId, ClaimId, FillId, Nonce, RequestId, Termination, TokenAmount
 from beamer.util import TokenMatchChecker
 
 SOURCE_CHAIN_ID = ChainId(2)
 TARGET_CHAIN_ID = ChainId(3)
 
-REQUEST_ID = RequestId(10)
+REQUEST_ID = RequestId(31 * b"" + b"1")
 CLAIM_ID = ClaimId(200)
 
 CLAIMER_STAKE = Wei(10_000_000)
@@ -59,6 +59,7 @@ def make_request(valid_until: int = TIMESTAMP - 1) -> Request:
         target_token_address=make_address(),
         target_address=make_address(),
         amount=TokenAmount(123),
+        nonce=Nonce(100),
         valid_until=valid_until,
     )
 
