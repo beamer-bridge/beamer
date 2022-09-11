@@ -7,53 +7,53 @@ library BeamerUtils {
         bytes32 fillId;
     }
 
-    function createRequestHash(
-        uint256 requestId,
-        uint256 sourceChainId,
-        uint256 targetChainId,
-        address targetTokenAddress,
-        address targetReceiverAddress,
-        uint256 amount
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    requestId,
-                    sourceChainId,
-                    targetChainId,
-                    targetTokenAddress,
-                    targetReceiverAddress,
-                    amount
-                )
-            );
-    }
-
-    function createFillHash(bytes32 requestHash, bytes32 fillId)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encodePacked(requestHash, fillId));
-    }
-
-    function createFillHash(
-        uint256 requestId,
+    function createRequestId(
         uint256 sourceChainId,
         uint256 targetChainId,
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount,
-        bytes32 fillId
+        uint256 nonce
     ) internal pure returns (bytes32) {
         return
-            createFillHash(
-                createRequestHash(
-                    requestId,
+            keccak256(
+                abi.encodePacked(
                     sourceChainId,
                     targetChainId,
                     targetTokenAddress,
                     targetReceiverAddress,
-                    amount
+                    amount,
+                    nonce
+                )
+            );
+    }
+
+    function createFillHash(bytes32 requestId, bytes32 fillId)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(requestId, fillId));
+    }
+
+    function createFillHash(
+        uint256 sourceChainId,
+        uint256 targetChainId,
+        address targetTokenAddress,
+        address targetReceiverAddress,
+        uint256 amount,
+        uint256 nonce,
+        bytes32 fillId
+    ) internal pure returns (bytes32) {
+        return
+            createFillHash(
+                createRequestId(
+                    sourceChainId,
+                    targetChainId,
+                    targetTokenAddress,
+                    targetReceiverAddress,
+                    amount,
+                    nonce
                 ),
                 fillId
             );

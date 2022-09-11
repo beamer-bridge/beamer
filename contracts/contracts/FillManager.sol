@@ -22,7 +22,7 @@ contract FillManager is Ownable, LpWhitelist {
     ///
     /// .. seealso:: :sol:func:`fillRequest`
     event RequestFilled(
-        uint256 indexed requestId,
+        bytes32 indexed requestId,
         bytes32 fillId,
         uint256 indexed sourceChainId,
         address indexed targetTokenAddress,
@@ -34,7 +34,7 @@ contract FillManager is Ownable, LpWhitelist {
     ///
     /// .. seealso:: :sol:func:`invalidateFill`
     event HashInvalidated(
-        bytes32 indexed requestHash,
+        bytes32 indexed requestId,
         bytes32 indexed fillId,
         bytes32 indexed fillHash
     );
@@ -48,7 +48,7 @@ contract FillManager is Ownable, LpWhitelist {
     /// is chain-dependent.
     IProofSubmitter public proofSubmitter;
 
-    /// Maps request hashes to fill hashes.
+    /// Maps request IDs to fill hashes.
     mapping(bytes32 => bytes32) public fills;
 
     /// Constructor.
@@ -67,38 +67,38 @@ contract FillManager is Ownable, LpWhitelist {
     /// sent to ``targetReceiverAddress`` and a fill proof will be generated, which can later
     /// be used to trigger L1 resolution, if needed.
     ///
-    /// @param requestId The request ID.
     /// @param sourceChainId The source chain ID.
     /// @param targetTokenAddress Address of the token contract on the target chain.
     /// @param targetReceiverAddress Recipient address on the target chain.
     /// @param amount Amount of tokens to transfer. Does not include fees.
+    /// @param nonce The nonce used to create the request ID.
     /// @return The fill ID.
     function fillRequest(
-        uint256 requestId,
         uint256 sourceChainId,
         address targetTokenAddress,
         address targetReceiverAddress,
-        uint256 amount
+        uint256 amount,
+        uint256 nonce
     ) external onlyWhitelist returns (bytes32) {
-        bytes32 requestHash = BeamerUtils.createRequestHash(
-            requestId,
+        bytes32 requestId = BeamerUtils.createRequestId(
             sourceChainId,
             block.chainid,
             targetTokenAddress,
             targetReceiverAddress,
-            amount
+            amount,
+            nonce
         );
 
-        require(fills[requestHash] == bytes32(0), "Already filled");
+        require(fills[requestId] == bytes32(0), "Already filled");
 
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
         IProofSubmitter.ProofReceipt memory proofReceipt = proofSubmitter
-            .submitProof(l1Resolver, sourceChainId, requestHash, msg.sender);
+            .submitProof(l1Resolver, sourceChainId, requestId, msg.sender);
         require(proofReceipt.fillId != 0, "Submitting proof data failed");
 
-        fills[requestHash] = proofReceipt.fillHash;
+        fills[requestId] = proofReceipt.fillHash;
 
         emit RequestFilled(
             requestId,
@@ -120,22 +120,22 @@ contract FillManager is Ownable, LpWhitelist {
     /// the dishonest claimer is guaranteed to lose as soon as the information about the invalid
     /// fill (so called "non-fill proof") is propagated to the source chain via L1 resolution.
     ///
-    /// @param requestHash The request hash.
+    /// @param requestId The request ID.
     /// @param fillId The fill ID.
     /// @param sourceChainId The source chain ID.
     function invalidateFill(
-        bytes32 requestHash,
+        bytes32 requestId,
         bytes32 fillId,
         uint256 sourceChainId
     ) external {
-        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
-        require(fills[requestHash] != fillHash, "Fill hash valid");
+        bytes32 fillHash = BeamerUtils.createFillHash(requestId, fillId);
+        require(fills[requestId] != fillHash, "Fill hash valid");
         proofSubmitter.submitNonFillProof(
             l1Resolver,
             sourceChainId,
-            requestHash,
+            requestId,
             fillId
         );
-        emit HashInvalidated(requestHash, fillId, fillHash);
+        emit HashInvalidated(requestId, fillId, fillHash);
     }
 }

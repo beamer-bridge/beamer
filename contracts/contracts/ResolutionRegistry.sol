@@ -19,20 +19,20 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
     /// Emitted when a request has been resolved via L1 resolution.
     ///
     /// .. seealso:: :sol:func:`resolveRequest`
-    event RequestResolved(bytes32 requestHash, address filler, bytes32 fillId);
+    event RequestResolved(bytes32 requestId, address filler, bytes32 fillId);
 
     /// Emitted when a fill hash has been invalidated.
     ///
     /// .. seealso:: :sol:func:`invalidateFill`
     event FillHashInvalidated(bytes32 fillHash);
 
-    /// Maps request hashes to fill infos.
+    /// Maps request IDs to fill infos.
     mapping(bytes32 => BeamerUtils.FillInfo) public fillers;
 
     /// The set of invalid fill hashes.
     mapping(bytes32 => bool) public invalidFillHashes;
 
-    /// Mark the request identified by ``requestHash`` as filled by ``filler``.
+    /// Mark the request identified by ``requestId`` as filled by ``filler``.
     ///
     /// .. note::
     ///
@@ -40,26 +40,26 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
     ///     which simply delivers the message sent from L1 by the
     ///     Beamer's L2 :sol:interface:`messenger <IMessenger>` contract.
     ///
-    /// @param requestHash The request hash.
+    /// @param requestId The request ID.
     /// @param fillId The fill ID.
     /// @param resolutionChainId The resolution (L1) chain ID.
     /// @param filler The address that filled the request.
     function resolveRequest(
-        bytes32 requestHash,
+        bytes32 requestId,
         bytes32 fillId,
         uint256 resolutionChainId,
         address filler
     ) external restricted(resolutionChainId, msg.sender) {
         require(
-            fillers[requestHash].filler == address(0),
+            fillers[requestId].filler == address(0),
             "Resolution already recorded"
         );
-        fillers[requestHash] = BeamerUtils.FillInfo(filler, fillId);
+        fillers[requestId] = BeamerUtils.FillInfo(filler, fillId);
         // Revert fill hash invalidation, fill proofs outweigh an invalidation
-        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
+        bytes32 fillHash = BeamerUtils.createFillHash(requestId, fillId);
         invalidFillHashes[fillHash] = false;
 
-        emit RequestResolved(requestHash, filler, fillId);
+        emit RequestResolved(requestId, filler, fillId);
     }
 
     /// Mark the fill identified by ``fillId`` as invalid.
@@ -70,19 +70,19 @@ contract ResolutionRegistry is CrossDomainRestrictedCalls {
     ///     which simply delivers the message sent from L1 by the
     ///     Beamer's L2 :sol:interface:`messenger <IMessenger>` contract.
     ///
-    /// @param requestHash The request hash.
+    /// @param requestId The request ID.
     /// @param fillId The fill ID.
     /// @param resolutionChainId The resolution (L1) chain ID.
     function invalidateFill(
-        bytes32 requestHash,
+        bytes32 requestId,
         bytes32 fillId,
         uint256 resolutionChainId
     ) external restricted(resolutionChainId, msg.sender) {
         require(
-            fillers[requestHash].filler == address(0),
+            fillers[requestId].filler == address(0),
             "Cannot invalidate resolved fillHashes"
         );
-        bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
+        bytes32 fillHash = BeamerUtils.createFillHash(requestId, fillId);
         require(
             invalidFillHashes[fillHash] == false,
             "FillHash already invalidated"

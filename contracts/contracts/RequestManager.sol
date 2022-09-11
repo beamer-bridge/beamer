@@ -38,7 +38,7 @@ contract RequestManager is Ownable, LpWhitelist {
     }
 
     struct Claim {
-        uint256 requestId;
+        bytes32 requestId;
         address claimer;
         uint256 claimerStake;
         mapping(address => uint256) challengersStakes;
@@ -55,12 +55,13 @@ contract RequestManager is Ownable, LpWhitelist {
     ///
     /// .. seealso:: :sol:func:`createRequest`
     event RequestCreated(
-        uint256 requestId,
+        bytes32 requestId,
         uint256 targetChainId,
         address sourceTokenAddress,
         address targetTokenAddress,
         address targetAddress,
         uint256 amount,
+        uint256 nonce,
         uint256 validUntil
     );
 
@@ -73,13 +74,13 @@ contract RequestManager is Ownable, LpWhitelist {
     ///  * a claim related to the request has been resolved successfully in favor of the claimer
     ///
     /// .. seealso:: :sol:func:`withdraw` :sol:func:`withdrawExpiredRequest`
-    event DepositWithdrawn(uint256 requestId, address receiver);
+    event DepositWithdrawn(bytes32 requestId, address receiver);
 
     /// Emitted when a claim or a counter-claim (challenge) has been made.
     ///
     /// .. seealso:: :sol:func:`claimRequest` :sol:func:`challengeClaim`
     event ClaimMade(
-        uint256 indexed requestId,
+        bytes32 indexed requestId,
         uint256 claimId,
         address claimer,
         uint256 claimerStake,
@@ -97,7 +98,7 @@ contract RequestManager is Ownable, LpWhitelist {
     /// .. seealso:: :sol:func:`withdraw`
     event ClaimStakeWithdrawn(
         uint256 claimId,
-        uint256 indexed requestId,
+        bytes32 indexed requestId,
         address claimReceiver
     );
 
@@ -149,7 +150,7 @@ contract RequestManager is Ownable, LpWhitelist {
     mapping(uint256 => uint256) public finalityPeriods;
 
     /// Maps request IDs to requests.
-    mapping(uint256 => Request) public requests;
+    mapping(bytes32 => Request) public requests;
 
     /// Maps claim IDs to claims.
     mapping(uint256 => Claim) public claims;
@@ -188,8 +189,11 @@ contract RequestManager is Ownable, LpWhitelist {
     // Modifiers
 
     /// Check whether a given request ID is valid.
-    modifier validRequestId(uint256 requestId) {
-        require(requestId <= counter && requestId > 0, "requestId not valid");
+    modifier validRequestId(bytes32 requestId) {
+        require(
+            requests[requestId].sender != address(0),
+            "requestId not valid"
+        );
         _;
     }
 
@@ -236,7 +240,7 @@ contract RequestManager is Ownable, LpWhitelist {
         address targetAddress,
         uint256 amount,
         uint256 validityPeriod
-    ) external returns (uint256) {
+    ) external returns (bytes32) {
         require(deprecated == false, "Contract is deprecated");
         require(
             finalityPeriods[targetChainId] != 0,
@@ -266,7 +270,16 @@ contract RequestManager is Ownable, LpWhitelist {
         );
 
         counter += 1;
-        Request storage newRequest = requests[counter];
+        bytes32 requestId = BeamerUtils.createRequestId(
+            block.chainid,
+            targetChainId,
+            targetTokenAddress,
+            targetAddress,
+            amount,
+            counter
+        );
+
+        Request storage newRequest = requests[requestId];
         newRequest.sender = msg.sender;
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
@@ -279,18 +292,19 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.protocolFee = protocolFeeTokenAmount;
 
         emit RequestCreated(
-            counter,
+            requestId,
             targetChainId,
             sourceTokenAddress,
             targetTokenAddress,
             targetAddress,
             amount,
+            counter,
             newRequest.validUntil
         );
 
         token.safeTransferFrom(msg.sender, address(this), totalTokenAmount);
 
-        return counter;
+        return requestId;
     }
 
     /// Withdraw funds deposited with an expired request.
@@ -298,7 +312,7 @@ contract RequestManager is Ownable, LpWhitelist {
     /// No claims must be active for the request.
     ///
     /// @param requestId ID of the expired request.
-    function withdrawExpiredRequest(uint256 requestId)
+    function withdrawExpiredRequest(bytes32 requestId)
         external
         validRequestId(requestId)
     {
@@ -334,7 +348,7 @@ contract RequestManager is Ownable, LpWhitelist {
     /// @param requestId ID of the request.
     /// @param fillId The fill ID.
     /// @return The claim ID.
-    function claimRequest(uint256 requestId, bytes32 fillId)
+    function claimRequest(bytes32 requestId, bytes32 fillId)
         external
         payable
         validRequestId(requestId)
@@ -530,17 +544,8 @@ contract RequestManager is Ownable, LpWhitelist {
             "Claim already withdrawn"
         );
 
-        bytes32 requestHash = BeamerUtils.createRequestHash(
-            claim.requestId,
-            block.chainid,
-            request.targetChainId,
-            request.targetTokenAddress,
-            request.targetAddress,
-            request.amount
-        );
-
         bytes32 fillHash = BeamerUtils.createFillHash(
-            requestHash,
+            claim.requestId,
             claim.fillId
         );
 
@@ -554,7 +559,7 @@ contract RequestManager is Ownable, LpWhitelist {
         // 3) Request.withdrawInfo, the claimer withdrew with an identical claim (same fill id)
         // 4) Claim properties, claim terminated and claimer has the highest stake
         (address filler, bytes32 fillId) = resolutionRegistry.fillers(
-            requestHash
+            claim.requestId
         );
 
         if (filler == address(0)) {

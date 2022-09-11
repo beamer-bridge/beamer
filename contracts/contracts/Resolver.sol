@@ -23,7 +23,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     event Resolution(
         uint256 sourceChainId,
         uint256 fillChainId,
-        bytes32 requestHash,
+        bytes32 requestId,
         address filler,
         bytes32 fillId
     );
@@ -33,7 +33,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
 
     /// Resolve the specified request.
     ///
-    /// This marks the request identified by ``requestHash`` as filled by ``filler``.
+    /// This marks the request identified by ``requestId`` as filled by ``filler``.
     /// If the ``filler`` is zero, the fill be marked invalid.
     ///
     /// Information about the fill will be sent to the source chain's :sol:contract:`ResolutionRegistry`,
@@ -45,13 +45,13 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     ///     which simply delivers the message sent from the target chain by the
     ///     Beamer's L2 :sol:interface:`messenger <IMessenger>` contract.
     ///
-    /// @param requestHash The request hash.
+    /// @param requestId The request ID.
     /// @param fillId The fill ID.
     /// @param fillChainId The fill (target) chain ID.
     /// @param sourceChainId The source chain ID.
     /// @param filler The address that filled the request, or zero to invalidate the fill.
     function resolve(
-        bytes32 requestHash,
+        bytes32 requestId,
         bytes32 fillId,
         uint256 fillChainId,
         uint256 sourceChainId,
@@ -72,25 +72,19 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         if (filler == address(0)) {
             message = abi.encodeCall(
                 ResolutionRegistry.invalidateFill,
-                (requestHash, fillId, block.chainid)
+                (requestId, fillId, block.chainid)
             );
         } else {
             message = abi.encodeCall(
                 ResolutionRegistry.resolveRequest,
-                (requestHash, fillId, block.chainid, filler)
+                (requestId, fillId, block.chainid, filler)
             );
         }
 
         IMessenger messenger = IMessenger(info.messenger);
         messenger.sendMessage(info.resolutionRegistry, message, 1_000_000);
 
-        emit Resolution(
-            sourceChainId,
-            fillChainId,
-            requestHash,
-            filler,
-            fillId
-        );
+        emit Resolution(sourceChainId, fillChainId, requestId, filler, fillId);
     }
 
     /// Add a resolution registry.
