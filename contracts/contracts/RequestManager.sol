@@ -139,8 +139,8 @@ contract RequestManager is Ownable, LpWhitelist {
     /// cannot be used to create new requests.
     bool public deprecated;
 
-    /// The counter, used to generate request and claim IDs.
-    uint256 public counter;
+    /// The nonce counter, used to generate request and claim IDs.
+    uint256 public nonceCounter;
 
     /// The resolution registry that is used to query for results of L1 resolution.
     ResolutionRegistry public resolutionRegistry;
@@ -199,7 +199,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
     /// Check whether a given claim ID is valid.
     modifier validClaimId(uint256 claimId) {
-        require(claimId <= counter && claimId > 0, "claimId not valid");
+        require(claimId <= nonceCounter && claimId > 0, "claimId not valid");
         _;
     }
 
@@ -269,14 +269,14 @@ contract RequestManager is Ownable, LpWhitelist {
             "Insufficient allowance"
         );
 
-        counter += 1;
+        nonceCounter += 1;
         bytes32 requestId = BeamerUtils.createRequestId(
             block.chainid,
             targetChainId,
             targetTokenAddress,
             targetAddress,
             amount,
-            counter
+            nonceCounter
         );
 
         Request storage newRequest = requests[requestId];
@@ -298,7 +298,7 @@ contract RequestManager is Ownable, LpWhitelist {
             targetTokenAddress,
             targetAddress,
             amount,
-            counter,
+            nonceCounter,
             newRequest.validUntil
         );
 
@@ -366,9 +366,9 @@ contract RequestManager is Ownable, LpWhitelist {
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
         request.activeClaims += 1;
-        counter += 1;
+        nonceCounter += 1;
 
-        Claim storage claim = claims[counter];
+        Claim storage claim = claims[nonceCounter];
         claim.requestId = requestId;
         claim.claimer = msg.sender;
         claim.claimerStake = claimStake;
@@ -380,7 +380,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
         emit ClaimMade(
             requestId,
-            counter,
+            nonceCounter,
             claim.claimer,
             claim.claimerStake,
             claim.lastChallenger,
@@ -389,7 +389,7 @@ contract RequestManager is Ownable, LpWhitelist {
             fillId
         );
 
-        return counter;
+        return nonceCounter;
     }
 
     /// Challenge an existing claim.

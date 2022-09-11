@@ -28,7 +28,7 @@ def test_request_invalid_target_chain(request_manager, token):
             amount=1,
         )
 
-    assert request_manager.counter() == 0
+    assert request_manager.nonceCounter() == 0
     make_request(
         request_manager,
         target_chain_id=web3.eth.chain_id,
@@ -37,7 +37,7 @@ def test_request_invalid_target_chain(request_manager, token):
         target_address=requester,
         amount=1,
     )
-    assert request_manager.counter() == 1
+    assert request_manager.nonceCounter() == 1
 
 
 def test_claim(token, request_manager, claim_stake, deployer):
