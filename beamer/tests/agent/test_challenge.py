@@ -270,18 +270,20 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     request_id = make_request(
         request_manager, token, requester, target, amount, fee_data="standard"
     )
+    # FIXME: Nonce is one because it was the only request created
+    # ideally we should get it from the event which is dropped by make_request()
+    nonce = 1
     fill_id = FILL_ID
-
     if honest_claim:
         # Fill by Charlie
         token.mint(charlie, amount, {"from": charlie})
         token.approve(fill_manager, amount, {"from": charlie})
         fill_transaction = fill_manager.fillRequest(
-            request_id,
             brownie.chain.id,
             token,
             target,
             amount,
+            nonce,
             {"from": charlie},
         )
         fill_id = fill_transaction.return_value

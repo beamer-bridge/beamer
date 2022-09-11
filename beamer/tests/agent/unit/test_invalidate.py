@@ -84,7 +84,7 @@ def test_handle_hash_invalidated():
     event = HashInvalidated(
         chain_id=request.target_chain_id,
         tx_hash=tx_hash,
-        request_hash=request.request_hash,
+        request_id=request.id,
         fill_id=request.fill_id,
         fill_hash=fill_hash,
         block_number=BLOCK_NUMBER,

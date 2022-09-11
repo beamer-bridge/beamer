@@ -15,6 +15,10 @@ class _HexBytes(HexBytes):
         return "%s(%r)" % (type(self).__name__, self.hex())
 
 
+class RequestId(_HexBytes):
+    pass
+
+
 class FillId(_HexBytes):
     pass
 
@@ -23,13 +27,8 @@ class FillHash(_HexBytes):
     pass
 
 
-class RequestHash(_HexBytes):
-    pass
-
-
 ChainId = NewType("ChainId", int)
 ClaimId = NewType("ClaimId", int)
-RequestId = NewType("RequestId", int)
 TokenAmount = NewType("TokenAmount", int)
 Nonce = NewType("Nonce", int)
 URL = NewType("URL", str)

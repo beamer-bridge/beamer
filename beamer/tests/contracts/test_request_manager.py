@@ -9,12 +9,11 @@ from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION
 from beamer.tests.util import (
     alloc_accounts,
     alloc_whitelisted_accounts,
-    create_fill_hash,
-    create_request_hash,
+    create_fill_hash_from_request_id,
     earnings,
     make_request,
 )
-from beamer.typing import ClaimId, FillId, Termination
+from beamer.typing import ClaimId, FillId, RequestId, Termination
 
 
 def test_request_invalid_target_chain(request_manager, token):
@@ -65,7 +64,7 @@ def test_claim(token, request_manager, claim_stake, deployer):
 
     assert "ClaimMade" in claim_tx.events
     claim_event = claim_tx.events["ClaimMade"]
-    assert claim_event["requestId"] == request_id
+    assert RequestId(claim_event["requestId"]) == request_id
     assert claim_event["claimId"] == claim_id
     assert claim_event["claimer"] == claimer
     assert claim_event["claimerStake"] == claim_stake
@@ -860,22 +859,9 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
     # Start L1 resolution
-    request_hash = create_request_hash(
-        request_id,
-        web3.eth.chain_id,
-        web3.eth.chain_id,
-        token.address,
-        requester.address,
-        transfer_amount,
-    )
 
-    fill_hash = create_fill_hash(
+    fill_hash = create_fill_hash_from_request_id(
         request_id,
-        web3.eth.chain_id,
-        web3.eth.chain_id,
-        token.address,
-        requester.address,
-        transfer_amount,
         fill_id,
     )
 
@@ -883,14 +869,14 @@ def test_withdraw_without_challenge_with_resolution(
 
     if invalidate:
         resolution_registry.invalidateFill(
-            request_hash, fill_id, chain.id, {"from": contracts.l1_messenger}
+            request_id, fill_id, chain.id, {"from": contracts.l1_messenger}
         )
     # Assert that invalidation works
     assert resolution_registry.invalidFillHashes(fill_hash) == invalidate
 
     # Register a L1 resolution
     resolution_registry.resolveRequest(
-        request_hash, fill_id, web3.eth.chain_id, l1_filler, {"from": contracts.l1_messenger}
+        request_id, fill_id, web3.eth.chain_id, l1_filler, {"from": contracts.l1_messenger}
     )
 
     # Assert that correct filler is resolved, it reverts the false invalidation
@@ -975,18 +961,9 @@ def test_withdraw_l1_resolved_muliple_claims(
         request_manager.withdraw(claim_id_4, {"from": claimer1})
 
     # Start L1 resolution
-    request_hash = create_request_hash(
-        request_id,
-        web3.eth.chain_id,
-        web3.eth.chain_id,
-        token.address,
-        requester.address,
-        transfer_amount,
-    )
-
     # Register a L1 resolution
     resolution_registry.resolveRequest(
-        request_hash, fill_id, web3.eth.chain_id, claimer1, {"from": contracts.l1_messenger}
+        request_id, fill_id, web3.eth.chain_id, claimer1, {"from": contracts.l1_messenger}
     )
 
     # The claim period is not over, but the resolution must allow withdrawal now

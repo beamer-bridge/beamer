@@ -6,14 +6,14 @@ from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
 from beamer.tests.constants import FILL_ID_EMPTY
-from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_hash
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("forward_state", [True])
 def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, amount):
     requested_amount = 100
-    request_id = 23
+    nonce = 23
     (receiver,) = alloc_accounts(1)
     (filler,) = alloc_whitelisted_accounts(1, {fill_manager})
     chain_id = brownie.web3.eth.chain_id
@@ -22,17 +22,17 @@ def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, am
     token.approve(fill_manager.address, amount, {"from": filler})
 
     fill_tx = fill_manager.fillRequest(
-        request_id, chain_id, token.address, receiver, amount, {"from": filler}
+        chain_id, token.address, receiver, amount, nonce, {"from": filler}
     )
     fill_id = fill_tx.return_value
 
-    request_hash = create_request_hash(
-        request_id,
+    request_id = create_request_id(
         chain_id,
         chain_id,
         token.address,
         receiver.address,
         requested_amount,
+        nonce,
     )
 
     expected_address = ADDRESS_ZERO
@@ -42,7 +42,7 @@ def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, am
         expected_address = filler
         expected_fill_id = fill_id
 
-    resolved_filler, resolved_fill_id = resolution_registry.fillers(request_hash)
+    resolved_filler, resolved_fill_id = resolution_registry.fillers(request_id)
 
     assert resolved_filler == expected_address
     assert resolved_fill_id == HexString(expected_fill_id, "bytes32")
@@ -50,17 +50,17 @@ def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, am
 
 @pytest.mark.parametrize("forward_state", [True])
 def test_l1_non_fill_proof(fill_manager, resolution_registry):
-    request_hash = "1234" + "00" * 30
+    request_id = "1234" + "00" * 30
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
 
-    fill_manager.invalidateFill(request_hash, fill_id, chain_id)
+    fill_manager.invalidateFill(request_id, fill_id, chain_id)
 
     fill_hash = keccak(
         encode_abi_packed(
             ["bytes32", "bytes32"],
             [
-                bytes.fromhex(request_hash),
+                bytes.fromhex(request_id),
                 bytes.fromhex(fill_id),
             ],
         )
