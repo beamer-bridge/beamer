@@ -1,5 +1,8 @@
 <template>
-  <div class="w-full h-full flex flex-col justify-center items-center bg-teal/30 p-16 rounded-lg">
+  <div
+    class="w-full h-full flex flex-col justify-center items-center bg-teal/30 p-16 rounded-lg"
+    @click="close"
+  >
     <button class="absolute top-0 right-0 m-10" data-test="close-button" @click="close">
       <img class="h-6 w-6" src="@/assets/images/close.svg" alt="close" />
     </button>
@@ -8,7 +11,7 @@
       v-for="walletOption of walletOptions"
       :key="walletOption.name"
       class="w-[25rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
-      @click="walletOption.connect"
+      @click.stop="walletOption.connect"
     >
       <img class="h-20 w-20" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />
       <div class="text-2xl font-bold">{{ walletOption.name }}</div>
