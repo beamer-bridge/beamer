@@ -201,7 +201,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
     /// Check whether a given claim ID is valid.
     modifier validClaimId(uint256 claimId) {
-        require(claimId <= nonceCounter && claimId > 0, "claimId not valid");
+        require(claims[claimId].claimer != address(0), "claimId not valid");
         _;
     }
 
