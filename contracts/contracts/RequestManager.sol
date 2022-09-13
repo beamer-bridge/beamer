@@ -27,8 +27,6 @@ contract RequestManager is Ownable, LpWhitelist {
         address sender;
         address sourceTokenAddress;
         uint256 targetChainId;
-        address targetTokenAddress;
-        address targetAddress;
         uint256 amount;
         BeamerUtils.FillInfo withdrawInfo;
         uint192 activeClaims;
@@ -283,8 +281,6 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.sender = msg.sender;
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
-        newRequest.targetTokenAddress = targetTokenAddress;
-        newRequest.targetAddress = targetAddress;
         newRequest.amount = amount;
         newRequest.withdrawInfo = BeamerUtils.FillInfo(address(0), bytes32(0));
         newRequest.validUntil = block.timestamp + validityPeriod;
