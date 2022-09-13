@@ -556,35 +556,24 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
             "Claim already withdrawn"
         );
 
-        bytes32 fillHash = BeamerUtils.createFillHash(
-            claim.requestId,
-            claim.fillId
-        );
-
         bool claimValid = false;
 
         // Priority list for validity check of claim
-        // Claim is valid if either
-        // 1) ResolutionRegistry entry in fillers, claimer is the filler
-        // 2) ResolutionRegistry entry in invalidFillHashes, claim is invalid
-        // 3) Request.filler and request.fillId, the claimer withdrew with an identical claim (same fill id)
-        // 4) Claim properties, claim terminated and claimer has the highest stake
-        (address filler, bytes32 fillId) = resolutionRegistry.fillers(
-            claim.requestId
-        );
+        // Claim is valid/invalid if either
+        // 1) The request's filler is the claimer and request.fillId matches, claim is valid
+        // 2) FillId is true in request's invalidFillIds, claim is invalid
+        // 3) Claim properties, claim terminated and claimer has the highest stake
+        address filler = request.filler;
+        bytes32 fillId = request.fillId;
 
-        if (filler == address(0)) {
-            (filler, fillId) = (request.filler, request.fillId);
-        }
-
-        if (resolutionRegistry.invalidFillHashes(fillHash)) {
+        if (filler != address(0)) {
+            // Claim resolution via 1)
+            claimValid = filler == claim.claimer && fillId == claim.fillId;
+        } else if (request.invalidFillIds[fillId]) {
             // Claim resolution via 2)
             claimValid = false;
-        } else if (filler != address(0)) {
-            // Claim resolution via 1) or 3)
-            claimValid = filler == claim.claimer && fillId == claim.fillId;
         } else {
-            // Claim resolution via 4)
+            // Claim resolution via 3)
             require(
                 block.timestamp >= claim.termination,
                 "Claim period not finished"
