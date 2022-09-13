@@ -42,6 +42,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         bool withdrawn;
         address filler;
         bytes32 fillId;
+        mapping(bytes32 => bool) invalidFillIds;
     }
 
     struct Claim {
@@ -115,6 +116,11 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     ///
     /// .. seealso:: :sol:func:`resolveRequest`
     event RequestResolved(bytes32 requestId, address filler, bytes32 fillId);
+
+    /// Emitted when an invalidated fill has been resolved.
+    ///
+    /// .. seealso:: :sol:func:`invalidateFill`
+    event FillInvalidatedResolved(bytes32 requestId, bytes32 fillId);
 
     // Constants
 
@@ -736,6 +742,41 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         request.filler = filler;
         request.fillId = fillId;
 
+        request.invalidFillIds[fillId] = false;
+
         emit RequestResolved(requestId, filler, fillId);
+    }
+
+    /// Mark the fill identified by ``requestId`` and ``fillId`` as invalid.
+    ///
+    /// .. note::
+    ///
+    ///     This function is a restricted call function. Only callable by the added caller.
+    ///
+    /// @param requestId The request ID.
+    /// @param fillId The fill ID.
+    /// @param resolutionChainId The resolution (L1) chain ID.
+    function invalidateFill(
+        bytes32 requestId,
+        bytes32 fillId,
+        uint256 resolutionChainId
+    )
+        external
+        validRequestId(requestId)
+        restricted(resolutionChainId, msg.sender)
+    {
+        Request storage request = requests[requestId];
+        require(
+            request.filler == address(0),
+            "Cannot invalidate resolved fills"
+        );
+        require(
+            request.invalidFillIds[fillId] == false,
+            "Fill already invalidated"
+        );
+
+        request.invalidFillIds[fillId] = true;
+
+        emit FillInvalidatedResolved(requestId, fillId);
     }
 }
