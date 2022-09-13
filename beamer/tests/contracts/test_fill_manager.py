@@ -78,7 +78,7 @@ def test_invalidate_valid_fill_hash(fill_manager, token):
     request_id = create_request_id(
         chain_id, chain_id, token.address, receiver.address, amount, nonce
     )
-    with brownie.reverts("Fill hash valid"):
+    with brownie.reverts("Fill valid"):
         fill_manager.invalidateFill(request_id, fill_id, chain_id)
 
 
