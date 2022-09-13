@@ -29,6 +29,7 @@ contract RequestManager is Ownable, LpWhitelist {
         uint256 targetChainId;
         uint256 amount;
         BeamerUtils.FillInfo withdrawInfo;
+        bool withdrawn;
         uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
@@ -285,6 +286,7 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.targetChainId = targetChainId;
         newRequest.amount = amount;
         newRequest.withdrawInfo = BeamerUtils.FillInfo(address(0), bytes32(0));
+        newRequest.withdrawn = false;
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFeeTokenAmount;
         newRequest.protocolFee = protocolFeeTokenAmount;
@@ -316,10 +318,7 @@ contract RequestManager is Ownable, LpWhitelist {
     {
         Request storage request = requests[requestId];
 
-        require(
-            request.withdrawInfo.filler == address(0),
-            "Deposit already withdrawn"
-        );
+        require(!request.withdrawn, "Deposit already withdrawn");
         require(
             block.timestamp >= request.validUntil,
             "Request not expired yet"
@@ -327,6 +326,7 @@ contract RequestManager is Ownable, LpWhitelist {
         require(request.activeClaims == 0, "Active claims running");
 
         request.withdrawInfo.filler = request.sender;
+        request.withdrawn = true;
 
         emit DepositWithdrawn(requestId, request.sender);
 
@@ -356,10 +356,7 @@ contract RequestManager is Ownable, LpWhitelist {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");
-        require(
-            request.withdrawInfo.filler == address(0),
-            "Deposit already withdrawn"
-        );
+        require(!request.withdrawn, "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
@@ -518,10 +515,7 @@ contract RequestManager is Ownable, LpWhitelist {
 
         emit ClaimStakeWithdrawn(claimId, claim.requestId, claimReceiver);
 
-        if (
-            request.withdrawInfo.filler == address(0) &&
-            claimReceiver == claim.claimer
-        ) {
+        if (!request.withdrawn && claimReceiver == claim.claimer) {
             withdrawDeposit(request, claim);
         }
 
@@ -621,6 +615,7 @@ contract RequestManager is Ownable, LpWhitelist {
         emit DepositWithdrawn(claim.requestId, claimer);
 
         request.withdrawInfo = BeamerUtils.FillInfo(claimer, claim.fillId);
+        request.withdrawn = true;
 
         collectedProtocolFees[request.sourceTokenAddress] += request
             .protocolFee;
