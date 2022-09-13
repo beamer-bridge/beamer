@@ -29,6 +29,27 @@ function createWrapper(options?: {
 }
 
 describe('Selector.vue', () => {
+  it('emits `opened` event when selection view is opened', async () => {
+    const wrapper = createWrapper();
+    const openTrigger = wrapper.find('[data-test="open-trigger"]');
+
+    await openTrigger.trigger('click');
+
+    const closeTrigger = wrapper.find('[data-test="close-trigger"');
+    await closeTrigger.trigger('click');
+
+    expect(Object.keys(wrapper.emitted())).toContain('opened');
+  });
+
+  it('emits `closed` event when selection view is closed', async () => {
+    const wrapper = createWrapper();
+    const openTrigger = wrapper.find('[data-test="open-trigger"]');
+
+    await openTrigger.trigger('click');
+
+    expect(Object.keys(wrapper.emitted())).toContain('opened');
+  });
+
   it('displays the options when opened', async () => {
     const wrapper = createWrapper();
     const trigger = wrapper.find('[data-test="open-trigger"]');
@@ -127,6 +148,20 @@ describe('Selector.vue', () => {
     await optionList.trigger('keyup.esc');
 
     optionList = wrapper.find('[data-test="option-list"');
+
+    expect(optionList.exists()).toBe(false);
+  });
+
+  it('should close the selector when close button is clicked', async () => {
+    const wrapper = createWrapper();
+    const openTrigger = wrapper.find('[data-test="open-trigger"]');
+
+    await openTrigger.trigger('click');
+
+    const closeTrigger = wrapper.find('[data-test="close-trigger"');
+    await closeTrigger.trigger('click');
+
+    const optionList = wrapper.find('[data-test="option-list"');
 
     expect(optionList.exists()).toBe(false);
   });

@@ -44,7 +44,13 @@
         </div>
       </div>
       <div class="items-end">
-        <div class="text-5xl cursor-pointer text-sea-green" @click="closeSelector">&lt;</div>
+        <div
+          class="text-5xl cursor-pointer text-sea-green"
+          data-test="close-trigger"
+          @click="closeSelector"
+        >
+          &lt;
+        </div>
       </div>
     </div>
   </Transition>
