@@ -31,13 +31,10 @@ contract FillManager is Ownable, LpWhitelist {
         uint256 amount
     );
 
-    /// Emitted when a fill hash has been invalidated.
+    /// Emitted when a fill has been invalidated.
     ///
     /// .. seealso:: :sol:func:`invalidateFill`
-    event FillInvalidated(
-        bytes32 indexed requestId,
-        bytes32 indexed fillId
-    );
+    event FillInvalidated(bytes32 indexed requestId, bytes32 indexed fillId);
 
     // The messenger to send messages to L1
     //
@@ -48,7 +45,7 @@ contract FillManager is Ownable, LpWhitelist {
     /// The L1 :sol:contract:`Resolver` contract to be used for L1 resolution.
     address public l1Resolver;
 
-    /// Maps request IDs to fill hashes.
+    /// Maps request IDs to fill IDs.
     mapping(bytes32 => bytes32) public fills;
 
     /// Constructor.
@@ -104,7 +101,6 @@ contract FillManager is Ownable, LpWhitelist {
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
         bytes32 fillId = blockhash(block.number - 1);
-        bytes32 fillHash = BeamerUtils.createFillHash(requestId, fillId);
 
         messenger.sendMessage(
             l1Resolver,
@@ -114,7 +110,7 @@ contract FillManager is Ownable, LpWhitelist {
             )
         );
 
-        fills[requestId] = fillHash;
+        fills[requestId] = fillId;
 
         emit RequestFilled(
             requestId,
@@ -145,8 +141,7 @@ contract FillManager is Ownable, LpWhitelist {
         uint256 sourceChainId
     ) external {
         require(l1Resolver != address(0), "Resolver address not set");
-        bytes32 fillHash = BeamerUtils.createFillHash(requestId, fillId);
-        require(fills[requestId] != fillHash, "Fill hash valid");
+        require(fills[requestId] != fillId, "Fill valid");
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
