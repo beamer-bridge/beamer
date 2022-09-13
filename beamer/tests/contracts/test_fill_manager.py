@@ -1,7 +1,10 @@
 import brownie
+
+from brownie import FillManager, TestL2Messenger
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak
 
+from beamer.tests.agent.utils import make_address
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_hash
 
 
@@ -105,3 +108,59 @@ def test_invalidated_fill_hash_event(fill_manager):
     assert tx.events["HashInvalidated"]["requestHash"] == "0x" + request_hash
     assert tx.events["HashInvalidated"]["fillId"] == "0x" + fill_id
     assert tx.events["HashInvalidated"]["fillHash"] == "0x" + fill_hash.hex()
+
+
+def test_unset_resolver(deployer, token):
+    chain_id = brownie.web3.eth.chain_id
+
+    # deploy new contracts
+    l2_messenger = deployer.deploy(TestL2Messenger)
+    new_fill_manager = deployer.deploy(FillManager, l2_messenger)
+    l2_messenger.addCaller(chain_id, new_fill_manager.address)
+
+    amount = 100
+    (receiver,) = alloc_accounts(1)
+    (filler,) = alloc_whitelisted_accounts(1, {new_fill_manager})
+
+    token.mint(filler, amount)
+    token.approve(new_fill_manager.address, amount, {"from": filler})
+    with brownie.reverts("Resolver address not set"):
+        new_fill_manager.fillRequest(
+            1,
+            chain_id,
+            token.address,
+            receiver,
+            amount,
+            {"from": filler},
+        )
+
+    request_hash = create_request_hash(
+        1,
+        chain_id,
+        chain_id,
+        token.address,
+        receiver.address,
+        amount,
+    )
+
+    with brownie.reverts("Resolver address not set"):
+        new_fill_manager.invalidateFill(request_hash, 1, chain_id)
+
+    with brownie.reverts("Ownable: caller is not the owner"):
+        new_fill_manager.setResolver(make_address(), {"from": filler})
+
+    new_fill_manager.setResolver(make_address())
+
+    with brownie.reverts("Resolver already set"):
+        new_fill_manager.setResolver(make_address())
+
+    new_fill_manager.fillRequest(
+        1,
+        chain_id,
+        token.address,
+        receiver,
+        amount,
+        {"from": filler},
+    )
+
+    new_fill_manager.invalidateFill(request_hash, 1, chain_id)
