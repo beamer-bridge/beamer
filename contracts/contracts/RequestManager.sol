@@ -9,7 +9,6 @@ import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 import "./BeamerUtils.sol";
 import "./CrossDomainRestrictedCalls.sol";
 import "./LpWhitelist.sol";
-import "./ResolutionRegistry.sol";
 
 /// The request manager.
 ///
@@ -162,9 +161,6 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     /// be incremented to get the next nonce
     uint256 public currentNonce;
 
-    /// The resolution registry that is used to query for results of L1 resolution.
-    ResolutionRegistry public resolutionRegistry;
-
     /// Maps target rollup chain IDs to finality periods.
     /// Finality periods are in seconds.
     mapping(uint256 => uint256) public finalityPeriods;
@@ -228,17 +224,14 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     /// @param _claimStake Claim stake amount.
     /// @param _claimPeriod Claim period, in seconds.
     /// @param _challengePeriodExtension Challenge period extension, in seconds.
-    /// @param _resolutionRegistry Address of the resolution registry.
     constructor(
         uint256 _claimStake,
         uint256 _claimPeriod,
-        uint256 _challengePeriodExtension,
-        address _resolutionRegistry
+        uint256 _challengePeriodExtension
     ) {
         claimStake = _claimStake;
         claimPeriod = _claimPeriod;
         challengePeriodExtension = _challengePeriodExtension;
-        resolutionRegistry = ResolutionRegistry(_resolutionRegistry);
     }
 
     /// Create a new transfer request.
