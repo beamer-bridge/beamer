@@ -5,8 +5,10 @@ import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
-import "./LpWhitelist.sol";
+
 import "./BeamerUtils.sol";
+import "./CrossDomainRestrictedCalls.sol";
+import "./LpWhitelist.sol";
 import "./ResolutionRegistry.sol";
 
 /// The request manager.
@@ -14,9 +16,14 @@ import "./ResolutionRegistry.sol";
 /// This contract is responsible for keeping track of transfer requests,
 /// implementing the rules of the challenge game and holding deposited
 /// tokens until they are withdrawn.
+/// The information passed by L1 resolution will be stored with the respective requests.
 ///
 /// It is the only contract that agents need to interact with on the source chain.
-contract RequestManager is Ownable, LpWhitelist {
+/// .. note::
+///
+///   The functions resolveRequest and invalidateFill can only be called by
+///   the :sol:contract:`Resolver` contract, via a chain-dependent messenger contract.
+contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
