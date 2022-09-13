@@ -111,6 +111,11 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
 
     event FinalityPeriodUpdated(uint256 targetChainId, uint256 finalityPeriod);
 
+    /// Emitted when a request has been resolved via L1 resolution.
+    ///
+    /// .. seealso:: :sol:func:`resolveRequest`
+    event RequestResolved(bytes32 requestId, address filler, bytes32 fillId);
+
     // Constants
 
     /// The minimum amount of source chain's native token that the claimer needs to
@@ -705,5 +710,32 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     function deprecateContract() external onlyOwner {
         require(deprecated == false, "Contract already deprecated");
         deprecated = true;
+    }
+
+    /// Mark the request identified by ``requestId`` as filled by ``filler``.
+    ///
+    /// .. note::
+    ///
+    ///     This function is a restricted call function. Only callable by the added caller.
+    ///
+    /// @param requestId The request ID.
+    /// @param fillId The fill ID.
+    /// @param resolutionChainId The resolution (L1) chain ID.
+    /// @param filler The address that filled the request.
+    function resolveRequest(
+        bytes32 requestId,
+        bytes32 fillId,
+        uint256 resolutionChainId,
+        address filler
+    )
+        external
+        validRequestId(requestId)
+        restricted(resolutionChainId, msg.sender)
+    {
+        Request storage request = requests[requestId];
+        request.filler = filler;
+        request.fillId = fillId;
+
+        emit RequestResolved(requestId, filler, fillId);
     }
 }
