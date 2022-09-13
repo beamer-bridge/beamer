@@ -24,15 +24,16 @@
           @tab-changed="onTabChanged"
         />
       </div>
-
-      <div id="action-button-portal" class="flex flex-col justify-center gap-5 h-28">
-        <ActionButton
-          v-if="!signer"
-          class="bg-orange disabled:hidden"
-          :disabled="walletMenuIsOpen"
-          @click="openWalletMenu"
-          >Connect to Wallet
-        </ActionButton>
+      <div class="h-28">
+        <div
+          v-show="actionButtonPortalVisible"
+          id="action-button-portal"
+          class="flex flex-col justify-center gap-5"
+        >
+          <ActionButton v-if="!signer" class="bg-orange" @click="openWalletMenu"
+            >Connect to Wallet
+          </ActionButton>
+        </div>
       </div>
     </div>
   </div>
@@ -51,20 +52,24 @@ import WalletMenu from '@/components/WalletMenu.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { usePortals } from '@/stores/portals';
 import { useSettings } from '@/stores/settings';
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { signer } = storeToRefs(ethereumProvider);
-
+const { actionButtonPortalVisible } = storeToRefs(usePortals());
+const { hideActionButton, showActionButton } = usePortals();
 const walletMenuIsOpen = ref(false);
 
 function openWalletMenu(): void {
   walletMenuIsOpen.value = true;
+  hideActionButton();
 }
 
 function closeWalletMenu(): void {
   walletMenuIsOpen.value = false;
+  showActionButton();
 }
 
 const tabs = [
