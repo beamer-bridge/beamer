@@ -34,10 +34,9 @@ contract FillManager is Ownable, LpWhitelist {
     /// Emitted when a fill hash has been invalidated.
     ///
     /// .. seealso:: :sol:func:`invalidateFill`
-    event HashInvalidated(
+    event FillInvalidated(
         bytes32 indexed requestId,
-        bytes32 indexed fillId,
-        bytes32 indexed fillHash
+        bytes32 indexed fillId
     );
 
     // The messenger to send messages to L1
@@ -155,6 +154,6 @@ contract FillManager is Ownable, LpWhitelist {
                 (requestId, fillId, block.chainid, sourceChainId, address(0))
             )
         );
-        emit HashInvalidated(requestId, fillId, fillHash);
+        emit FillInvalidated(requestId, fillId);
     }
 }
