@@ -21,8 +21,8 @@ from beamer.events import (
     DepositWithdrawn,
     Event,
     FillHashInvalidated,
+    FillInvalidated,
     FinalityPeriodUpdated,
-    HashInvalidated,
     InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
@@ -81,8 +81,8 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, RequestResolved):
         return _handle_request_resolved(event, context)
 
-    elif isinstance(event, HashInvalidated):
-        return _handle_hash_invalidated(event, context)
+    elif isinstance(event, FillInvalidated):
+        return _handle_fill_invalidated(event, context)
 
     elif isinstance(event, FillHashInvalidated):
         return _handle_fill_hash_invalidated(event, context)
@@ -329,9 +329,13 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     return True, None
 
 
-def _handle_hash_invalidated(event: HashInvalidated, context: Context) -> HandlerResult:
+def _handle_fill_invalidated(event: FillInvalidated, context: Context) -> HandlerResult:
     fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
-    claims = _find_claims_by_fill_hash(context, event.fill_hash)
+    # FIXME: Remove with https://github.com/beamer-bridge/beamer/issues/994
+    request = context.requests.get(event.request_id)
+    assert request is not None
+
+    claims = _find_claims_by_fill_hash(context, request.fill_hash_with_fill_id(event.fill_id))
 
     for claim in claims:
         claim.start_challenge(event.tx_hash, fill_block.timestamp)  # type: ignore

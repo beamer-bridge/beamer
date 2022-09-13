@@ -89,20 +89,9 @@ def test_invalidated_fill_hash_event(fill_manager):
 
     tx = fill_manager.invalidateFill(request_id, fill_id, chain_id)
 
-    fill_hash = keccak(
-        encode_abi_packed(
-            ["bytes32", "bytes32"],
-            [
-                bytes.fromhex(request_id),
-                bytes.fromhex(fill_id),
-            ],
-        )
-    )
-
-    assert "HashInvalidated" in tx.events
-    assert tx.events["HashInvalidated"]["requestId"] == "0x" + request_id
-    assert tx.events["HashInvalidated"]["fillId"] == "0x" + fill_id
-    assert tx.events["HashInvalidated"]["fillHash"] == "0x" + fill_hash.hex()
+    assert "FillInvalidated" in tx.events
+    assert tx.events["FillInvalidated"]["requestId"] == "0x" + request_id
+    assert tx.events["FillInvalidated"]["fillId"] == "0x" + fill_id
 
 
 def test_unset_resolver(deployer, token):
