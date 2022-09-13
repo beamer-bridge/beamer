@@ -94,7 +94,8 @@ def contracts(
     # L2b contracts
     l2_messenger = deployer.deploy(TestL2Messenger)
     l2_messenger.setForwardState(forward_state)
-    fill_manager = deployer.deploy(FillManager, resolver.address, l2_messenger.address)
+    fill_manager = deployer.deploy(FillManager, l2_messenger.address)
+    fill_manager.setResolver(resolver.address)
 
     # L2a contracts
     resolution_registry = deployer.deploy(ResolutionRegistry)

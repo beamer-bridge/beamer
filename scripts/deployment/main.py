@@ -130,7 +130,8 @@ def deploy_beamer(
                 )
             )
 
-    fill_manager = deploy_contract(web3, ("FillManager", resolver.address, l2_messenger.address))
+    fill_manager = deploy_contract(web3, ("FillManager", l2_messenger.address))
+    transact(fill_manager.functions.setResolver(resolver.address))
 
     # Authorize call chain
     transact(l2_messenger.functions.addCaller(l2_config["chain_id"], fill_manager.address))
