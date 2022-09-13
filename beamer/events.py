@@ -128,10 +128,9 @@ class FillHashInvalidated(TxEvent):
 
 
 @dataclass(frozen=True)
-class HashInvalidated(TxEvent):
+class FillInvalidated(TxEvent):
     request_id: RequestId
     fill_id: FillId
-    fill_hash: FillHash
 
 
 def _camel_to_snake(s: str) -> str:
@@ -146,7 +145,7 @@ _EVENT_TYPES = dict(
     ClaimStakeWithdrawn=ClaimStakeWithdrawn,
     RequestResolved=RequestResolved,
     FillHashInvalidated=FillHashInvalidated,
-    HashInvalidated=HashInvalidated,
+    FillInvalidated=FillInvalidated,
     FinalityPeriodUpdated=FinalityPeriodUpdated,
 )
 
@@ -170,7 +169,6 @@ def _make_topics_to_abi(contract: Contract) -> dict[bytes, ABIEvent]:
 def _convert_bytes(kwargs: dict) -> None:
     for name, type_ in (
         ("fill_id", FillId),
-        ("fill_hash", FillHash),
         ("request_id", RequestId),
     ):
         value = kwargs.get(name)
