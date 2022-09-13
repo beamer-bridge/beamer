@@ -28,12 +28,13 @@ contract RequestManager is Ownable, LpWhitelist {
         address sourceTokenAddress;
         uint256 targetChainId;
         uint256 amount;
-        BeamerUtils.FillInfo withdrawInfo;
-        bool withdrawn;
-        uint192 activeClaims;
         uint256 validUntil;
         uint256 lpFee;
         uint256 protocolFee;
+        uint192 activeClaims;
+        bool withdrawn;
+        address filler;
+        bytes32 fillId;
     }
 
     struct Claim {
@@ -285,11 +286,12 @@ contract RequestManager is Ownable, LpWhitelist {
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
         newRequest.amount = amount;
-        newRequest.withdrawInfo = BeamerUtils.FillInfo(address(0), bytes32(0));
-        newRequest.withdrawn = false;
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFeeTokenAmount;
         newRequest.protocolFee = protocolFeeTokenAmount;
+        newRequest.withdrawn = false;
+        newRequest.filler = address(0);
+        newRequest.fillId = bytes32(0);
 
         emit RequestCreated(
             requestId,
@@ -325,8 +327,8 @@ contract RequestManager is Ownable, LpWhitelist {
         );
         require(request.activeClaims == 0, "Active claims running");
 
-        request.withdrawInfo.filler = request.sender;
         request.withdrawn = true;
+        request.filler = request.sender;
 
         emit DepositWithdrawn(requestId, request.sender);
 
@@ -542,20 +544,19 @@ contract RequestManager is Ownable, LpWhitelist {
         );
 
         bool claimValid = false;
-        BeamerUtils.FillInfo memory withdrawInfo = request.withdrawInfo;
 
         // Priority list for validity check of claim
         // Claim is valid if either
         // 1) ResolutionRegistry entry in fillers, claimer is the filler
         // 2) ResolutionRegistry entry in invalidFillHashes, claim is invalid
-        // 3) Request.withdrawInfo, the claimer withdrew with an identical claim (same fill id)
+        // 3) Request.filler and request.fillId, the claimer withdrew with an identical claim (same fill id)
         // 4) Claim properties, claim terminated and claimer has the highest stake
         (address filler, bytes32 fillId) = resolutionRegistry.fillers(
             claim.requestId
         );
 
         if (filler == address(0)) {
-            (filler, fillId) = (withdrawInfo.filler, withdrawInfo.fillId);
+            (filler, fillId) = (request.filler, request.fillId);
         }
 
         if (resolutionRegistry.invalidFillHashes(fillHash)) {
@@ -614,8 +615,9 @@ contract RequestManager is Ownable, LpWhitelist {
         address claimer = claim.claimer;
         emit DepositWithdrawn(claim.requestId, claimer);
 
-        request.withdrawInfo = BeamerUtils.FillInfo(claimer, claim.fillId);
         request.withdrawn = true;
+        request.filler = claimer;
+        request.fillId = claim.fillId;
 
         collectedProtocolFees[request.sourceTokenAddress] += request
             .protocolFee;
