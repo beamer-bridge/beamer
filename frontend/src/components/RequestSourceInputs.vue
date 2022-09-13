@@ -27,6 +27,8 @@
         :options="chainOptions"
         placeholder="Source Rollup"
         required
+        @opened="hideActionButton"
+        @closed="showActionButton"
       />
       <InputValidationMessage v-if="v$.selectedSourceChain.$error">
         {{ v$.selectedSourceChain.$errors[0].$message }}
@@ -76,6 +78,8 @@
             :options="tokens"
             placeholder="Token"
             required
+            @opened="hideActionButton"
+            @closed="showActionButton"
           />
           <Tooltip
             class="self-end -mr-3"
@@ -156,6 +160,7 @@ import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { usePortals } from '@/stores/portals';
 import type { Chain } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
@@ -174,6 +179,7 @@ const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
+const { hideActionButton, showActionButton } = usePortals();
 
 const { provider, signer } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);

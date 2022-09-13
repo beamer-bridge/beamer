@@ -9,6 +9,8 @@
         :options="chainOptions"
         placeholder="Target Rollup"
         required
+        @opened="hideActionButton"
+        @closed="showActionButton"
       />
     </div>
     <div class="flex flex-row gap-5">
@@ -65,6 +67,7 @@ import InputValidationMessage from '@/components/layout/InputValidationMessage.v
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useRequestTargetInputValidations } from '@/composables/useRequestTargetInputValidations';
 import { useConfiguration } from '@/stores/configuration';
+import { usePortals } from '@/stores/portals';
 import type { Chain, Token } from '@/types/data';
 import type { RequestTarget, SelectorOption } from '@/types/form';
 
@@ -83,6 +86,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
+const { hideActionButton, showActionButton } = usePortals();
 
 const { chains } = storeToRefs(configuration);
 

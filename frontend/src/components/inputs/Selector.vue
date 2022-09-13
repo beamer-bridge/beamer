@@ -66,6 +66,8 @@ interface Props {
 
 interface Emits {
   (e: 'update:modelValue', value: SelectorOption<unknown>): void;
+  (e: 'opened'): void;
+  (e: 'closed'): void;
 }
 
 const props = defineProps<Props>();
@@ -75,9 +77,13 @@ const opened = ref(false);
 const openSelector = () => {
   if (!props.disabled) {
     opened.value = true;
+    emits('opened');
   }
 };
-const closeSelector = () => (opened.value = false);
+const closeSelector = () => {
+  opened.value = false;
+  emits('closed');
+};
 
 const searchFilter = ref('');
 const filteredOptions = computed(() =>
