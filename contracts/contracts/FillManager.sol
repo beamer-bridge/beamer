@@ -54,11 +54,19 @@ contract FillManager is Ownable, LpWhitelist {
 
     /// Constructor.
     ///
-    /// @param _l1Resolver The L1 resolver contract.
     /// @param _messenger The messenger.
-    constructor(address _l1Resolver, address _messenger) {
-        l1Resolver = _l1Resolver;
+    constructor(address _messenger) {
         messenger = IMessenger(_messenger);
+    }
+
+    /// Set the resolver's address
+    ///
+    /// Can only ever be set once. Before it is set, no fills or invalidations are possible
+    ///
+    /// @param _l1Resolver The L1 resolver address
+    function setResolver(address _l1Resolver) public onlyOwner {
+        require(l1Resolver == address(0), "Resolver already set");
+        l1Resolver = _l1Resolver;
     }
 
     /// Fill the specified request.
@@ -81,6 +89,7 @@ contract FillManager is Ownable, LpWhitelist {
         address targetReceiverAddress,
         uint256 amount
     ) external onlyWhitelist returns (bytes32) {
+        require(l1Resolver != address(0), "Resolver address not set");
         bytes32 requestHash = BeamerUtils.createRequestHash(
             requestId,
             sourceChainId,
@@ -136,6 +145,7 @@ contract FillManager is Ownable, LpWhitelist {
         bytes32 fillId,
         uint256 sourceChainId
     ) external {
+        require(l1Resolver != address(0), "Resolver address not set");
         bytes32 fillHash = BeamerUtils.createFillHash(requestHash, fillId);
         require(fills[requestHash] != fillHash, "Fill hash valid");
         messenger.sendMessage(
