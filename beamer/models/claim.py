@@ -61,7 +61,12 @@ class Claim(StateMachine):
         | ignored.to(withdrawn)
         | withdrawn.to(withdrawn)
     )
-    ignore = claimer_winning.to(ignored) | ignored.to(ignored)
+    ignore = (
+        claimer_winning.to(ignored)
+        | challenger_winning.to(ignored)
+        | ignored.to(ignored)
+        | withdrawn.to(withdrawn)
+    )
 
     def on_enter_state(self, _state: State) -> None:
         self._log.debug("Claim changed state", claim=self)
