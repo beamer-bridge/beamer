@@ -1,5 +1,6 @@
 import type { Ref } from 'vue';
 
+import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import type { EthereumProvider } from '@/services/web3-provider';
 import {
   createMetaMaskProvider,
@@ -44,5 +45,14 @@ export function useWallet(
     }
   }
 
-  return { connectMetaMask, connectWalletConnect, reconnectToWallet };
+  const metamaskTask = useAsynchronousTask(connectMetaMask);
+  const walletConnectTask = useAsynchronousTask(connectWalletConnect);
+
+  return {
+    connectMetaMask: metamaskTask.run,
+    connectingMetaMask: metamaskTask.active,
+    connectWalletConnect: walletConnectTask.run,
+    connectingWalletConnect: walletConnectTask.active,
+    reconnectToWallet,
+  };
 }
