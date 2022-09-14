@@ -698,6 +698,27 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         deprecated = true;
     }
 
+    /// Returns whether a fill is invalidated or not
+    ///
+    /// Calling invalidateFill() will set this boolean to true,
+    /// marking that the ``fillId`` for the corresponding ``requestId`` was
+    /// invalidated.
+    /// Calling resolveRequest will validate it again, setting request.invalidatedFills[fillId]
+    /// to false.
+    /// .. seealso:: :sol:func:`invalidateFill`
+    /// .. seealso:: :sol:func:`resolveRequest`
+    ///
+    /// @param requestId The request ID
+    /// @param fillId The fill ID
+    /// @return Whether the fill ID is invalid for the given request ID
+    function isInvalidFill(bytes32 requestId, bytes32 fillId)
+        public
+        view
+        returns (bool)
+    {
+        return requests[requestId].invalidFillIds[fillId];
+    }
+
     /// Mark the request identified by ``requestId`` as filled by ``filler``.
     ///
     /// .. note::
@@ -730,7 +751,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     ///     This function is a restricted call function. Only callable by the added caller.
     ///
     /// @param requestId The request ID.
-    /// @param fillId The fill ID.
+    /// @param fillId The fi ll ID.
     /// @param resolutionChainId The resolution (L1) chain ID.
     function invalidateFill(
         bytes32 requestId,
