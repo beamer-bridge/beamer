@@ -13,7 +13,10 @@
       class="w-[25rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
       @click.stop="walletOption.connect"
     >
-      <img class="h-20 w-20" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />
+      <div v-if="walletOption.connecting" class="w-20 h-20 items-center justify-center flex">
+        <spinner class="border-t-teal border-4 h-1/2 w-1/2"></spinner>
+      </div>
+      <img v-else class="h-20 w-20" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />
       <div class="text-2xl font-bold">{{ walletOption.name }}</div>
       <div class="text-lg">{{ walletOption.description }}</div>
     </button>
@@ -23,6 +26,7 @@
 import { storeToRefs } from 'pinia';
 import { onMounted, ref, watch } from 'vue';
 
+import Spinner from '@/components/Spinner.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
@@ -32,7 +36,8 @@ import { isMobile } from '@/utils/userAgent';
 const { provider, signer } = storeToRefs(useEthereumProvider());
 const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
-const { connectMetaMask, connectWalletConnect } = useWallet(provider, connectedWallet, rpcUrls);
+const { connectMetaMask, connectWalletConnect, connectingMetaMask, connectingWalletConnect } =
+  useWallet(provider, connectedWallet, rpcUrls);
 
 const walletOptions = ref([
   {
@@ -40,12 +45,14 @@ const walletOptions = ref([
     icon: new URL('../assets/images/metamask.svg', import.meta.url).href,
     description: 'Connect using browser wallet',
     connect: () => connectMetaMask(true),
+    connecting: connectingMetaMask,
   },
   {
     name: 'WalletConnect',
     icon: new URL('../assets/images/walletconnect.svg', import.meta.url).href,
     description: 'Connect using mobile wallet',
     connect: connectWalletConnect,
+    connecting: connectingWalletConnect,
   },
 ]);
 
