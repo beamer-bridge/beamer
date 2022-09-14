@@ -16,5 +16,7 @@ digraph claim_state_machine {
     ignored -> withdrawn [label = withdraw];
 
     claimer_winning -> ignore [label = ignore];
+    challenger_winning -> ignored [label = ignore];
     ignored -> ignored [label = ignore];
+    withdrawn -> withdrawn [label = ignore];
 }
