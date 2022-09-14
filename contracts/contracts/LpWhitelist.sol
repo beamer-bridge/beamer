@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "OpenZeppelin/openzeppelin-contracts@4.5.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 
 /// Liquidity Provider Whitelist.
 ///
