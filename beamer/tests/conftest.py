@@ -7,7 +7,6 @@ import pytest
 from brownie import (
     FillManager,
     RequestManager,
-    ResolutionRegistry,
     Resolver,
     TestL1Messenger,
     TestL2Messenger,
@@ -30,7 +29,6 @@ class Contracts:
     request_manager: RequestManager
     l1_messenger: TestL1Messenger
     l2_messenger: TestL2Messenger
-    resolution_registry: ResolutionRegistry
 
 
 # brownie local account, to be used for fulfilling requests.
@@ -98,13 +96,8 @@ def contracts(
     fill_manager.setResolver(resolver.address)
 
     # L2a contracts
-    resolution_registry = deployer.deploy(ResolutionRegistry)
     request_manager = deployer.deploy(
-        RequestManager,
-        claim_stake,
-        claim_period,
-        challenge_period_extension,
-        resolution_registry.address,
+        RequestManager, claim_stake, claim_period, challenge_period_extension
     )
 
     # Add allowed LPs
@@ -114,14 +107,14 @@ def contracts(
     # Explicitly allow calls between contracts. The chain of trust:
     #
     # fill_manager -> L2 messenger -> L1 resolver ->
-    # L1 messenger -> resolution registry
+    # L1 messenger -> request_manager
     l1_chain_id = l2_chain_id = brownie.chain.id
 
     l2_messenger.addCaller(l2_chain_id, fill_manager.address)
     resolver.addCaller(l2_chain_id, l2_messenger.address, fill_manager.address)
     l1_messenger.addCaller(l1_chain_id, resolver.address)
-    resolution_registry.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
-    resolver.addRegistry(l2_chain_id, resolution_registry.address, l1_messenger.address)
+    request_manager.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
+    resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
 
     request_manager.setFinalityPeriod(l2_chain_id, finality_period)
     return Contracts(
@@ -130,12 +123,11 @@ def contracts(
         resolver=resolver,
         fill_manager=fill_manager,
         request_manager=request_manager,
-        resolution_registry=resolution_registry,
     )
 
 
 @pytest.fixture
-def config(request_manager, fill_manager, resolution_registry, token):
+def config(request_manager, fill_manager, token):
     contracts_info = dict(
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(1),
@@ -144,11 +136,6 @@ def config(request_manager, fill_manager, resolution_registry, token):
         ),
         FillManager=ContractInfo(
             deployment_block=BlockNumber(1), address=fill_manager.address, abi=fill_manager.abi
-        ),
-        ResolutionRegistry=ContractInfo(
-            deployment_block=BlockNumber(1),
-            address=resolution_registry.address,
-            abi=resolution_registry.abi,
         ),
     )
     deployment_info = {brownie.chain.id: contracts_info}
@@ -210,11 +197,6 @@ def test_cross_domain_messenger(contracts):
 @pytest.fixture
 def resolver(contracts):
     return contracts.resolver
-
-
-@pytest.fixture
-def resolution_registry(contracts):
-    return contracts.resolution_registry
 
 
 @pytest.fixture
