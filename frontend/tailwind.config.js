@@ -24,6 +24,7 @@ module.exports = {
       DEFAULT: '0px 4px 26px rgba(0, 0, 0, 0.25)',
       inner: 'inset 0px 3px 6px 2px rgba(0, 0, 0, 0.15)',
       'inner-bottom': 'inset 0px -3px 6px 2px rgba(0, 0, 0, 0.15)',
+      autofill: '0px 3px 6px 30px inset',
     },
     extend: {
       spacing: { 18: '4.5rem', 112: '28rem' },
