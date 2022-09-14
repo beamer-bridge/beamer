@@ -3,21 +3,21 @@ pragma solidity ^0.8.12;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 import "../interfaces/IMessenger.sol";
-import "./ResolutionRegistry.sol";
 import "./CrossDomainRestrictedCalls.sol";
+import "./RequestManager.sol";
 
 /// The resolver.
 ///
 /// This contract resides on the L1 chain and is tasked with receiving the
 /// fill or non-fill proofs from the target L2 chain and forwarding them to
-/// the :sol:contract:`ResolutionRegistry` on the source L2 chain.
+/// the :sol:contract:`RequestManager` on the source L2 chain.
 contract Resolver is Ownable, CrossDomainRestrictedCalls {
     struct SourceChainInfo {
-        address resolutionRegistry;
+        address requestManager;
         address messenger;
     }
 
-    /// Emitted when a fill or a non-fill proof is received and sent to the resolution registry.
+    /// Emitted when a fill or a non-fill proof is received and sent to the request manager.
     ///
     /// .. note:: In case of a non-fill proof, the ``filler`` will be zero.
     event Resolution(
@@ -34,9 +34,9 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     /// Resolve the specified request.
     ///
     /// This marks the request identified by ``requestId`` as filled by ``filler``.
-    /// If the ``filler`` is zero, the fill be marked invalid.
+    /// If the ``filler`` is zero, the fill will be marked invalid.
     ///
-    /// Information about the fill will be sent to the source chain's :sol:contract:`ResolutionRegistry`,
+    /// Information about the fill will be sent to the source chain's :sol:contract:`RequestManager`,
     /// using the messenger responsible for the source chain.
     ///
     /// .. note::
@@ -59,8 +59,8 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
     ) external restricted(fillChainId, msg.sender) {
         SourceChainInfo storage info = sourceChainInfos[sourceChainId];
         require(
-            info.resolutionRegistry != address(0),
-            "No registry available for source chain"
+            info.requestManager != address(0),
+            "No request manager available for source chain"
         );
         require(
             info.messenger != address(0),
@@ -71,43 +71,40 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
 
         if (filler == address(0)) {
             message = abi.encodeCall(
-                ResolutionRegistry.invalidateFill,
+                RequestManager.invalidateFill,
                 (requestId, fillId, block.chainid)
             );
         } else {
             message = abi.encodeCall(
-                ResolutionRegistry.resolveRequest,
+                RequestManager.resolveRequest,
                 (requestId, fillId, block.chainid, filler)
             );
         }
 
         IMessenger messenger = IMessenger(info.messenger);
-        messenger.sendMessage(info.resolutionRegistry, message);
+        messenger.sendMessage(info.requestManager, message);
 
         emit Resolution(sourceChainId, fillChainId, requestId, filler, fillId);
     }
 
-    /// Add a resolution registry.
+    /// Add a request manager.
     ///
-    /// In order to be able to send messages to the :sol:contract:`ResolutionRegistry`,
-    /// the resolver contract needs to know the address of the registry on the source
+    /// In order to be able to send messages to the :sol:contract:`RequestManager`,
+    /// the resolver contract needs to know the address of the request manager on the source
     /// chain, as well as the address of the messenger contract responsible for
     /// transferring messages to the L2 chain.
     ///
     /// .. note:: This function can only be called by the contract owner.
     ///
     /// @param chainId The source L2 chain ID.
-    /// @param resolutionRegistry The resolution registry.
+    /// @param requestManager The request manager.
     /// @param messenger The messenger contract responsible for chain ``chainId``.
     ///                  Must implement :sol:interface:`IMessenger`.
-    function addRegistry(
+    function addRequestManager(
         uint256 chainId,
-        address resolutionRegistry,
+        address requestManager,
         address messenger
     ) external onlyOwner {
-        sourceChainInfos[chainId] = SourceChainInfo(
-            resolutionRegistry,
-            messenger
-        );
+        sourceChainInfos[chainId] = SourceChainInfo(requestManager, messenger);
     }
 }
