@@ -1337,7 +1337,7 @@ testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (
 
 [[package]]
 name = "shiv"
-version = "1.0.1"
+version = "1.0.2"
 description = "A command line utility for building fully self contained Python zipapps."
 category = "dev"
 optional = false
@@ -1782,7 +1782,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9, <3.10"
-content-hash = "414b1ebee2c57536b5f211c35ce3088395db890fc874ed2b4c96db96d3cfa739"
+content-hash = "f5ed9a20bc1012f4eb68d61146e0cdcf381f6d4112676bb68fb37f0b8da4d050"
 
 [metadata.files]
 aiohttp = [
@@ -2674,8 +2674,8 @@ setuptools = [
     {file = "setuptools-65.3.0.tar.gz", hash = "sha256:7732871f4f7fa58fb6bdcaeadb0161b2bd046c85905dbaa066bdcbcc81953b57"},
 ]
 shiv = [
-    {file = "shiv-1.0.1-py2.py3-none-any.whl", hash = "sha256:f66133c85c4bfad8e52ea9a163778e9ef4e21f57da9e3319656bf520d4276920"},
-    {file = "shiv-1.0.1.tar.gz", hash = "sha256:ec16095a0565906536af7f5e57771e9ae7a061b646ed63ad66ebbc70c30f4d2a"},
+    {file = "shiv-1.0.2-py2.py3-none-any.whl", hash = "sha256:486c65837101ec3ff8556c41de91136c8700f4af14fa8f33f688da2a88f80d21"},
+    {file = "shiv-1.0.2.tar.gz", hash = "sha256:04349f8174b2b61594af0567b20dbbac73749ec7ee985757ff67bada1db7f546"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
