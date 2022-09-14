@@ -47,11 +47,20 @@ const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner
   text-2xl outline-none placeholder:opacity-25 placeholder:text-black
   disabled:text-sea-green disabled:bg-transparent disabled:border-2
   disabled:border-sea-green disabled:placeholder:text-sea-green`;
+// Overrides the color manipulation behavior of browsers when input is in autofill mode
+const autofillColorOverlayClasses = `
+autofill:shadow-autofill autofill:shadow-sea-green autofill:bg-sea-green filter-none
+`;
+
 const inputComputedClasses = computed(() => [
   props.valid ? 'text-teal' : `text-red`,
   props.alignRight ? 'text-right' : 'text-left',
 ]);
-const classes = computed(() => [inputClasses, inputComputedClasses.value]);
+const classes = computed(() => [
+  inputClasses,
+  autofillColorOverlayClasses,
+  inputComputedClasses.value,
+]);
 </script>
 
 <style scoped>
