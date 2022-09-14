@@ -301,8 +301,6 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         newRequest.lpFee = lpFeeTokenAmount;
         newRequest.protocolFee = protocolFeeTokenAmount;
         newRequest.withdrawn = false;
-        newRequest.filler = address(0);
-        newRequest.fillId = bytes32(0);
 
         emit RequestCreated(
             requestId,
@@ -715,11 +713,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         bytes32 fillId,
         uint256 resolutionChainId,
         address filler
-    )
-        external
-        validRequestId(requestId)
-        restricted(resolutionChainId, msg.sender)
-    {
+    ) external restricted(resolutionChainId, msg.sender) {
         Request storage request = requests[requestId];
         request.filler = filler;
         request.fillId = fillId;
@@ -742,11 +736,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         bytes32 requestId,
         bytes32 fillId,
         uint256 resolutionChainId
-    )
-        external
-        validRequestId(requestId)
-        restricted(resolutionChainId, msg.sender)
-    {
+    ) external restricted(resolutionChainId, msg.sender) {
         Request storage request = requests[requestId];
         require(
             request.filler == address(0),
