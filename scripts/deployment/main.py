@@ -100,7 +100,6 @@ def deploy_beamer(
     l1_messenger = deploy_contract(resolver.web3, l2_config["l1_messenger"])
     l2_messenger = deploy_contract(web3, l2_config["l2_messenger"])
 
-    resolution_registry = deploy_contract(web3, "ResolutionRegistry")
     request_manager_arguments = l2_config["request_manager_arguments"]
     claim_stake = to_wei(request_manager_arguments["claim_stake"], "ether")
     claim_period = request_manager_arguments["claim_period"]
@@ -113,7 +112,6 @@ def deploy_beamer(
             claim_stake,
             claim_period,
             challenge_period_extension,
-            resolution_registry.address,
         ),
     )
 
@@ -142,8 +140,8 @@ def deploy_beamer(
         timeout=600,
     )
     transact(
-        resolver.functions.addRegistry(
-            l2_config["chain_id"], resolution_registry.address, l1_messenger.address
+        resolver.functions.addRequestManager(
+            l2_config["chain_id"], request_manager.address, l1_messenger.address
         ),
         timeout=600,
     )
@@ -151,7 +149,7 @@ def deploy_beamer(
         l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address), timeout=600
     )
     transact(
-        resolution_registry.functions.addCaller(
+        request_manager.functions.addCaller(
             resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
         )
     )
@@ -161,7 +159,6 @@ def deploy_beamer(
         [
             request_manager,
             fill_manager,
-            resolution_registry,
             l2_messenger,
         ]
     )
