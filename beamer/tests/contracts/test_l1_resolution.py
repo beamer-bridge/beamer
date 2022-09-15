@@ -1,17 +1,15 @@
 import brownie
 import pytest
 from brownie.convert.datatypes import HexString
-from eth_abi.packed import encode_abi_packed
-from eth_utils import keccak
 from web3.constants import ADDRESS_ZERO
 
-from beamer.tests.constants import FILL_ID_EMPTY
+from beamer.tests.constants import FILL_ID_EMPTY, RM_R_FIELD_FILL_ID, RM_R_FIELD_FILLER
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("forward_state", [True])
-def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, amount):
+def test_l1_resolution_correct_id(request_manager, fill_manager, token, amount):
     requested_amount = 100
     nonce = 23
     (receiver,) = alloc_accounts(1)
@@ -42,39 +40,28 @@ def test_l1_resolution_correct_hash(fill_manager, resolution_registry, token, am
         expected_address = filler
         expected_fill_id = fill_id
 
-    resolved_filler, resolved_fill_id = resolution_registry.fillers(request_id)
+    request = request_manager.requests(request_id)
 
-    assert resolved_filler == expected_address
-    assert resolved_fill_id == HexString(expected_fill_id, "bytes32")
+    assert request[RM_R_FIELD_FILLER] == expected_address
+    assert request[RM_R_FIELD_FILL_ID] == HexString(expected_fill_id, "bytes32")
 
 
 @pytest.mark.parametrize("forward_state", [True])
-def test_l1_non_fill_proof(fill_manager, resolution_registry):
+def test_l1_non_fill_proof(fill_manager, request_manager):
     request_id = "1234" + "00" * 30
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
 
     fill_manager.invalidateFill(request_id, fill_id, chain_id)
-
-    fill_hash = keccak(
-        encode_abi_packed(
-            ["bytes32", "bytes32"],
-            [
-                bytes.fromhex(request_id),
-                bytes.fromhex(fill_id),
-            ],
-        )
-    )
-
-    assert resolution_registry.invalidFillHashes(fill_hash)
+    assert request_manager.isInvalidFill(request_id, fill_id)
 
 
-def test_restricted_calls(contracts, resolver, resolution_registry):
+def test_restricted_calls(contracts, resolver, request_manager):
     """Test that important contract calls cannot be invoked by a random caller."""
     (caller,) = alloc_accounts(1)
 
     # fill_manager -> messenger1 -> L1 resolver ->
-    # messenger2 -> resolution registry
+    # messenger2 -> request manager
 
     with brownie.reverts("RestrictedCalls: unknown caller"):
         contracts.l2_messenger.sendMessage(resolver.address, b"")
@@ -90,10 +77,10 @@ def test_restricted_calls(contracts, resolver, resolution_registry):
         )
 
     with brownie.reverts("RestrictedCalls: unknown caller"):
-        contracts.l1_messenger.sendMessage(resolution_registry.address, b"")
+        contracts.l1_messenger.sendMessage(request_manager.address, b"")
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.resolveRequest(0, 0, 0, caller, {"from": caller})
+        contracts.request_manager.resolveRequest(0, 0, 0, caller, {"from": caller})
 
     with brownie.reverts("XRestrictedCalls: unknown caller"):
-        contracts.resolution_registry.invalidateFill(0, 0, 0, {"from": caller})
+        contracts.request_manager.invalidateFill(0, 0, 0, {"from": caller})
