@@ -46,7 +46,6 @@ class Agent:
         l2b_contracts = make_contracts(w3_l2b, l2b_contracts_info)
 
         request_manager = l2a_contracts["RequestManager"]
-        resolution_registry = l2a_contracts["ResolutionRegistry"]
         fill_manager = l2b_contracts["FillManager"]
 
         if not fill_manager.functions.allowedLps(config.account.address).call():
@@ -75,11 +74,8 @@ class Agent:
 
         self._event_monitor_l2a = EventMonitor(
             web3=w3_l2a,
-            contracts=(request_manager, resolution_registry),
-            deployment_block=min(
-                l2a_contracts_info["RequestManager"].deployment_block,
-                l2a_contracts_info["ResolutionRegistry"].deployment_block,
-            ),
+            contracts=(request_manager,),
+            deployment_block=l2a_contracts_info["RequestManager"].deployment_block,
             on_new_events=self._event_processor.add_events,
             on_sync_done=self._event_processor.mark_sync_done,
             poll_period=poll_period,
