@@ -233,35 +233,3 @@ def create_request_id(
             ],
         )
     )
-
-
-def create_fill_hash(
-    source_chain_id,
-    target_chain_id,
-    target_token_address,
-    receiver_address,
-    amount,
-    nonce,
-    fill_id,
-):
-    return create_fill_hash_from_request_id(
-        create_request_id(
-            source_chain_id, target_chain_id, target_token_address, receiver_address, amount, nonce
-        ),
-        fill_id,
-    )
-
-
-def create_fill_hash_from_request_id(
-    request_id,
-    fill_id,
-):
-    return keccak(
-        encode_abi_packed(
-            ["bytes32", "bytes32"],
-            [
-                request_id,
-                fill_id,
-            ],
-        )
-    )
