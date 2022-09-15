@@ -23,10 +23,6 @@ def _generate_deployment_dir(output_dir, root, contracts):
                     "deployment_block": 1,
                 },
                 "FillManager": {"address": contracts.fill_manager.address, "deployment_block": 1},
-                "ResolutionRegistry": {
-                    "address": contracts.resolution_registry.address,
-                    "deployment_block": 1,
-                },
             }
         },
     }
@@ -36,7 +32,6 @@ def _generate_deployment_dir(output_dir, root, contracts):
     src = root / "contracts/build/contracts"
     shutil.copy(src / "RequestManager.json", output_dir)
     shutil.copy(src / "FillManager.json", output_dir)
-    shutil.copy(src / "ResolutionRegistry.json", output_dir)
 
 
 @pytest.fixture
