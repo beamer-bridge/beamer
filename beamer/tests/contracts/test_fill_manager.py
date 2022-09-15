@@ -1,8 +1,6 @@
 import brownie
 
 from brownie import FillManager, TestL2Messenger
-from eth_abi.packed import encode_abi_packed
-from eth_utils import keccak
 
 from beamer.tests.agent.utils import make_address
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
