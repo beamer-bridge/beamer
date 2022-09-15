@@ -3,6 +3,7 @@ import sys
 import time
 from pathlib import Path
 
+from beamer.tests.constants import RM_R_FIELD_FILLER
 from beamer.tests.util import create_request_id
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3
@@ -47,18 +48,24 @@ def main() -> None:
     )
 
     # A fill has been done, and the proof has been submitted.  As the message
-    # resolver runs in the e2e setup, the resultion will be triggered
-    # automatically. So we just need to wait until the fill hash ends up in the
-    # resolution registry.
-    resolution_registry = l2_contracts["ResolutionRegistry"]
+    # resolver runs in the e2e setup, the resolution will be triggered
+    # automatically. So we just need to wait until the filler and fill ID ends up in the
+    # request's object.
+    request_manager = l2_contracts["RequestManager"]
 
     for _ in range(50):
         time.sleep(1)
         print("Waiting for resolution data...")
-        if resolution_registry.functions.fillers(request_id).call()[0] == deployer.address:
+        if (
+            request_manager.functions.requests(request_id).call()[RM_R_FIELD_FILLER]
+            == deployer.address
+        ):
             break
 
-    assert resolution_registry.functions.fillers(request_id).call()[0] == deployer.address
+    assert (
+        request_manager.functions.requests(request_id).call()[RM_R_FIELD_FILLER]
+        == deployer.address
+    )
 
 
 if __name__ == "__main__":
