@@ -10,33 +10,35 @@ import "./Lib_PredeployAddresses.sol";
 abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
     uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
 
-    ICrossDomainMessenger public messenger;
+    ICrossDomainMessenger public nativeMessenger;
 
-    function originalSender() external view returns (address) {
-        return messenger.xDomainMessageSender();
-    }
-
-    function nativeMessenger() external view returns (address) {
-        return address(messenger);
+    function callAllowed(address caller, address courier)
+        external
+        view
+        returns (bool)
+    {
+        return
+            courier == address(nativeMessenger) &&
+            caller == nativeMessenger.xDomainMessageSender();
     }
 
     function sendMessage(address target, bytes calldata message)
         external
-        restricted(block.chainid, msg.sender)
+        restricted(block.chainid)
     {
-        messenger.sendMessage(target, message, MESSAGE_GAS_LIMIT);
+        nativeMessenger.sendMessage(target, message, MESSAGE_GAS_LIMIT);
     }
 }
 
 contract OptimismL1Messenger is OptimismMessengerBase {
     constructor(address messenger_) {
-        messenger = ICrossDomainMessenger(messenger_);
+        nativeMessenger = ICrossDomainMessenger(messenger_);
     }
 }
 
 contract OptimismL2Messenger is OptimismMessengerBase {
     constructor() {
-        messenger = ICrossDomainMessenger(
+        nativeMessenger = ICrossDomainMessenger(
             Lib_PredeployAddresses.L2_CROSS_DOMAIN_MESSENGER
         );
     }

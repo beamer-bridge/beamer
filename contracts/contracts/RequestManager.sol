@@ -7,7 +7,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/Math.sol"
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 
 import "./BeamerUtils.sol";
-import "./CrossDomainRestrictedCalls.sol";
+import "./RestrictedCalls.sol";
 import "./LpWhitelist.sol";
 
 /// The request manager.
@@ -22,7 +22,7 @@ import "./LpWhitelist.sol";
 ///
 ///   The functions resolveRequest and invalidateFill can only be called by
 ///   the :sol:contract:`Resolver` contract, via a chain-dependent messenger contract.
-contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
+contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -737,7 +737,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         bytes32 fillId,
         uint256 resolutionChainId,
         address filler
-    ) external restricted(resolutionChainId, msg.sender) {
+    ) external restricted(resolutionChainId) {
         Request storage request = requests[requestId];
         request.filler = filler;
         request.fillId = fillId;
@@ -760,7 +760,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         bytes32 requestId,
         bytes32 fillId,
         uint256 resolutionChainId
-    ) external restricted(resolutionChainId, msg.sender) {
+    ) external restricted(resolutionChainId) {
         Request storage request = requests[requestId];
         require(
             request.filler == address(0),
