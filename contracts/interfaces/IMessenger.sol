@@ -17,11 +17,12 @@ interface IMessenger {
     /// @param message The message.
     function sendMessage(address target, bytes calldata message) external;
 
-    /// Get the original sender of the last message.
-    function originalSender() external view returns (address);
-
-    /// Get the native messenger contract.
+    /// Return whether the call is allowed or not.
     ///
-    /// In case a native messenger is not used, zero must be returned.
-    function nativeMessenger() external view returns (address);
+    /// @param caller The caller.
+    /// @param courier The contract that is trying to deliver the message.
+    function callAllowed(address caller, address courier)
+        external
+        view
+        returns (bool);
 }

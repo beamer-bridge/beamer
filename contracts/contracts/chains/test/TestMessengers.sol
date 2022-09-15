@@ -11,13 +11,17 @@ contract TestMessengerBase is IMessenger, RestrictedCalls {
     address public lastSender;
     bool public forwardMessages;
 
-    function originalSender() external view returns (address) {
-        return lastSender;
+    function callAllowed(address caller, address courier)
+        external
+        view
+        returns (bool)
+    {
+        return courier == address(this) && caller == lastSender;
     }
 
     function sendMessage(address target, bytes calldata message)
         external
-        restricted(block.chainid, msg.sender)
+        restricted(block.chainid)
     {
         if (forwardMessages) {
             lastSender = msg.sender;
@@ -32,10 +36,6 @@ contract TestMessengerBase is IMessenger, RestrictedCalls {
 
     function setForwardState(bool forward) external {
         forwardMessages = forward;
-    }
-
-    function nativeMessenger() external view returns (address) {
-        return address(this);
     }
 }
 

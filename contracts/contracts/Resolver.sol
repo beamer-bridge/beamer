@@ -3,15 +3,15 @@ pragma solidity ^0.8.12;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 import "../interfaces/IMessenger.sol";
-import "./CrossDomainRestrictedCalls.sol";
 import "./RequestManager.sol";
+import "./RestrictedCalls.sol";
 
 /// The resolver.
 ///
 /// This contract resides on the L1 chain and is tasked with receiving the
 /// fill or non-fill proofs from the target L2 chain and forwarding them to
 /// the :sol:contract:`RequestManager` on the source L2 chain.
-contract Resolver is Ownable, CrossDomainRestrictedCalls {
+contract Resolver is Ownable, RestrictedCalls {
     struct SourceChainInfo {
         address requestManager;
         address messenger;
@@ -56,7 +56,7 @@ contract Resolver is Ownable, CrossDomainRestrictedCalls {
         uint256 fillChainId,
         uint256 sourceChainId,
         address filler
-    ) external restricted(fillChainId, msg.sender) {
+    ) external restricted(fillChainId) {
         SourceChainInfo storage info = sourceChainInfos[sourceChainId];
         require(
             info.requestManager != address(0),

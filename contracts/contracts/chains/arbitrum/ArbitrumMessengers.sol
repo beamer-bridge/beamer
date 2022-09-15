@@ -23,16 +23,17 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
         inbox = IInbox(inbox_);
     }
 
-    function nativeMessenger() external view returns (address) {
-        return address(bridge);
-    }
+    function callAllowed(address caller, address courier)
+        external
+        view
+        returns (bool)
+    {
+        // The call from L2 must be delivered by the Arbitrum bridge.
+        if (courier != address(bridge)) return false;
 
-    function originalSender() external view returns (address) {
         IOutbox outbox = IOutbox(bridge.activeOutbox());
         address sender = outbox.l2ToL1Sender();
-
-        require(sender != address(0), "no sender");
-        return sender;
+        return sender == caller;
     }
 
     // This is copied verbatim from the Arbitrum Nitro repo.
@@ -64,7 +65,7 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
     /* solhint-disable avoid-tx-origin */
     function sendMessage(address target, bytes calldata message)
         external
-        restricted(block.chainid, msg.sender)
+        restricted(block.chainid)
     {
         uint256 submissionFee = calculateRetryableSubmissionFee(
             message.length,
@@ -92,28 +93,24 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
 }
 
 contract ArbitrumL2Messenger is IMessenger, Ownable, RestrictedCalls {
-    address public l1Messenger;
-
-    function setL1Messenger(address messenger) external onlyOwner {
-        l1Messenger = messenger;
-    }
-
-    function nativeMessenger() external view returns (address) {
+    function callAllowed(address caller, address courier)
+        external
+        view
+        returns (bool)
+    {
         // Arbitrum sets `msg.sender` on calls coming from L1 to be the aliased
-        // address of the contract that sent the message so we need to return that
-        // aliased address here. In our case, that is the L2 alias of our ArbitrumL1Messenger.
+        // form of the address that sent the message so we need to check
+        // that aliased address here. In our case, that is the L2 alias of our
+        // caller, ArbitrumL1Messenger.
         IArbSys arbsys = IArbSys(address(100));
         return
-            arbsys.mapL1SenderContractAddressToL2Alias(l1Messenger, address(0));
-    }
-
-    function originalSender() external view returns (address) {
-        return l1Messenger;
+            courier ==
+            arbsys.mapL1SenderContractAddressToL2Alias(caller, address(0));
     }
 
     function sendMessage(address target, bytes calldata message)
         external
-        restricted(block.chainid, msg.sender)
+        restricted(block.chainid)
     {
         IArbSys arbsys = IArbSys(address(100));
         arbsys.sendTxToL1(target, message);
