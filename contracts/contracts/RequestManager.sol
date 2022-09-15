@@ -38,7 +38,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         uint256 lpFee;
         uint256 protocolFee;
         uint192 activeClaims;
-        bool withdrawn;
+        uint256 withdrawClaimId;
         address filler;
         bytes32 fillId;
         mapping(bytes32 => bool) invalidFillIds;
@@ -149,6 +149,9 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
 
     /// The maximum validity period of a request.
     uint256 public constant MAX_VALIDITY_PERIOD = 30 minutes;
+
+    /// withdrawClaimId is set to this value when an expired request gets withdrawn by the sender
+    uint256 public constant CLAIM_ID_WITHDRAWN_EXPIRED = type(uint256).max;
 
     // Variables
 
@@ -300,7 +303,6 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         newRequest.validUntil = block.timestamp + validityPeriod;
         newRequest.lpFee = lpFeeTokenAmount;
         newRequest.protocolFee = protocolFeeTokenAmount;
-        newRequest.withdrawn = false;
 
         emit RequestCreated(
             requestId,
@@ -329,15 +331,14 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     {
         Request storage request = requests[requestId];
 
-        require(!request.withdrawn, "Deposit already withdrawn");
+        require(request.withdrawClaimId == 0, "Deposit already withdrawn");
         require(
             block.timestamp >= request.validUntil,
             "Request not expired yet"
         );
         require(request.activeClaims == 0, "Active claims running");
 
-        request.withdrawn = true;
-        request.filler = request.sender;
+        request.withdrawClaimId = CLAIM_ID_WITHDRAWN_EXPIRED;
 
         emit DepositWithdrawn(requestId, request.sender);
 
@@ -367,7 +368,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         Request storage request = requests[requestId];
 
         require(block.timestamp < request.validUntil, "Request expired");
-        require(!request.withdrawn, "Deposit already withdrawn");
+        require(request.withdrawClaimId == 0, "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
@@ -526,8 +527,8 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
 
         emit ClaimStakeWithdrawn(claimId, claim.requestId, claimReceiver);
 
-        if (!request.withdrawn && claimReceiver == claim.claimer) {
-            withdrawDeposit(request, claim);
+        if (request.withdrawClaimId == 0 && claimReceiver == claim.claimer) {
+            withdrawDeposit(request, claimId);
         }
 
         return claimReceiver;
@@ -549,11 +550,11 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
 
         bool claimValid = false;
 
-        // Priority list for validity check of claim
-        // Claim is valid/invalid if either
-        // 1) The request's filler is the claimer and request.fillId matches, claim is valid
+        // The claim is resolved with the following priority:
+        // 1) The l1 resolved filler is the claimer and l1 resolved fillId matches, claim is valid
         // 2) FillId is true in request's invalidFillIds, claim is invalid
-        // 3) Claim properties, claim terminated and claimer has the highest stake
+        // 3) The withdrawer's claim matches exactly this claim (same claimer address, same fillId)
+        // 4) Claim properties, claim terminated and claimer has the highest stake
         address filler = request.filler;
         bytes32 fillId = request.fillId;
 
@@ -563,8 +564,13 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         } else if (request.invalidFillIds[fillId]) {
             // Claim resolution via 2)
             claimValid = false;
-        } else {
+        } else if (request.withdrawClaimId != 0) {
             // Claim resolution via 3)
+            claimValid =
+                claim.claimer == claims[request.withdrawClaimId].claimer &&
+                claim.fillId == claims[request.withdrawClaimId].fillId;
+        } else {
+            // Claim resolution via 4)
             require(
                 block.timestamp >= claim.termination,
                 "Claim period not finished"
@@ -607,15 +613,12 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
         return (claimReceiver, ethToTransfer);
     }
 
-    function withdrawDeposit(Request storage request, Claim storage claim)
-        private
-    {
+    function withdrawDeposit(Request storage request, uint256 claimId) private {
+        Claim storage claim = claims[claimId];
         address claimer = claim.claimer;
         emit DepositWithdrawn(claim.requestId, claimer);
 
-        request.withdrawn = true;
-        request.filler = claimer;
-        request.fillId = claim.fillId;
+        request.withdrawClaimId = claimId;
 
         collectedProtocolFees[request.sourceTokenAddress] += request
             .protocolFee;
@@ -751,7 +754,7 @@ contract RequestManager is Ownable, LpWhitelist, CrossDomainRestrictedCalls {
     ///     This function is a restricted call function. Only callable by the added caller.
     ///
     /// @param requestId The request ID.
-    /// @param fillId The fi ll ID.
+    /// @param fillId The fill ID.
     /// @param resolutionChainId The resolution (L1) chain ID.
     function invalidateFill(
         bytes32 requestId,
