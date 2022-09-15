@@ -6,13 +6,7 @@ from eth_utils import to_hex
 
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION
-from beamer.tests.util import (
-    alloc_accounts,
-    alloc_whitelisted_accounts,
-    create_fill_hash_from_request_id,
-    earnings,
-    make_request,
-)
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
 from beamer.typing import ClaimId, FillId, RequestId, Termination
 
 
@@ -810,7 +804,7 @@ def test_second_claim_after_withdraw(deployer, request_manager, token, claim_sta
 @pytest.mark.parametrize("invalidate", [True, False])
 @pytest.mark.parametrize("l1_filler", [make_address(), None])
 def test_withdraw_without_challenge_with_resolution(
-    request_manager, resolution_registry, token, claim_stake, contracts, invalidate, l1_filler
+    request_manager, token, claim_stake, contracts, invalidate, l1_filler
 ):
     """
     Test withdraw when a claim was not challenged, but L1 resolved
@@ -823,7 +817,7 @@ def test_withdraw_without_challenge_with_resolution(
     In the invalid - dishonest claimer case, stakes go to the contract
     owner as there is no challenger
     In the invalid - honest claimer case, honest claimer reverts the
-    invalidation in the resolution registry
+    invalidation in request.invalidFillIds
     """
     (requester,) = alloc_accounts(1)
     (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
@@ -859,29 +853,23 @@ def test_withdraw_without_challenge_with_resolution(
     assert web3.eth.get_balance(claimer.address) == claimer_eth_balance - claim_stake
 
     # Start L1 resolution
-
-    fill_hash = create_fill_hash_from_request_id(
-        request_id,
-        fill_id,
-    )
-
     contracts.l1_messenger.setLastSender(contracts.resolver.address)
 
     if invalidate:
-        resolution_registry.invalidateFill(
+        request_manager.invalidateFill(
             request_id, fill_id, chain.id, {"from": contracts.l1_messenger}
         )
     # Assert that invalidation works
-    assert resolution_registry.invalidFillHashes(fill_hash) == invalidate
+    assert request_manager.isInvalidFill(request_id, fill_id) == invalidate
 
     # Register a L1 resolution
-    resolution_registry.resolveRequest(
+    request_manager.resolveRequest(
         request_id, fill_id, web3.eth.chain_id, l1_filler, {"from": contracts.l1_messenger}
     )
 
     # Assert that correct filler is resolved, it reverts the false invalidation
     if invalidate and l1_filler == claimer:
-        assert not resolution_registry.invalidFillHashes(fill_hash)
+        assert not request_manager.isInvalidFill(request_id, fill_id)
 
     # The claim period is not over, but the resolution must allow withdrawal now
     withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
@@ -906,9 +894,7 @@ def test_withdraw_without_challenge_with_resolution(
         request_manager.withdraw(claim_id, {"from": claimer})
 
 
-def test_withdraw_l1_resolved_muliple_claims(
-    contracts, request_manager, resolution_registry, token, claim_stake
-):
+def test_withdraw_l1_resolved_muliple_claims(contracts, request_manager, token, claim_stake):
     (requester,) = alloc_accounts(1)
     claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
@@ -962,7 +948,7 @@ def test_withdraw_l1_resolved_muliple_claims(
 
     # Start L1 resolution
     # Register a L1 resolution
-    resolution_registry.resolveRequest(
+    request_manager.resolveRequest(
         request_id, fill_id, web3.eth.chain_id, claimer1, {"from": contracts.l1_messenger}
     )
 
