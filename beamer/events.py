@@ -15,7 +15,6 @@ from beamer.typing import (
     BlockNumber,
     ChainId,
     ClaimId,
-    FillHash,
     FillId,
     Nonce,
     RequestId,
@@ -123,8 +122,9 @@ class RequestResolved(TxEvent):
 
 
 @dataclass(frozen=True)
-class FillHashInvalidated(TxEvent):
-    fill_hash: FillHash
+class FillInvalidatedResolved(TxEvent):
+    request_id: RequestId
+    fill_id: FillId
 
 
 @dataclass(frozen=True)
@@ -144,7 +144,7 @@ _EVENT_TYPES = dict(
     ClaimMade=ClaimMade,
     ClaimStakeWithdrawn=ClaimStakeWithdrawn,
     RequestResolved=RequestResolved,
-    FillHashInvalidated=FillHashInvalidated,
+    FillInvalidatedResolved=FillInvalidatedResolved,
     FillInvalidated=FillInvalidated,
     FinalityPeriodUpdated=FinalityPeriodUpdated,
 )
@@ -261,7 +261,7 @@ class EventFetcher:
             assert isinstance(self._web3.provider, HTTPProvider)
             url = self._web3.provider.endpoint_uri
             self._log.error("Connection error", url=url, exc=exc)
-            # Propagate the exception upwards so we don't make further attempts.
+            # Propagate the exception upwards, so we don't make further attempts.
             raise exc
 
         else:
