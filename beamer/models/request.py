@@ -1,14 +1,12 @@
 from typing import Optional
 
 import structlog
-from eth_abi.packed import encode_abi_packed
 from eth_typing import ChecksumAddress
-from eth_utils import keccak
 from hexbytes import HexBytes
 from statemachine import State, StateMachine
 from web3.types import Timestamp
 
-from beamer.typing import ChainId, FillHash, FillId, Nonce, RequestId, TokenAmount
+from beamer.typing import ChainId, FillId, Nonce, RequestId, TokenAmount
 
 
 class Request(StateMachine):
@@ -87,19 +85,6 @@ class Request(StateMachine):
     ) -> None:
         self.l1_resolution_filler = l1_filler
         self.l1_resolution_fill_id = l1_fill_id
-
-    def fill_hash_with_fill_id(self, fill_id: FillId) -> FillHash:
-        return FillHash(
-            keccak(
-                encode_abi_packed(
-                    ["bytes32", "bytes32"],
-                    [
-                        self.id,
-                        fill_id,
-                    ],
-                )
-            )
-        )
 
     def __repr__(self) -> str:
         state = self.current_state.identifier

@@ -23,10 +23,6 @@ class FillId(_HexBytes):
     pass
 
 
-class FillHash(_HexBytes):
-    pass
-
-
 ChainId = NewType("ChainId", int)
 ClaimId = NewType("ClaimId", int)
 TokenAmount = NewType("TokenAmount", int)

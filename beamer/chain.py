@@ -506,4 +506,10 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         log.error("Calling invalidateFill failed", claim=claim, exc=exc)
         return
 
-    log.info("Invalidated fill hash", claim=claim.id, txn_hash=receipt.transactionHash.hex())
+    log.info(
+        "Invalidated fill",
+        request=request.id,
+        fill_id=request.fill_id,
+        claim=claim.id,
+        txn_hash=receipt.transactionHash.hex(),
+    )
