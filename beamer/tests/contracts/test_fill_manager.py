@@ -98,7 +98,7 @@ def test_unset_resolver(deployer, token):
     # deploy new contracts
     l2_messenger = deployer.deploy(TestL2Messenger)
     new_fill_manager = deployer.deploy(FillManager, l2_messenger)
-    l2_messenger.addCaller(chain_id, new_fill_manager.address)
+    l2_messenger.addCaller(new_fill_manager.address)
 
     amount = 100
     (receiver,) = alloc_accounts(1)
