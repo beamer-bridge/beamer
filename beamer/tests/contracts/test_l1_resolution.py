@@ -96,24 +96,27 @@ def test_restricted_calls(contracts, resolver, request_manager):
     # fill_manager -> messenger1 -> L1 resolver ->
     # messenger2 -> request manager
 
-    with brownie.reverts("RestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: call disallowed"):
         contracts.l2_messenger.sendMessage(resolver.address, b"")
 
-    with brownie.reverts("XRestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: call disallowed"):
         contracts.resolver.resolve(
             0, 0, brownie.chain.id, brownie.chain.id, caller, {"from": caller}
         )
 
-    with brownie.reverts("XRestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: call disallowed"):
         contracts.resolver.resolve(
             0, 0, brownie.chain.id, brownie.chain.id, ADDRESS_ZERO, {"from": caller}
         )
 
-    with brownie.reverts("RestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: call disallowed"):
         contracts.l1_messenger.sendMessage(request_manager.address, b"")
 
-    with brownie.reverts("XRestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: call disallowed"):
+        contracts.request_manager.resolveRequest(0, 0, brownie.chain.id, caller, {"from": caller})
+
+    with brownie.reverts("RestrictedCalls: messenger not set"):
         contracts.request_manager.resolveRequest(0, 0, 0, caller, {"from": caller})
 
-    with brownie.reverts("XRestrictedCalls: unknown caller"):
+    with brownie.reverts("RestrictedCalls: messenger not set"):
         contracts.request_manager.invalidateFill(0, 0, 0, {"from": caller})

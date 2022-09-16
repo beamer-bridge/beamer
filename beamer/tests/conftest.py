@@ -110,10 +110,10 @@ def contracts(
     # L1 messenger -> request_manager
     l1_chain_id = l2_chain_id = brownie.chain.id
 
-    l2_messenger.addCaller(l2_chain_id, fill_manager.address)
-    resolver.addCaller(l2_chain_id, l2_messenger.address, fill_manager.address)
-    l1_messenger.addCaller(l1_chain_id, resolver.address)
-    request_manager.addCaller(l1_chain_id, l1_messenger.address, resolver.address)
+    l2_messenger.addCaller(fill_manager.address)
+    resolver.addCaller(l2_chain_id, l2_messenger.address, l1_messenger.address)
+    l1_messenger.addCaller(resolver.address)
+    request_manager.addCaller(l1_chain_id, l1_messenger.address, l2_messenger.address)
     resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
 
     request_manager.setFinalityPeriod(l2_chain_id, finality_period)
