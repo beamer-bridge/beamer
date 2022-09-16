@@ -20,8 +20,8 @@ from beamer.events import (
     ClaimStakeWithdrawn,
     DepositWithdrawn,
     Event,
-    FillHashInvalidated,
     FillInvalidated,
+    FillInvalidatedResolved,
     FinalityPeriodUpdated,
     InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
@@ -34,7 +34,7 @@ from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, FillHash, RequestId
+from beamer.typing import ChainId, ClaimId, FillId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -84,8 +84,8 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, FillInvalidated):
         return _handle_fill_invalidated(event, context)
 
-    elif isinstance(event, FillHashInvalidated):
-        return _handle_fill_hash_invalidated(event, context)
+    elif isinstance(event, FillInvalidatedResolved):
+        return _handle_fill_invalidated_resolved(event, context)
 
     elif isinstance(event, InitiateL1ResolutionEvent):
         return _handle_initiate_l1_resolution(event, context)
@@ -100,16 +100,13 @@ def process_event(event: Event, context: Context) -> HandlerResult:
         raise RuntimeError("Unrecognized event type")
 
 
-def _find_claims_by_fill_hash(context: Context, fill_hash: FillHash) -> list[Claim]:
+def _find_claims(context: Context, request_id: RequestId, fill_id: FillId) -> list[Claim]:
     """
-    This returns a list, as there can be multiple claims with the same fill hash
+    This returns a list with matching request ID and fill ID, as there can be multiple claims
     """
     matching_claims = []
     for claim in context.claims:
-        request = context.requests.get(claim.request_id)
-        assert request is not None
-
-        if fill_hash == request.fill_hash_with_fill_id(claim.fill_id):
+        if claim.request_id == request_id and claim.fill_id == fill_id:
             matching_claims.append(claim)
 
     return matching_claims
@@ -331,11 +328,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 def _handle_fill_invalidated(event: FillInvalidated, context: Context) -> HandlerResult:
     fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
-    # FIXME: Remove with https://github.com/beamer-bridge/beamer/issues/994
-    request = context.requests.get(event.request_id)
-    assert request is not None
-
-    claims = _find_claims_by_fill_hash(context, request.fill_hash_with_fill_id(event.fill_id))
+    claims = _find_claims(context, event.request_id, event.fill_id)
 
     for claim in claims:
         claim.start_challenge(event.tx_hash, fill_block.timestamp)  # type: ignore
@@ -343,8 +336,10 @@ def _handle_fill_invalidated(event: FillInvalidated, context: Context) -> Handle
     return True, None
 
 
-def _handle_fill_hash_invalidated(event: FillHashInvalidated, context: Context) -> HandlerResult:
-    claims = _find_claims_by_fill_hash(context, event.fill_hash)
+def _handle_fill_invalidated_resolved(
+    event: FillInvalidatedResolved, context: Context
+) -> HandlerResult:
+    claims = _find_claims(context, event.request_id, event.fill_id)
     for claim in claims:
         claim.l1_invalidate()
 

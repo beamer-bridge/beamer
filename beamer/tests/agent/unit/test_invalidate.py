@@ -6,7 +6,7 @@ import pytest
 from hexbytes import HexBytes
 
 from beamer.chain import process_claims
-from beamer.events import FillHashInvalidated, FillInvalidated, InitiateL1InvalidationEvent
+from beamer.events import FillInvalidated, FillInvalidatedResolved, InitiateL1InvalidationEvent
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
@@ -47,11 +47,11 @@ def test_handle_fill_hash_invalidated():
     context.claims.add(claim_1.id, claim_1)
     context.claims.add(claim_2.id, claim_2)
 
-    fill_hash = request.fill_hash_with_fill_id(request.fill_id)
-    event = FillHashInvalidated(
+    event = FillInvalidatedResolved(
         chain_id=request.target_chain_id,
         tx_hash=HexBytes(""),
-        fill_hash=fill_hash,
+        request_id=request.id,
+        fill_id=request.fill_id,
         block_number=BLOCK_NUMBER,
     )
     assert process_event(event, context) == (True, None)
