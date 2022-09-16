@@ -810,7 +810,7 @@ def test_withdraw_without_challenge_with_resolution(
     Test withdraw when a claim was not challenged, but L1 resolved
     It tests the combination of L1 resolution
 
-    fill hash (invalid, valid)
+    fill (invalid, valid)
             X
     l1 filler (honest claimer, dishonest claimer)
 

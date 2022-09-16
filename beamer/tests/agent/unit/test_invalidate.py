@@ -25,7 +25,7 @@ from beamer.tests.constants import FILL_ID
 from beamer.typing import ClaimId, FillId, Termination
 
 
-def test_handle_fill_hash_invalidated():
+def test_handle_fill_invalidated_resolved():
     context, config = make_context()
 
     request = make_request()
@@ -63,7 +63,7 @@ def test_handle_fill_hash_invalidated():
     assert claim_2.is_claimer_winning  # pylint:disable=no-member
 
 
-def test_handle_hash_invalidated():
+def test_handle_fill_invalidated():
     context, config = make_context()
 
     request = make_request()

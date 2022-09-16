@@ -55,7 +55,7 @@ def test_fill_request(fill_manager, token):
         )
 
 
-def test_invalidate_valid_fill_hash(fill_manager, token):
+def test_invalidate_valid_fill(fill_manager, token):
     chain_id = brownie.web3.eth.chain_id
     amount = 100
     nonce = 1
@@ -80,7 +80,7 @@ def test_invalidate_valid_fill_hash(fill_manager, token):
         fill_manager.invalidateFill(request_id, fill_id, chain_id)
 
 
-def test_invalidated_fill_hash_event(fill_manager):
+def test_fill_invalidated_event(fill_manager):
     request_id = "1234" + "00" * 30
     fill_id = "5678" + "00" * 30
     chain_id = brownie.web3.eth.chain_id
