@@ -12,7 +12,6 @@ Contracts
 Helper contracts
 ----------------
 
-.. autosolcontract:: CrossDomainRestrictedCalls
 .. autosolcontract:: RestrictedCalls
 
 
