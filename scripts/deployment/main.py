@@ -132,10 +132,12 @@ def deploy_beamer(
     transact(fill_manager.functions.setResolver(resolver.address))
 
     # Authorize call chain
-    transact(l2_messenger.functions.addCaller(l2_config["chain_id"], fill_manager.address))
+    transact(l2_messenger.functions.addCaller(fill_manager.address))
     transact(
         resolver.functions.addCaller(
-            l2_config["chain_id"], l1_messenger.address, l2_messenger.address
+            l2_config["chain_id"],
+            l2_messenger.address,
+            l1_messenger.address,
         ),
         timeout=600,
     )
@@ -145,12 +147,12 @@ def deploy_beamer(
         ),
         timeout=600,
     )
-    transact(
-        l1_messenger.functions.addCaller(config["L1"]["chain_id"], resolver.address), timeout=600
-    )
+    transact(l1_messenger.functions.addCaller(resolver.address), timeout=600)
     transact(
         request_manager.functions.addCaller(
-            resolver.web3.eth.chain_id, l2_messenger.address, l1_messenger.address
+            resolver.web3.eth.chain_id,
+            l1_messenger.address,
+            l2_messenger.address,
         )
     )
 
