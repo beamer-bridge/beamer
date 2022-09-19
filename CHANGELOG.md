@@ -2,8 +2,13 @@
 
 ## v0.1.6 (2022-09-19)
 
-* frontend: fix onboarding when MetaMask is not installed
+* frontend: added onboarding on desktop devices when MetaMask is not installed
+* frontend: changed to dynamic wallet provider selection options based on device detection
 * frontend: fixed transactions display inside the transfer history
+* frontend: fixed failing transfers by adjusting logic for waiting on transaction receipts
+* frontend: add automated config file generation process & yarn hooks for it
+* frontend: added "go back" feature on selector view
+* frontend: fixed other minor bugs
 * docs: added a FAQ
 * agent: allow more transitions when calling ignore() in claim state machine
 
