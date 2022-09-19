@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.6 (2022-09-19)
+
+* frontend: fix onboarding when MetaMask is not installed
+* frontend: fixed transactions display inside the transfer history
+* docs: added a FAQ
+* agent: allow more transitions when calling ignore() in claim state machine
+
 ## v0.1.5 (2022-09-06)
 
 * agent: fix handling of L1 resolution events when syncing
