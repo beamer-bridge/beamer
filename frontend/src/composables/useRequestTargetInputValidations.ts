@@ -6,7 +6,11 @@ import { computed } from 'vue';
 
 import type { Chain } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
-import { isValidEthAddress, makeNotSameAsChainValidator } from '@/validation/validators';
+import {
+  isValidEthAddress,
+  makeIsNotBlacklistedEthAddressValidator,
+  makeNotSameAsChainValidator,
+} from '@/validation/validators';
 
 type ValidationState = {
   selectedTargetChain: Ref<SelectorOption<Chain> | null>;
@@ -27,6 +31,10 @@ export const useRequestTargetInputValidations = (
       selectedTargetAddress: {
         required: helpers.withMessage('Target address is required', required),
         isValidEthAddress: helpers.withMessage('Invalid ETH address', isValidEthAddress),
+        makeIsNotBlacklistedEthAddressValidator: helpers.withMessage(
+          'Blacklisted ETH address',
+          makeIsNotBlacklistedEthAddressValidator(),
+        ),
       },
       selectedTargetChain: {
         required,

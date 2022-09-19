@@ -1,18 +1,20 @@
+import { BLACKLIST_ADDRESSES } from '@/utils/addressBlacklist';
 import { TokenAmount } from '@/types/token-amount';
 import {
   isUnsignedNumeric,
   isValidEthAddress,
+  makeIsNotBlacklistedEthAddressValidator,
   makeMatchingDecimalsValidator,
   makeMaxTokenAmountValidator,
   makeMinTokenAmountValidator,
   makeNotSameAsChainValidator,
 } from '@/validation/validators';
-import { generateChain, generateToken } from '~/utils/data_generators';
+import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 
 describe('validators', () => {
   describe('isValidEthAddress()', () => {
     it('returns true if provided value is a valid ETH address', () => {
-      // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct addresses
+      // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
       const address = '0x61437b5BEa6F897b76E6B2F39e1332F1dA47712F';
       expect(isValidEthAddress(address)).toBe(true);
     });
@@ -119,6 +121,35 @@ describe('validators', () => {
     it('returns true when provided value is less than max number', () => {
       const value = TokenAmount.parse(String(1.000_01), token);
       expect(validator(value)).toBe(true);
+    });
+  });
+
+  describe('makeIsNotBlacklistedEthAddressValidator()', () => {
+    // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
+    const blacklistedAddress = '0x61437b5BEa6F897b76E6B2F39e1332F1dA47712F';
+    const blacklistAddresses = [blacklistedAddress, getRandomEthereumAddress()];
+    const validator = makeIsNotBlacklistedEthAddressValidator(blacklistAddresses);
+
+    it('returns false when provided address value is found inside the blacklist', () => {
+      expect(validator(blacklistedAddress)).toBe(false);
+    });
+
+    it('returns true when provided address value is not found inside the blacklist', () => {
+      // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
+      const normalAddress = '0x0b789C16c313164DD27B8b751D8e7320c838BC47';
+      expect(validator(normalAddress)).toBe(true);
+    });
+    describe('when no blacklist is provided', () => {
+      const validator = makeIsNotBlacklistedEthAddressValidator();
+
+      it('checks against default blacklist', () => {
+        // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
+        const normalAddress = '0x0b789C16c313164DD27B8b751D8e7320c838BC47';
+        const blacklistedAddress = BLACKLIST_ADDRESSES[0];
+
+        expect(validator(normalAddress)).toBe(true);
+        expect(validator(blacklistedAddress)).toBe(false);
+      });
     });
   });
 });
