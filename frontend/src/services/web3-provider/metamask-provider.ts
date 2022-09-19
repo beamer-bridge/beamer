@@ -1,7 +1,7 @@
 import type { ExternalProvider } from '@ethersproject/providers';
 import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
-import { hexValue } from 'ethers/lib/utils';
+import { getAddress, hexValue } from 'ethers/lib/utils';
 
 import type { Eip1193Provider, ISigner } from '@/services/web3-provider';
 import { EthereumProvider } from '@/services/web3-provider';
@@ -34,7 +34,7 @@ export class MetaMaskProvider extends EthereumProvider implements ISigner {
     try {
       const accounts: string[] = await this.web3Provider.send('eth_requestAccounts', []);
       this.signer.value = this.web3Provider.getSigner(accounts[0]);
-      this.signerAddress.value = accounts[0];
+      this.signerAddress.value = getAddress(accounts[0]);
     } catch (error) {
       this.signer.value = undefined;
       this.signerAddress.value = undefined;

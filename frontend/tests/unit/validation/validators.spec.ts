@@ -1,5 +1,5 @@
-import { BLACKLIST_ADDRESSES } from '@/utils/addressBlacklist';
 import { TokenAmount } from '@/types/token-amount';
+import { BLACKLIST_ADDRESSES } from '@/utils/addressBlacklist';
 import {
   isUnsignedNumeric,
   isValidEthAddress,
