@@ -2,6 +2,7 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 import { createPinia, setActivePinia } from 'pinia';
 
 import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { BLACKLIST_ADDRESSES } from '@/utils/addressBlacklist';
 import { MockedMetaMaskProvider } from '~/utils/mocks/ethereum-provider';
 
 describe('configuration store', () => {
@@ -60,6 +61,30 @@ describe('configuration store', () => {
       ethereumProvider.$state.provider = new MockedMetaMaskProvider({ chainId: 5 });
 
       expect(ethereumProvider.chainId).toBe(5);
+    });
+  });
+  describe('isBlacklistedWallet getter', () => {
+    it('is false when signer is not defined', () => {
+      const ethereumProvider = useEthereumProvider();
+      ethereumProvider.$state.provider = undefined;
+
+      expect(ethereumProvider.isBlacklistedWallet).toBe(false);
+    });
+    it('is false when signer is defined but signer address is not blacklisted', () => {
+      const ethereumProvider = useEthereumProvider();
+      // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
+      const signerAddress = '0x0b789C16c313164DD27B8b751D8e7320c838BC47';
+      ethereumProvider.$state.provider = new MockedMetaMaskProvider({
+        signerAddress,
+      });
+      expect(ethereumProvider.isBlacklistedWallet).toBe(false);
+    });
+    it('is true when signer is defined and signer address is blacklisted', () => {
+      const ethereumProvider = useEthereumProvider();
+      ethereumProvider.$state.provider = new MockedMetaMaskProvider({
+        signerAddress: BLACKLIST_ADDRESSES[0],
+      });
+      expect(ethereumProvider.isBlacklistedWallet).toBe(true);
     });
   });
 });

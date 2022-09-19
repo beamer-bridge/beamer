@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { shallowRef } from 'vue';
 
 import type { IEthereumProvider } from '@/services/web3-provider';
+import { isAddressBlacklisted } from '@/utils/addressBlacklist';
 
 export const useEthereumProvider = defineStore('ethereumProvider', {
   state: () => ({
@@ -14,5 +15,12 @@ export const useEthereumProvider = defineStore('ethereumProvider', {
     signer: (state): JsonRpcSigner | undefined => state.provider?.signer.value,
     signerAddress: (state): string => state.provider?.signerAddress.value ?? '',
     chainId: (state): number => state.provider?.chainId.value ?? -1,
+    isBlacklistedWallet(): boolean {
+      if (!this.signerAddress) {
+        return false;
+      }
+
+      return isAddressBlacklisted(this.signerAddress);
+    },
   },
 });
