@@ -113,14 +113,14 @@ export async function getRequestIdentifier(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
-): Promise<UInt256> {
+): Promise<string> {
   const provider = new JsonRpcProvider(rpcUrl);
   const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const receipt = await provider.waitForTransaction(transactionHash, 1);
   if (receipt) {
     const event = contract.interface.parseLog(receipt.logs[0]);
     if (event) {
-      return new UInt256(event.args.requestId);
+      return event.args.requestId;
     }
   }
 
@@ -136,12 +136,10 @@ type RequestData = {
 export async function getRequestData(
   rpcUrl: string,
   requestManagerAddress: string,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
 ): Promise<RequestData> {
   const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
-  const request: RequestData | undefined = await contract.requests(
-    BigNumber.from(requestIdentifier.asString),
-  );
+  const request: RequestData | undefined = await contract.requests(requestIdentifier);
 
   if (request !== undefined) {
     return request;
@@ -158,7 +156,7 @@ type RequestExpiryInfo = {
 export async function getRequestExpiryInfo(
   rpcUrl: string,
   requestManagerAddress: string,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
   requestAccount: string,
 ): Promise<RequestExpiryInfo> {
   const { validUntil, activeClaims, withdrawInfo } = await getRequestData(
@@ -188,7 +186,7 @@ export async function getRequestExpiryInfo(
 export function failWhenRequestExpires(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
   requestAccount: string,
 ): Cancelable<void> {
   const provider = new JsonRpcProvider(rpcUrl);
@@ -203,10 +201,7 @@ export function failWhenRequestExpires(
     };
 
     const attachClaimWithdrawnListener = async () => {
-      const eventFilter = contract.filters.ClaimStakeWithdrawn(
-        undefined,
-        BigNumber.from(requestIdentifier.asString),
-      );
+      const eventFilter = contract.filters.ClaimStakeWithdrawn(undefined, requestIdentifier);
 
       contract.on(eventFilter, async () => {
         const { activeClaims } = await getRequestData(
@@ -275,11 +270,11 @@ export class RequestExpiredError extends Error {
 export async function withdrawRequest(
   signer: JsonRpcSigner,
   requestManagerAddress: EthereumAddress,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
 ): Promise<void> {
   const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
 
-  const requestParameter = [BigNumber.from(requestIdentifier.asString)];
+  const requestParameter = [requestIdentifier];
 
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.withdrawExpiredRequest(

@@ -20,6 +20,7 @@ import {
   generateTransferData,
   generateUInt256Data,
   getRandomEthereumAddress,
+  getRandomString,
 } from '~/utils/data_generators';
 import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 
@@ -279,7 +280,7 @@ describe('transfer', () => {
   describe('waitForFulfillment()', () => {
     const TRANSFER_DATA = generateTransferData({
       requestInformation: generateRequestInformationData({
-        identifier: generateUInt256Data('1'),
+        identifier: getRandomString(),
       }),
     });
 
@@ -297,37 +298,38 @@ describe('transfer', () => {
     });
 
     it('uses the correct parameters to wait for the request fill', async () => {
+      const identifier = getRandomString();
       const data = generateTransferData({
         targetChain: generateChain({
           rpcUrl: 'https://target.rpc',
           fillManagerAddress: '0xFillManager',
         }),
         requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
+          identifier,
           blockNumberOnTargetChain: 2,
         }),
       });
       const transfer = new TestTransfer(data);
 
       await transfer.waitForFulfillment();
-
       expect(fillManager.waitForFulfillment).toHaveBeenCalledTimes(1);
       expect(fillManager.waitForFulfillment).toHaveBeenLastCalledWith(
         'https://target.rpc',
         '0xFillManager',
-        new UInt256('1'),
+        identifier,
         2,
       );
     });
 
     it('uses the correct parameters to wait for the request expiration', async () => {
+      const identifier = getRandomString();
       const data = generateTransferData({
         sourceChain: generateChain({
           rpcUrl: 'https://source.rpc',
           requestManagerAddress: '0xRequestManager',
         }),
         requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
+          identifier,
           requestAccount: '0xRequestAccount',
         }),
       });
@@ -339,7 +341,7 @@ describe('transfer', () => {
       expect(requestManager.failWhenRequestExpires).toHaveBeenLastCalledWith(
         'https://source.rpc',
         '0xRequestManager',
-        new UInt256('1'),
+        identifier,
         '0xRequestAccount',
       );
     });
@@ -393,7 +395,7 @@ describe('transfer', () => {
       expired: true,
       withdrawn: false,
       requestInformation: generateRequestInformationData({
-        identifier: generateUInt256Data('1'),
+        identifier: getRandomString(),
       }),
     });
 
@@ -473,10 +475,11 @@ describe('transfer', () => {
     });
 
     it('uses the correct parameters to make the withdraw', async () => {
+      const identifier = getRandomString();
       const data = generateTransferData({
         expired: true,
         requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
+          identifier,
         }),
         sourceChain: generateChain({
           identifier: 1,
@@ -493,7 +496,7 @@ describe('transfer', () => {
       expect(requestManager.withdrawRequest).toHaveBeenLastCalledWith(
         signer,
         '0xRequestManager',
-        new UInt256('1'),
+        identifier,
       );
     });
   });
@@ -501,7 +504,7 @@ describe('transfer', () => {
   describe('checkAndUpdateWithdrawState()', () => {
     const TRANSFER_DATA = generateTransferData({
       requestInformation: generateRequestInformationData({
-        identifier: generateUInt256Data('1'),
+        identifier: getRandomString(),
       }),
     });
 
@@ -519,13 +522,14 @@ describe('transfer', () => {
     });
 
     it('uses the correct parameters to query the request data', async () => {
+      const identifier = getRandomString();
       const data = generateTransferData({
         sourceChain: generateChain({
           rpcUrl: 'https://source.rpc',
           requestManagerAddress: '0xRequestManager',
         }),
         requestInformation: generateRequestInformationData({
-          identifier: generateUInt256Data('1'),
+          identifier,
         }),
       });
       const transfer = new TestTransfer(data);
@@ -536,7 +540,7 @@ describe('transfer', () => {
       expect(requestManager.getRequestData).toHaveBeenLastCalledWith(
         'https://source.rpc',
         '0xRequestManager',
-        new UInt256('1'),
+        identifier,
       );
     });
 

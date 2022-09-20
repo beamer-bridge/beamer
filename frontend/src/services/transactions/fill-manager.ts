@@ -1,11 +1,10 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import type { EventFilter } from 'ethers';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 
 import FillManager from '@/assets/FillManager.json';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
-import type { UInt256 } from '@/types/uint-256';
 
 function getContract(rpcUrl: string, address: EthereumAddress): Contract {
   const provider = new JsonRpcProvider(rpcUrl);
@@ -50,24 +49,24 @@ export async function fetchUntilFirstMatchingEvent(
 export async function checkForPastFulfillmentEvent(
   rpcUrl: string,
   fillManagerAddress: string,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
   fromBlockNumber: number,
 ): Promise<boolean> {
   const provider = new JsonRpcProvider(rpcUrl);
   const contract = getContract(rpcUrl, fillManagerAddress);
   const currentBlockNumber = await provider.getBlockNumber();
-  const filter = contract.filters.RequestFilled(BigNumber.from(requestIdentifier.asString));
+  const filter = contract.filters.RequestFilled(requestIdentifier);
   return fetchUntilFirstMatchingEvent(contract, filter, fromBlockNumber, currentBlockNumber);
 }
 
 export function waitForFulfillment(
   rpcUrl: string,
   fillManagerAddress: string,
-  requestIdentifier: UInt256,
+  requestIdentifier: string,
   fromBlockNumber: number,
 ): Cancelable<void> {
   const contract = getContract(rpcUrl, fillManagerAddress);
-  const eventFilter = contract.filters.RequestFilled(BigNumber.from(requestIdentifier.asString));
+  const eventFilter = contract.filters.RequestFilled(requestIdentifier);
   const promise = new Promise<void>((resolve) => {
     const cleanUpAndResolve = () => {
       contract.removeAllListeners();
