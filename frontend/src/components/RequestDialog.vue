@@ -23,7 +23,7 @@
   <Teleport v-if="signer" to="#action-button-portal">
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <div v-if="DISCLAIMER_REQUIRED" class="relative">
-        <div class="absolute -top-11 -left-44 w-96 m-auto flex flex-row gap-5">
+        <div class="absolute -top-10 -left-44 w-96 m-auto flex flex-row gap-5">
           <!--  
             There seems to be a problem with tailwind and escaping the backslash in the TS variable. 
             For this reason the content rule is added separately here in the HTML.
