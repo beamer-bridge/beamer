@@ -9,6 +9,8 @@ digraph claim_state_machine {
     challenger_winning -> claimer_winning [label = challenge];
     ignored -> ignored [label = challenge];
 
+    withdrawn -> withdrawn [label = l1_invalidate];
+
     claimer_winning -> invalidated_l1_resolved [label = resolution];
     challenger_winning -> invalidated_l1_resolved [label = resolution];
 
