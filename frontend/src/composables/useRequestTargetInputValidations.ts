@@ -41,7 +41,11 @@ export const useRequestTargetInputValidations = (
       },
     };
 
-    if (options.selectedTargetChain.value && options.sourceChain?.value) {
+    if (
+      options.selectedTargetChain.value &&
+      options.sourceChain?.value &&
+      process.env.NODE_ENV !== 'development'
+    ) {
       const sourceChainTemporary = options.sourceChain.value.value;
       Object.assign(rules.selectedTargetChain, {
         notSameAsSourceChain: (chain: SelectorOption<Chain>) =>
