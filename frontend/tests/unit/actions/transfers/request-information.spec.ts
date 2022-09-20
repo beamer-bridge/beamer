@@ -1,10 +1,9 @@
 import { RequestInformation } from '@/actions/transfers/request-information';
-import { UInt256 } from '@/types/uint-256';
 import {
   generateRequestInformationData,
-  generateUInt256Data,
   getRandomEthereumAddress,
   getRandomNumber,
+  getRandomString,
   getRandomTransactionHash,
 } from '~/utils/data_generators';
 
@@ -13,17 +12,18 @@ describe('RequestInformation', () => {
     it('is possible when identifier is not already defined', () => {
       const data = generateRequestInformationData({ identifier: undefined });
       const information = new RequestInformation(data);
+      const identifier = getRandomString();
+      information.setIdentifier(identifier);
 
-      information.setIdentifier(new UInt256('1'));
-
-      expect(information.identifier).toMatchObject(new UInt256('1'));
+      expect(information.identifier).toEqual(identifier);
     });
 
     it('fails if identifier is alrady defined', () => {
-      const data = generateRequestInformationData({ identifier: '1' });
+      const identifier = getRandomString();
+      const data = generateRequestInformationData({ identifier });
       const information = new RequestInformation(data);
 
-      return expect(() => information.setIdentifier(new UInt256('2'))).toThrow(
+      return expect(() => information.setIdentifier(identifier)).toThrow(
         'Attempt to overwrite already existing identifier of a request!',
       );
     });
@@ -34,7 +34,7 @@ describe('RequestInformation', () => {
       const transactionHash = getRandomTransactionHash();
       const requestAccount = getRandomEthereumAddress();
       const blockNumberOnTargetChain = getRandomNumber();
-      const identifier = generateUInt256Data();
+      const identifier = getRandomString();
       const data = { transactionHash, requestAccount, blockNumberOnTargetChain, identifier };
       const information = new RequestInformation(data);
 
@@ -43,7 +43,7 @@ describe('RequestInformation', () => {
       expect(encodedData.transactionHash).toMatchObject(transactionHash);
       expect(encodedData.requestAccount).toMatchObject(requestAccount);
       expect(encodedData.blockNumberOnTargetChain).toMatchObject(blockNumberOnTargetChain);
-      expect(encodedData.identifier).toMatchObject(identifier);
+      expect(encodedData.identifier).toEqual(identifier);
     });
 
     it('can be used to re-instantiate token amount again', () => {

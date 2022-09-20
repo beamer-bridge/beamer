@@ -25,10 +25,7 @@
           </LazyWrapper>
           <LazyWrapper
             v-for="(transfer, groupTransferIndex) of group.transfers"
-            :key="
-              transfer.requestInformation?.identifier?.asString ??
-              `${groupIndex}-${groupTransferIndex}`
-            "
+            :key="transfer.requestInformation?.identifier ?? `${groupIndex}-${groupTransferIndex}`"
             :threshold="0.0"
             :root-element="listElement"
           >

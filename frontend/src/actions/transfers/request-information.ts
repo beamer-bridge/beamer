@@ -1,26 +1,24 @@
 import type { EthereumAddress, TransactionHash } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
-import type { UInt256Data } from '@/types/uint-256';
-import { UInt256 } from '@/types/uint-256';
 
 export class RequestInformation implements Encodable<RequestInformationData> {
   readonly transactionHash: TransactionHash;
   readonly requestAccount: EthereumAddress;
   readonly blockNumberOnTargetChain: number;
-  private _identifier?: UInt256;
+  private _identifier?: string;
 
   constructor(data: RequestInformationData) {
     this.transactionHash = data.transactionHash;
     this.requestAccount = data.requestAccount;
     this.blockNumberOnTargetChain = data.blockNumberOnTargetChain ?? 0;
-    this._identifier = data.identifier ? new UInt256(data.identifier) : undefined;
+    this._identifier = data.identifier ?? undefined;
   }
 
-  get identifier(): UInt256 | undefined {
+  get identifier(): string | undefined {
     return this._identifier;
   }
 
-  public setIdentifier(value: UInt256): void {
+  public setIdentifier(value: string): void {
     if (this._identifier === undefined) {
       this._identifier = value;
     } else {
@@ -33,7 +31,7 @@ export class RequestInformation implements Encodable<RequestInformationData> {
       transactionHash: this.transactionHash,
       requestAccount: this.requestAccount,
       blockNumberOnTargetChain: this.blockNumberOnTargetChain,
-      identifier: this.identifier?.encode(),
+      identifier: this.identifier,
     };
   }
 }
@@ -42,5 +40,5 @@ export type RequestInformationData = {
   transactionHash: TransactionHash;
   requestAccount: EthereumAddress;
   blockNumberOnTargetChain?: number;
-  identifier?: UInt256Data;
+  identifier?: string;
 };
