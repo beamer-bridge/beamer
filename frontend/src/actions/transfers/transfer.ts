@@ -20,7 +20,6 @@ import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
-import type { FulfillmentInformation } from './fulfillment-information';
 import type { RequestInformationData } from './request-information';
 import { RequestInformation } from './request-information';
 
@@ -79,7 +78,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly fees: TokenAmount;
   readonly date: Date;
   private _requestInformation?: RequestInformation;
-  private _fulfillmentInformation?: FulfillmentInformation;
   private _expired: boolean;
   private _withdrawn: boolean;
 
@@ -97,7 +95,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this._requestInformation = data.requestInformation
       ? new RequestInformation(data.requestInformation)
       : undefined;
-    this._fulfillmentInformation = data.fulfillmentInformation;
     this._expired = data.expired ?? false;
     this._withdrawn = data.withdrawn ?? false;
   }
@@ -131,10 +128,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
   get requestInformation(): RequestInformation | undefined {
     return this._requestInformation;
-  }
-
-  get fulfillmentInformation(): FulfillmentInformation | undefined {
-    return this._fulfillmentInformation;
   }
 
   get expired(): boolean {
@@ -218,7 +211,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       date: this.date.getTime(),
       steps: this.steps.map((step) => step.encode()),
       requestInformation: this._requestInformation?.encode(),
-      fulfillmentInformation: this.fulfillmentInformation,
       expired: this._expired,
       withdrawn: this._withdrawn,
     };
@@ -302,7 +294,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
     try {
       await Promise.race([fulfillmentPromise, expirationPromise]);
-      // TODO: set this.fulfillmentInformation
     } catch (exception: unknown) {
       if (exception instanceof RequestExpiredError) {
         this._expired = true;
@@ -343,7 +334,6 @@ export type TransferData = {
   date: number;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
-  fulfillmentInformation?: FulfillmentInformation;
   expired?: boolean;
   withdrawn?: boolean;
 };
