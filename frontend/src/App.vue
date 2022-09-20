@@ -1,5 +1,9 @@
 <template>
-  <img class="w-[30rem] absolute top-12 left-12" src="@/assets/images/logo.svg" alt="logo" />
+  <img
+    class="w-[30rem] hidden md:block absolute top-12 left-12"
+    src="@/assets/images/logo.svg"
+    alt="logo"
+  />
   <div v-if="configurationLoaded">
     <router-view v-if="!isBlacklistedWallet" class="z-10" />
     <div
