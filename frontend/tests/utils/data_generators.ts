@@ -3,11 +3,7 @@ import { DeploymentInfo } from 'config/deployment';
 import { TokenMetadata } from 'config/tokens/token';
 
 import type { StepData } from '@/actions/steps';
-import type {
-  FulfillmentInformation,
-  RequestInformationData,
-  TransferData,
-} from '@/actions/transfers';
+import type { RequestInformationData, TransferData } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
@@ -119,16 +115,6 @@ export function generateRequestInformationData(
     transactionHash: getRandomTransactionHash(),
     requestAccount: getRandomEthereumAddress(),
     ...partialRequestInformationData,
-  };
-}
-
-export function generateFulfillmentInformation(
-  partialFulfillmentInformation?: Partial<FulfillmentInformation>,
-): FulfillmentInformation {
-  return {
-    transactionHash: getRandomTransactionHash(),
-    fillerAccount: getRandomEthereumAddress(),
-    ...partialFulfillmentInformation,
   };
 }
 

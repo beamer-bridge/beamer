@@ -12,7 +12,6 @@ import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 import {
   generateChain,
-  generateFulfillmentInformation,
   generateRequestInformationData,
   generateStepData,
   generateToken,
@@ -576,7 +575,6 @@ describe('transfer', () => {
       const fees = generateTokenAmountData();
       const date = 1652688517448;
       const requestInformation = generateRequestInformationData();
-      const fulfillmentInformation = generateFulfillmentInformation();
       const expired = true;
       const withdrawn = true;
       const steps = [generateStepData()];
@@ -590,7 +588,6 @@ describe('transfer', () => {
         fees,
         date,
         requestInformation,
-        fulfillmentInformation,
         expired,
         withdrawn,
         steps,
@@ -608,7 +605,6 @@ describe('transfer', () => {
       expect(encodedData.fees).toMatchObject(fees);
       expect(encodedData.date).toMatchObject(date);
       expect(encodedData.requestInformation).toMatchObject(requestInformation);
-      expect(encodedData.fulfillmentInformation).toMatchObject(fulfillmentInformation);
       expect(encodedData.expired).toBe(true);
       expect(encodedData.withdrawn).toBe(true);
       expect(encodedData.steps).toMatchObject(steps);
