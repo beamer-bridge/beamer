@@ -36,7 +36,7 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 
-const enableFeedback = false;
+const enableFeedback = true;
 
 const configuration = useConfiguration();
 const { configurationLoaded } = useLoadConfiguration(configuration.setChainConfiguration);
