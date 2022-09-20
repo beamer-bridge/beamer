@@ -1,7 +1,7 @@
 <template>
   <img class="w-[30rem] absolute top-12 left-12" src="@/assets/images/logo.svg" alt="logo" />
   <div v-if="configurationLoaded">
-    <router-view v-if="!isBlacklistedWallet" class="flex-auto z-10" />
+    <router-view v-if="!isBlacklistedWallet" class="z-10" />
     <div
       v-else
       class="text-red h-[90vh] w-full flex justify-center items-center text-4xl text-center px-4"
@@ -9,7 +9,7 @@
       Your address is on the blocked list.
     </div>
   </div>
-  <div v-else class="flex-auto flex flex-col items-center justify-center">
+  <div v-else class="flex flex-grow items-center justify-center">
     <div class="w-48 h-48">
       <spinner size="48"></spinner>
     </div>
