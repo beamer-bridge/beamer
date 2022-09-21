@@ -238,16 +238,16 @@ rollup B on L1. This proof is a call to a ``resolver`` contract on L1 and contai
 - Bob's address
 
 To trigger L1 resolution is to apply this call on L1 using the data from the rollup B's outbox. This will forward the
-information from the resolver to the inbox of rollup A in the form of a call to the ``resolution registry``.
-This registry will store in its state a mapping from ``fill hash`` to ``Bob``, allowing the ``request manager``
-to verify that a claim to fill a certain request with a certain fill ID is honest. Rollup A's chain ID is necessary for
-the ``resolver`` contract to know to which ``resolution registry`` to forward the proof to. Rollup B's chain ID is used to
+information from the resolver to the inbox of rollup A in the form of a call to the ``request manager``.
+This request manager will store ``Bob`` as the rightful filler and the ``fill ID`` to the request object. This marks any
+claim created by Bob with the corresponding ``fill ID`` to be valid. The  Rollup A's chain ID is necessary for
+the ``resolver`` contract to know to which ``request manager`` to forward the proof to. Rollup B's chain ID is used to
 restrict the call to authenticated ``fill manager`` and ``cross domain messenger`` contracts.
 
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call ``withdraw`` on
-the ``request manager`` on rollup A. This will compute a ``fill hash`` and query the ``resolution registry`` for the filler
-address corresponding to ``fill hash``, which will return Bob's address. Bob will immediately be considered the winner of
-the challenge and receive the challengers' stake, the tokens locked by Alice, and the fees paid by Alice for the service.
+the ``request manager`` on rollup A. Bob's address is stored in the request object, thus he will immediately be considered
+the winner of the challenge and receive the challengers' stake, the tokens locked by Alice, and the fees paid by Alice for
+the service.
 
 .. mermaid::
     :caption: `L1 Resolution`
@@ -368,12 +368,12 @@ It then submits a proof to the outbox of rollup B indicating that the fill hash 
 cannot be mapped to the fill hash.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
-message will store a flag in the ``resolution registry`` stating that the ``fill hash`` is invalid. This invalidates any
-claim with the corresponding ``fill hash``.
+message will store a flag in the ``request manager`` stating that the ``fill ID`` is invalid for the given request. This
+invalidates any claim with the corresponding ``fill ID``.
 
 To make sure the proof arrives in time on rollup A, Bob will need to call the ``fill manager`` as soon as he notices a
-false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call to be able to send the
-proof to the resolution registry, while the challenge period is defined to be
+false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call is able to be executed
+which then sends the proof to the request manager.  The challenge period is defined to be
 ``finality period of rollup B + challenge period extension``.
 
 In the case where someone challenges Charles on the false claim at the same time as Bob sends the transaction for the
