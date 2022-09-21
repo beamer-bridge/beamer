@@ -22,7 +22,7 @@ For example, the ``L1Messenger`` contract may only be called by the ``Resolver``
 In this way, a chain of trust is established to ensure that L1 resolution is safe.
 The complete trusted call chain is::
 
-  FillManager -> L2Messenger -> Resolver -> L1Messenger -> ResolutionRegistry
+  FillManager -> L2Messenger -> Resolver -> L1Messenger -> RequestManager
 
 The ``Resolver`` contract is deployed on L1 and is used by all L2 chains.
 
@@ -48,8 +48,7 @@ message transfer between L1 and L2.
    ======================= ===========
    ``RequestManager``          L2        
    ``FillManager``             L2        
-   ``Resolver``                L1        
-   ``ResolutionRegistry``      L2        
+   ``Resolver``                L1
    ======================= ===========
 
 .. table:: Interface contracts (chain‑dependent)
