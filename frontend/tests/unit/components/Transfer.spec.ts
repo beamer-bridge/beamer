@@ -191,7 +191,7 @@ describe('Transfer.vue', () => {
 
       Object.defineProperty(ethereumProviderComposable, 'useEthereumProvider', {
         value: vi.fn().mockReturnValue({
-          provider,
+          provider: ref(provider),
         }),
       });
 
