@@ -130,19 +130,26 @@ export async function getRequestIdentifier(
 type RequestData = {
   validUntil: BigNumber;
   activeClaims: BigNumber;
-  withdrawInfo: { filler: EthereumAddress };
+  withdrawClaimId: BigNumber;
+};
+
+type RequestDataDerivedProperties = {
+  withdrawn: boolean;
 };
 
 export async function getRequestData(
   rpcUrl: string,
   requestManagerAddress: string,
   requestIdentifier: string,
-): Promise<RequestData> {
+): Promise<RequestData & RequestDataDerivedProperties> {
   const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const request: RequestData | undefined = await contract.requests(requestIdentifier);
 
   if (request !== undefined) {
-    return request;
+    return {
+      ...request,
+      withdrawn: !request.withdrawClaimId.isZero(),
+    };
   } else {
     throw new Error('No request known for this identifier!');
   }
@@ -150,16 +157,15 @@ export async function getRequestData(
 type RequestExpiryInfo = {
   validityExpired: boolean;
   noActiveClaims: boolean;
-  notWithdrawnBySomeoneElse: boolean;
+  withdrawn: boolean;
   timeToExpiredMillis: number;
 };
 export async function getRequestExpiryInfo(
   rpcUrl: string,
   requestManagerAddress: string,
   requestIdentifier: string,
-  requestAccount: string,
 ): Promise<RequestExpiryInfo> {
-  const { validUntil, activeClaims, withdrawInfo } = await getRequestData(
+  const { validUntil, activeClaims, withdrawn } = await getRequestData(
     rpcUrl,
     requestManagerAddress,
     requestIdentifier,
@@ -168,9 +174,6 @@ export async function getRequestExpiryInfo(
   const block = await provider.getBlock('latest');
   const validityExpired = validUntil.lt(block.timestamp);
   const noActiveClaims = activeClaims.eq(0);
-  const notWithdrawnBySomeoneElse =
-    withdrawInfo.filler.toLowerCase() == '0x0000000000000000000000000000000000000000' ||
-    withdrawInfo.filler.toLowerCase() == requestAccount.toLowerCase();
 
   const timeNow = BigNumber.from(Date.now());
   const timeToExpiredMillis = Math.max(validUntil.mul(1000).sub(timeNow).toNumber(), 0);
@@ -178,7 +181,7 @@ export async function getRequestExpiryInfo(
   return {
     validityExpired,
     noActiveClaims,
-    notWithdrawnBySomeoneElse,
+    withdrawn,
     timeToExpiredMillis,
   };
 }
@@ -187,7 +190,6 @@ export function failWhenRequestExpires(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
-  requestAccount: string,
 ): Cancelable<void> {
   const provider = new JsonRpcProvider(rpcUrl);
   const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
@@ -220,7 +222,6 @@ export function failWhenRequestExpires(
         rpcUrl,
         requestManagerAddress,
         requestIdentifier,
-        requestAccount,
       );
 
       // If not expired by sequencer clock
@@ -235,7 +236,7 @@ export function failWhenRequestExpires(
           timeout = setTimeout(configureListeners, requestExpiryInfo.timeToExpiredMillis);
         }
       } else {
-        if (!requestExpiryInfo.notWithdrawnBySomeoneElse) {
+        if (requestExpiryInfo.withdrawn) {
           return cleanUpAndReject();
         }
         if (!requestExpiryInfo.noActiveClaims) {

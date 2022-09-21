@@ -289,7 +289,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.sourceChain.rpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
-      this._requestInformation.requestAccount,
     );
 
     try {
@@ -312,14 +311,13 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Can not check withdraw state without request identfier!');
     }
 
-    const { withdrawInfo } = await getRequestData(
+    const { withdrawn } = await getRequestData(
       this.sourceChain.rpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );
 
-    const filler = withdrawInfo.filler.toLowerCase();
-    this._withdrawn = filler != '0x0000000000000000000000000000000000000000';
+    this._withdrawn = withdrawn;
   }
 }
 
