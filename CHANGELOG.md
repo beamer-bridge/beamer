@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.7 (2022-09-21)
+
+* agent: allow more transitions in the request and claim state machines
+
 ## v0.1.6 (2022-09-19)
 
 * frontend: added onboarding on desktop devices when MetaMask is not installed
