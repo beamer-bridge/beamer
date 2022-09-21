@@ -329,7 +329,6 @@ describe('transfer', () => {
         }),
         requestInformation: generateRequestInformationData({
           identifier,
-          requestAccount: '0xRequestAccount',
         }),
       });
       const transfer = new TestTransfer(data);
@@ -341,7 +340,6 @@ describe('transfer', () => {
         'https://source.rpc',
         '0xRequestManager',
         identifier,
-        '0xRequestAccount',
       );
     });
 
@@ -542,25 +540,16 @@ describe('transfer', () => {
         identifier,
       );
     });
-
-    it('sets withdraw state to false if filler is zero', async () => {
-      const withdrawInfo = { filler: '0x0000000000000000000000000000000000000000' };
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawInfo }));
-      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: true });
-
-      await transfer.checkAndUpdateWithdrawState();
-
-      expect(transfer.withdrawn).toBeFalsy();
-    });
-
-    it('sets withdraw state to true if deposit receiver is zero', async () => {
-      const withdrawInfo = { filler: '0xDepositReceiver' };
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawInfo }));
+    it('updates withdraw state based on contract state', async () => {
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawn: true }));
       const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
 
       await transfer.checkAndUpdateWithdrawState();
-
       expect(transfer.withdrawn).toBeTruthy();
+
+      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawn: false }));
+      await transfer.checkAndUpdateWithdrawState();
+      expect(transfer.withdrawn).toBeFalsy();
     });
   });
 
