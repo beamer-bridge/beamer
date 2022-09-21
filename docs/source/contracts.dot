@@ -17,7 +17,6 @@ digraph "Beamer contracts" {
         RequestManager [label="RequestManager"]
         FillManager [label="FillManager"]
         L2Messenger [label="L2Messenger", color="purple"]
-        ResolutionRegistry [label="ResolutionRegistry", rank=2]
     }
     
     {
@@ -31,14 +30,13 @@ digraph "Beamer contracts" {
         # restricted calls crossing the L1/L2 boundary
         edge [color=red, style=dashed]
         L2Messenger -> Resolver [headlabel="resolve()"]
-        L1Messenger -> ResolutionRegistry [headlabel="resolveRequest()"]
+        L1Messenger -> RequestManager [headlabel="resolveRequest()"]
     }
 
     {
         # unrestricted calls
         Resolver -> L1Messenger [headlabel="originalSender()"]
-        ResolutionRegistry -> L2Messenger [headlabel="originalSender()"]
-        RequestManager -> ResolutionRegistry [headlabel="fillers()"]
+        RequestManager -> L2Messenger [headlabel="originalSender()"]
     }
     
     l1dummy -> l2dummy [style=invis]
