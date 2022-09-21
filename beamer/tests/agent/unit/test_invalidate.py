@@ -1,5 +1,4 @@
 import time
-from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -211,19 +210,18 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
 
 @pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
 def test_handle_generate_l1_invalidation_event(timestamp):
-    context, config = make_context()
+    context, _ = make_context()
 
     request = make_request()
     context.requests.add(request.id, request)
 
-    claim = make_claim_challenged(
+    claim = make_claim_unchallenged(
         request=request,
-        claimer=config.account.address,
     )
     claim.start_challenge(make_tx_hash(), timestamp)
     context.claims.add(claim.id, claim)
 
-    event = deepcopy(claim.latest_claim_made)
+    event = make_claim_challenged(request, claim_id=claim.id).latest_claim_made
     flag, events = process_event(event, context)
 
     assert flag
