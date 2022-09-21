@@ -39,8 +39,9 @@ The directory typically looks like this::
 		├── deployment.json
 		├── FillManager.json
 		├── MintableToken.json
+		├── OptimismL1Messenger.json
+		├── OptimismL2Messenger.json
 		├── RequestManager.json
-		├── ResolutionRegistry.json
 		└── Resolver.json
 
 The above shows contract `deployment on Rinkeby`_.
