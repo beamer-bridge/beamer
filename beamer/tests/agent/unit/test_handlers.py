@@ -1,18 +1,12 @@
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from hexbytes import HexBytes
 from web3.types import ChecksumAddress, Wei
 
 from beamer.chain import claim_request, process_claims, process_requests
-from beamer.events import (
-    ClaimMade,
-    InitiateL1ResolutionEvent,
-    RequestCreated,
-    RequestFilled,
-    RequestResolved,
-)
+from beamer.events import InitiateL1ResolutionEvent, RequestResolved
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
@@ -20,20 +14,17 @@ from beamer.tests.agent.unit.utils import (
     BLOCK_NUMBER,
     CLAIM_ID,
     CLAIMER_STAKE,
-    NULL_ADDRESS,
     REQUEST_ID,
-    SOURCE_CHAIN_ID,
     TARGET_CHAIN_ID,
-    TERMINATION,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
     make_context,
     make_request,
 )
-from beamer.tests.agent.utils import make_address, make_tx_hash
+from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-from beamer.typing import FillId, Nonce, Termination, TokenAmount
+from beamer.typing import FillId, Termination
 
 
 def test_skip_not_self_filled():
