@@ -15,7 +15,7 @@ Routing
 
 The proof of request fulfillment will always be written by the ``FillManager``
 contract on the target rollup and, in case a L1 resolution is triggered, must be
-submitted to the ``ResolutionRegistry`` contract on the source rollup.
+submitted to the ``RequestManager`` contract on the source rollup.
 
 This process is started by the liquidity provider who fills a request. This
 writes a proof on that rollup. This proof includes information about the
@@ -25,11 +25,11 @@ on L1.
 
 The central role for routing this information correctly has the ``Resolver``
 contract, which is deployed on the shared L1 chain of both rollups. The resolver
-holds a mapping of chain ids to the contract address of the ``ResolutionRegistry``
+holds a mapping of chain ids to the contract address of the ``RequestManager``
 on that chain.
 
 When a proof transaction sent by the target rollup is executed, the resolver can
-find the correct registry in the mapping and forward the information about the
+find the correct request manager in the mapping and forward the information about the
 filler. This again happens in form of a transaction, that can be executed on the
 source rollup.
 
@@ -46,4 +46,4 @@ of information.
 
 * On the target rollup, the ``Messenger`` must only be callable by the ``FillManager`` contract.
 * On L1, the resolver must only accept messages send by a whitelisted L2 messenger for the given chain id.
-* On the source rollup the registry must only accept transactions that have been sent by the L1 messenger.
+* On the source rollup the request manager must only accept transactions that have been sent by the L1 messenger.
