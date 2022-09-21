@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
@@ -85,7 +86,7 @@ const statusBackgroundColorClass = computed(() => {
   return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-lime' : 'bg-grey';
 });
 
-const { provider } = useEthereumProvider();
+const { provider } = storeToRefs(useEthereumProvider());
 const {
   active: withdrawTransferActive,
   error: withdrawTransferError,
@@ -99,7 +100,7 @@ const withdrawProperties = computed(() => ({
 }));
 
 function withdrawTransfer() {
-  runWithdrawTransfer(props.transfer, provider);
+  runWithdrawTransfer(props.transfer, provider.value);
 }
 
 watch(
