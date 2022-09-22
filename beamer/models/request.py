@@ -37,8 +37,10 @@ class Request(StateMachine):
         self.fill_tx: Optional[HexBytes] = None
         self.fill_timestamp: Optional[Timestamp] = None
         self.fill_id: Optional[FillId] = None
+        self.invalid_fill_ids: dict[FillId, tuple[HexBytes, int]] = {}
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
         self.l1_resolution_fill_id: Optional[FillId] = None
+        self.l1_resolution_invalid_fill_ids: set[FillId] = set()
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
