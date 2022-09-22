@@ -254,18 +254,21 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         # (e.g. an invalid token pair).
         return True, None
 
-    # If we receive a `ClaimMade` event, move forward in the state machine
-    if event.claimer == context.address:
-        request.try_to_claim()
+    # If we haven't seen the fill event for own claim, don't process
+    if request.is_pending and event.claimer == context.address:
+        return False, None
 
     claim = context.claims.get(event.claim_id)
 
     if claim is None:
+        if event.last_challenger != ADDRESS_ZERO:
+            return False, None
+
         challenge_back_off_timestamp = int(time.time())
         # if fill event is not fetched yet, wait `_fill_wait_time`
         # to give the target chain time to sync before challenging
         # additionally, if we are already in the challenge game, no need to back off
-        if request.filler is None and event.challenger_stake_total == 0:
+        if request.filler is None:
             challenge_back_off_timestamp += context.config.fill_wait_time
         claim = Claim(event, challenge_back_off_timestamp)
         context.claims.add(claim.id, claim)
