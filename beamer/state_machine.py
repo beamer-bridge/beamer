@@ -340,6 +340,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
     if request is not None:
         try:
             request.l1_resolve(event.filler, event.fill_id)
+            request.invalid_fill_ids.pop(event.fill_id, None)
         except TransitionNotAllowed:
             return False, None
     return True, None
@@ -347,10 +348,18 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 def _handle_fill_invalidated(event: FillInvalidated, context: Context) -> HandlerResult:
     fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
-    claims = _find_claims(context, event.request_id, event.fill_id)
+    timestamp = fill_block.timestamp  # type: ignore
+    request = context.requests.get(event.request_id)
 
+    if request is not None:
+        # If we get more invalidation events for the same fill ID, just ignore them.
+        if event.fill_id in request.invalid_fill_ids:
+            return True, None
+        request.invalid_fill_ids[event.fill_id] = event.tx_hash, timestamp
+
+    claims = _find_claims(context, event.request_id, event.fill_id)
     for claim in claims:
-        claim.start_challenge(event.tx_hash, fill_block.timestamp)  # type: ignore
+        claim.start_challenge(event.tx_hash, timestamp)
 
     return True, None
 
@@ -361,6 +370,9 @@ def _handle_fill_invalidated_resolved(
     claims = _find_claims(context, event.request_id, event.fill_id)
     for claim in claims:
         claim.l1_invalidate()
+        request = context.requests.get(claim.request_id)
+        assert request is not None
+        request.l1_resolution_invalid_fill_ids.add(claim.fill_id)
 
     return True, None
 
