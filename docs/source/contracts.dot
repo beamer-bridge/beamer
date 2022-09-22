@@ -35,8 +35,8 @@ digraph "Beamer contracts" {
 
     {
         # unrestricted calls
-        Resolver -> L1Messenger [headlabel="originalSender()"]
-        RequestManager -> L2Messenger [headlabel="originalSender()"]
+        Resolver -> L1Messenger [headlabel="callAllowed()"]
+        RequestManager -> L2Messenger [headlabel="callAllowed()"]
     }
     
     l1dummy -> l2dummy [style=invis]
