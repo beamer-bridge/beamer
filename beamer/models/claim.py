@@ -44,6 +44,7 @@ class Claim(StateMachine):
         started.to(claimer_winning)
         | claimer_winning.to(claimer_winning)
         | challenger_winning.to(challenger_winning)
+        | invalidated_l1_resolved.to(invalidated_l1_resolved)
         | withdrawn.to(withdrawn)
     )
     challenge = (
