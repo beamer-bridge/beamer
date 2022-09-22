@@ -50,6 +50,7 @@ class Claim(StateMachine):
         claimer_winning.to(challenger_winning)
         | challenger_winning.to(claimer_winning)
         | ignored.to(ignored)
+        | invalidated_l1_resolved.to(invalidated_l1_resolved)
     )
     l1_invalidate = (
         claimer_winning.to(invalidated_l1_resolved)
