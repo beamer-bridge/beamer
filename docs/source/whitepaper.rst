@@ -105,7 +105,7 @@ that can later serve to prove that the request was properly filled.
                         target token address, recipient address, amount, nonce)
 
 When filling the request, a ``fill ID`` is also computed, that serves to identify a fill. Detailed information on the
-``fill ID`` can be found in section :ref:``fill_id``.
+``fill ID`` can be found in section :ref:`fill_id`.
 
 After filling the request, Bob will immediately claim the refund on rollup A. In doing so, he submits the ``request ID``,
 and ``fill ID`` to rollup A. This initiates a ``claim period`` during which the validity of the fill by
@@ -242,8 +242,8 @@ To trigger L1 resolution is to apply this call on L1 using the data from the rol
 information from the resolver to the inbox of rollup A in the form of a call to the ``request manager``.
 This request manager will store ``Bob`` as the rightful filler and the ``fill ID`` to the request object. This marks any
 claim created by Bob with the corresponding ``fill ID`` to be valid. The  Rollup A's chain ID is necessary for
-the ``resolver`` contract to know to which ``request manager`` to forward the proof to. Rollup B's chain ID is used to
-restrict the call to authenticated ``fill manager`` and ``cross domain messenger`` contracts.
+the ``Resolver`` contract to know to which ``request manager`` to forward the proof to. Rollup B's chain ID is used to
+restrict the call to the authenticated messenger contract on rollup B.
 
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call ``withdraw`` on
 the ``request manager`` on rollup A. Bob's address is stored in the request object, thus he will immediately be considered
@@ -368,10 +368,10 @@ It then submits a proof to the outbox of rollup B indicating that the fill ID is
 that the request ID cannot be mapped to the fill ID.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
-message will store a flag in the ``request manager`` stating that the fill ID is invalid for the given request. This
+message will store a flag in the request manager stating that the fill ID is invalid for the given request. This
 invalidates any claim with the corresponding fill ID.
 
-To make sure the proof arrives in time on rollup A, Bob will need to call the ``fill manager`` as soon as he notices a
+To make sure the proof arrives in time on rollup A, Bob will need to call the fill manager as soon as he notices a
 false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call is able to be executed
 which then sends the proof to the request manager.  The challenge period is defined to be
 ``finality period of rollup B + challenge period extension``.
@@ -435,7 +435,7 @@ The current implementation of the agent follows this strategy:
 Protocol parameters
 -------------------
 
-The choice of different protocol parameters such as ``claim period`` or ``claim stake`` is explained in :ref:``contract_parameters``.
+The choice of different protocol parameters such as ``claim period`` or ``claim stake`` is explained in :ref:`contract_parameters`.
 
 One important decision regarding parameters is not to wait for the inclusion period of rollups to consider an event as successful.
 When liquidity providers fill a user request, the event regarding the successful fill is sent by the target rollup sequencer.
