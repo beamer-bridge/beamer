@@ -45,6 +45,11 @@ export function useWallet(
     }
   }
 
+  async function disconnectWallet() {
+    connectedWallet.value = undefined;
+    provider.value = undefined;
+  }
+
   const metamaskTask = useAsynchronousTask(connectMetaMask);
   const walletConnectTask = useAsynchronousTask(connectWalletConnect);
 
@@ -54,5 +59,6 @@ export function useWallet(
     connectWalletConnect: walletConnectTask.run,
     connectingWalletConnect: walletConnectTask.active,
     reconnectToWallet,
+    disconnectWallet,
   };
 }

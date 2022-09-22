@@ -130,4 +130,21 @@ describe('useWallets', () => {
       expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
     });
   });
+
+  describe('disconnectWallet()', () => {
+    it('disconnects from the currently connected wallet', async () => {
+      const provider = ref(undefined);
+      const connectedWallet = ref(undefined);
+      const { connectMetaMask, disconnectWallet } = useWallet(provider, connectedWallet, ref({}));
+
+      // Since we dont have a proper mocking strategy implemented for EthereumProvider we have to circumvent the issue like this
+      await connectMetaMask();
+      expect(provider.value).not.toBeUndefined();
+      expect(connectedWallet.value).not.toBeUndefined();
+
+      disconnectWallet();
+      expect(provider.value).toBeUndefined();
+      expect(connectedWallet.value).toBeUndefined();
+    });
+  });
 });
