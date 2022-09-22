@@ -1,10 +1,6 @@
 <template>
   <div class="home flex justify-center">
     <div class="w-[40rem] flex flex-col xl:justify-center xl:items-center">
-      <div class="text-center text-red p-2 text-lg h-12">
-        {{ errorMessage }}
-      </div>
-
       <WalletConnectionDetails></WalletConnectionDetails>
 
       <div class="relative mb-11 mt-3 w-full h-[62rem]">
@@ -103,15 +99,6 @@ watch(
   },
   { immediate: true },
 );
-
-const { chainId } = storeToRefs(ethereumProvider);
-const errorMessage = computed(() => {
-  if (chainId.value > 0 && !configuration.isSupportedChain(chainId.value)) {
-    return 'Connected chain is not supported';
-  } else {
-    return undefined;
-  }
-});
 
 const { provider } = storeToRefs(ethereumProvider);
 const { rpcUrls } = storeToRefs(configuration);

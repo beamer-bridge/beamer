@@ -21,6 +21,12 @@ function createWrapper() {
 }
 
 describe('WalletConnectionDetails.vue', () => {
+  it('renders connection error component', () => {
+    const wrapper = createWrapper();
+    const connectionError = wrapper.find('[data-test="error-component"]');
+    expect(connectionError.exists()).toBe(true);
+  });
+
   describe('when wallet provider is connected', () => {
     beforeEach(() => {
       Object.defineProperty(useEthereumProviderComposable, 'useEthereumProvider', {
