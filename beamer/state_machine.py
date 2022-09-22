@@ -271,6 +271,9 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         if request.filler is None:
             challenge_back_off_timestamp += context.config.fill_wait_time
         claim = Claim(event, challenge_back_off_timestamp)
+        if claim.fill_id in request.invalid_fill_ids:
+            tx_hash, timestamp = request.invalid_fill_ids[claim.fill_id]
+            claim.start_challenge(tx_hash, timestamp)
         context.claims.add(claim.id, claim)
 
         return True, None
