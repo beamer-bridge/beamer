@@ -259,6 +259,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         request.try_to_claim()
 
     claim = context.claims.get(event.claim_id)
+
     if claim is None:
         challenge_back_off_timestamp = int(time.time())
         # if fill event is not fetched yet, wait `_fill_wait_time`
@@ -273,6 +274,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
 
     # Don't process challenge events before there was a chance to invalidate the claim
     if claim.is_started:
+        claim.unprocessed_claim_made_events.add(event)
         return False, None
 
     events: list[Event] = []
@@ -289,7 +291,10 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     try:
         claim.challenge(event)
     except TransitionNotAllowed:
+        claim.unprocessed_claim_made_events.add(event)
         return False, events
+
+    claim.unprocessed_claim_made_events.discard(event)
 
     if _proof_ready_for_l1_relay(request):
         events.append(
