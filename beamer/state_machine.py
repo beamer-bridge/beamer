@@ -315,10 +315,21 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
 def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) -> HandlerResult:
     claim = context.claims.get(event.claim_id)
 
-    # Check if claim exists, it could happen that we ignored the request because of an
-    # invalid token pair, and therefore also did not create the claim
-    if claim is None:
+    # Check if request exists, it could happen that we ignored it because of an
+    # invalid token pair, and therefore also did not create any claims to it
+    if context.requests.get(event.request_id) is None:
         return True, None
+
+    # It can happen that ClaimMade events have not been processed yet because of a missing
+    # preceding event (i.e. if the agent filled the request, we need to first process the
+    # corresponding RequestFilled event.
+    if claim is None or claim.unprocessed_claim_made_events:
+        log.debug(
+            "Unprocessed ClaimMade events in event loop. Cannot withdraw",
+            withdraw_event=event,
+            claim_id=event.claim_id,
+        )
+        return False, None
 
     claim.withdraw()
     return True, None
