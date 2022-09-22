@@ -274,6 +274,9 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         if claim.fill_id in request.invalid_fill_ids:
             tx_hash, timestamp = request.invalid_fill_ids[claim.fill_id]
             claim.start_challenge(tx_hash, timestamp)
+        if claim.fill_id in request.l1_resolution_invalid_fill_ids:
+            claim.start_challenge()
+            claim.l1_invalidate()
         context.claims.add(claim.id, claim)
 
         return True, None
