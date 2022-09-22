@@ -4,8 +4,7 @@ import Tooltip from '@/components/layout/Tooltip.vue';
 
 async function createWrapper(options?: {
   hint?: string;
-  position?: string;
-  maxTooltipWidth?: string;
+  tooltipWidth?: string;
   gap?: string;
   arrowSize?: number;
   defaultSlot?: string;
@@ -20,8 +19,7 @@ async function createWrapper(options?: {
     },
     props: {
       hint: options?.hint,
-      position: options?.position,
-      maxTooltipWidth: options?.maxTooltipWidth,
+      tooltipWidth: options?.tooltipWidth,
       gap: options?.gap,
       arrowSize: options?.arrowSize,
     },
@@ -59,7 +57,7 @@ describe('Tooltip.vue', () => {
     expect(tooltip.exists()).toBeFalsy();
   });
 
-  it('shows tooltip on hover', async () => {
+  it('allows controlling tooltip visibility based on mouse events', async () => {
     const wrapper = await createWrapper();
 
     expect(wrapper.find('[data-test="tooltip"]').exists()).toBeFalsy();
@@ -86,11 +84,11 @@ describe('Tooltip.vue', () => {
     expect(tooltip.html()).toContain('<span>test hint</span>');
   });
 
-  it('sets maximum width to tooltip', async () => {
-    const wrapper = await createWrapper({ maxTooltipWidth: '200px', showTooltip: true });
+  it('sets width to tooltip', async () => {
+    const wrapper = await createWrapper({ tooltipWidth: '200px', showTooltip: true });
     const tooltip = wrapper.get('[data-test="tooltip"]');
 
-    expect((tooltip.element as HTMLElement).style).toContain({ maxWidth: '200px' });
+    expect((tooltip.element as HTMLElement).style).toContain({ width: '200px' });
   });
 
   it('adapts the arrow size', async () => {
@@ -100,65 +98,26 @@ describe('Tooltip.vue', () => {
     expect((arrow.element as HTMLElement).style).toContain({ width: '20px', height: '20px' });
   });
 
-  describe('position top', () => {
+  describe('when not fitting in viewport', () => {
     /*
      * Note that it is currently not possible to test the actual positioning as
      * in the test environment, the `getBoundingClientRect()` of an HTML element
      * always returns zero for all properties.
+     *
+     * The position should be bottom of the content element in this case.
      */
+
+    let windowWidth: number;
+    beforeEach(() => {
+      windowWidth = global.window.innerWidth;
+      Object.defineProperty(global.window, 'innerWidth', { value: -1 });
+    });
+    afterEach(() => {
+      Object.defineProperty(global.window, 'innerWidth', { value: windowWidth });
+    });
 
     it('sets gap as vertical margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', position: 'top', showTooltip: true });
-      const tooltip = wrapper.get('[data-test="tooltip"]');
-
-      expect((tooltip.element as HTMLElement).style).toContain({ margin: '20px 0px' });
-    });
-
-    it('shows the arrow at the center of the bottom border', async () => {
-      const wrapper = await createWrapper({ arrowSize: 20, position: 'top', showTooltip: true });
-      const arrow = wrapper.get('[data-test="arrow"]');
-
-      expect((arrow.element as HTMLElement).style).toContain({
-        bottom: '-10px',
-        right: 'calc(50% - 10px)',
-      });
-    });
-  });
-
-  describe('position left', () => {
-    /*
-     * Note that it is currently not possible to test the actual positioning as
-     * in the test environment, the `getBoundingClientRect()` of an HTML element
-     * always returns zero for all properties.
-     */
-
-    it('sets gap as horizontal margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', position: 'left', showTooltip: true });
-      const tooltip = wrapper.get('[data-test="tooltip"]');
-
-      expect((tooltip.element as HTMLElement).style).toContain({ margin: '0px 20px' });
-    });
-
-    it('shows the arrow at the center of the bottom border', async () => {
-      const wrapper = await createWrapper({ arrowSize: 20, position: 'left', showTooltip: true });
-      const arrow = wrapper.get('[data-test="arrow"]');
-
-      expect((arrow.element as HTMLElement).style).toContain({
-        top: 'calc(50% - 10px)',
-        right: '-20px',
-      });
-    });
-  });
-
-  describe('position bottom', () => {
-    /*
-     * Note that it is currently not possible to test the actual positioning as
-     * in the test environment, the `getBoundingClientRect()` of an HTML element
-     * always returns zero for all properties.
-     */
-
-    it('sets gap as vertical margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', position: 'bottom', showTooltip: true });
+      const wrapper = await createWrapper({ gap: '20px', showTooltip: true });
       const tooltip = wrapper.get('[data-test="tooltip"]');
 
       expect((tooltip.element as HTMLElement).style).toContain({ margin: '20px 0px' });
@@ -167,7 +126,6 @@ describe('Tooltip.vue', () => {
     it('shows the arrow at the center of the top border', async () => {
       const wrapper = await createWrapper({
         arrowSize: 20,
-        position: 'bottom',
         showTooltip: true,
       });
       const arrow = wrapper.get('[data-test="arrow"]');
@@ -179,22 +137,24 @@ describe('Tooltip.vue', () => {
     });
   });
 
-  describe('position right', () => {
+  describe('when fitting in viewport', () => {
     /*
      * Note that it is currently not possible to test the actual positioning as
      * in the test environment, the `getBoundingClientRect()` of an HTML element
      * always returns zero for all properties.
+     *
+     * The position should be right of the reference element in this case.
      */
 
     it('sets gap as horizontal margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', position: 'right', showTooltip: true });
+      const wrapper = await createWrapper({ gap: '20px', showTooltip: true });
       const tooltip = wrapper.get('[data-test="tooltip"]');
 
       expect((tooltip.element as HTMLElement).style).toContain({ margin: '0px 20px' });
     });
 
     it('shows the arrow at the center of the left border', async () => {
-      const wrapper = await createWrapper({ arrowSize: 20, position: 'right', showTooltip: true });
+      const wrapper = await createWrapper({ arrowSize: 20, showTooltip: true });
       const arrow = wrapper.get('[data-test="arrow"]');
 
       expect((arrow.element as HTMLElement).style).toContain({
