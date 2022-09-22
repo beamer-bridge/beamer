@@ -29,6 +29,7 @@ class Claim(StateMachine):
         self.transaction_pending = False
         self.invalidation_tx: Optional[HexBytes] = None
         self.invalidation_timestamp: Optional[Timestamp] = None
+        self.unprocessed_claim_made_events = 0
 
     started = State("Started", initial=True)
     # Claimer is winning
