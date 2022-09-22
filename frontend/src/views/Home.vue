@@ -5,16 +5,9 @@
         {{ errorMessage }}
       </div>
 
-      <div class="h-14">
-        <div v-if="signer" class="flex flex-row gap-4 justify-center items-center">
-          <div
-            class="h-7 w-7 rounded-50 border-[3px] border-solid border-sea-green bg-green"
-          ></div>
-          <span class="text-lg">You are currently connected</span>
-        </div>
-      </div>
+      <WalletConnectionDetails></WalletConnectionDetails>
 
-      <div class="relative mb-11 w-full h-[62rem]">
+      <div class="relative mb-11 mt-3 w-full h-[62rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"
@@ -48,6 +41,7 @@ import ActionButton from '@/components/layout/ActionButton.vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import RequestDialog from '@/components/RequestDialog.vue';
 import TransferHistory from '@/components/TransferHistory.vue';
+import WalletConnectionDetails from '@/components/WalletConnectionDetails.vue';
 import WalletMenu from '@/components/WalletMenu.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
