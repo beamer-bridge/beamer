@@ -232,7 +232,8 @@ L1 resolutions
 When Bob filled Alice's request, a proof was sent by the ``fill manager`` contract on rollup B to the outbox of
 rollup B on L1. This proof is a call to a ``resolver`` contract on L1 and contains the following fields:
 
-- fill hash = Hash(request ID, fill ID)
+- request ID
+- fill ID
 - rollup B's chain ID
 - rollup A's chain ID
 - Bob's address
@@ -362,14 +363,13 @@ was not the correct filler. However, Alice's request might not be able to be fil
 Instead of proving that someone other than Charles filled a request, Bob will need to prove that Charles did not fill
 the request as claimed. For that, Bob needs to create and submit an ``L1 non-fill proof`` from rollup B to rollup A.
 
-When called, the fill manager contract on rollup B recomputes the fill hash from the request ID and fill ID which
-were made public during the claim, and checks that no fills exists for the corresponding request ID and fill hash.
-It then submits a proof to the outbox of rollup B indicating that the fill hash is invalid, i.e. that the request ID
-cannot be mapped to the fill hash.
+When called, the fill manager contract on rollup B checks that no fills exists for the corresponding request ID and fill ID.
+It then submits a proof to the outbox of rollup B indicating that the fill ID is invalid for the given request ID, i.e.
+that the request ID cannot be mapped to the fill ID.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
-message will store a flag in the ``request manager`` stating that the ``fill ID`` is invalid for the given request. This
-invalidates any claim with the corresponding ``fill ID``.
+message will store a flag in the ``request manager`` stating that the fill ID is invalid for the given request. This
+invalidates any claim with the corresponding fill ID.
 
 To make sure the proof arrives in time on rollup A, Bob will need to call the ``fill manager`` as soon as he notices a
 false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call is able to be executed
