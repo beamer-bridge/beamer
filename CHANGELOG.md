@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.8 (2022-09-26)
+
+* agent: improve state machine for ClaimMade events
+* agent: allow more transitions in the claim state machine
+
 ## v0.1.7 (2022-09-21)
 
 * agent: allow more transitions in the request and claim state machines
