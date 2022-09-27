@@ -106,6 +106,11 @@
                 <img class="h-6 w-6 cursor-help" src="@/assets/images/help.svg" />
               </div>
               <template #hint>
+                <span v-if="formattedMinFee">
+                  The minimum fee for a transfer is
+                  <span class="font-bold">{{ formattedMinFee }}</span>
+                  <br /><br />
+                </span>
                 The fee amount is composed of two parts:<br />
                 <ul class="pl-5">
                   <li>• the liquidity provider fee</li>
@@ -154,6 +159,7 @@ import Tooltip from '@/components/layout/Tooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
+import { useMinRequestFee } from '@/composables/useMinRequestFee';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
 import { useTokenBalance } from '@/composables/useTokenBalance';
@@ -262,6 +268,11 @@ const {
 } = useFaucet(
   signer,
   computed(() => selectedSourceChain.value?.value.identifier),
+);
+
+const { formattedMinFee } = useMinRequestFee(
+  computed(() => selectedSourceChain.value?.value),
+  computed(() => selectedToken.value?.value),
 );
 
 const totalRequestTokenAmount = computed(() => {
