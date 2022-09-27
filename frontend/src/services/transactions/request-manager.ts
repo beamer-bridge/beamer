@@ -13,6 +13,15 @@ function getContract(rpcUrl: string, address: EthereumAddress): Contract {
   return new Contract(address, RequestManager.abi, provider);
 }
 
+export async function getMinRequestFee(
+  rpcUrl: string,
+  requestManagerAddress: string,
+): Promise<UInt256> {
+  const contract = getContract(rpcUrl, requestManagerAddress);
+  const minLpFee: BigNumberish = await contract.minLpFee();
+  return new UInt256(minLpFee.toString());
+}
+
 export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
