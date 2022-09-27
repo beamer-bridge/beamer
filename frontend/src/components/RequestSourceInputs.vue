@@ -101,30 +101,7 @@
         <div class="flex flex-row justify-between">
           <div class="flex flex-row gap-3">
             <span>Fees</span>
-            <Tooltip class="-mr-3" show-outside-of-closest-reference-element>
-              <div class="h-full flex flex-col justify-center">
-                <img class="h-6 w-6 cursor-help" src="@/assets/images/help.svg" />
-              </div>
-              <template #hint>
-                <span v-if="formattedMinFee">
-                  The minimum fee for a transfer is
-                  <span class="font-bold">{{ formattedMinFee }}</span>
-                  <br /><br />
-                </span>
-                The fee amount is composed of two parts:<br />
-                <ul class="pl-5">
-                  <li>• the liquidity provider fee</li>
-                  <li>• the protocol fee</li>
-                </ul>
-                <br />
-                The liquidity provider fee is paid out to the liquidity provider servicing the
-                request, while the protocol fee stays with the contract and supports the Beamer
-                platform development.<br />
-                Note that the fee is paid on top of the token amount being transferred,so that the
-                token amount received on the target rollup is exactly the same as the token amount
-                sent from the source rollup.
-              </template>
-            </Tooltip>
+            <RequestFeeTooltip :formatted-min-fee="formattedMinFee"></RequestFeeTooltip>
           </div>
           <div class="text-sea-green">
             <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
@@ -156,6 +133,7 @@ import Input from '@/components/inputs/Input.vue';
 import Selector from '@/components/inputs/Selector.vue';
 import InputValidationMessage from '@/components/layout/InputValidationMessage.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
+import RequestFeeTooltip from '@/components/RequestFeeTooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
@@ -269,9 +247,8 @@ const {
   signer,
   computed(() => selectedSourceChain.value?.value.identifier),
 );
-
 const { formattedMinFee } = useMinRequestFee(
-  computed(() => selectedSourceChain.value?.value),
+  computed(() => selectedSourceChain?.value?.value),
   computed(() => selectedToken.value?.value),
 );
 
