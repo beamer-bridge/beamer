@@ -390,14 +390,21 @@ Fees
 There are two fees that users need to pay to bridge their tokens:
 
 agent fee
-    The fee paid in token being moved, covering the gas costs and rewarding
-    the liquidity provider. Variable and currently set to ``max(5e18, 0.1% of
-    token amount transferred)``. Collected by the agent.
+    The fee paid in token being moved, covering the gas costs and rewarding the
+    liquidity provider. Variable, collected by the agent and currently set to
+
+    .. math::
+
+        max(10^\textnormal{token.decimals()}, 0.3\% \textnormal{ of token amount transferred})
 
 protocol fee
     The fee paid in token being moved, intended to support further development
-    of the Beamer protocol. Variable and currently set to 0% of token amount
-    transferred. Collected by the smart contract.
+    of the Beamer protocol. Variable, collected by the smart contract and
+    currently set to
+
+    .. math::
+
+        0\% \textnormal{ of token amount transferred}
 
 In theory, the agent fee should cover the gas costs, the opportunity costs of
 the funds being locked and include a reward for providing the service.
