@@ -62,6 +62,22 @@ describe('useWallets', () => {
 
       expect(connectedWallet.value).toBe('metamask');
     });
+    it('listens on wallet provider disconnect events', async () => {
+      const wallet = new MockedMetaMaskProvider();
+      Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const { connectMetaMask, disconnectWallet } = useWallet(
+        ref(undefined),
+        ref(undefined),
+        ref({}),
+      );
+
+      await connectMetaMask();
+
+      expect(wallet.on).toHaveBeenCalledWith('disconnect', disconnectWallet);
+    });
+
     describe('when onboarding is enabled', () => {
       it('starts onboarding process when metamask instance is not found', async () => {
         Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
@@ -128,6 +144,39 @@ describe('useWallets', () => {
       await reconnectToWallet();
 
       expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
+    });
+
+    it('listens on wallet provider disconnect events', async () => {
+      const wallet = new MockedMetaMaskProvider();
+      Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const { connectWalletConnect, disconnectWallet } = useWallet(
+        ref(undefined),
+        ref(undefined),
+        ref({}),
+      );
+
+      await connectWalletConnect();
+
+      expect(wallet.on).toHaveBeenCalledWith('disconnect', disconnectWallet);
+    });
+  });
+
+  describe('disconnectWallet()', () => {
+    it('disconnects from the currently connected wallet', async () => {
+      const provider = ref(undefined);
+      const connectedWallet = ref(undefined);
+      const { connectMetaMask, disconnectWallet } = useWallet(provider, connectedWallet, ref({}));
+
+      // Since we dont have a proper mocking strategy implemented for EthereumProvider we have to circumvent the issue like this
+      await connectMetaMask();
+      expect(provider.value).not.toBeUndefined();
+      expect(connectedWallet.value).not.toBeUndefined();
+
+      disconnectWallet();
+      expect(provider.value).toBeUndefined();
+      expect(connectedWallet.value).toBeUndefined();
     });
   });
 

@@ -21,6 +21,7 @@ export function useWallet(
       metaMaskProvider.requestSigner();
       provider.value = metaMaskProvider;
       connectedWallet.value = WalletType.MetaMask;
+      metaMaskProvider.on('disconnect', disconnectWallet);
     } else if (withOnboarding) {
       onboardMetaMask();
     }
@@ -32,6 +33,7 @@ export function useWallet(
     if (walletConnectProvider) {
       provider.value = walletConnectProvider;
       connectedWallet.value = WalletType.WalletConnect;
+      walletConnectProvider.on('disconnect', disconnectWallet);
     }
   }
 

@@ -15,7 +15,10 @@ export interface IEthereumProvider {
   getChainId(): Promise<number>;
   addToken(tokenData: TokenData): Promise<void>;
 }
-
+export interface EventEmitter {
+  on(eventName: string, listener: (...args: unknown[]) => void): void;
+  emit(eventName: string): void;
+}
 export interface ISigner {
   requestSigner(): Promise<void>;
 }
