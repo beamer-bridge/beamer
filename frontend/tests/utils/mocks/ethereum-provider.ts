@@ -2,9 +2,9 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
-import type { IEthereumProvider, ISigner } from '@/services/web3-provider';
+import type { EventEmitter, IEthereumProvider, ISigner } from '@/services/web3-provider';
 
-export class MockedEthereumProvider implements IEthereumProvider {
+export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
   readonly chainId: Ref<number>;
@@ -23,6 +23,8 @@ export class MockedEthereumProvider implements IEthereumProvider {
   addChain = vi.fn();
   getChainId = vi.fn(async () => this.chainId.value);
   addToken = vi.fn();
+  on = vi.fn();
+  emit = vi.fn();
 }
 
 export class MockedMetaMaskProvider extends MockedEthereumProvider implements ISigner {

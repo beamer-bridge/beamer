@@ -21,6 +21,7 @@ export function useWallet(
       metaMaskProvider.requestSigner();
       provider.value = metaMaskProvider;
       connectedWallet.value = WalletType.MetaMask;
+      metaMaskProvider.on('disconnect', disconnectWallet);
     } else if (withOnboarding) {
       onboardMetaMask();
     }
@@ -32,6 +33,7 @@ export function useWallet(
     if (walletConnectProvider) {
       provider.value = walletConnectProvider;
       connectedWallet.value = WalletType.WalletConnect;
+      walletConnectProvider.on('disconnect', disconnectWallet);
     }
   }
 
@@ -45,6 +47,11 @@ export function useWallet(
     }
   }
 
+  async function disconnectWallet() {
+    connectedWallet.value = undefined;
+    provider.value = undefined;
+  }
+
   const metamaskTask = useAsynchronousTask(connectMetaMask);
   const walletConnectTask = useAsynchronousTask(connectWalletConnect);
 
@@ -54,5 +61,6 @@ export function useWallet(
     connectWalletConnect: walletConnectTask.run,
     connectingWalletConnect: walletConnectTask.active,
     reconnectToWallet,
+    disconnectWallet,
   };
 }

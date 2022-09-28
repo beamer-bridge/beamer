@@ -3,6 +3,7 @@ import { getNetwork, Web3Provider } from '@ethersproject/providers';
 import type { Contract } from 'ethers';
 import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
+import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
@@ -10,7 +11,7 @@ import type { Chain } from '@/types/data';
 
 import type { ChainData, Eip1193Provider, IEthereumProvider, TokenData } from './types';
 
-export abstract class EthereumProvider implements IEthereumProvider {
+export abstract class EthereumProvider extends EventEmitter implements IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
@@ -19,6 +20,7 @@ export abstract class EthereumProvider implements IEthereumProvider {
   protected externalProvider: Eip1193Provider;
 
   constructor(_provider: Eip1193Provider) {
+    super();
     this.web3Provider = new Web3Provider(_provider);
     this.externalProvider = _provider;
   }
@@ -117,12 +119,16 @@ export abstract class EthereumProvider implements IEthereumProvider {
 
   newDefaultSigner(accounts: string[]): void {
     if (accounts.length === 0) {
-      this.signer.value = undefined;
-      this.signerAddress.value = undefined;
-      return;
+      return this.disconnect();
     }
     this.signer.value = this.web3Provider.getSigner(accounts[0]);
     this.signerAddress.value = accounts[0];
+  }
+
+  disconnect(): void {
+    this.signer.value = undefined;
+    this.signerAddress.value = undefined;
+    this.emit('disconnect');
   }
 
   listenToEvents(): void {
@@ -132,5 +138,6 @@ export abstract class EthereumProvider implements IEthereumProvider {
     this.externalProvider.on('chainChanged', (chainId: string) => {
       this.chainId.value = BigNumber.from(chainId).toNumber();
     });
+    this.externalProvider.on('disconnect', () => this.disconnect());
   }
 }
