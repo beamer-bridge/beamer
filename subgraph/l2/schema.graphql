@@ -1,0 +1,84 @@
+type ExampleEntity @entity {
+  id: ID!
+  count: BigInt!
+  requestId: BigInt! # uint256
+  claimId: BigInt! # uint256
+}
+type HashInvalidated @entity {
+  id: ID!
+  requestHash: Bytes! # bytes32
+  fillId: Bytes! # bytes32
+  fillHash: Bytes! # bytes32
+}
+
+type LPAdded @entity {
+  id: ID!
+  lp: Bytes! # address
+}
+
+type LPRemoved @entity {
+  id: ID!
+  lp: Bytes! # address
+}
+
+type FillManagerOwnershipTransferred @entity {
+  id: ID!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+}
+type RequestFilled @entity {
+  id: ID!
+  requestId: BigInt! # uint256
+  fillId: Bytes! # bytes32
+  sourceChainId: BigInt! # uint256
+  targetTokenAddress: Bytes! # address
+  filler: Bytes! # address
+  amount: BigInt! # uint256
+}
+type ClaimMade @entity {
+  id: ID!
+  requestId: BigInt! # uint256
+  claimId: BigInt! # uint256
+  claimer: Bytes! # address
+  claimerStake: BigInt! # uint256
+  lastChallenger: Bytes! # address
+  challengerStakeTotal: BigInt! # uint256
+  termination: BigInt! # uint256
+  fillId: Bytes! # bytes32
+}
+
+type ClaimStakeWithdrawn @entity {
+  id: ID!
+  claimId: BigInt! # uint256
+  requestId: BigInt! # uint256
+  claimReceiver: Bytes! # address
+}
+
+type DepositWithdrawn @entity {
+  id: ID!
+  requestId: BigInt! # uint256
+  receiver: Bytes! # address
+}
+
+type FinalityPeriodUpdated @entity {
+  id: ID!
+  targetChainId: BigInt! # uint256
+  finalityPeriod: BigInt! # uint256
+}
+
+type OwnershipTransferred @entity {
+  id: ID!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+}
+
+type RequestCreated @entity {
+  id: ID!
+  requestId: BigInt! # uint256
+  targetChainId: BigInt! # uint256
+  sourceTokenAddress: Bytes! # address
+  targetTokenAddress: Bytes! # address
+  targetAddress: Bytes! # address
+  amount: BigInt! # uint256
+  validUntil: BigInt! # uint256
+}
