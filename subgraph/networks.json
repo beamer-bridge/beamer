@@ -1,0 +1,22 @@
+{
+  "optimism": {
+    "RequestManager": {
+      "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
+      "startBlock": 20408774
+    },
+    "FillManager": {
+      "address": "0x85267688CE7677D69d75F288Ff3064431030aF9F",
+      "startBlock": 13891898
+    }
+  },
+  "boba": {
+    "RequestManager": {
+      "address": "0xB7481d9C9D46766FA193Ea8d1e8fC6FB6BBcc537",
+      "startBlock": 785558
+    },
+    "FillManager": {
+      "address": "0x4e32CEc57BCaE80928f58D3dbD84550D397F5416",
+      "startBlock": 769275
+    }
+  }
+}
