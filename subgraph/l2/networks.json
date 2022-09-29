@@ -1,0 +1,10 @@
+{
+  "optimism": {
+    "RequestManager": {
+      "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F"
+    },
+    "FillManager": {
+      "address": "0x85267688CE7677D69d75F288Ff3064431030aF9F"
+    }
+  }
+}
