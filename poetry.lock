@@ -1382,7 +1382,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "Sphinx"
-version = "5.2.2"
+version = "5.2.3"
 description = "Python documentation generator"
 category = "dev"
 optional = false
@@ -1782,7 +1782,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9, <3.10"
-content-hash = "3434bd372dd690356a5d560de80a81ac7f525a89c56bb00e258174d7fa401b6f"
+content-hash = "8e02c362e275ac5987ad1b444e4c0f4db029d42f2108c80688c3d5ac208d1061"
 
 [metadata.files]
 aiohttp = [
@@ -2693,8 +2693,8 @@ soupsieve = [
     {file = "soupsieve-2.3.1.tar.gz", hash = "sha256:b8d49b1cd4f037c7082a9683dfa1801aa2597fb11c3a1155b7a5b94829b4f1f9"},
 ]
 Sphinx = [
-    {file = "Sphinx-5.2.2.tar.gz", hash = "sha256:7225c104dc06169eb73b061582c4bc84a9594042acae6c1582564de274b7df2f"},
-    {file = "sphinx-5.2.2-py3-none-any.whl", hash = "sha256:9150a8ed2e98d70e778624373f183c5498bf429dd605cf7b63e80e2a166c35a5"},
+    {file = "Sphinx-5.2.3.tar.gz", hash = "sha256:5b10cb1022dac8c035f75767799c39217a05fc0fe2d6fe5597560d38e44f0363"},
+    {file = "sphinx-5.2.3-py3-none-any.whl", hash = "sha256:7abf6fabd7b58d0727b7317d5e2650ef68765bbe0ccb63c8795fa8683477eaa2"},
 ]
 sphinx-basic-ng = [
     {file = "sphinx_basic_ng-0.0.1a11-py3-none-any.whl", hash = "sha256:9aecb5345816998789ef76658a83e3c0a12aafa14b17d40e28cd4aaeb94d1517"},
