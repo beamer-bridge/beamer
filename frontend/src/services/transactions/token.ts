@@ -15,10 +15,10 @@ export async function ensureTokenAllowance(
 ): Promise<void> {
   const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
   const signerAddress = await signer.getAddress();
-  const signerTokenBalance = await tokenContract.balanceOf(signerAddress);
   const allowance: BigNumber = await tokenContract.allowance(signerAddress, allowedSpender);
-  if (allowance.lt(BigNumber.from(minimumRequiredAmount.asString))) {
-    const transaction = await tokenContract.approve(allowedSpender, signerTokenBalance);
+  const approvalAmount = BigNumber.from(minimumRequiredAmount.asString);
+  if (allowance.lt(approvalAmount)) {
+    const transaction = await tokenContract.approve(allowedSpender, approvalAmount);
     await transaction.wait();
   }
 }
