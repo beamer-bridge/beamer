@@ -1,9 +1,10 @@
 <template>
-  <img
-    class="w-[30rem] hidden md:block absolute top-12 left-12"
-    src="@/assets/images/logo.svg"
-    alt="logo"
-  />
+  <a href="https://beamerbridge.com" target="_blank">
+    <img
+      class="w-[30rem] hidden md:block absolute top-12 left-12"
+      src="@/assets/images/logo.svg"
+      alt="logo"
+  /></a>
   <div v-if="configurationLoaded">
     <router-view v-if="!isBlacklistedWallet" class="z-10" />
     <div
@@ -20,7 +21,9 @@
   </div>
   <feedback v-if="enableFeedback"></feedback>
   <footer class="my-8 text-lg text-center text-sea-green">
-    Powered by Beamer &bull;
+    Powered by
+    <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>
+    &bull;
     <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
       >Imprint</a
     >
