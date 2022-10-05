@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
 
+import ConnectionError from '@/components/wallet/ConnectionError.vue';
 import Disconnect from '@/components/wallet/Disconnect.vue';
 import WalletConnectionDetails from '@/components/WalletConnectionDetails.vue';
 import * as useEthereumProviderComposable from '@/stores/ethereum-provider';
@@ -23,7 +24,7 @@ function createWrapper() {
 describe('WalletConnectionDetails.vue', () => {
   it('renders connection error component', () => {
     const wrapper = createWrapper();
-    const connectionError = wrapper.find('[data-test="error-component"]');
+    const connectionError = wrapper.findComponent(ConnectionError);
     expect(connectionError.exists()).toBe(true);
   });
 

@@ -1,5 +1,7 @@
 <template>
-  <slot data-test="error" v-bind="{ message }"></slot>
+  <div class="text-center text-red p-2 text-lg h-12">
+    {{ message }}
+  </div>
 </template>
 
 <script lang="ts" setup>
