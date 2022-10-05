@@ -8,7 +8,10 @@ vi.mock('@/composables/useWallet');
 
 const createWrapper = () => {
   return mount(Disconnect, {
-    plugins: [createTestingPinia()],
+    shallow: true,
+    global: {
+      plugins: [createTestingPinia()],
+    },
   });
 };
 
