@@ -33,6 +33,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
+import { onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
@@ -45,13 +46,15 @@ import { useTransferHistory } from '@/stores/transfer-history';
 
 const enableFeedback = process.env.NODE_ENV === 'production' && true;
 
-const configuration = useConfiguration();
-const { configurationLoaded } = useLoadConfiguration(configuration.setChainConfiguration);
+const { setConfiguration } = useConfiguration();
+const { loadConfiguration, configurationLoaded } = useLoadConfiguration(setConfiguration);
 
 const { isBlacklistedWallet } = storeToRefs(useEthereumProvider());
 
 const { transfers, loaded } = storeToRefs(useTransferHistory());
 useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
+
+onMounted(loadConfiguration);
 </script>
 
 <style lang="css">

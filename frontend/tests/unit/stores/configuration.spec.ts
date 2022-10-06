@@ -1,7 +1,11 @@
 import { createPinia, setActivePinia } from 'pinia';
 
 import { useConfiguration } from '@/stores/configuration';
-import { generateChainWithTokens, generateToken } from '~/utils/data_generators';
+import {
+  generateBeamerConfig,
+  generateChainWithTokens,
+  generateToken,
+} from '~/utils/data_generators';
 
 describe('configuration store', () => {
   beforeEach(() => {
@@ -9,31 +13,17 @@ describe('configuration store', () => {
     setActivePinia(pinia);
   });
 
-  describe('setChainConfiguration()', () => {
-    it('can add a new chain configuration', async () => {
+  describe('setConfiguration()', () => {
+    it('allows replacing the configuration state', () => {
       const configuration = useConfiguration();
-      const chainConfiguration = generateChainWithTokens();
+      const generatedConfig = generateBeamerConfig();
 
-      expect(configuration.chains['5']).toBeUndefined();
+      configuration.setConfiguration(generatedConfig);
 
-      configuration.setChainConfiguration('5', chainConfiguration);
-
-      expect(configuration.chains['5']).toMatchObject(chainConfiguration);
-    });
-
-    it('can update existing chain configuration', async () => {
-      const configuration = useConfiguration();
-      const oldChainConfiguration = generateChainWithTokens({ name: 'old-name' });
-      const newChainConfiguration = { ...oldChainConfiguration, name: 'new-name' };
-      configuration.$state = { chains: { ['5']: oldChainConfiguration } };
-
-      expect(configuration.chains['5']).toMatchObject(oldChainConfiguration);
-
-      configuration.setChainConfiguration('5', newChainConfiguration);
-
-      expect(configuration.chains['5']).toMatchObject(newChainConfiguration);
+      expect(configuration.$state).toEqual(generatedConfig);
     });
   });
+
   describe('getTokenForChain getter', () => {
     it('returns a specific token for specific chain', () => {
       const configuration = useConfiguration();
