@@ -11,6 +11,7 @@
       v-for="walletOption of walletOptions"
       :key="walletOption.name"
       class="w-[25rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
+      :data-test="`connect-${walletOption.name}`"
       @click.stop="walletOption.connect"
     >
       <div v-if="walletOption.connecting" class="w-20 h-20 items-center justify-center flex">
