@@ -4,6 +4,8 @@ import { markRaw } from 'vue';
 import Tabs from '@/components/layout/Tabs.vue';
 import { getRandomString } from '~/utils/data_generators';
 
+const TEST_HTML_TAGS = ['foo', 'bar', 'baz'];
+
 function createWrapper(options?: {
   tabs: Array<{ label?: string; template?: string }>;
   activeTabLabel?: string;
@@ -16,6 +18,11 @@ function createWrapper(options?: {
   return mount(Tabs, {
     shallow: false,
     props: { tabs, activeTabLabel: options?.activeTabLabel },
+    global: {
+      config: {
+        compilerOptions: { isCustomElement: (tag: string) => TEST_HTML_TAGS.includes(tag) },
+      },
+    },
   });
 }
 
@@ -32,74 +39,74 @@ describe('Tabs.vue', () => {
   });
 
   it('shows first tab content per default', () => {
-    const tabs = [{ template: 'foo' }, { template: 'bar' }, { template: 'baz' }];
+    const tabs = [{ template: '<foo />' }, { template: '<bar />' }, { template: '<baz />' }];
     const wrapper = createWrapper({ tabs });
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
   });
 
   it('can alternate first open tab via property', () => {
-    const tabs = [{ template: 'foo' }, { label: 'bar', template: 'bar' }];
+    const tabs = [{ template: '<foo />' }, { label: 'bar', template: '<bar />' }];
     const wrapper = createWrapper({ tabs, activeTabLabel: 'bar' });
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('bar');
+    expect(tabContent.findComponent('bar').exists()).toBe(true);
   });
 
   it('can switch tab content via clicks on the headers', async () => {
-    const tabs = [{ template: 'foo' }, { template: 'bar' }, { template: 'baz' }];
+    const tabs = [{ template: '<foo />' }, { template: '<bar />' }, { template: '<baz />' }];
     const wrapper = createWrapper({ tabs });
     const tabHeaders = wrapper.findAll('[data-test="tab-header"]');
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
     await tabHeaders[1].trigger('click');
-    expect(tabContent.html()).toContain('bar');
+    expect(tabContent.findComponent('bar').exists()).toBe(true);
     await tabHeaders[2].trigger('click');
-    expect(tabContent.html()).toContain('baz');
+    expect(tabContent.findComponent('baz').exists()).toBe(true);
     await tabHeaders[1].trigger('click');
-    expect(tabContent.html()).toContain('bar');
+    expect(tabContent.findComponent('bar').exists()).toBe(true);
     await tabHeaders[0].trigger('click');
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
   });
 
   it('can switch tab content via alternating the related property', async () => {
     const tabs = [
-      { label: 'foo', template: 'foo' },
-      { label: 'bar', template: 'bar' },
-      { label: 'baz', template: 'baz' },
+      { label: 'foo', template: '<foo />' },
+      { label: 'bar', template: '<bar />' },
+      { label: 'baz', template: '<baz />' },
     ];
     const wrapper = createWrapper({ tabs });
     const tabContent = wrapper.get('[data-test="tab-content"]');
 
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
     await wrapper.setProps({ ...wrapper.props, activeTabLabel: 'bar' });
-    expect(tabContent.html()).toContain('bar');
+    expect(tabContent.findComponent('bar').exists()).toBe(true);
     await wrapper.setProps({ ...wrapper.props, activeTabLabel: 'baz' });
-    expect(tabContent.html()).toContain('baz');
+    expect(tabContent.findComponent('baz').exists()).toBe(true);
     await wrapper.setProps({ ...wrapper.props, activeTabLabel: 'bar' });
-    expect(tabContent.html()).toContain('bar');
+    expect(tabContent.findComponent('bar').exists()).toBe(true);
     await wrapper.setProps({ ...wrapper.props, activeTabLabel: 'foo' });
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
   });
 
   it('does nothing if trying to switch to unknown tab', async () => {
     const tabs = [
-      { label: 'foo', template: 'foo' },
-      { label: 'bar', template: 'bar' },
+      { label: 'foo', template: '<foo />' },
+      { label: 'bar', template: '<bar />' },
     ];
     const wrapper = createWrapper({ tabs });
     const tabContent = wrapper.get('[data-test="tab-content"]');
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
 
     await wrapper.setProps({ ...wrapper.props, activeTabLabel: 'baz' });
 
-    expect(tabContent.html()).toContain('foo');
+    expect(tabContent.findComponent('foo').exists()).toBe(true);
   });
 
   it('does not unload content component when tab changes', async () => {
-    const tabs = [{ template: '<input id="test-input" />' }, { template: 'bar' }];
+    const tabs = [{ template: '<input id="test-input" />' }, { template: '<bar />' }];
     const wrapper = createWrapper({ tabs });
     const tabHeaders = wrapper.findAll('[data-test="tab-header"]');
 
