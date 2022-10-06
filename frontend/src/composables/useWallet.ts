@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { IEthereumProvider } from '@/services/web3-provider';
 import {
   createMetaMaskProvider,
   createWalletConnectProvider,
@@ -10,7 +10,7 @@ import {
 import { WalletType } from '@/types/settings';
 
 export function useWallet(
-  provider: Ref<EthereumProvider | undefined>,
+  provider: Ref<IEthereumProvider | undefined>,
   connectedWallet: Ref<WalletType | undefined>,
   rpcUrls: Ref<{ [chainId: number]: string }>,
 ) {
