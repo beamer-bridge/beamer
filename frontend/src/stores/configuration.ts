@@ -8,8 +8,8 @@ export const useConfiguration = defineStore('configuration', {
     chains: {},
   }),
   actions: {
-    setChainConfiguration(id: string, configuration: ChainWithTokens) {
-      this.chains = { ...this.chains, [id]: configuration };
+    setConfiguration(configuration: BeamerConfig) {
+      this.$patch(configuration);
     },
   },
   getters: {

@@ -1,32 +1,19 @@
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
-import type { BeamerConfig, ChainWithTokens } from '@/types/config';
+import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
+import type { BeamerConfig } from '@/types/config';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function useLoadConfiguration(
-  setChainConfiguration: (id: string, configuration: ChainWithTokens) => void,
+  setConfiguration: (configuration: BeamerConfig) => void,
 ) {
   const configurationLoaded = ref(false);
 
-  onMounted(async () => {
-    const configurationFile = await fetchConfigurationFile();
-
-    for (const [chainId, chainConfiguration] of Object.entries(configurationFile.chains)) {
-      setChainConfiguration(chainId, chainConfiguration);
-    }
-
+  const { run: loadConfiguration, error: configurationError } = useAsynchronousTask(async () => {
+    const response = await fetch(import.meta.env.VITE_CONFIG_URL);
+    const config = (await response.json()) as BeamerConfig;
+    setConfiguration(config);
     configurationLoaded.value = true;
   });
 
-  return { configurationLoaded };
+  return { loadConfiguration, configurationLoaded, configurationError };
 }
-
-const fetchConfigurationFile = async (): Promise<BeamerConfig> => {
-  try {
-    const response = await fetch(import.meta.env.VITE_CONFIG_URL);
-    return response.json();
-  } catch (error) {
-    console.error(error);
-    return { chains: {} };
-  }
-};
