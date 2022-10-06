@@ -14,6 +14,22 @@
       Your address is on the blocked list.
     </div>
   </div>
+  <div
+    v-else-if="configurationError"
+    class="text-red h-[90vh] w-full flex flex-col justify-center items-center text-4xl text-center px-4"
+  >
+    <span> Failed loading configuration. </span>
+    <br />
+    <span>
+      If you see this error please report it on our
+      <a
+        href="https://discord.com/invite/YWdStZkz9z"
+        target="_blank"
+        class="underline inline-block"
+        >discord channel.</a
+      >
+    </span>
+  </div>
   <div v-else class="flex flex-grow items-center justify-center">
     <div class="w-48 h-48">
       <spinner size="48"></spinner>
@@ -47,7 +63,8 @@ import { useTransferHistory } from '@/stores/transfer-history';
 const enableFeedback = process.env.NODE_ENV === 'production' && true;
 
 const { setConfiguration } = useConfiguration();
-const { loadConfiguration, configurationLoaded } = useLoadConfiguration(setConfiguration);
+const { loadConfiguration, configurationLoaded, configurationError } =
+  useLoadConfiguration(setConfiguration);
 
 const { isBlacklistedWallet } = storeToRefs(useEthereumProvider());
 
