@@ -26,7 +26,7 @@ describe('useTransferRequest', () => {
     });
   });
 
-  describe('create', () => {
+  describe('create()', () => {
     it('creates and returns a new transfer object', async () => {
       const { create } = useTransferRequest();
 
@@ -45,7 +45,7 @@ describe('useTransferRequest', () => {
     // Todo: check if created instance holds correct values
   });
 
-  describe('execute', () => {
+  describe('execute()', () => {
     it('executes the provided transfer object', () => {
       const { execute } = useTransferRequest();
       const transfer = generateTransfer();
@@ -54,6 +54,29 @@ describe('useTransferRequest', () => {
       const signerAddressRef = ref(SIGNER_ADDRESS);
       execute(signerRef, signerAddressRef, transfer);
       expect(transfer.execute).toHaveBeenCalledWith(signerRef.value, signerAddressRef.value);
+    });
+
+    it('throws an error when provided signer is undefined', async () => {
+      const { execute, executeError } = useTransferRequest();
+      const transfer = generateTransfer();
+      const signerRef = ref(undefined);
+      const signerAddressRef = ref(undefined);
+      await execute(signerRef, signerAddressRef, transfer);
+      // Has to be tested this way since we are using useAsynchronousTask composable
+      expect(executeError.value?.message).toEqual('No signer available!');
+    });
+  });
+
+  describe('withdraw()', () => {
+    it('triggers a fund withdrawal attempt for a specific transfer', async () => {
+      const { withdraw } = useTransferRequest();
+      const transferWithdrawFn = vi.fn();
+      const transfer = { withdraw: transferWithdrawFn };
+      const provider = 'fake-provider';
+
+      await withdraw(transfer, provider);
+
+      expect(transfer.withdraw).toHaveBeenCalledWith(provider);
     });
   });
 });
