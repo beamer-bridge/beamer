@@ -8,7 +8,7 @@ import TransferComponent from '@/components/Transfer.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
-import * as withdrawTransferComposable from '@/composables/useWithdrawTransfer';
+import * as transferRequestComposable from '@/composables/useTransferRequest';
 import * as ethereumProviderComposable from '@/stores/ethereum-provider';
 import {
   generateChain,
@@ -20,7 +20,7 @@ import {
   generateUInt256Data,
 } from '~/utils/data_generators';
 
-vi.mock('@/composables/useWithdrawTransfer');
+vi.mock('@/composables/useTransferRequest');
 vi.mock('@/stores/ethereum-provider');
 
 function createWrapper(options?: { transfer?: Transfer }) {
@@ -45,11 +45,11 @@ describe('Transfer.vue', () => {
   beforeEach(() => {
     vi.useFakeTimers();
 
-    Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+    Object.defineProperty(transferRequestComposable, 'useTransferRequest', {
       value: vi.fn().mockReturnValue({
-        active: ref(false),
-        error: ref(undefined),
-        run: vi.fn(),
+        withdrawing: ref(false),
+        withdrawError: ref(undefined),
+        withdraw: vi.fn(),
       }),
     });
 
@@ -155,12 +155,12 @@ describe('Transfer.vue', () => {
       expect(withdrawer.exists()).toBeFalsy();
     });
 
-    it('shows transfers withrawer if transfer has expired', () => {
-      Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+    it('shows transfers withdrawer if transfer has expired', () => {
+      Object.defineProperty(transferRequestComposable, 'useTransferRequest', {
         value: vi.fn().mockReturnValue({
-          active: ref(true),
-          error: ref(new Error('test error')),
-          run: vi.fn(),
+          withdrawing: ref(true),
+          withdrawError: ref(new Error('test error')),
+          withdraw: vi.fn(),
         }),
       });
 
@@ -181,11 +181,11 @@ describe('Transfer.vue', () => {
     it('on event triggers withraw transaction with connected wallet', async () => {
       const runWithdrawTransfer = vi.fn();
       const provider = 'fake-provider';
-      Object.defineProperty(withdrawTransferComposable, 'useWithdrawTransfer', {
+      Object.defineProperty(transferRequestComposable, 'useTransferRequest', {
         value: vi.fn().mockReturnValue({
-          active: ref(false),
-          error: ref(undefined),
-          run: runWithdrawTransfer,
+          withdrawing: ref(false),
+          withdrawError: ref(undefined),
+          withdraw: runWithdrawTransfer,
         }),
       });
 
