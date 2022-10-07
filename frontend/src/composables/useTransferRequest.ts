@@ -5,6 +5,7 @@ import { reactive } from 'vue';
 import { Transfer } from '@/actions/transfers';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
+import type { EthereumProvider } from '@/services/web3-provider';
 import type { Chain, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -55,22 +56,38 @@ export function useTransferRequest() {
     if (!signer.value) {
       throw new Error('No signer available!');
     }
-
-    try {
-      await transfer.execute(signer.value, signerAddress.value);
-    } catch (error) {
-      console.error(error);
-      console.log(transfer);
-    }
+    await transfer.execute(signer.value, signerAddress.value);
   };
 
-  const { active: createActive, run: createAsync } = useAsynchronousTask(create);
-  const { active: executeActive, run: executeAsync } = useAsynchronousTask(execute);
+  const withdraw = async (transfer: Transfer, provider: EthereumProvider): Promise<void> => {
+    await transfer.withdraw(provider);
+  };
+
+  const {
+    active: createActive,
+    run: createAsync,
+    error: createError,
+  } = useAsynchronousTask(create);
+  const {
+    active: executeActive,
+    run: executeAsync,
+    error: executeError,
+  } = useAsynchronousTask(execute);
+  const {
+    active: withdrawActive,
+    run: withdrawAsync,
+    error: withdrawError,
+  } = useAsynchronousTask(withdraw);
 
   return {
     create: createAsync,
     execute: executeAsync,
+    withdraw: withdrawAsync,
     creating: createActive,
     executing: executeActive,
+    withdrawing: withdrawActive,
+    createError,
+    executeError,
+    withdrawError,
   };
 }
