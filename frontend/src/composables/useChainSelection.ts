@@ -4,25 +4,22 @@ import { computed } from 'vue';
 import type { ChainConfigMapping } from '@/types/config';
 import type { Chain } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
+import { removeMatchesByProperty } from '@/utils/arrayFilters';
 
 export function useChainSelection(chains: Ref<ChainConfigMapping>, ignoreChains: Ref<Chain[]>) {
   const chainOptions = computed(() => {
-    const options = Object.keys(chains.value)
-      .map((chainId) => getChainSelectorOption(chainId, chains.value))
-      .filter((chainOption) => chainOption !== null) as SelectorOption<Chain>[];
-    return options.filter(
-      (chainOption) =>
-        !ignoreChains.value.find(
-          (ignoreChain) => ignoreChain.identifier === chainOption.value.identifier,
-        ),
-    );
+    return removeMatchesByProperty<Chain>(
+      Object.values(chains.value),
+      ignoreChains.value,
+      'identifier',
+    ).map((chain) => getChainSelectorOption(chain.identifier, chains.value));
   });
 
   return { chainOptions };
 }
 
 export function getChainSelectorOption(
-  chainId: string,
+  chainId: number,
   chains: ChainConfigMapping,
 ): SelectorOption<Chain> | null {
   if (chains[chainId]) {
