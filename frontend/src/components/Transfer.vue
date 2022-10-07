@@ -39,7 +39,7 @@ import Progress from '@/components/layout/Progress.vue';
 import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
-import { useWithdrawTransfer } from '@/composables/useWithdrawTransfer';
+import { useTransferRequest } from '@/composables/useTransferRequest';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 
 interface Props {
@@ -88,10 +88,10 @@ const statusBackgroundColorClass = computed(() => {
 
 const { provider } = storeToRefs(useEthereumProvider());
 const {
-  active: withdrawTransferActive,
-  error: withdrawTransferError,
-  run: runWithdrawTransfer,
-} = useWithdrawTransfer();
+  withdraw: runWithdrawTransfer,
+  withdrawError: withdrawTransferError,
+  withdrawing: withdrawTransferActive,
+} = useTransferRequest();
 
 const withdrawProperties = computed(() => ({
   withdrawn: props.transfer.withdrawn,
