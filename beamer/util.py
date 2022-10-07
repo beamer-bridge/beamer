@@ -22,9 +22,9 @@ from web3.middleware import (
     construct_simple_cache_middleware,
     geth_poa_middleware,
 )
-from web3.middleware.cache import SIMPLE_CACHE_RPC_WHITELIST
-from web3.types import GasPriceStrategy, RPCEndpoint, TxParams
+from web3.types import GasPriceStrategy, TxParams
 
+import beamer.middleware
 from beamer.typing import URL, ChainId, ChecksumAddress
 
 log = structlog.get_logger(__name__)
@@ -116,13 +116,12 @@ def make_web3(
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
     # Cache data of 1000 least recently used blocks.
-    rpc_whitelist = set(SIMPLE_CACHE_RPC_WHITELIST)
-    rpc_whitelist.add(RPCEndpoint("eth_getBlockByNumber"))
     cache_class = cast(Type[dict[Any, Any]], functools.partial(lru.LRU, 1000))
-    middleware = construct_simple_cache_middleware(
-        cache_class=cache_class, rpc_whitelist=rpc_whitelist
-    )
+    middleware = construct_simple_cache_middleware(cache_class=cache_class)
     w3.middleware_onion.add(middleware)
+
+    # Cache data of 1000 least recently used blocks, fetched via eth_getBlockByNumber.
+    w3.middleware_onion.add(beamer.middleware.cache_get_block_by_number)
 
     w3.eth.default_account = account.address
     return w3
