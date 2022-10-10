@@ -70,6 +70,11 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         chainId: chainIdHexValue,
         chainName: name,
         rpcUrls: [rpcUrl],
+        nativeCurrency: {
+          name: 'Ethereum',
+          symbol: 'ETH',
+          decimals: 18,
+        },
       };
       await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
     } catch (error) {
