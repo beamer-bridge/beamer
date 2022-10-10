@@ -68,6 +68,11 @@ export abstract class EthereumProvider implements IEthereumProvider {
         chainId: chainIdHexValue,
         chainName: name,
         rpcUrls: [rpcUrl],
+        nativeCurrency: {
+          name: 'Ethereum',
+          symbol: 'ETH',
+          decimals: 18,
+        },
       };
       await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
     } catch (error) {
