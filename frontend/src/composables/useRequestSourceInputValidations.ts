@@ -1,7 +1,7 @@
 import type { ValidationArgs } from '@vuelidate/core';
 import { useVuelidate } from '@vuelidate/core';
 import { helpers, minValue, numeric, required, sameAs } from '@vuelidate/validators';
-import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
 import { computed } from 'vue';
 
 import type { Chain, Token } from '@/types/data';
@@ -14,17 +14,17 @@ import {
 } from '@/validation/validators';
 
 type ValidationState = {
-  selectedSourceChain: WritableComputedRef<SelectorOption<Chain> | null>;
-  selectedToken: WritableComputedRef<SelectorOption<Token> | null>;
+  selectedSourceChain: Ref<SelectorOption<Chain> | null>;
+  selectedToken: Ref<SelectorOption<Token> | null>;
   selectedAmount: Ref<string>;
   selectedTokenAmount: ComputedRef<TokenAmount | undefined>;
   totalRequestTokenAmount: ComputedRef<TokenAmount | undefined>;
   requestFeeLoading: Ref<boolean>;
 };
 type ValidationRules = ValidationArgs<{
-  selectedSourceChain: WritableComputedRef<SelectorOption<Chain> | null>;
-  selectedToken: WritableComputedRef<SelectorOption<Token> | null>;
-  selectedAmount?: Ref<string>;
+  selectedSourceChain: Ref<SelectorOption<Chain> | null>;
+  selectedToken: Ref<SelectorOption<Token> | null>;
+  selectedAmount: Ref<string>;
   selectedTokenAmount?: ComputedRef<TokenAmount | undefined>;
   totalRequestTokenAmount?: ComputedRef<TokenAmount | undefined>;
   requestFeeLoading?: Ref<boolean>;
@@ -49,7 +49,7 @@ export const useRequestSourceInputValidations = (
         amount: amountValidationGroup,
       },
       selectedAmount: {
-        numeric: helpers.withMessage('Must be a positive number', numeric),
+        numeric: helpers.withMessage('Invalid numeric value', numeric),
         minValue: helpers.withMessage('Must be a positive number', minValue(0)),
       },
     };
@@ -68,7 +68,7 @@ export const useRequestSourceInputValidations = (
 
       if (options.selectedTokenAmount.value) {
         const min = TokenAmount.parse(
-          ['0.', '0'.repeat(selectedTokenDecimals - 1), '1'].join(''),
+          `0.${'0'.repeat(selectedTokenDecimals - 1)}1`,
           selectedTokenValue,
         );
         const selectedTokenAmountRules = {

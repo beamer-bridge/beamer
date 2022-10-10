@@ -7,6 +7,7 @@ import type { RequestInformationData, TransferData } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
+import type { SelectorOption } from '@/types/form';
 import type { TokenAmountData } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 
@@ -231,5 +232,23 @@ export function generateBeamerConfig(partialBeamerConfig?: Partial<BeamerConfig>
       [getRandomNumber()]: generateChainWithTokens(),
     },
     ...partialBeamerConfig,
+  };
+}
+
+export function generateChainSelectorOption(partialChain?: Partial<Chain>): SelectorOption<Chain> {
+  const chain = generateChain(partialChain);
+  return {
+    label: chain.name,
+    value: chain,
+    imageUrl: chain.imageUrl,
+  };
+}
+
+export function generateTokenSelectorOption(partialToken?: Partial<Token>): SelectorOption<Token> {
+  const token = generateToken(partialToken);
+  return {
+    label: token.symbol,
+    value: token,
+    imageUrl: token.imageUrl,
   };
 }

@@ -18,15 +18,7 @@ export function useTokenSelection(
       ) ?? [],
   );
 
-  const _selectedToken = ref<SelectorOption<Token> | null>(null);
-  const selectedToken = computed({
-    get() {
-      return _selectedToken.value;
-    },
-    set(token: SelectorOption<Token> | null) {
-      _selectedToken.value = token;
-    },
-  });
+  const selectedToken = ref<SelectorOption<Token> | null>(null);
 
   const addTokenToProvider = async () => {
     if (!provider.value || !selectedToken.value) {
