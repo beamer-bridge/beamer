@@ -174,7 +174,7 @@ const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { hideActionButton, showActionButton } = usePortals();
 
-const { provider, signer } = storeToRefs(ethereumProvider);
+const { provider, signer, signerAddress } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
@@ -267,7 +267,7 @@ const {
   active: faucetRequestActive,
   run: runFaucetRequest,
 } = useFaucet(
-  signer,
+  signerAddress,
   computed(() => selectedSourceChain.value?.value.identifier),
 );
 const { formattedMinFee } = useMinRequestFee(
