@@ -54,7 +54,7 @@ jobs:
           flavor: latest=true
 
       - name: Build and push container image
-        uses: docker/build-push-action@v3.1.1
+        uses: docker/build-push-action@v3.2.0
         with:
           context: .
           file: docker/Dockerfile.agent
