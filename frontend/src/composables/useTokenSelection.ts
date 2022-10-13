@@ -1,43 +1,14 @@
 import type { Ref } from 'vue';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
-import type { IEthereumProvider } from '@/services/web3-provider';
-import type { ChainConfigMapping } from '@/types/config';
 import type { Token } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
-export function useTokenSelection(
-  chains: Ref<ChainConfigMapping>,
-  connectedChainIdentifier: Ref<number | undefined>,
-  provider: Ref<IEthereumProvider | undefined>,
-) {
-  const tokens = computed(
-    () =>
-      chains.value[connectedChainIdentifier.value ?? -1]?.tokens.map((token) =>
-        getTokenSelectorOption(token),
-      ) ?? [],
-  );
-
-  const selectedToken = ref<SelectorOption<Token> | null>(null);
-
-  const addTokenToProvider = async () => {
-    if (!provider.value || !selectedToken.value) {
-      throw new Error('Provider or token missing!');
-    }
-    try {
-      await provider.value.addToken(selectedToken.value.value);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const addTokenAvailable = computed(() => provider.value && selectedToken.value);
+export function useTokenSelection(tokens: Ref<Token[]>) {
+  const tokenOptions = computed(() => tokens.value.map(getTokenSelectorOption));
 
   return {
-    selectedToken,
-    tokens,
-    addTokenToProvider,
-    addTokenAvailable,
+    tokenOptions,
   };
 }
 

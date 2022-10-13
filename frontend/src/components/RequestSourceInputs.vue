@@ -82,7 +82,7 @@
             v-model="selectedToken"
             name="token"
             label="Token"
-            :options="tokens"
+            :options="tokenOptions"
             placeholder="Token"
             required
             @opened="hideActionButton"
@@ -96,7 +96,7 @@
             <button
               class="text-orange text-base font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
               :disabled="!addTokenAvailable"
-              @click="addTokenToProvider"
+              @click="handleAddTokenClick"
             >
               Add to Wallet
             </button>
@@ -154,7 +154,7 @@ import { useTransferLimit } from '@/composables/useTransferLimit';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { usePortals } from '@/stores/portals';
-import type { Chain } from '@/types/data';
+import type { Chain, Token } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
 import { isUnsignedNumeric, makeMatchingDecimalsValidator } from '@/validation/validators';
@@ -171,6 +171,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
+const { getTokensForChain } = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { hideActionButton, showActionButton } = usePortals();
 
@@ -208,15 +209,13 @@ watch(providerChainOption, (_newProviderChainOption, previousProviderChainOption
 
 const { chainOptions } = useChainSelection(chains, ref([]));
 
-const selectedSourceChainIdentifier = computed(
-  () => selectedSourceChain.value?.value.identifier ?? -1,
+const selectedSourceChainTokens = computed(() =>
+  getTokensForChain(selectedSourceChain.value?.value.identifier ?? -1),
 );
 
-const { selectedToken, tokens, addTokenToProvider, addTokenAvailable } = useTokenSelection(
-  chains,
-  selectedSourceChainIdentifier,
-  provider,
-);
+const selectedToken = ref<SelectorOption<Token> | null>(null);
+const addTokenAvailable = computed(() => !!provider.value && !!selectedToken.value);
+const { tokenOptions } = useTokenSelection(selectedSourceChainTokens);
 
 const selectedTokenAmount = computed(() => {
   if (
@@ -321,6 +320,12 @@ const setMaxTokenAmount = async () => {
     selectedAmount.value = maxTransferableTokenBalance.value.decimalAmount;
   } else if (balance.value) {
     selectedAmount.value = balance.value.decimalAmount;
+  }
+};
+
+const handleAddTokenClick = () => {
+  if (provider.value && selectedToken.value) {
+    provider.value.addToken(selectedToken.value.value);
   }
 };
 

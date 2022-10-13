@@ -24,6 +24,23 @@ describe('configuration store', () => {
     });
   });
 
+  describe('getTokensForChain getter', () => {
+    it('returns the token list for specific chain id', () => {
+      const configuration = useConfiguration();
+      const chainId = 5;
+      const tokens = [generateToken(), generateToken()];
+      const chain = generateChainWithTokens({ identifier: chainId, tokens });
+      configuration.$state = { chains: { [chainId]: chain } };
+      const resultTokens = configuration.getTokensForChain(5);
+      expect(resultTokens).toEqual(tokens);
+    });
+    it('returns an empty array if chain is not found in configuration', () => {
+      const configuration = useConfiguration();
+      const resultTokens = configuration.getTokensForChain(4);
+      expect(resultTokens).toEqual([]);
+    });
+  });
+
   describe('getTokenForChain getter', () => {
     it('returns a specific token for specific chain', () => {
       const configuration = useConfiguration();
