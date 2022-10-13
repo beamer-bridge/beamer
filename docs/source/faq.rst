@@ -4,7 +4,7 @@ FAQ
 * What is Beamer Bridge?
 
   Beamer Bridge enables direct ERC20 asset transfers between any two EVM
-  compatible rollups, without transiting via L1.
+  compatible rollups, without transiting via Layer 1(L1).
 
 * What are the advantages of Beamer?
 
@@ -39,7 +39,7 @@ FAQ
 * What happens when I send tokens from Rollup 1 to Rollup 2?
 
   1. User initiates transaction to contract on Rollup 1, locking fees and assets
-  2. Agent sents assets to user on Rollup 2
+  2. Agent sends assets to user on Rollup 2
 
   At this stage, the user is done and receives their assets on target rollup.
 
@@ -55,7 +55,7 @@ FAQ
 
 * What is a rollup?
 
-  A rollup performs transaction executioon oustide Layer 1 nad then the data is
+  A rollup performs transaction execution outside Layer 1 and then the data is
   posted to layer 1 where consensus is reached. There are two types of rollups,
   Zero-Knowledge (ZK) and Optimistic Rollups.
 
