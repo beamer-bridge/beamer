@@ -13,6 +13,16 @@ export const useConfiguration = defineStore('configuration', {
     },
   },
   getters: {
+    getTokensForChain:
+      (state) =>
+      (chainId: number): Token[] => {
+        const chain = state.chains[chainId];
+        if (!chain) {
+          return [];
+        }
+
+        return chain.tokens;
+      },
     getTokenForChain:
       (state) =>
       (chainId: number, tokenSymbol: string): Token | undefined => {
