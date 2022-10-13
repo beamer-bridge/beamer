@@ -47,7 +47,7 @@
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
           <div v-else class="self-end">
-            <div v-if="showTokenBalance && balance" class="text-base">
+            <div v-if="balance" class="text-base">
               <spinner
                 v-if="maxTransferableTokenBalanceLoading"
                 size="6"
@@ -174,7 +174,7 @@ const configuration = useConfiguration();
 const ethereumProvider = useEthereumProvider();
 const { hideActionButton, showActionButton } = usePortals();
 
-const { provider, signer, signerAddress } = storeToRefs(ethereumProvider);
+const { provider, signerAddress } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
@@ -238,13 +238,8 @@ const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
   true,
 );
 
-const {
-  available: showTokenBalance,
-  formattedBalance: formattedTokenBalance,
-  balance,
-} = useTokenBalance(
+const { formattedBalance: formattedTokenBalance, balance } = useTokenBalance(
   provider,
-  signer,
   computed(() => selectedToken?.value?.value ?? undefined),
 );
 

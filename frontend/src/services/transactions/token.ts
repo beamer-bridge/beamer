@@ -1,9 +1,9 @@
-import type { JsonRpcSigner } from '@ethersproject/providers';
+import type { JsonRpcSigner, Listener } from '@ethersproject/providers';
 import { BigNumber, Contract } from 'ethers';
 
 import StandardToken from '@/assets/StandardToken.json';
 import type { IEthereumProvider } from '@/services/web3-provider';
-import type { Token } from '@/types/data';
+import type { EthereumAddress, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
@@ -41,4 +41,24 @@ export async function getTokenBalance(
   const connectedContract = provider.connectContract(tokenContract);
   const balance: BigNumber = await connectedContract.balanceOf(accountAddress);
   return TokenAmount.new(new UInt256(balance.toString()), token);
+}
+
+export function listenOnTokenBalanceChange(options: {
+  provider: IEthereumProvider;
+  token: Token;
+  addressToListen: EthereumAddress;
+  onReduce: Listener;
+  onIncrease: Listener;
+}): Contract {
+  const tokenContract = options.provider.connectContract(
+    new Contract(options.token.address, StandardToken.abi),
+  );
+
+  const sendFilter = tokenContract.filters.Transfer(options.addressToListen, undefined);
+  const receiveFilter = tokenContract.filters.Transfer(undefined, options.addressToListen);
+
+  tokenContract.on(sendFilter, options.onReduce);
+  tokenContract.on(receiveFilter, options.onIncrease);
+
+  return tokenContract;
 }
