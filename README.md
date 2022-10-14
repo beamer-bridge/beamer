@@ -10,6 +10,9 @@ Liquidity providers then fill the request and directly send tokens to the user
 on the target rollup.
 
 Documentation: https://docs.beamerbridge.com
+
+Mainnet frontend: https://app.beamerbridge.com
+
 Testnet frontend: https://testnet.beamerbridge.com
 
 For running your own agents, see https://github.com/beamer-bridge/run-your-own-agent.
