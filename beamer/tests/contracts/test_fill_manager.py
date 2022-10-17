@@ -139,3 +139,15 @@ def test_unset_resolver(deployer, token):
     )
 
     new_fill_manager.invalidateFill(request_id, 1, chain_id)
+
+
+def test_invalidate_previous_block_hash(fill_manager):
+    chain_id = brownie.web3.eth.chain_id
+    current_block = brownie.web3.eth.get_block("latest")
+    with brownie.reverts("Cannot invalidate fills of current block"):
+        fill_manager.invalidateFill(1, current_block["hash"], chain_id)
+
+    assert current_block["hash"] != brownie.web3.eth.get_block("latest")["hash"]
+
+    # We proceeded one block so invalidating the fill id should work now
+    fill_manager.invalidateFill(1, current_block["hash"], chain_id)
