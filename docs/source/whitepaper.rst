@@ -248,7 +248,8 @@ restrict the call to the authenticated messenger contract on rollup B.
 After L1 resolution has transferred the fill information from rollup B to rollup A, Bob can directly call ``withdraw`` on
 the ``request manager`` on rollup A. Bob's address is stored in the request object, thus he will immediately be considered
 the winner of the challenge and receive the challengers' stake, the tokens locked by Alice, and the fees paid by Alice for
-the service.
+the service. Note that after a request is resolved through L1, any claim about this request cannot be challenged anymore.
+This is due to the fact, that any claim will be resolved correctly by the L1 resolution information.
 
 .. mermaid::
     :caption: `L1 Resolution`
@@ -369,7 +370,8 @@ that the request ID cannot be mapped to the fill ID.
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
 message will store a flag in the request manager stating that the fill ID is invalid for the given request. This
-invalidates any claim with the corresponding fill ID.
+invalidates any claim with the corresponding fill ID. The associated claims cannot be challenged anymore as they will be
+resolved correctly by the invalidation data.
 
 To make sure the proof arrives in time on rollup A, Bob will need to call the fill manager as soon as he notices a
 false claim for a non-filled request. It takes ``finality period of rollup B`` after Bob's call is able to be executed
