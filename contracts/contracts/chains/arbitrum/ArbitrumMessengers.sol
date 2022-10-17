@@ -9,7 +9,6 @@ import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
 
 import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
-import "../../Resolver.sol";
 
 contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
     IBridge public bridge;
@@ -71,9 +70,10 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
             message.length,
             0
         );
-        require(deposits[tx.origin] >= submissionFee, "insufficient deposit");
+        uint256 depositOrigin = deposits[tx.origin];
+        require(depositOrigin >= submissionFee, "insufficient deposit");
 
-        deposits[tx.origin] -= submissionFee;
+        deposits[tx.origin] = depositOrigin - submissionFee;
 
         // We set maxGas to 100_000. We also set gasPriceBid to 0 because the
         // relayer will redeem the ticket on L2 and we only want to pay the
