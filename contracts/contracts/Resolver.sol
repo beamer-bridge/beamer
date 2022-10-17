@@ -57,7 +57,7 @@ contract Resolver is Ownable, RestrictedCalls {
         uint256 sourceChainId,
         address filler
     ) external restricted(fillChainId) {
-        SourceChainInfo storage info = sourceChainInfos[sourceChainId];
+        SourceChainInfo memory info = sourceChainInfos[sourceChainId];
         require(
             info.requestManager != address(0),
             "No request manager available for source chain"
