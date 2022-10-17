@@ -434,6 +434,11 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         require(block.timestamp < claim.termination, "Claim expired");
+        require(request.filler == address(0), "Request already resolved");
+        require(
+            !request.invalidFillIds[claim.fillId],
+            "Fill already invalidated"
+        );
 
         address nextActor;
         uint256 minValue;
