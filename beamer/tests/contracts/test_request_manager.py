@@ -979,6 +979,36 @@ def test_withdraw_l1_resolved_muliple_claims(contracts, request_manager, token, 
     assert web3.eth.get_balance(request_manager.owner()) == owner_eth_balance + 2 * claim_stake
 
 
+def test_challenge_after_l1_resolution(request_manager, token, claim_stake, contracts):
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+    transfer_amount = 23
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+
+    # Claim
+    fill_id = to_bytes(b"123")
+    claim_tx = request_manager.claimRequest(
+        request_id, fill_id, {"from": claimer, "value": claim_stake}
+    )
+    claim_id = claim_tx.return_value
+
+    request_manager.invalidateFill(request_id, fill_id, chain.id, {"from": contracts.l1_messenger})
+    # Assert that invalidation works
+    assert request_manager.isInvalidFill(request_id, fill_id)
+
+    with brownie.reverts("Fill already invalidated"):
+        request_manager.challengeClaim(claim_id)
+
+    request_manager.resolveRequest(
+        request_id, fill_id, brownie.web3.chain_id, claimer, {"from": contracts.l1_messenger}
+    )
+
+    with brownie.reverts("Request already resolved"):
+        request_manager.challengeClaim(claim_id)
+
+
 def test_withdraw_two_challengers(
     request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
