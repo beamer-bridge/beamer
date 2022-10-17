@@ -85,7 +85,8 @@ contract FillManager is Ownable, LpWhitelist {
         uint256 amount,
         uint256 nonce
     ) external onlyWhitelist returns (bytes32) {
-        require(l1Resolver != address(0), "Resolver address not set");
+        address _l1Resolver = l1Resolver;
+        require(_l1Resolver != address(0), "Resolver address not set");
         bytes32 requestId = BeamerUtils.createRequestId(
             sourceChainId,
             block.chainid,
@@ -101,16 +102,15 @@ contract FillManager is Ownable, LpWhitelist {
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
         bytes32 fillId = generateFillId();
+        fills[requestId] = fillId;
 
         messenger.sendMessage(
-            l1Resolver,
+            _l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
                 (requestId, fillId, block.chainid, sourceChainId, msg.sender)
             )
         );
-
-        fills[requestId] = fillId;
 
         emit RequestFilled(
             requestId,
@@ -140,7 +140,8 @@ contract FillManager is Ownable, LpWhitelist {
         bytes32 fillId,
         uint256 sourceChainId
     ) external {
-        require(l1Resolver != address(0), "Resolver address not set");
+        address _l1Resolver = l1Resolver;
+        require(_l1Resolver != address(0), "Resolver address not set");
         require(fills[requestId] != fillId, "Fill valid");
         require(
             fillId != generateFillId(),
@@ -148,7 +149,7 @@ contract FillManager is Ownable, LpWhitelist {
         );
 
         messenger.sendMessage(
-            l1Resolver,
+            _l1Resolver,
             abi.encodeCall(
                 Resolver.resolve,
                 (requestId, fillId, block.chainid, sourceChainId, address(0))
