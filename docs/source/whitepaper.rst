@@ -365,7 +365,8 @@ the request as claimed. For that, Bob needs to create and submit an ``L1 non-fil
 
 When called, the fill manager contract on rollup B checks that no fills exists for the corresponding request ID and fill ID.
 It then submits a proof to the outbox of rollup B indicating that the fill ID is invalid for the given request ID, i.e.
-that the request ID cannot be mapped to the fill ID.
+that the request ID cannot be mapped to the fill ID. In order to prevent a specific race condition where a non-fill proof
+is generated in the same block as the fill transactions, the current block's fill ID cannot be invalidated. 
 
 Similarly to the filled L1 resolution case, Bob can then trigger a call on L1 to forward this message to rollup A. This
 message will store a flag in the request manager stating that the fill ID is invalid for the given request. This
