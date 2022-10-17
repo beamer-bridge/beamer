@@ -100,7 +100,7 @@ contract FillManager is Ownable, LpWhitelist {
         IERC20 token = IERC20(targetTokenAddress);
         token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
 
-        bytes32 fillId = blockhash(block.number - 1);
+        bytes32 fillId = generateFillId();
 
         messenger.sendMessage(
             l1Resolver,
@@ -142,6 +142,11 @@ contract FillManager is Ownable, LpWhitelist {
     ) external {
         require(l1Resolver != address(0), "Resolver address not set");
         require(fills[requestId] != fillId, "Fill valid");
+        require(
+            fillId != generateFillId(),
+            "Cannot invalidate fills of current block"
+        );
+
         messenger.sendMessage(
             l1Resolver,
             abi.encodeCall(
@@ -150,5 +155,14 @@ contract FillManager is Ownable, LpWhitelist {
             )
         );
         emit FillInvalidated(requestId, fillId);
+    }
+
+    /// Generate a fill ID.
+    ///
+    /// The fill ID is defined as the previous block hash.
+    ///
+    /// @return The current fill ID
+    function generateFillId() private view returns (bytes32) {
+        return blockhash(block.number - 1);
     }
 }
