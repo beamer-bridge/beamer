@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import structlog
 from eth_typing import Address
 from web3 import Web3
+from web3.middleware import latest_block_based_cache_middleware
 
 import beamer.metrics
 from beamer.chain import POLL_PERIOD_MAINNET, POLL_PERIOD_TESTNET, EventMonitor, EventProcessor
@@ -38,6 +39,8 @@ class Agent:
         w3_l1 = make_web3(config.l1_rpc_url, config.account)
         w3_l2a = make_web3(config.l2a_rpc_url, config.account)
         w3_l2b = make_web3(config.l2b_rpc_url, config.account)
+
+        w3_l1.middleware_onion.add(latest_block_based_cache_middleware)
 
         l2a_contracts_info = _get_contracts_info(config, w3_l2a)
         l2b_contracts_info = _get_contracts_info(config, w3_l2b)
