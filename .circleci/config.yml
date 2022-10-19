@@ -12,7 +12,7 @@ commands:
 executors:
   python:
     docker:
-      - image: cimg/python:3.9.13
+      - image: cimg/python:3.10
     working_directory: ~/beamer
 
   node:
