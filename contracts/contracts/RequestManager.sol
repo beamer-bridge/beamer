@@ -34,10 +34,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         address sourceTokenAddress;
         uint256 targetChainId;
         uint256 amount;
-        uint256 validUntil;
-        uint256 lpFee;
-        uint256 protocolFee;
-        uint192 activeClaims;
+        uint32 validUntil;
+        uint96 lpFee;
+        uint96 protocolFee;
+        uint32 activeClaims;
         uint256 withdrawClaimId;
         address filler;
         bytes32 fillId;
@@ -69,7 +69,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         address targetAddress,
         uint256 amount,
         uint256 nonce,
-        uint256 validUntil
+        uint32 validUntil
     );
 
     /// Emitted when the token deposit for request ``requestId`` has been
@@ -300,9 +300,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         newRequest.sourceTokenAddress = sourceTokenAddress;
         newRequest.targetChainId = targetChainId;
         newRequest.amount = amount;
-        newRequest.validUntil = block.timestamp + validityPeriod;
-        newRequest.lpFee = lpFeeTokenAmount;
-        newRequest.protocolFee = protocolFeeTokenAmount;
+        newRequest.validUntil = uint32(block.timestamp + validityPeriod);
+        newRequest.lpFee = uint96(lpFeeTokenAmount);
+        newRequest.protocolFee = uint96(protocolFeeTokenAmount);
 
         emit RequestCreated(
             requestId,
