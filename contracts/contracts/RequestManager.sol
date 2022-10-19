@@ -436,17 +436,18 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         validClaimId(claimId)
     {
         Claim storage claim = claims[claimId];
-        Request storage request = requests[claim.requestId];
-        require(block.timestamp < claim.termination, "Claim expired");
+        bytes32 requestId = claim.requestId;
+        uint256 termination = claim.termination;
+        Request storage request = requests[requestId];
+        require(block.timestamp < termination, "Claim expired");
         require(request.filler == address(0), "Request already resolved");
         require(
             !request.invalidFillIds[claim.fillId],
             "Fill already invalidated"
         );
 
-        address nextActor;
-        uint256 minValue;
         uint256 periodExtension = challengePeriodExtension;
+        address claimer = claim.claimer;
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
 
@@ -454,43 +455,45 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
             if (challengerStakeTotal == 0) {
                 periodExtension += finalityPeriods[request.targetChainId];
             }
-            require(claim.claimer != msg.sender, "Cannot challenge own claim");
-            nextActor = msg.sender;
-            minValue = claimerStake - challengerStakeTotal + 1;
+            require(msg.sender != claimer, "Cannot challenge own claim");
+            require(
+                msg.value >= claimerStake - challengerStakeTotal + 1,
+                "Not enough stake provided"
+            );
         } else {
-            nextActor = claim.claimer;
-            minValue = challengerStakeTotal - claimerStake + claimStake;
+            require(msg.sender == claimer, "Not eligible to outbid");
+            require(
+                msg.value >= challengerStakeTotal - claimerStake + claimStake,
+                "Not enough stake provided"
+            );
         }
 
-        require(msg.sender == nextActor, "Not eligible to outbid");
-        require(msg.value >= minValue, "Not enough stake provided");
-
-        if (nextActor == claim.claimer) {
-            claim.claimerStake += msg.value;
+        if (msg.sender == claimer) {
+            claimerStake += msg.value;
+            claim.claimerStake = claimerStake;
         } else {
             claim.lastChallenger = msg.sender;
             claim.challengersStakes[msg.sender] += msg.value;
-            claim.challengerStakeTotal += msg.value;
+            challengerStakeTotal += msg.value;
+            claim.challengerStakeTotal = challengerStakeTotal;
         }
 
-        claim.termination = Math.max(
-            claim.termination,
-            block.timestamp + periodExtension
-        );
-        uint256 minimumTermination = block.timestamp + challengePeriodExtension;
+        termination = Math.max(termination, block.timestamp + periodExtension);
+        claim.termination = termination;
+
         require(
-            claim.termination >= minimumTermination,
+            termination >= block.timestamp + challengePeriodExtension,
             "Claim termination did not increase enough"
         );
 
         emit ClaimMade(
-            claim.requestId,
+            requestId,
             claimId,
-            claim.claimer,
-            claim.claimerStake,
+            claimer,
+            claimerStake,
             claim.lastChallenger,
-            claim.challengerStakeTotal,
-            claim.termination,
+            challengerStakeTotal,
+            termination,
             claim.fillId
         );
     }
