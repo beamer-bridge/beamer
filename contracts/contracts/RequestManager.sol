@@ -511,7 +511,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         returns (address)
     {
         Claim storage claim = claims[claimId];
-        Request storage request = requests[claim.requestId];
+        bytes32 requestId = claim.requestId;
+        Request storage request = requests[requestId];
 
         (address claimReceiver, uint256 ethToTransfer) = resolveClaim(claimId);
 
@@ -520,21 +521,24 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
             claim.challengersStakes[claimReceiver] = 0;
         }
 
+        uint256 withdrawnAmount = claim.withdrawnAmount;
+
         // First time withdraw is called, remove it from active claims
-        if (claim.withdrawnAmount == 0) {
+        if (withdrawnAmount == 0) {
             request.activeClaims -= 1;
         }
-        claim.withdrawnAmount += ethToTransfer;
+        withdrawnAmount += ethToTransfer;
+        claim.withdrawnAmount = withdrawnAmount;
+
         require(
-            claim.withdrawnAmount <=
-                claim.claimerStake + claim.challengerStakeTotal,
+            withdrawnAmount <= claim.claimerStake + claim.challengerStakeTotal,
             "Amount to withdraw too large"
         );
 
         (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
-        emit ClaimStakeWithdrawn(claimId, claim.requestId, claimReceiver);
+        emit ClaimStakeWithdrawn(claimId, requestId, claimReceiver);
 
         if (request.withdrawClaimId == 0 && claimReceiver == claim.claimer) {
             withdrawDeposit(request, claimId);
