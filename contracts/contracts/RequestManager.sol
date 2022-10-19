@@ -478,13 +478,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
             claim.challengerStakeTotal = challengerStakeTotal;
         }
 
-        termination = Math.max(termination, block.timestamp + periodExtension);
-        claim.termination = termination;
-
-        require(
-            termination >= block.timestamp + challengePeriodExtension,
-            "Claim termination did not increase enough"
-        );
+        if (block.timestamp + periodExtension > termination) {
+            termination = block.timestamp + periodExtension;
+            claim.termination = termination;
+        }
 
         emit ClaimMade(
             requestId,
