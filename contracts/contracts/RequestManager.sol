@@ -377,30 +377,30 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
         request.activeClaims += 1;
-        currentNonce += 1;
 
-        Claim storage claim = claims[currentNonce];
+        uint256 nonce = currentNonce + 1;
+        currentNonce = nonce;
+        uint256 termination = block.timestamp + claimPeriod;
+
+        Claim storage claim = claims[nonce];
         claim.requestId = requestId;
         claim.claimer = msg.sender;
-        claim.claimerStake = claimStake;
-        claim.lastChallenger = address(0);
-        claim.challengerStakeTotal = 0;
-        claim.withdrawnAmount = 0;
-        claim.termination = block.timestamp + claimPeriod;
+        claim.claimerStake = msg.value;
+        claim.termination = termination;
         claim.fillId = fillId;
 
         emit ClaimMade(
             requestId,
-            currentNonce,
-            claim.claimer,
-            claim.claimerStake,
-            claim.lastChallenger,
-            claim.challengerStakeTotal,
-            claim.termination,
+            nonce,
+            msg.sender,
+            msg.value,
+            address(0),
+            0,
+            termination,
             fillId
         );
 
-        return currentNonce;
+        return nonce;
     }
 
     /// Challenge an existing claim.
