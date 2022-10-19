@@ -276,23 +276,23 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
         uint256 lpFeeTokenAmount = lpFee(amount);
         uint256 protocolFeeTokenAmount = protocolFee(amount);
-        uint256 totalTokenAmount = amount +
-            lpFeeTokenAmount +
-            protocolFeeTokenAmount;
 
         require(
-            token.allowance(msg.sender, address(this)) >= totalTokenAmount,
+            token.allowance(msg.sender, address(this)) >=
+                amount + lpFeeTokenAmount + protocolFeeTokenAmount,
             "Insufficient allowance"
         );
 
-        currentNonce += 1;
+        uint256 nonce = currentNonce + 1;
+        currentNonce = nonce;
+
         bytes32 requestId = BeamerUtils.createRequestId(
             block.chainid,
             targetChainId,
             targetTokenAddress,
             targetAddress,
             amount,
-            currentNonce
+            nonce
         );
 
         Request storage newRequest = requests[requestId];
@@ -311,11 +311,15 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
             targetTokenAddress,
             targetAddress,
             amount,
-            currentNonce,
-            newRequest.validUntil
+            nonce,
+            uint32(block.timestamp + validityPeriod)
         );
 
-        token.safeTransferFrom(msg.sender, address(this), totalTokenAmount);
+        token.safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount + lpFeeTokenAmount + protocolFeeTokenAmount
+        );
 
         return requestId;
     }
