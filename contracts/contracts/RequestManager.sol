@@ -554,8 +554,11 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
+        uint256 withdrawClaimId = request.withdrawClaimId;
+        address claimer = claim.claimer;
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
+        bytes32 claimFillId = claim.fillId;
         require(
             claim.withdrawnAmount < claimerStake + challengerStakeTotal,
             "Claim already withdrawn"
@@ -573,15 +576,15 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
         if (filler != address(0)) {
             // Claim resolution via 1)
-            claimValid = filler == claim.claimer && fillId == claim.fillId;
+            claimValid = filler == claimer && fillId == claimFillId;
         } else if (request.invalidFillIds[fillId]) {
             // Claim resolution via 2)
             claimValid = false;
-        } else if (request.withdrawClaimId != 0) {
+        } else if (withdrawClaimId != 0) {
             // Claim resolution via 3)
             claimValid =
-                claim.claimer == claims[request.withdrawClaimId].claimer &&
-                claim.fillId == claims[request.withdrawClaimId].fillId;
+                claimer == claims[withdrawClaimId].claimer &&
+                claimFillId == claims[withdrawClaimId].fillId;
         } else {
             // Claim resolution via 4)
             require(
@@ -598,7 +601,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         if (claimValid) {
             // If claim is valid, all stakes go to the claimer
             ethToTransfer = claimerStake + challengerStakeTotal;
-            claimReceiver = claim.claimer;
+            claimReceiver = claimer;
         } else if (challengerStakeTotal > 0) {
             // If claim is invalid, partial withdrawal by the sender
             ethToTransfer = 2 * claim.challengersStakes[msg.sender];
