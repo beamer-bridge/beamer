@@ -1,4 +1,4 @@
-import { UInt256 } from '@/types/uint-256';
+import { EXCEPTIONS, UInt256 } from '@/types/uint-256';
 import { generateUInt256Data } from '~/utils/data_generators';
 
 function createUInt256Pair(numberOne: string, numberTwo: string) {
@@ -8,6 +8,10 @@ function createUInt256Pair(numberOne: string, numberTwo: string) {
   ];
 }
 describe('UInt256', () => {
+  it('cannot be instantiated for a negative number', () => {
+    expect(() => new UInt256('-50')).toThrow(EXCEPTIONS.CONSTRUCT_NEGATIVE_VALUE);
+  });
+
   describe('parse()', () => {
     it('correctly parses integer number according to decimals', () => {
       const number = UInt256.parse('2', 4);
@@ -25,12 +29,6 @@ describe('UInt256', () => {
       const number = UInt256.parse('1', 0);
 
       expect(number.asString).toBe('1');
-    });
-
-    it('can parse negative numbers', () => {
-      const number = UInt256.parse('-1');
-
-      expect(number.asString).toBe('-1');
     });
 
     it('can parse numbers larger then the maximum JavaScript integer', () => {
@@ -72,8 +70,29 @@ describe('UInt256', () => {
 
   describe('add()', () => {
     it('returns sum of two numbers', () => {
-      const [numberOne, numberTwo] = createUInt256Pair('100', '-50');
-      expect(numberOne.add(numberTwo).asString).toBe('50');
+      const [numberOne, numberTwo] = createUInt256Pair('100', '50');
+      expect(numberOne.add(numberTwo).asString).toBe('150');
+    });
+  });
+
+  describe('subtract()', () => {
+    it('returns the difference between two numbers', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('100', '50');
+      expect(numberOne.subtract(numberTwo).asString).toBe('50');
+    });
+  });
+
+  describe('multiply()', () => {
+    it('returns the multiplication result of the two numbers', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('4', '4');
+      expect(numberOne.multiply(numberTwo).asString).toBe('16');
+    });
+  });
+
+  describe('divide()', () => {
+    it('returns the result of the divison between the two numbers', () => {
+      const [numberOne, numberTwo] = createUInt256Pair('4', '4');
+      expect(numberOne.divide(numberTwo).asString).toBe('1');
     });
   });
 
