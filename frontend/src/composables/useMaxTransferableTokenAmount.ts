@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import { ref, watch } from 'vue';
 
-import { deriveBaseTransferableAmountFromTotalAmount } from '@/services/transactions/request-manager';
+import { getAmountBeforeFees } from '@/services/transactions/request-manager';
 import type { Chain } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 
@@ -14,10 +14,10 @@ export function useMaxTransferableTokenAmount(
 
   async function updateMaxTransferableTokenAmount(balance: TokenAmount, chain: Chain) {
     try {
-      const transferableAmount = await deriveBaseTransferableAmountFromTotalAmount(
+      const transferableAmount = await getAmountBeforeFees(
+        balance.uint256,
         chain.rpcUrl,
         chain.requestManagerAddress,
-        balance.uint256,
       );
       maxTransferableTokenAmount.value = TokenAmount.new(transferableAmount, balance.token);
     } catch (e) {

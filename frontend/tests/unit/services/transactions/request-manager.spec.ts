@@ -1,4 +1,4 @@
-import { deriveBaseTransferableAmountFromTotalAmount } from '@/services/transactions/request-manager';
+import { getAmountBeforeFees } from '@/services/transactions/request-manager';
 import * as transactionUtils from '@/services/transactions/utils';
 import { UInt256 } from '@/types/uint-256';
 import { getRandomEthereumAddress, getRandomUrl } from '~/utils/data_generators';
@@ -35,17 +35,15 @@ describe('request-manager', () => {
   });
   describe('deriveBaseAmountFromTotalTransferAmount()', () => {
     describe('when percentage lp fee is higher than the minimal lp fee for the provided token amount', () => {
-      it('derives the base amount (amount before fees) from the provided total amount by using percentage fees', async () => {
+      it('returns the amount before fees for the provided total amount by using percentage fees', async () => {
         const rpcUrl = getRandomUrl('rpc');
         const requestManagerAddress = getRandomEthereumAddress();
         const DECIMALS = 4;
 
-        const totalAmountDecimal = 1000;
-        const minLpFee = 1;
+        const minLpFee = 0.001;
         const lpFeePercent = 0.3;
         const protocolFeePercent = 0.3;
 
-        const totalAmountWei = UInt256.parse(totalAmountDecimal.toString(), DECIMALS);
         const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
@@ -56,17 +54,26 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await deriveBaseTransferableAmountFromTotalAmount(
-          rpcUrl,
-          requestManagerAddress,
-          totalAmountWei,
-        );
+        const totalAmounts = [
+          UInt256.parse('10', DECIMALS),
+          UInt256.parse('100', DECIMALS),
+          UInt256.parse('1000', DECIMALS),
+        ];
+        const expectedResult = [
+          new UInt256('99403'),
+          new UInt256('994035'),
+          new UInt256('9940357'),
+        ];
+        const testCases = [
+          [totalAmounts[0], expectedResult[0]],
+          [totalAmounts[1], expectedResult[1]],
+          [totalAmounts[2], expectedResult[2]],
+        ];
 
-        const decimalResult =
-          (totalAmountDecimal * PARTS_IN_PERCENT) /
-          (PARTS_IN_PERCENT + lpFeePercent + protocolFeePercent);
-
-        expect(baseAmount.format(DECIMALS)).toBeCloseTo(decimalResult, DECIMALS - 1);
+        testCases.forEach(async ([amount, expectedResult]) => {
+          const result = await getAmountBeforeFees(amount, rpcUrl, requestManagerAddress);
+          expect(result.asString).toBe(expectedResult.asString);
+        });
       });
     });
     describe('when percentage lp fee is lower than the minimal lp fee for the provided token amount', () => {
@@ -85,26 +92,20 @@ describe('request-manager', () => {
 
         mockGetContractReturnValue({ minLpFeeWei, lpFeePartsPerMillion });
 
-        expect(
-          deriveBaseTransferableAmountFromTotalAmount(
-            rpcUrl,
-            requestManagerAddress,
-            totalAmountWei,
-          ),
-        ).rejects.toThrow('Total amount is not high enough to cover the fees.');
+        expect(getAmountBeforeFees(totalAmountWei, rpcUrl, requestManagerAddress)).rejects.toThrow(
+          'Total amount is not high enough to cover the fees.',
+        );
       });
 
-      it('derives the base amount (amount before fees) from the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
+      it('returns the amount before fees for the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
         const rpcUrl = getRandomUrl('rpc');
         const requestManagerAddress = getRandomEthereumAddress();
         const DECIMALS = 4;
 
-        const totalAmountDecimal = 1000;
-        const minLpFee = 10;
-        const lpFeePercent = 0.3;
+        const minLpFee = 1;
+        const lpFeePercent = 0.003;
         const protocolFeePercent = 0.3;
 
-        const totalAmountWei = UInt256.parse(totalAmountDecimal.toString(), DECIMALS);
         const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
@@ -115,17 +116,26 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await deriveBaseTransferableAmountFromTotalAmount(
-          rpcUrl,
-          requestManagerAddress,
-          totalAmountWei,
-        );
+        const totalAmounts = [
+          UInt256.parse('10', DECIMALS),
+          UInt256.parse('100', DECIMALS),
+          UInt256.parse('1000', DECIMALS),
+        ];
+        const expectedResult = [
+          new UInt256('89700'),
+          new UInt256('987008'),
+          new UInt256('9960089'),
+        ];
+        const testCases = [
+          [totalAmounts[0], expectedResult[0]],
+          [totalAmounts[1], expectedResult[1]],
+          [totalAmounts[2], expectedResult[2]],
+        ];
 
-        const decimalResult =
-          (totalAmountDecimal * PARTS_IN_PERCENT) / (PARTS_IN_PERCENT + protocolFeePercent) -
-          minLpFee;
-
-        expect(baseAmount.format(DECIMALS)).toBeCloseTo(decimalResult, DECIMALS - 1);
+        testCases.forEach(async ([amount, expectedResult]) => {
+          const result = await getAmountBeforeFees(amount, rpcUrl, requestManagerAddress);
+          expect(result.asString).toBe(expectedResult.asString);
+        });
       });
     });
   });
