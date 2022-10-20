@@ -2,11 +2,21 @@ import { BigNumber, utils } from 'ethers';
 
 import type { Encodable } from '@/types/encoding';
 
+export enum EXCEPTIONS {
+  CONSTRUCT_NEGATIVE_VALUE = 'Cannot create UInt256 from a negative number',
+}
+
 export class UInt256 implements Encodable<UInt256Data> {
   private value: BigNumber;
 
   constructor(data: UInt256Data) {
-    this.value = BigNumber.from(data);
+    const value = BigNumber.from(data);
+
+    if (value.isNegative()) {
+      throw new Error(EXCEPTIONS.CONSTRUCT_NEGATIVE_VALUE);
+    }
+
+    this.value = value;
   }
 
   static parse(value: string, decimals?: number): UInt256 {
@@ -27,6 +37,18 @@ export class UInt256 implements Encodable<UInt256Data> {
 
   public add(value: UInt256): UInt256 {
     return new UInt256(this.value.add(value.value).toString());
+  }
+
+  public subtract(value: UInt256): UInt256 {
+    return new UInt256(this.value.sub(value.value).toString());
+  }
+
+  public multiply(value: UInt256): UInt256 {
+    return new UInt256(this.value.mul(value.value).toString());
+  }
+
+  public divide(value: UInt256): UInt256 {
+    return new UInt256(this.value.div(value.value).toString());
   }
 
   public isZero(): boolean {

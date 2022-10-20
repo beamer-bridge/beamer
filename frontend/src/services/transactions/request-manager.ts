@@ -4,20 +4,47 @@ import type { BigNumberish } from 'ethers';
 import { BigNumber, Contract } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
+import { getContract } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 
-function getContract(rpcUrl: string, address: EthereumAddress): Contract {
-  const provider = new JsonRpcProvider(rpcUrl);
-  return new Contract(address, RequestManager.abi, provider);
+export async function deriveBaseTransferableAmountFromTotalAmount(
+  rpcUrl: string,
+  requestManagerAddress: string,
+  totalAmountWei: UInt256,
+): Promise<UInt256> {
+  const PARTS_IN_MILLION = new UInt256('1000000');
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const minLpFeeWei: UInt256 = new UInt256(await contract.minLpFee());
+  const lpFeePartsPerMillion: UInt256 = new UInt256(await contract.lpFeePPM());
+  const protocolFeePartsPerMillion: UInt256 = new UInt256(await contract.protocolFeePPM());
+
+  const lpFeePPMAmount = totalAmountWei.multiply(lpFeePartsPerMillion).divide(PARTS_IN_MILLION);
+
+  if (lpFeePPMAmount.gte(minLpFeeWei)) {
+    return totalAmountWei
+      .multiply(PARTS_IN_MILLION)
+      .divide(PARTS_IN_MILLION.add(protocolFeePartsPerMillion).add(lpFeePartsPerMillion));
+  } else {
+    try {
+      return totalAmountWei
+        .multiply(PARTS_IN_MILLION)
+        .divide(PARTS_IN_MILLION.add(protocolFeePartsPerMillion))
+        .subtract(minLpFeeWei);
+    } catch (e) {
+      throw new Error(
+        'Cannot derive base amount. Total amount is not high enough to cover the fees.',
+      );
+    }
+  }
 }
 
 export async function getMinRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getContract(rpcUrl, requestManagerAddress);
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const minLpFee: BigNumberish = await contract.minLpFee();
   return new UInt256(minLpFee.toString());
 }
@@ -27,7 +54,7 @@ export async function getRequestFee(
   requestManagerAddress: string,
   transferAmount: UInt256,
 ): Promise<UInt256> {
-  const contract = getContract(rpcUrl, requestManagerAddress);
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const fetchedAmount: BigNumberish = await contract.totalFee(
     BigNumber.from(transferAmount.asString),
   );
@@ -79,7 +106,7 @@ export async function getRequestIdentifier(
   transactionHash: string,
 ): Promise<UInt256> {
   const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, requestManagerAddress);
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const receipt = await provider.waitForTransaction(transactionHash, 1);
   if (receipt) {
     const event = contract.interface.parseLog(receipt.logs[0]);
@@ -102,7 +129,7 @@ export async function getRequestData(
   requestManagerAddress: string,
   requestIdentifier: UInt256,
 ): Promise<RequestData> {
-  const contract = getContract(rpcUrl, requestManagerAddress);
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   const request: RequestData | undefined = await contract.requests(
     BigNumber.from(requestIdentifier.asString),
   );
@@ -156,7 +183,7 @@ export function failWhenRequestExpires(
   requestAccount: string,
 ): Cancelable<void> {
   const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, requestManagerAddress);
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const promise = new Promise<void>((_, reject) => {
