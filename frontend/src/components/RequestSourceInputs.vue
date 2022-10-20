@@ -53,19 +53,32 @@
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
           <div v-else class="self-end">
-            <div v-if="showTokenBalance && balance" class="text-base mr-5 mt-1">
-              <div v-if="balance.uint256.isZero()">{{ formattedTokenBalance }} available</div>
-              <Tooltip
-                v-else
-                :hint="`You have ${balance.formatFullValue()} in your wallet. Click to use all.`"
-                show-outside-of-closest-reference-element
-                @click="balance && setSelectedAmount(balance)"
-              >
-                <span :class="{ underline: formattedTokenBalance?.includes('<') }">
-                  {{ formattedTokenBalance }}
-                </span>
-                available
-              </Tooltip>
+            <div v-if="showTokenBalance && balance" class="text-base">
+              <spinner
+                v-if="maxTransferableTokenBalanceLoading"
+                size="6"
+                border="2"
+                class="mr-5 mt-1"
+              ></spinner>
+              <template v-else>
+                <div v-if="balance.uint256.isZero()">{{ formattedTokenBalance }} available</div>
+                <Tooltip
+                  v-else
+                  :hint="`You have ${balance.formatFullValue()} in your wallet. Click to use all.`"
+                  show-outside-of-closest-reference-element
+                >
+                  <button
+                    class="text-orange text-base font-semibold my-1 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+                    :disabled="maxTransferableTokenBalanceLoading"
+                    @click="setMaxTokenAmount"
+                  >
+                    <span :class="{ underline: formattedTokenBalance?.includes('<') }">
+                      {{ formattedTokenBalance }}
+                    </span>
+                    available
+                  </button>
+                </Tooltip>
+              </template>
             </div>
           </div>
         </div>
@@ -137,6 +150,7 @@ import RequestFeeTooltip from '@/components/RequestFeeTooltip.vue';
 import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
+import { useMaxTransferableTokenAmount } from '@/composables/useMaxTransferableTokenAmount';
 import { useMinRequestFee } from '@/composables/useMinRequestFee';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
@@ -221,6 +235,7 @@ const selectedTokenAmount = computed(() => {
     return undefined;
   }
 });
+
 const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
   computed(() => selectedSourceChain.value?.value.rpcUrl),
   computed(() => selectedSourceChain.value?.value.requestManagerAddress),
@@ -236,6 +251,14 @@ const {
   provider,
   signer,
   computed(() => selectedToken?.value?.value ?? undefined),
+);
+
+const {
+  maxTransferableTokenAmount: maxTransferableTokenBalance,
+  loading: maxTransferableTokenBalanceLoading,
+} = useMaxTransferableTokenAmount(
+  balance,
+  computed(() => selectedSourceChain.value?.value),
 );
 
 const {
@@ -296,9 +319,15 @@ defineExpose({ v$ });
 const isSelectedAmountValid = computed(() => {
   return !v$.value.$validationGroups?.amount || !v$.value.$validationGroups.amount.$error;
 });
-const setSelectedAmount = (amount: TokenAmount) => {
-  selectedAmount.value = amount.decimalAmount;
+
+const setMaxTokenAmount = async () => {
+  if (maxTransferableTokenBalance.value) {
+    selectedAmount.value = maxTransferableTokenBalance.value.decimalAmount;
+  } else if (balance.value) {
+    selectedAmount.value = balance.value.decimalAmount;
+  }
 };
+
 watch(selectedToken, () => {
   if (selectedAmount.value) {
     v$.value.$touch();
