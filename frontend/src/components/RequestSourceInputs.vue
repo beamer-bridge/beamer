@@ -47,9 +47,9 @@
             autocorrect="off"
             placeholder="0.00"
             required
-            :valid="isSelectedAmountValid"
+            :valid="selectedAmount.length == 0 || isSelectedAmountValid"
           />
-          <InputValidationMessage v-if="!isSelectedAmountValid">
+          <InputValidationMessage v-if="!isSelectedAmountValid && selectedAmount.length > 0">
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
           <div v-else class="self-end">
