@@ -9,10 +9,10 @@ import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 
-export async function deriveBaseTransferableAmountFromTotalAmount(
+export async function getAmountBeforeFees(
+  totalAmountWei: UInt256,
   rpcUrl: string,
   requestManagerAddress: string,
-  totalAmountWei: UInt256,
 ): Promise<UInt256> {
   const PARTS_IN_MILLION = new UInt256('1000000');
   const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);

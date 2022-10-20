@@ -14,8 +14,8 @@ vi.mock('@/services/transactions/request-manager');
 
 describe('useMaxTransferableTokenAmount', () => {
   beforeEach(() => {
-    Object.defineProperty(requestManagerService, 'deriveBaseTransferableAmountFromTotalAmount', {
-      value: vi.fn().mockImplementation((rpcUrl, requestManagerAddress, amount) => amount),
+    Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
+      value: vi.fn().mockImplementation((amount) => amount),
     });
   });
   beforeEach(() => {
@@ -63,18 +63,18 @@ describe('useMaxTransferableTokenAmount', () => {
         new TokenAmount({ amount: '1000', token: TOKEN }),
       ) as Ref<TokenAmount>;
       const chain = ref(CHAIN);
-      const mockedDeriveBaseTransferableAmountFromTotalAmount = vi.fn().mockImplementation(() => {
+      const mockedGetAmountBeforeFees = vi.fn().mockImplementation(() => {
         throw new Error('error');
       });
 
-      Object.defineProperty(requestManagerService, 'deriveBaseTransferableAmountFromTotalAmount', {
-        value: mockedDeriveBaseTransferableAmountFromTotalAmount,
+      Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
+        value: mockedGetAmountBeforeFees,
       });
 
       const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
       await flushPromises();
 
-      expect(mockedDeriveBaseTransferableAmountFromTotalAmount).toHaveBeenCalled();
+      expect(mockedGetAmountBeforeFees).toHaveBeenCalled();
       expect(maxTransferableTokenAmount.value).toBeUndefined();
     });
   });
