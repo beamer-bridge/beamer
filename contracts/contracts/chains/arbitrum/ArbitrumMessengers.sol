@@ -11,8 +11,8 @@ import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
 
 contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
-    IBridge public bridge;
-    IInbox public inbox;
+    IBridge public immutable bridge;
+    IInbox public immutable inbox;
 
     /// Maps addresses to ETH deposits to be used for paying the submission fee.
     mapping(address => uint256) public deposits;

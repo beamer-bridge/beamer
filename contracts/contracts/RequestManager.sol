@@ -125,10 +125,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
     /// The minimum amount of source chain's native token that the claimer needs to
     /// provide when making a claim, as well in each round of the challenge game.
-    uint256 public claimStake;
+    uint256 public immutable claimStake;
 
     /// The period for which the claim is valid.
-    uint256 public claimPeriod;
+    uint256 public immutable claimPeriod;
 
     /// The period by which the termination time of a claim is extended after each
     /// round of the challenge game. This period should allow enough time for the
@@ -142,7 +142,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// Note that in the first challenge round, i.e. the round initiated by the first
     /// challenger, the termination time is extended additionally by the finality
     /// period of the target chain. This is done to allow for L1 resolution.
-    uint256 public challengePeriodExtension;
+    uint256 public immutable challengePeriodExtension;
 
     /// The minimum validity period of a request.
     uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
