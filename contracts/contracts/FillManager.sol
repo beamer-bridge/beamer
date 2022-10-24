@@ -40,7 +40,7 @@ contract FillManager is Ownable, LpWhitelist {
     //
     // It is used to send proofs to L1. The specific implementation of the
     // :sol:interface:`IMessenger` interface is chain-dependent.
-    IMessenger public messenger;
+    IMessenger public immutable messenger;
 
     /// The L1 :sol:contract:`Resolver` contract to be used for L1 resolution.
     address public l1Resolver;
