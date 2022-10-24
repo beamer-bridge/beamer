@@ -1,4 +1,4 @@
-import { deriveBaseTransferableAmountFromTotalAmount } from '@/services/transactions/request-manager';
+import { getAmountBeforeFees } from '@/services/transactions/request-manager';
 import * as transactionUtils from '@/services/transactions/utils';
 import { UInt256 } from '@/types/uint-256';
 import { getRandomEthereumAddress, getRandomUrl } from '~/utils/data_generators';
@@ -28,6 +28,15 @@ function mockGetContractReturnValue(options?: {
 function transformPercentToPPM(percent: number): string {
   return (percent * (PARTS_IN_MILLION / PARTS_IN_PERCENT)).toString();
 }
+/**
+ * Be careful when using this substitute function, only works for WEI values below 9007199254740991. (JS.MAX_SAFE_INTEGER)
+ * This is a basic substitute of `ethersjs.utils.formatUnits` function.
+ * Switching to `formatUnits` will break the tests and will introduce a dependency in the test suite.
+ */
+function decimalNumberToWei(number: number, decimals: number): string {
+  const weiNumber = number * Math.pow(10, decimals);
+  return Math.trunc(weiNumber).toString();
+}
 
 describe('request-manager', () => {
   beforeEach(() => {
@@ -56,17 +65,17 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await deriveBaseTransferableAmountFromTotalAmount(
+        const baseAmount = await getAmountBeforeFees(
+          totalAmountWei,
           rpcUrl,
           requestManagerAddress,
-          totalAmountWei,
         );
 
         const decimalResult =
           (totalAmountDecimal * PARTS_IN_PERCENT) /
           (PARTS_IN_PERCENT + lpFeePercent + protocolFeePercent);
 
-        expect(baseAmount.format(DECIMALS)).toBeCloseTo(decimalResult, DECIMALS - 1);
+        expect(baseAmount.asString).toBe(decimalNumberToWei(decimalResult, DECIMALS));
       });
     });
     describe('when percentage lp fee is lower than the minimal lp fee for the provided token amount', () => {
@@ -85,13 +94,9 @@ describe('request-manager', () => {
 
         mockGetContractReturnValue({ minLpFeeWei, lpFeePartsPerMillion });
 
-        expect(
-          deriveBaseTransferableAmountFromTotalAmount(
-            rpcUrl,
-            requestManagerAddress,
-            totalAmountWei,
-          ),
-        ).rejects.toThrow('Total amount is not high enough to cover the fees.');
+        expect(getAmountBeforeFees(totalAmountWei, rpcUrl, requestManagerAddress)).rejects.toThrow(
+          'Total amount is not high enough to cover the fees.',
+        );
       });
 
       it('derives the base amount (amount before fees) from the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
@@ -115,17 +120,17 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await deriveBaseTransferableAmountFromTotalAmount(
+        const baseAmount = await getAmountBeforeFees(
+          totalAmountWei,
           rpcUrl,
           requestManagerAddress,
-          totalAmountWei,
         );
 
         const decimalResult =
           (totalAmountDecimal * PARTS_IN_PERCENT) / (PARTS_IN_PERCENT + protocolFeePercent) -
           minLpFee;
 
-        expect(baseAmount.format(DECIMALS)).toBeCloseTo(decimalResult, DECIMALS - 1);
+        expect(baseAmount.asString).toBe(decimalNumberToWei(decimalResult, DECIMALS));
       });
     });
   });
