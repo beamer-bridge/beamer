@@ -28,15 +28,6 @@ function mockGetContractReturnValue(options?: {
 function transformPercentToPPM(percent: number): string {
   return (percent * (PARTS_IN_MILLION / PARTS_IN_PERCENT)).toString();
 }
-/**
- * Be careful when using this substitute function, only works for WEI values below 9007199254740991. (JS.MAX_SAFE_INTEGER)
- * This is a basic substitute of `ethersjs.utils.formatUnits` function.
- * Switching to `formatUnits` will break the tests and will introduce a dependency in the test suite.
- */
-function decimalNumberToWei(number: number, decimals: number): string {
-  const weiNumber = number * Math.pow(10, decimals);
-  return Math.trunc(weiNumber).toString();
-}
 
 describe('request-manager', () => {
   beforeEach(() => {
@@ -44,17 +35,15 @@ describe('request-manager', () => {
   });
   describe('deriveBaseAmountFromTotalTransferAmount()', () => {
     describe('when percentage lp fee is higher than the minimal lp fee for the provided token amount', () => {
-      it('derives the base amount (amount before fees) from the provided total amount by using percentage fees', async () => {
+      it('returns the amount before fees for the provided total amount by using percentage fees', async () => {
         const rpcUrl = getRandomUrl('rpc');
         const requestManagerAddress = getRandomEthereumAddress();
         const DECIMALS = 4;
 
-        const totalAmountDecimal = 1000;
-        const minLpFee = 1;
+        const minLpFee = 0.001;
         const lpFeePercent = 0.3;
         const protocolFeePercent = 0.3;
 
-        const totalAmountWei = UInt256.parse(totalAmountDecimal.toString(), DECIMALS);
         const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
@@ -65,17 +54,26 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await getAmountBeforeFees(
-          totalAmountWei,
-          rpcUrl,
-          requestManagerAddress,
-        );
+        const totalAmounts = [
+          UInt256.parse('10', DECIMALS),
+          UInt256.parse('100', DECIMALS),
+          UInt256.parse('1000', DECIMALS),
+        ];
+        const expectedResult = [
+          new UInt256('99403'),
+          new UInt256('994035'),
+          new UInt256('9940357'),
+        ];
+        const testCases = [
+          [totalAmounts[0], expectedResult[0]],
+          [totalAmounts[1], expectedResult[1]],
+          [totalAmounts[2], expectedResult[2]],
+        ];
 
-        const decimalResult =
-          (totalAmountDecimal * PARTS_IN_PERCENT) /
-          (PARTS_IN_PERCENT + lpFeePercent + protocolFeePercent);
-
-        expect(baseAmount.asString).toBe(decimalNumberToWei(decimalResult, DECIMALS));
+        testCases.forEach(async ([amount, expectedResult]) => {
+          const result = await getAmountBeforeFees(amount, rpcUrl, requestManagerAddress);
+          expect(result.asString).toBe(expectedResult.asString);
+        });
       });
     });
     describe('when percentage lp fee is lower than the minimal lp fee for the provided token amount', () => {
@@ -99,17 +97,15 @@ describe('request-manager', () => {
         );
       });
 
-      it('derives the base amount (amount before fees) from the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
+      it('returns the amount before fees for the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
         const rpcUrl = getRandomUrl('rpc');
         const requestManagerAddress = getRandomEthereumAddress();
         const DECIMALS = 4;
 
-        const totalAmountDecimal = 1000;
-        const minLpFee = 10;
-        const lpFeePercent = 0.3;
+        const minLpFee = 1;
+        const lpFeePercent = 0.003;
         const protocolFeePercent = 0.3;
 
-        const totalAmountWei = UInt256.parse(totalAmountDecimal.toString(), DECIMALS);
         const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
@@ -120,17 +116,26 @@ describe('request-manager', () => {
           protocolFeePartsPerMillion,
         });
 
-        const baseAmount = await getAmountBeforeFees(
-          totalAmountWei,
-          rpcUrl,
-          requestManagerAddress,
-        );
+        const totalAmounts = [
+          UInt256.parse('10', DECIMALS),
+          UInt256.parse('100', DECIMALS),
+          UInt256.parse('1000', DECIMALS),
+        ];
+        const expectedResult = [
+          new UInt256('89700'),
+          new UInt256('987008'),
+          new UInt256('9960089'),
+        ];
+        const testCases = [
+          [totalAmounts[0], expectedResult[0]],
+          [totalAmounts[1], expectedResult[1]],
+          [totalAmounts[2], expectedResult[2]],
+        ];
 
-        const decimalResult =
-          (totalAmountDecimal * PARTS_IN_PERCENT) / (PARTS_IN_PERCENT + protocolFeePercent) -
-          minLpFee;
-
-        expect(baseAmount.asString).toBe(decimalNumberToWei(decimalResult, DECIMALS));
+        testCases.forEach(async ([amount, expectedResult]) => {
+          const result = await getAmountBeforeFees(amount, rpcUrl, requestManagerAddress);
+          expect(result.asString).toBe(expectedResult.asString);
+        });
       });
     });
   });
