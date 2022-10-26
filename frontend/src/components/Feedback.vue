@@ -5,8 +5,6 @@
     data-tf-button-color="#FFFFFF"
     data-tf-notification-days="3"
     data-tf-tooltip="Hey 👋&nbsp;&nbsp;Let us know what you think!"
-    data-tf-open="scroll"
-    data-tf-open-value="30"
     data-tf-chat
     data-tf-medium="snippet"
     data-tf-hidden="utm_source=xxxxx,utm_medium=xxxxx,utm_campaign=xxxxx,utm_content=xxxxx"
