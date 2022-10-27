@@ -1,6 +1,10 @@
 <template>
   <div ref="element" class="relative flex flex-col">
-    <img :src="buttonImage" class="absolute top-6 left-6 h-[1.5rem] w-[1.5rem]" />
+    <img
+      :src="CaretRight"
+      class="absolute top-6 left-6 h-[1.5rem] w-[1.5rem]"
+      :class="caretClasses"
+    />
 
     <div class="cursor-pointer" data-test="header" @click="toggleBodyVisibility">
       <slot name="header" />
@@ -15,7 +19,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
-import CaretDown from '@/assets/images/caret-down.svg';
 import CaretRight from '@/assets/images/caret-right.svg';
 
 interface Props {
@@ -28,7 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const element = ref<HTMLElement>();
 const bodyIsVisible = ref(false);
-const buttonImage = computed(() => (bodyIsVisible.value ? CaretDown : CaretRight));
+const caretClasses = computed(() => (bodyIsVisible.value ? 'rotate-90' : 'rotate-0'));
 
 function toggleBodyVisibility(): void {
   bodyIsVisible.value = !bodyIsVisible.value;
