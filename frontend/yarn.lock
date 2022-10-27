@@ -811,13 +811,6 @@
   resolved "https://registry.yarnpkg.com/@types/ua-parser-js/-/ua-parser-js-0.7.36.tgz#9bd0b47f26b5a3151be21ba4ce9f5fa457c5f190"
   integrity sha512-N1rW+njavs70y2cApeIw1vLMYXRwfBy+7trgavGuuTfOd7j1Yh7QTRc/yqsPl6ncokt72ZXuxEU0PiCp9bSwNQ==
 
-"@types/vue-select@^3.16.0":
-  version "3.16.0"
-  resolved "https://registry.yarnpkg.com/@types/vue-select/-/vue-select-3.16.0.tgz#377d26d5e768c19a4863e101f36824df7e8c1592"
-  integrity sha512-eUNzHK8tY7fT6fWR3mcN3kq9BznRrFPFvmpBZ66DAz4k9aD27AwT54gvR58O9P+ql7/iC0yVvl5lUTjKZ7K1tA==
-  dependencies:
-    vue "^2.0.0"
-
 "@types/vuelidate@^0.7.15":
   version "0.7.15"
   resolved "https://registry.yarnpkg.com/@types/vuelidate/-/vuelidate-0.7.15.tgz#f88b1d89081ea8e54d33ca83ead034a9619b2eb4"
@@ -5153,16 +5146,6 @@ vue-router@^4.0.0-0:
   integrity sha512-CPXvfqe+mZLB1kBWssssTiWg4EQERyqJZes7USiqfW9B5N2x+nHlnsM1D3b5CaJ6qgCvMmYJnz+G0iWjNCvXrg==
   dependencies:
     "@vue/devtools-api" "^6.0.0-beta.18"
-
-vue-select@^4.0.0-beta.2:
-  version "4.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-4.0.0-beta.2.tgz#767c07a3ef4cf23cdebc4b050f3054bc2a0425da"
-  integrity sha512-uR7Jn6dkfaFbvbXfKKp6s//ArkbP+U4mK432D6rbsQKk6NfG9J7Nwe0jonzQdttfHPuBPCiw0PV8nnWmpY5jtg==
-
-vue@^2.0.0:
-  version "2.6.14"
-  resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.14.tgz#e51aa5250250d569a3fbad3a8a5a687d6036e235"
-  integrity sha512-x2284lgYvjOMj3Za7kqzRcUSxBboHqtgRE2zlos1qWaOye5yUmHn42LB1250NJBLRwEcdrB0JRwyPTEPhfQjiQ==
 
 vue@^2.6.11:
   version "2.7.8"
