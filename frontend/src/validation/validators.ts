@@ -11,7 +11,7 @@ export const isValidEthAddress: ValidatorFunction<string> = function (value: str
 };
 
 export const isUnsignedNumeric: ValidatorFunction<string> = function (value: string): boolean {
-  return /^\d*\.?\d*$/.test(value);
+  return /^\d*(\.\d+)?$/.test(value);
 };
 
 export const makeMatchingDecimalsValidator =
