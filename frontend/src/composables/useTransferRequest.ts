@@ -10,6 +10,8 @@ import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export function useTransferRequest() {
+  const VALIDITY_PERIOD_SECONDS = import.meta.env.VITE_REQUEST_EXPIRY_SECONDS || '1800';
+
   const create = async (options: {
     sourceChain: Chain;
     sourceAmount: string;
@@ -21,7 +23,7 @@ export function useTransferRequest() {
     const sourceTokenAmount = TokenAmount.parse(options.sourceAmount, options.sourceToken);
     const targetTokenAmount = TokenAmount.parse(options.sourceAmount, options.targetToken);
 
-    const validityPeriod = new UInt256('600');
+    const validityPeriod = new UInt256(VALIDITY_PERIOD_SECONDS);
     const { rpcUrl, requestManagerAddress } = options.sourceChain;
     const requestFee = await getRequestFee(
       rpcUrl,
