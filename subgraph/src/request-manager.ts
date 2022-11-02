@@ -1,87 +1,90 @@
-import { BigInt } from "@graphprotocol/graph-ts"
 import {
-  RequestManager,
+  ClaimMade as ClaimMadeEvent,
+  ClaimStakeWithdrawn as ClaimStakeWithdrawnEvent,
+  DepositWithdrawn as DepositWithdrawnEvent,
+  FinalityPeriodUpdated as FinalityPeriodUpdatedEvent,
+  OwnershipTransferred as OwnershipTransferredEvent,
+  RequestCreated as RequestCreatedEvent,
+} from '../generated/RequestManager/RequestManager';
+import {
   ClaimMade,
-  ClaimStakeWithdrawn,
   DepositWithdrawn,
+  ClaimStakeWithdrawn,
   FinalityPeriodUpdated,
   OwnershipTransferred,
-  RequestCreated
-} from "../generated/RequestManager/RequestManager"
-import { ExampleEntity } from "../generated/schema"
+  RequestCreated,
+} from '../generated/schema';
 
-export function handleClaimMade(event: ClaimMade): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
+export function handleClaimMade(event: ClaimMadeEvent): void {
+  const entity = new ClaimMade(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+  entity.requestId = event.params.requestId;
+  entity.claimId = event.params.claimId;
+  entity.claimer = event.params.claimer;
+  entity.claimerStake = event.params.claimerStake;
+  entity.lastChallenger = event.params.lastChallenger;
+  entity.challengerStakeTotal = event.params.challengerStakeTotal;
+  entity.termination = event.params.termination;
+  entity.fillId = event.params.fillId;
 
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.requestId = event.params.requestId
-  entity.claimId = event.params.claimId
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.MAX_VALIDITY_PERIOD(...)
-  // - contract.MIN_VALIDITY_PERIOD(...)
-  // - contract.challengePeriodExtension(...)
-  // - contract.claimCounter(...)
-  // - contract.claimPeriod(...)
-  // - contract.claimStake(...)
-  // - contract.claims(...)
-  // - contract.collectedProtocolFees(...)
-  // - contract.createRequest(...)
-  // - contract.deprecated(...)
-  // - contract.finalityPeriods(...)
-  // - contract.lpFee(...)
-  // - contract.lpFeePPM(...)
-  // - contract.minLpFee(...)
-  // - contract.owner(...)
-  // - contract.protocolFee(...)
-  // - contract.protocolFeePPM(...)
-  // - contract.requestCounter(...)
-  // - contract.requests(...)
-  // - contract.resolutionRegistry(...)
-  // - contract.totalFee(...)
-  // - contract.transferLimit(...)
-  // - contract.withdraw(...)
+  entity.save();
 }
 
-export function handleClaimStakeWithdrawn(event: ClaimStakeWithdrawn): void {}
+export function handleClaimStakeWithdrawn(event: ClaimStakeWithdrawnEvent): void {
+  const entity = new ClaimStakeWithdrawn(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString(),
+  );
+  entity.claimId = event.params.claimId;
+  entity.requestId = event.params.requestId;
+  entity.claimReceiver = event.params.claimReceiver;
 
-export function handleDepositWithdrawn(event: DepositWithdrawn): void {}
+  entity.save();
+}
 
-export function handleFinalityPeriodUpdated(
-  event: FinalityPeriodUpdated
-): void {}
+export function handleDepositWithdrawn(event: DepositWithdrawnEvent): void {
+  const entity = new DepositWithdrawn(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString(),
+  );
 
-export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
+  entity.requestId = event.params.requestId;
+  entity.receiver = event.params.receiver;
 
-export function handleRequestCreated(event: RequestCreated): void {}
+  entity.save();
+}
+
+export function handleFinalityPeriodUpdated(event: FinalityPeriodUpdatedEvent): void {
+  const entity = new FinalityPeriodUpdated(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString(),
+  );
+
+  entity.targetChainId = event.params.targetChainId;
+  entity.finalityPeriod = event.params.finalityPeriod;
+
+  entity.save();
+}
+
+export function handleOwnershipTransferred(event: OwnershipTransferredEvent): void {
+  const entity = new OwnershipTransferred(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString(),
+  );
+
+  entity.previousOwner = event.params.previousOwner;
+  entity.newOwner = event.params.newOwner;
+
+  entity.save();
+}
+
+export function handleRequestCreated(event: RequestCreatedEvent): void {
+  const entity = new RequestCreated(
+    event.transaction.hash.toHex() + '-' + event.logIndex.toString(),
+  );
+
+  entity.requestId = event.params.requestId;
+  entity.targetChainId = event.params.targetChainId;
+  entity.sourceTokenAddress = event.params.sourceTokenAddress;
+  entity.targetTokenAddress = event.params.targetTokenAddress;
+  entity.targetAddress = event.params.targetAddress;
+  entity.amount = event.params.amount;
+  entity.validUntil = event.params.validUntil;
+
+  entity.save();
+}
