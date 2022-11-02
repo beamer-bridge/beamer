@@ -5,8 +5,9 @@ dataSources:
   - kind: ethereum
     name: RequestManager
     source:
-      address: "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F"
       abi: RequestManager
+      address: "{{RequestManager.address}}"
+      startBlock: {{RequestManager.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -22,7 +23,8 @@ dataSources:
         - name: RequestManager
           file: ./abis/RequestManager.json
       eventHandlers:
-        - event: ClaimMade(indexed uint256,uint256,address,uint256,address,uint256,uint256,bytes32)
+        - event: ClaimMade(indexed
+            uint256,uint256,address,uint256,address,uint256,uint256,bytes32)
           handler: handleClaimMade
         - event: ClaimStakeWithdrawn(uint256,indexed uint256,address)
           handler: handleClaimStakeWithdrawn
@@ -35,11 +37,13 @@ dataSources:
         - event: RequestCreated(uint256,uint256,address,address,address,uint256,uint256)
           handler: handleRequestCreated
       file: ./src/request-manager.ts
+    network: {{network}}
   - kind: ethereum
     name: FillManager
     source:
-      address: "0x85267688CE7677D69d75F288Ff3064431030aF9F"
       abi: FillManager
+      address: "{{FillManager.address}}"
+      startBlock: {{FillManager.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -66,3 +70,4 @@ dataSources:
             address,address,uint256)
           handler: handleRequestFilled
       file: ./src/fill-manager.ts
+    network: {{network}}
