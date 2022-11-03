@@ -1,15 +1,18 @@
 {
-  "name": "l2",
+  "name": "beamer-bridge-subgraph",
   "license": "UNLICENSED",
+  "private": true,
   "scripts": {
-    "codegen": "graph codegen",
+    "codegen": "yarn prepare && graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ beamerbridge/l2",
     "create-local": "graph create --node http://localhost:8020/ beamerbridge/l2",
     "remove-local": "graph remove --node http://localhost:8020/ beamerbridge/l2",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 beamerbridge/l2",
+    "prepare": "mustache config/optimism.json subgraph.template.yaml > subgraph.yaml",
     "prepare:optimism": "mustache config/optimism.json subgraph.template.yaml > subgraph.yaml",
     "prepare:boba": "mustache config/boba.json subgraph.template.yaml > subgraph.yaml",
+    "deploy:optimism": "graph deploy --product hosted-service beamer-bridge/beamer-optimism",
+    "deploy:boba": "graph deploy --product hosted-service beamer-bridge/beamer-boba",
     "test": "graph test"
   },
   "dependencies": {
