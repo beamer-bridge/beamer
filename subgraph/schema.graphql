@@ -1,9 +1,3 @@
-type ExampleEntity @entity {
-  id: ID!
-  count: BigInt!
-  requestId: BigInt! # uint256
-  claimId: BigInt! # uint256
-}
 type HashInvalidated @entity {
   id: ID!
   requestHash: Bytes! # bytes32
