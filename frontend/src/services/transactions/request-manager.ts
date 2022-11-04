@@ -9,6 +9,15 @@ import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 
+export async function getTransferLimit(
+  rpcUrl: string,
+  requestManagerAddress: string,
+): Promise<UInt256> {
+  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+
+  return new UInt256(await contract.transferLimit());
+}
+
 export async function getAmountBeforeFees(
   totalAmountWei: UInt256,
   rpcUrl: string,

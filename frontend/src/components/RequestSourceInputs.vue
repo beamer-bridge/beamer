@@ -156,6 +156,7 @@ import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
 import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
+import { useTransferLimit } from '@/composables/useTransferLimit';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { usePortals } from '@/stores/portals';
@@ -261,6 +262,11 @@ const {
   computed(() => selectedSourceChain.value?.value),
 );
 
+const { transferLimitTokenAmount } = useTransferLimit(
+  computed(() => selectedSourceChain.value?.value),
+  computed(() => selectedToken?.value?.value),
+);
+
 const {
   enabled: faucetEnabled,
   available: faucetAvailable,
@@ -310,6 +316,7 @@ const v$ = useRequestSourceInputValidations({
   selectedToken,
   selectedAmount,
   selectedTokenAmount,
+  transferLimitTokenAmount,
   totalRequestTokenAmount,
   requestFeeLoading,
   balance,
