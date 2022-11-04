@@ -1,16 +1,19 @@
 <template>
   <input
     ref="textElement"
+    v-focusOnMount="focusOnMount"
     data-test="input"
     v-bind="{ type }"
     :value="modelValue"
     :class="classes"
-    @input="updateValue"
+    @input="handleInput"
   />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
+
+import { vFocusOnMount } from '@/directives/vFocusOnMount';
 
 interface Props {
   modelValue: string;
@@ -32,16 +35,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<Emits>();
 
-const updateValue = (event: Event) => {
-  emits('update:modelValue', (event.target as HTMLInputElement).value);
+const updateValue = (value: string) => {
+  emits('update:modelValue', value);
+};
+
+const handleInput = (event: Event) => {
+  updateValue((event.target as HTMLInputElement).value);
 };
 
 const textElement = ref<HTMLElement>();
-onMounted(() => {
-  if (props.focusOnMount && textElement.value) {
-    textElement.value.focus();
-  }
-});
 
 const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner
   text-2xl outline-none placeholder:opacity-25 placeholder:text-black
