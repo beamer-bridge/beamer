@@ -15,8 +15,8 @@ import type { TokenAmountData } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 
 const HEXADECIMAL_CHARACTERS = '0123456789abcdefABCDEF';
-const DECIMAL_CHARACTERS = '0123456789';
-const ALPHABET_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz';
+export const DECIMAL_CHARACTERS = '0123456789';
+export const ALPHABET_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz';
 
 export function getRandomString(charSet = ALPHABET_CHARACTERS, length = 5, prefix = ''): string {
   let output = prefix;
