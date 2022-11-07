@@ -18,7 +18,7 @@
       @keyup.esc="closeSelector"
     >
       <span class="text-3xl">{{ label }}</span>
-      <Input
+      <BasicInput
         v-model="searchFilter"
         name="searchFilter"
         placeholder="Search"
@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
-import Input from '@/components/inputs/Input.vue';
+import BasicInput from '@/components/inputs/BasicInput.vue';
 import type { SelectorOption } from '@/types/form';
 
 interface Props {
