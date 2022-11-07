@@ -37,15 +37,9 @@
     <div class="flex flex-col justify-between">
       <div class="flex flex-row gap-5">
         <div class="flex-[9_9_0%] flex flex-col items-start">
-          <Input
+          <NumericInput
             v-model="selectedAmount"
             name="amount"
-            type="text"
-            pattern="^[0-9]*[.,]?[0-9]*$"
-            inputmode="decimal"
-            autocomplete="off"
-            autocorrect="off"
-            placeholder="0.00"
             required
             :valid="selectedAmount.length == 0 || isSelectedAmountValid"
           />
@@ -142,7 +136,7 @@ import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, watch } from 'vue';
 
-import Input from '@/components/inputs/Input.vue';
+import NumericInput from '@/components/inputs/NumericInput.vue';
 import Selector from '@/components/inputs/Selector.vue';
 import InputValidationMessage from '@/components/layout/InputValidationMessage.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
