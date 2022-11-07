@@ -15,7 +15,7 @@
     </div>
     <div class="flex flex-row gap-5">
       <div class="flex-[9_9_0%] flex flex-col items-end">
-        <Input :model-value="props.amount" placeholder="0.00" type="number" disabled />
+        <BasicInput :model-value="props.amount" placeholder="0.00" type="text" disabled />
       </div>
       <div class="flex-[7_7_0%]">
         <Selector
@@ -29,7 +29,7 @@
     </div>
     <div class="flex flex-col items-end">
       <div class="relative w-full items-end">
-        <Input
+        <BasicInput
           v-model="selectedTargetAddress"
           name="toAddress"
           type="text"
@@ -61,7 +61,7 @@ import { storeToRefs } from 'pinia';
 import type { WritableComputedRef } from 'vue';
 import { computed, ref, toRef, watch } from 'vue';
 
-import Input from '@/components/inputs/Input.vue';
+import BasicInput from '@/components/inputs/BasicInput.vue';
 import Selector from '@/components/inputs/Selector.vue';
 import InputValidationMessage from '@/components/layout/InputValidationMessage.vue';
 import { useChainSelection } from '@/composables/useChainSelection';

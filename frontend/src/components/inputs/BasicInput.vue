@@ -1,15 +1,13 @@
 <template>
   <input
-    ref="textElement"
+    ref="inputElement"
     v-focusOnMount="focusOnMount"
     data-test="input"
-    v-bind="{ type }"
     :value="modelValue"
     :class="classes"
     @input="handleInput"
   />
 </template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
@@ -18,7 +16,6 @@ import { vFocusOnMount } from '@/directives/vFocusOnMount';
 interface Props {
   modelValue: string;
   focusOnMount?: boolean;
-  type?: string;
   valid?: boolean;
   alignRight?: boolean;
 }
@@ -28,7 +25,6 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  type: 'text',
   valid: true,
   alignRight: false,
 });
@@ -42,8 +38,6 @@ const updateValue = (value: string) => {
 const handleInput = (event: Event) => {
   updateValue((event.target as HTMLInputElement).value);
 };
-
-const textElement = ref<HTMLElement>();
 
 const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner
   text-2xl outline-none placeholder:opacity-25 placeholder:text-black
@@ -63,6 +57,12 @@ const classes = computed(() => [
   autofillColorOverlayClasses,
   inputComputedClasses.value,
 ]);
+
+const inputElement = ref<HTMLInputElement | null>(null);
+
+defineExpose({
+  inputElement,
+});
 </script>
 
 <style scoped>
