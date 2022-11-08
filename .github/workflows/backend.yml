@@ -81,7 +81,7 @@ jobs:
           cname: docs.beamerbridge.com
 
       - name: Install prettier for solidity
-        run: npm install prettier prettier-plugin-solidity --global
+        run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --global
 
       - name: Check formatting of contracts
         run: prettier --list-different 'contracts/**/*.sol'
