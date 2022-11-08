@@ -131,7 +131,9 @@ class Claim(StateMachine):
             return Wei(claimer_stake - challenger_stake + 1)
 
     def on_start_challenge(
-        self, invalidation_tx: HexBytes = None, invalidation_timestamp: Timestamp = None
+        self,
+        invalidation_tx: HexBytes | None = None,
+        invalidation_timestamp: Timestamp | None = None,
     ) -> None:
         self.invalidation_tx = invalidation_tx
         self.invalidation_timestamp = invalidation_timestamp
