@@ -67,7 +67,7 @@ def make_request(valid_until: int = TIMESTAMP - 1) -> Request:
 def make_claim_unchallenged(
     request: Request,
     claim_id: ClaimId = CLAIM_ID,
-    claimer: ChecksumAddress = None,
+    claimer: ChecksumAddress | None = None,
     claimer_stake: Wei = CLAIMER_STAKE,
     fill_id: FillId = FILL_ID,
     termination: Termination = TERMINATION,
@@ -89,9 +89,9 @@ def make_claim_unchallenged(
 def make_claim_challenged(
     request: Request,
     claim_id: ClaimId = CLAIM_ID,
-    claimer: ChecksumAddress = None,
+    claimer: ChecksumAddress | None = None,
     claimer_stake: Wei = CLAIMER_STAKE,
-    challenger: ChecksumAddress = None,
+    challenger: ChecksumAddress | None = None,
     challenger_stake: Wei = CHALLENGER_STAKE,
     fill_id: FillId = FILL_ID,
     termination: Termination = TERMINATION,
