@@ -69,7 +69,7 @@ jobs:
     steps:
       - attach_workspace:
           at: "~"
-      - run: npm install prettier prettier-plugin-solidity --location=global
+      - run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --location=global
       - run: npm install solhint --location=global
       - run: npm install ganache --location=global
       - persist_to_workspace:
