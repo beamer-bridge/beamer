@@ -107,7 +107,7 @@ describe('Transfer.vue', () => {
       }),
       sourceChain: generateChain({
         name: 'Source Chain',
-        explorerTransactionUrl: 'https://test.explorer/tx/',
+        explorerUrl: 'https://test.explorer',
       }),
       targetChain: generateChain({ name: 'Target Chain' }),
       targetAccount: '0xTargetAccount',

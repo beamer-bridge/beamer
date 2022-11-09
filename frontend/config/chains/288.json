@@ -1,6 +1,6 @@
 {
   "identifier": 288,
-  "explorerTransactionUrl": "https://bobascan.com/tx/",
+  "explorerUrl": "https://bobascan.com",
   "rpcUrl": "https://replica.boba.network",
   "name": "Boba Mainnet",
   "imageUrl": "/images/boba.svg",

@@ -7,9 +7,9 @@ import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
-import type { Chain } from '@/types/data';
+import type { Chain, Token } from '@/types/data';
 
-import type { ChainData, Eip1193Provider, IEthereumProvider, TokenData } from './types';
+import type { Eip1193Provider, IEthereumProvider } from './types';
 
 export abstract class EthereumProvider extends EventEmitter implements IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
@@ -36,11 +36,7 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
       try {
         const isSuccessfulSwitch = await this.switchChain(newChain.identifier);
         if (!isSuccessfulSwitch) {
-          await this.addChain({
-            chainId: newChain.identifier,
-            name: newChain.name,
-            rpcUrl: newChain.rpcUrl,
-          });
+          await this.addChain(newChain);
         }
         // As different wallets handle the add and switch chain methods quite differently
         // (e.g. after an add the switch is not performed automatically),
@@ -60,9 +56,9 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   // Throws if the user rejects.
   protected abstract switchChain(newChainId: number): Promise<boolean>;
 
-  protected async addChain(chainData: ChainData): Promise<boolean> {
+  protected async addChain(chain: Chain): Promise<boolean> {
     try {
-      const { chainId, name, rpcUrl } = chainData;
+      const { identifier: chainId, name, rpcUrl, explorerUrl } = chain;
       const chainIdHexValue = hexValue(chainId);
       const providerNetworkData = getNetwork(chainId);
       providerNetworkData?.name !== 'unknown' ? providerNetworkData?.name : name;
@@ -70,6 +66,7 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         chainId: chainIdHexValue,
         chainName: name,
         rpcUrls: [rpcUrl],
+        blockExplorerUrls: [explorerUrl],
         nativeCurrency: {
           name: 'Ethereum',
           symbol: 'ETH',
@@ -83,16 +80,16 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
     return true;
   }
 
-  async addToken(tokenData: TokenData): Promise<void> {
+  async addToken(token: Token): Promise<void> {
     try {
       const wasAdded = await this.externalProvider.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC20',
           options: {
-            address: tokenData.address,
-            symbol: tokenData.symbol,
-            decimals: tokenData.decimals,
+            address: token.address,
+            symbol: token.symbol,
+            decimals: token.decimals,
           },
         },
       });

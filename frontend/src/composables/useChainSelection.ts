@@ -32,7 +32,7 @@ export function getChainSelectorOption(
       rpcUrl: chains[chainId].rpcUrl,
       requestManagerAddress: chains[chainId].requestManagerAddress,
       fillManagerAddress: chains[chainId].fillManagerAddress,
-      explorerTransactionUrl: chains[chainId].explorerTransactionUrl,
+      explorerUrl: chains[chainId].explorerUrl,
       imageUrl: chains[chainId].imageUrl,
     };
     return { value: chain, label: chain.name, imageUrl: chain.imageUrl };

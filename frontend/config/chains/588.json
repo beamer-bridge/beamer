@@ -1,6 +1,6 @@
 {
   "identifier": 588,
-  "explorerTransactionUrl": "https://stardust-explorer.metis.io/tx/",
+  "explorerUrl": "https://stardust-explorer.metis.io",
   "rpcUrl": "https://stardust.metis.io/?owner=588",
   "name": "Metis Stardust",
   "imageUrl": "/images/metis.png",
