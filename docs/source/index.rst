@@ -14,5 +14,6 @@ Welcome to Beamer's documentation!
    l1_resolution.rst
    contributing.rst
    releasing.rst
+   branching-strategy.rst
    faq.rst
    glossary.rst
