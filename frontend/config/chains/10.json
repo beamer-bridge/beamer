@@ -1,6 +1,6 @@
 {
   "identifier": 10,
-  "explorerTransactionUrl": "https://optimistic.etherscan.io/tx/",
+  "explorerUrl": "https://optimistic.etherscan.io",
   "rpcUrl": "https://opt-mainnet.g.alchemy.com/v2/umLO_ve2OzJ_7rAVebkVbUsuM37cCFoN",
   "name": "Optimism Mainnet",
   "imageUrl": "/images/optimism.png",

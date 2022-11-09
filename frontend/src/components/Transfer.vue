@@ -51,9 +51,9 @@ const isExpanded = ref(props.transfer.active);
 const formattedAmount = computed(() => props.transfer.sourceAmount.format());
 
 const requestTransactionUrl = computed(() => {
-  const { explorerTransactionUrl } = props.transfer.sourceChain;
+  const { explorerUrl } = props.transfer.sourceChain;
   const { transactionHash } = props.transfer.requestInformation ?? {};
-  return transactionHash ? `${explorerTransactionUrl}${transactionHash}` : undefined;
+  return transactionHash ? `${explorerUrl}/tx/${transactionHash}` : undefined;
 });
 
 const summary = computed(() => ({

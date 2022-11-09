@@ -8,7 +8,7 @@ export type Chain = {
   rpcUrl: string; // TODO: restrict more
   requestManagerAddress: EthereumAddress;
   fillManagerAddress: EthereumAddress;
-  explorerTransactionUrl: string; // TODO: restrict more
+  explorerUrl: string; // TODO: restrict more
   imageUrl?: string; // TODO: restrict more
 };
 

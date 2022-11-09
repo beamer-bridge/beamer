@@ -17,7 +17,7 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
               type: 'number',
               minimum: 0,
             },
-            explorerTransactionUrl: {
+            explorerUrl: {
               type: 'string',
             },
             rpcUrl: {
@@ -75,7 +75,7 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
           },
           required: [
             'identifier',
-            'explorerTransactionUrl',
+            'explorerUrl',
             'rpcUrl',
             'name',
             'tokens',
