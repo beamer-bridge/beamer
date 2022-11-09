@@ -1,7 +1,7 @@
 {
   "identifier": 28,
-  "explorerTransactionUrl": "https://blockexplorer.rinkeby.boba.network/tx/",
-  "rpcUrl": "https://rinkeby.boba.network/",
+  "explorerUrl": "https://blockexplorer.rinkeby.boba.network",
+  "rpcUrl": "https://rinkeby.boba.network",
   "name": "Boba Rinkeby",
   "imageUrl": "/images/boba.svg",
   "tokenSymbols": ["TST"]

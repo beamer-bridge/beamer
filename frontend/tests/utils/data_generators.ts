@@ -83,7 +83,7 @@ export function generateChain(partialChain?: Partial<Chain>): Chain {
     rpcUrl: getRandomUrl('rpc'),
     requestManagerAddress: getRandomEthereumAddress(),
     fillManagerAddress: getRandomEthereumAddress(),
-    explorerTransactionUrl: getRandomUrl('explorer'),
+    explorerUrl: getRandomUrl('explorer'),
     ...partialChain,
   };
 }
@@ -193,7 +193,7 @@ export function generateChainMetadata(
     identifier: getRandomNumber(),
     name: getRandomChainName(),
     rpcUrl: getRandomUrl('rpc'),
-    explorerTransactionUrl: getRandomUrl('explorer'),
+    explorerUrl: getRandomUrl('explorer'),
     tokenSymbols: [getRandomTokenSymbol()],
     ...partialChainMetadata,
   });
