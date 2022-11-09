@@ -5,7 +5,7 @@ import { readFileJsonContent } from '../utils';
 
 export class ChainMetadata {
   readonly identifier: number;
-  readonly explorerTransactionUrl: string;
+  readonly explorerUrl: string;
   readonly rpcUrl: string;
   readonly name: string;
   readonly imageUrl?: string;
@@ -13,7 +13,7 @@ export class ChainMetadata {
 
   constructor(data: ChainMetadataData) {
     this.identifier = data.identifier;
-    this.explorerTransactionUrl = data.explorerTransactionUrl;
+    this.explorerUrl = data.explorerUrl;
     this.rpcUrl = data.rpcUrl;
     this.name = data.name;
     this.imageUrl = data.imageUrl;
@@ -48,7 +48,7 @@ export class ChainMetadata {
 
 export type ChainMetadataData = {
   identifier: number;
-  explorerTransactionUrl: string;
+  explorerUrl: string;
   rpcUrl: string;
   name: string;
   imageUrl?: string;
