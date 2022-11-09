@@ -33,12 +33,23 @@ describe('validators', () => {
       const value = '123.123';
       expect(isUnsignedNumeric(value)).toBe(true);
     });
-    it('returns false if provided value is not a numeric value', () => {
+    it('returns true if provided value is an usigned numeric value that contains only decimals', () => {
+      const value = '.123';
+      expect(isUnsignedNumeric(value)).toBe(true);
+    });
+    it('returns false if provided value contains alpha characters', () => {
       const value = 'asdf';
       expect(isUnsignedNumeric(value)).toBe(false);
     });
     it('returns false if provided value contains multiple decimal separators', () => {
       const value = '1.1.1';
+      expect(isUnsignedNumeric(value)).toBe(false);
+    });
+    it('returns false if provided value contains only symbols', () => {
+      let value = '.';
+      expect(isUnsignedNumeric(value)).toBe(false);
+
+      value = ',';
       expect(isUnsignedNumeric(value)).toBe(false);
     });
   });

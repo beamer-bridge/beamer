@@ -33,6 +33,7 @@ type ValidationRules = ValidationArgs<{
 export const useRequestSourceInputValidations = (
   options: ValidationState & {
     balance: Ref<TokenAmount | undefined>;
+    transferLimitTokenAmount: Ref<TokenAmount | undefined>;
   },
 ) => {
   const computedRules: ComputedRef<ValidationRules> = computed(() => {
@@ -76,6 +77,15 @@ export const useRequestSourceInputValidations = (
             makeMinTokenAmountValidator(min),
           ),
         };
+
+        if (options.transferLimitTokenAmount.value) {
+          Object.assign(selectedTokenAmountRules, {
+            maxValue: helpers.withMessage(
+              'Max. amount: ' + options.transferLimitTokenAmount.value.formatFullValue(),
+              makeMaxTokenAmountValidator(options.transferLimitTokenAmount.value),
+            ),
+          });
+        }
         Object.assign(rules, { selectedTokenAmount: selectedTokenAmountRules });
 
         const totalRequestTokenAmountRules = {
