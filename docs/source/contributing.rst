@@ -4,7 +4,7 @@ Contributing
 Requirements
 ------------
 
-- `Python <https://www.python.org>`_ 3.9
+- `Python <https://www.python.org>`_ 3.10
 - `poetry <https://python-poetry.org>`_
 - `ganache <https://trufflesuite.com/ganache>`_ 7
 - `prettier-plugin-solidity <https://github.com/prettier-solidity/prettier-plugin-solidity>`_
