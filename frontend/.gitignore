@@ -2,6 +2,7 @@
 /coverage/
 /public/config.*.json
 /config/tokens/TST.json
+/src/types/ethers-contracts
 
 .DS_Store
 node_modules
