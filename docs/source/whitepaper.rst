@@ -25,7 +25,7 @@ UX
 
 Other competitors seem to have prioritized easy implementations over user experience. For example, most bridges make
 it necessary for the end user to do two transactions on two different rollups. This costs time and requires
-on-boarding in advance. **We want to focus on the best possible UX**. This applies to all users in the system.
+onboarding in advance. **We want to focus on the best possible UX**. This applies to all users in the system.
 
 - Fast execution for the end user
 - One transaction (send and receive directly)
@@ -153,11 +153,11 @@ the tokens locked, and the LP fee paid by Alice.
 
 The rightful claim of Bob can however be challenged by anyone during its ``claim period``. This will start a challenge between
 him and the challenger, Charles. Charles needs to stake a deposit higher than ``claim stake`` to challenge Bob's claim.
-The challenge will be on-going until the end of the ``challenge period``.
+The challenge will be ongoing until the end of the ``challenge period``.
 
 During the challenge, the contested participant (in turn the claimer and the challenger), can submit a transaction to confirm its
 position and contest the other party. It is required that the new stake of the participant is higher than the current
-stake of the opponent. Everytime a participant responds to the challenge, the termination time of the challenge and
+stake of the opponent. Every time a participant responds to the challenge, the termination time of the challenge and
 underlying claim is extended to be at least ``challenge period extension``, to give time for the other party to respond.
 
 At the end of the challenge period, the last non-contested participant, and thus the participant with the highest stake, wins. The claim
@@ -345,7 +345,7 @@ In any case, this condition will always be fulfilled if Bob fills the request be
     Charles ->>Rollup A: claims tokens
 
     loop until stakes high enough for L1 resolution
-    Bob ->> Rollup A: challanges Charles's claim
+    Bob ->> Rollup A: challenges Charles's claim
     Charles ->> Rollup A: counter-challenges
     end
     note over Rollup A: Charles will win if we \nwait for end of challenge
