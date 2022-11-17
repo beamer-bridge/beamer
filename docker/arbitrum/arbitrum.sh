@@ -70,7 +70,7 @@ up() {
 }
 
 create_deployment_config_file() {
-    # get the address of the bridge contract, we need to to configure that
+    # get the address of the bridge contract, we need to configure that
     # address as the native messenger for our L1 messenger since the bridge
     # will be delivering our message
     BRIDGE=$(docker exec nitro-sequencer-1 jq -r .bridge /config/deployment.json)
