@@ -3,97 +3,159 @@ version: 2.1
 commands:
   initialize-environment:
     steps:
+      # Attach the git repo checkout at ~/beamer
       - attach_workspace:
-          at: "~"
-      - run:
-         name: Configuring virtual environment activation
-         command: echo 'export PATH=$(poetry env info -p)/bin:~/.nvm/versions/node/v16.16.0/bin:${PATH}' >> ${BASH_ENV}
+          at: /
+
+      # Restore the cached Python virtualenv packages and ~/.bashrc.
+      # The latter is useful to enter the virtualenv when the shell starts.
+      - restore_cache:
+          name: Restore cached Python packages
+          keys:
+            - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
+            - beamer-dependencies-v4
+
+      # Restore cached Python installation at /opt/circleci/.pyenv
+      - restore_cache:
+          name: Restore cached Python installation
+          key: python-3.10.6-v1
+
+      # Restore npm packages at /opt/circleci/.nvm
+      - restore_cache:
+          name: Restore cached npm packages
+          key: npm-packages-v1
+
+      # Restore brownie packages at /home/circleci/.brownie.
+      - restore_cache:
+          name: Restore cached solc and brownie packages
+          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
 
 executors:
-  python:
-    docker:
-      - image: cimg/python:3.10
-    working_directory: ~/beamer
-
-  node:
-    docker:
-      - image: cimg/node:16.16
+  vm:
+    machine:
+      image: ubuntu-2204:2022.10.2
+      docker_layer_caching: true
     working_directory: ~/beamer
 
 jobs:
   checkout:
-    executor: python
+    executor: vm
     steps:
       - checkout
       - persist_to_workspace:
-          root: "~"
+          root: /
           paths:
-            - beamer
+            - home/circleci/beamer
 
   install-python:
-    executor: python
-    environment:
-      SHELL: "/bin/bash"
+    executor: vm
     steps:
+      - run: for ver in /opt/circleci/.pyenv/versions/*; do pyenv uninstall -f $(basename $ver); done
       - attach_workspace:
-          at: "~"
-      - run: pip install -U poetry
+          at: /
+
+      - restore_cache:
+          key: python-3.10.6-v1
+
+      - run: pyenv install --skip-existing 3.10.6
+      - run: pyenv global 3.10.6
+      - run: pip install -U pip poetry
+
       - restore_cache:
           keys:
-            - beamer-dependencies-v1-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v1
+            - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
+            - beamer-dependencies-v4
       - run: poetry install
+      - run: echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
+
       - save_cache:
           key:
-            beamer-dependencies-v1-{{ checksum "poetry.lock" }}
+            beamer-dependencies-v4-{{ checksum "poetry.lock" }}
           paths:
-            - "~/.cache/pypoetry/virtualenvs"
-      - persist_to_workspace:
-          root: "~"
-          paths:
-            - ".cache/pypoetry/virtualenvs"
+            - ~/.cache/pypoetry/virtualenvs
+            - ~/.bashrc
 
-  create-relayers:
-    executor: node
-    steps:
-      - attach_workspace:
-          at: "~"
-      - run: make relayers
-      - persist_to_workspace:
-          root: "."
+      - save_cache:
+          key: python-3.10.6-v1
           paths:
-            - "relayer"
+            - /opt/circleci/.pyenv
 
   install-npm-packages:
-    executor: node
+    executor: vm
     steps:
-      - attach_workspace:
-          at: "~"
+      - restore_cache:
+          key: npm-packages-v1
       - run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --location=global
       - run: npm install solhint --location=global
       - run: npm install ganache --location=global
-      - persist_to_workspace:
-          root: "~"
+      - save_cache:
+          key: npm-packages-v1
           paths:
-            - ".nvm"
+            - /opt/circleci/.nvm/
+
+  create-relayers:
+    executor: vm
+    steps:
+      - attach_workspace:
+          at: /
+      - run: make relayers
+      - persist_to_workspace:
+          root: /
+          paths:
+            - home/circleci/beamer/relayer/relayer-*
 
   lint:
-    executor: python
+    executor: vm
     steps:
       - initialize-environment
       - run: make lint
 
   test-contracts:
-    executor: python
+    executor: vm
     steps:
       - initialize-environment
       - run: poetry run brownie test -v -G beamer/tests/contracts
 
-  test-agents:
-    executor: python
+  compile-contracts:
+    executor: vm
+    steps:
+      - initialize-environment
+      - run: brownie compile
+      - persist_to_workspace:
+          root: /
+          paths:
+            - home/circleci/beamer/contracts/build
+      - save_cache:
+          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
+          paths:
+            - /home/circleci/.brownie
+            - /home/circleci/.solcx
+
+  test-agent:
+    executor: vm
     steps:
       - initialize-environment
       - run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
+
+  e2e-test-optimism:
+    executor: vm
+    environment:
+      OPTIMISM: "docker/optimism"
+    steps:
+      - initialize-environment
+      - run: git submodule status $OPTIMISM/optimism | awk '{print $1;}' > "/tmp/optimism-commit-hash"
+      - restore_cache:
+          key: optimism-submodule-v2-{{ checksum "/tmp/optimism-commit-hash" }}
+      - run: git submodule update --init $OPTIMISM/optimism
+      - save_cache:
+          key: optimism-submodule-v2-{{ checksum "/tmp/optimism-commit-hash" }}
+          paths:
+            - docker/optimism/optimism
+            - .git/modules/docker/optimism
+      - run: bash $OPTIMISM/optimism.sh up
+      - run: bash $OPTIMISM/optimism.sh deploy-beamer
+      - run: bash $OPTIMISM/optimism.sh e2e-test
+      - run: bash $OPTIMISM/optimism.sh down
 
 workflows:
   backend:
@@ -103,19 +165,25 @@ workflows:
       - install-python:
           requires:
             - checkout
-      - create-relayers:
-          requires:
-            - checkout
       - lint:
           requires:
             - install-python
             - install-npm-packages
+      - create-relayers:
+          requires:
+            - checkout
+            - install-npm-packages
+      - compile-contracts:
+          requires:
+            - checkout
+            - install-python
+            - install-npm-packages
       - test-contracts:
           requires:
-            - install-python
-            - install-npm-packages
-      - test-agents:
+            - compile-contracts
+      - test-agent:
           requires:
-            - install-python
-            - install-npm-packages
-            - create-relayers
+            - compile-contracts
+      - e2e-test-optimism:
+          requires:
+            - compile-contracts
