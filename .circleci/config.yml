@@ -1,0 +1,27 @@
+version: 2.1
+
+setup: true
+
+# the path-filtering orb is required to continue a pipeline based on
+# the path of an updated fileset
+orbs:
+  path-filtering: circleci/path-filtering@0.1.1
+
+workflows:
+  always-run:
+    jobs:
+      # the path-filtering/filter job determines which pipeline
+      # parameters to update.
+      - path-filtering/filter:
+          name: check-updated-files
+          base-revision: main
+          config-path: .circleci/workflows.yml
+          mapping: |
+            beamer/.* backend-updated true
+            contracts/.* backend-updated true
+            docker/.* backend-updated true
+            relayer/.* backend-updated true
+            scripts/.* backend-updated true
+            docs/.* docs-updated true
+            frontend/.* frontend-updated true
+            subgraph/.* subgraph-updated true
