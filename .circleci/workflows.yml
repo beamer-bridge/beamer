@@ -1,12 +1,18 @@
 version: 2.1
 
-commands:
-  initialize-environment:
-    steps:
-      # Attach the git repo checkout at ~/beamer
-      - attach_workspace:
-          at: /
+orbs:
+    node: circleci/node@5.0.2
 
+commands:
+  restore-python:
+    steps:
+      # Restore cached Python installation at /opt/circleci/.pyenv
+      - restore_cache:
+          name: Restore cached Python installation
+          key: python-3.10.6-v1
+
+  restore-python-packages:
+    steps:
       # Restore the cached Python virtualenv packages and ~/.bashrc.
       # The latter is useful to enter the virtualenv when the shell starts.
       - restore_cache:
@@ -15,20 +21,42 @@ commands:
             - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
             - beamer-dependencies-v4
 
-      # Restore cached Python installation at /opt/circleci/.pyenv
+  restore-node-packages:
+    steps:
+      # Restore node runtime and packages at /opt/circleci/.nvm
       - restore_cache:
-          name: Restore cached Python installation
-          key: python-3.10.6-v1
+          name: Restore node runtime and packages
+          key: node18-packages-v10
+      - run: echo "nvm use default" >> "${BASH_ENV}"
 
-      # Restore npm packages at /opt/circleci/.nvm
-      - restore_cache:
-          name: Restore cached npm packages
-          key: npm-packages-v1
+  initialize-environment:
+    steps:
+      # Attach the git repo checkout at ~/beamer
+      - attach_workspace:
+          at: /
+
+      - restore-python
+      - restore-python-packages
+      - restore-node-packages
 
       # Restore brownie packages at /home/circleci/.brownie.
       - restore_cache:
           name: Restore cached solc and brownie packages
           key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
+
+parameters:
+  docs-updated:
+    type: boolean
+    default: false
+  backend-updated:
+    type: boolean
+    default: false
+  frontend-updated:
+    type: boolean
+    default: false
+  subgraph-updated:
+    type: boolean
+    default: false
 
 executors:
   vm:
@@ -83,22 +111,33 @@ jobs:
   install-npm-packages:
     executor: vm
     steps:
+      - attach_workspace:
+          at: /
       - restore_cache:
-          key: npm-packages-v1
-      - run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --location=global
+          key: node18-packages-v10
+      - run:
+          name: Install node v18
+          command: |
+            nvm install --default v18
+            # Remove other versions so they don't end up in the cache.
+            for x in $(ls -1 ${NVM_DIR}/versions/node | grep -v $(nvm version default)); do nvm uninstall $x; done
+      - run: npm install yarn --location=global
       - run: npm install solhint --location=global
       - run: npm install ganache --location=global
+      - run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --location=global
       - save_cache:
-          key: npm-packages-v1
+          key: node18-packages-v10
           paths:
-            - /opt/circleci/.nvm/
+            - /opt/circleci/.nvm/versions
+            - /opt/circleci/.nvm/alias/default
 
   create-relayers:
     executor: vm
     steps:
       - attach_workspace:
           at: /
-      - run: make relayers
+      - restore-node-packages
+      - run: make ~/beamer relayers
       - persist_to_workspace:
           root: /
           paths:
@@ -157,8 +196,93 @@ jobs:
       - run: bash $OPTIMISM/optimism.sh e2e-test
       - run: bash $OPTIMISM/optimism.sh down
 
+  build-docs:
+    executor: vm
+    steps:
+      - when:
+          condition: <<pipeline.parameters.docs-updated>>
+          steps:
+            - attach_workspace:
+                at: /
+            - restore-python
+            - restore-python-packages
+            - run: sudo apt-get install graphviz
+            - run: make docs
+            - persist_to_workspace:
+                root: /
+                paths:
+                  - home/circleci/beamer/docs/build/html
+      # The step below is here in order to pass CircleCI schema validation.
+      - run: echo -n > /dev/null
+
+  publish-docs:
+    docker:
+      - image: cimg/base:current
+    environment:
+      REPO_URL: git@github.com:beamer-bridge/docs.git
+      TMP_DIR: /tmp/docs
+    steps:
+      - attach_workspace:
+          at: /
+      - add_ssh_keys:
+          fingerprints:
+            - 5b:50:ed:f0:2b:67:fd:13:db:f5:64:a3:5c:3b:36:d7
+      - run: |
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git clone --depth=1 "${REPO_URL}" -b gh-pages "${TMP_DIR}"
+          rm -rf "${TMP_DIR}"/*
+          cp -r ~/beamer/docs/build/html/* "${TMP_DIR}"
+          cd "${TMP_DIR}"
+          # Bring back the CNAME file we deleted.
+          echo docs.beamerbridge.com > CNAME
+          git config user.name "${CIRCLE_USERNAME}"
+          git config user.email "${CIRCLE_USERNAME}@users.noreply.github.com"
+          git add --all
+          git commit -m "Auto-generated docs based on beamer ${CIRCLE_SHA1}"
+          git push origin gh-pages
+
+  build-and-test-frontend:
+    executor: node/default
+    working_directory: ~/beamer/frontend
+    steps:
+      - checkout:
+          path: ~/beamer
+      - node/install-packages:
+          pkg-manager: yarn
+          app-dir: ~/beamer/frontend
+      - run:
+          name: Build
+          command: yarn build
+      - run:
+          name: Lint
+          command: yarn lint
+      - run:
+          name: Unit tests
+          command: yarn test:unit
+
+  build-and-publish-container-image:
+    docker:
+      - image: cimg/base:current
+    environment:
+      IMAGE_NAME: ghcr.io/beamer-bridge/beamer-agent-test
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout:
+          path: ~/beamer
+      - run:
+          name: Log in to github container registry
+          command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
+      - run:
+          name: Build a beamer-agent image
+          command: cd ~/beamer && make container-image IMAGE_NAME=${IMAGE_NAME}
+      - run:
+          name: Push the image to github container registry
+          command: docker push -a ${IMAGE_NAME}
+
 workflows:
   backend:
+    when: <<pipeline.parameters.backend-updated>>
     jobs:
       - checkout
       - install-npm-packages
@@ -169,13 +293,15 @@ workflows:
           requires:
             - install-python
             - install-npm-packages
+      - build-docs:
+          requires:
+            - install-python
       - create-relayers:
           requires:
             - checkout
             - install-npm-packages
       - compile-contracts:
           requires:
-            - checkout
             - install-python
             - install-npm-packages
       - test-contracts:
@@ -187,3 +313,34 @@ workflows:
       - e2e-test-optimism:
           requires:
             - compile-contracts
+
+  publish-docs:
+    when:
+      and:
+        - <<pipeline.parameters.docs-updated>>
+        - equal: [ main, <<pipeline.git.branch>> ]
+    jobs:
+      - checkout
+      - install-python:
+          requires:
+            - checkout
+      - build-docs:
+          requires:
+            - checkout
+            - install-python
+      - publish-docs:
+          requires:
+            - build-docs
+
+  frontend:
+    when: <<pipeline.parameters.frontend-updated>>
+    jobs:
+      - build-and-test-frontend
+
+  build-and-publish-container-image:
+    when:
+      and:
+        - <<pipeline.parameters.backend-updated>>
+        - equal: [ main, <<pipeline.git.branch>> ]
+    jobs:
+      - build-and-publish-container-image
