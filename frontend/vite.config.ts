@@ -28,4 +28,7 @@ export default defineConfig({
       reportDir: path.resolve(test_output_directory, 'coverage'),
     },
   },
+  define: {
+    APP_VERSION: JSON.stringify(process.env.npm_package_version),
+  },
 });
