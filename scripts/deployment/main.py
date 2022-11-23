@@ -102,6 +102,7 @@ def deploy_beamer(
 
     request_manager_arguments = l2_config["request_manager_arguments"]
     claim_stake = to_wei(request_manager_arguments["claim_stake"], "ether")
+    claim_request_extension = request_manager_arguments["claim_request_extension"]
     claim_period = request_manager_arguments["claim_period"]
     challenge_period_extension = request_manager_arguments["challenge_period_extension"]
 
@@ -110,6 +111,7 @@ def deploy_beamer(
         (
             "RequestManager",
             claim_stake,
+            claim_request_extension,
             claim_period,
             challenge_period_extension,
         ),
