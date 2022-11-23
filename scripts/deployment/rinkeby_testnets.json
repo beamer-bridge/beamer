@@ -27,6 +27,7 @@
             "finality_period": 604800,
             "request_manager_arguments": {
                 "claim_stake": 0.00047,
+                "claim_request_extension": 3600,
                 "claim_period": 3600,
                 "challenge_period_extension": 3600
             }

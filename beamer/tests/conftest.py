@@ -56,6 +56,11 @@ def claim_stake():
 
 
 @pytest.fixture
+def claim_request_extension():
+    return 100
+
+
+@pytest.fixture
 def claim_period():
     return 100
 
@@ -80,6 +85,7 @@ def contracts(
     deployer,
     forward_state,
     claim_stake,
+    claim_request_extension,
     claim_period,
     finality_period,
     challenge_period_extension,
@@ -97,7 +103,11 @@ def contracts(
 
     # L2a contracts
     request_manager = deployer.deploy(
-        RequestManager, claim_stake, claim_period, challenge_period_extension
+        RequestManager,
+        claim_stake,
+        claim_request_extension,
+        claim_period,
+        challenge_period_extension,
     )
 
     # Add allowed LPs

@@ -14,6 +14,7 @@
             "l2_messenger": "TestL2Messenger",
             "request_manager_arguments": {
                 "claim_stake": 0.00047,
+                "claim_request_extension": 3600,
                 "claim_period": 3600,
                 "challenge_period_extension": 3600
             }
