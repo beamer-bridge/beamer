@@ -643,6 +643,25 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         token.safeTransfer(claimer, request.amount + request.lpFee);
     }
 
+    /// Returns whether a request's deposit was withdrawn or not
+    ///
+    /// This can be true in two cases:
+    /// 1. The deposit was withdrawn after the request was claimed and filled.
+    /// 2. The submitter withdrew the deposit after the request's expiry.
+    /// .. seealso:: :sol:func:`withdraw`
+    /// .. seealso:: :sol:func:`withdrawExpiredRequest`
+    ///
+    /// @param requestId The request ID
+    /// @return Whether the deposit corresponding to the given request ID was withdrawn
+    function isWithdrawn(bytes32 requestId)
+        public
+        view
+        validRequestId(requestId)
+        returns (bool)
+    {
+        return requests[requestId].withdrawClaimId != 0;
+    }
+
     /// Withdraw protocol fees collected by the contract.
     ///
     /// Protocol fees are paid in token transferred.

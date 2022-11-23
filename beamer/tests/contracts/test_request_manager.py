@@ -331,6 +331,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
     assert "DepositWithdrawn" in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
+    assert request_manager.isWithdrawn(request_id)
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer) == transfer_amount
@@ -394,6 +395,7 @@ def test_withdraw_with_challenge(
     withdraw_tx = request_manager.withdraw(claim_id, {"from": challenger})
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert "DepositWithdrawn" not in withdraw_tx.events
+    assert not request_manager.isWithdrawn(request_id)
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer) == 0
@@ -612,6 +614,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
     withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
     assert "DepositWithdrawn" in withdraw1_tx.events
     assert "ClaimStakeWithdrawn" in withdraw1_tx.events
+    assert request_manager.isWithdrawn(request_id)
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == transfer_amount
@@ -1098,6 +1101,7 @@ def test_withdraw_expired(token, request_manager):
     chain.mine(timedelta=validity_period)
     tx = request_manager.withdrawExpiredRequest(request_id, {"from": requester})
     assert "DepositWithdrawn" in tx.events
+    assert request_manager.isWithdrawn(request_id)
     assert token.balanceOf(requester) == amount
 
 
@@ -1113,6 +1117,15 @@ def test_withdraw_before_expiration(token, request_manager):
     chain.mine(timedelta=validity_period / 2)
     with brownie.reverts("Request not expired yet"):
         request_manager.withdrawExpiredRequest(request_id, {"from": requester})
+
+
+def test_withdrawal_state_of_new_request(token, request_manager):
+    """Test that a new request is not withdrawn"""
+    (requester,) = alloc_accounts(1)
+
+    request_id = make_request(request_manager, token, requester, requester, 1)
+
+    assert not request_manager.isWithdrawn(request_id)
 
 
 def test_deprecation(deployer, request_manager, token):
