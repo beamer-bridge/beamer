@@ -127,6 +127,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// provide when making a claim, as well in each round of the challenge game.
     uint256 public immutable claimStake;
 
+    /// The additional time given to claim a request. This value is added to the
+    /// validity period of a request.
+    uint256 public immutable claimRequestExtension;
+
     /// The period for which the claim is valid.
     uint256 public immutable claimPeriod;
 
@@ -225,14 +229,17 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// Constructor.
     ///
     /// @param _claimStake Claim stake amount.
+    /// @param _claimRequestExtension Extension to claim a request after validity period ends.
     /// @param _claimPeriod Claim period, in seconds.
     /// @param _challengePeriodExtension Challenge period extension, in seconds.
     constructor(
         uint256 _claimStake,
+        uint256 _claimRequestExtension,
         uint256 _claimPeriod,
         uint256 _challengePeriodExtension
     ) {
         claimStake = _claimStake;
+        claimRequestExtension = _claimRequestExtension;
         claimPeriod = _claimPeriod;
         challengePeriodExtension = _challengePeriodExtension;
     }
@@ -371,7 +378,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     {
         Request storage request = requests[requestId];
 
-        require(block.timestamp < request.validUntil, "Request expired");
+        require(
+            block.timestamp < request.validUntil + claimRequestExtension,
+            "Request cannot be claimed anymore"
+        );
         require(request.withdrawClaimId == 0, "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
         require(fillId != bytes32(0), "FillId must not be 0x0");
