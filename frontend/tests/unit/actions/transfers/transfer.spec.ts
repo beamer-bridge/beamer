@@ -7,6 +7,7 @@ import * as fillManager from '@/services/transactions/fill-manager';
 import { RequestExpiredError } from '@/services/transactions/request-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
+import * as transactionUtils from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
@@ -101,8 +102,11 @@ describe('transfer', () => {
       },
     });
 
-    Object.defineProperties(fillManager, {
+    Object.defineProperties(transactionUtils, {
       getCurrentBlockNumber: { value: vi.fn().mockResolvedValue(0) },
+    });
+
+    Object.defineProperties(fillManager, {
       waitForFulfillment: {
         value: vi.fn().mockReturnValue({
           promise: new Promise<void>((resolve) => resolve()),
@@ -227,7 +231,7 @@ describe('transfer', () => {
 
     it('sets the request account and transaction hash', async () => {
       define(requestManager, 'sendRequestTransaction', vi.fn().mockResolvedValue('0xHash'));
-      define(fillManager, 'getCurrentBlockNumber', vi.fn().mockResolvedValue(2));
+      define(transactionUtils, 'getCurrentBlockNumber', vi.fn().mockResolvedValue(2));
       const transfer = new TestTransfer(TRANSFER_DATA);
 
       expect(transfer.requestInformation?.requestAccount).toBeUndefined();

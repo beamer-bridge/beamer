@@ -1,50 +1,11 @@
-import { JsonRpcProvider } from '@ethersproject/providers';
-import type { EventFilter } from 'ethers';
-import { Contract } from 'ethers';
-
 import FillManager from '@/assets/FillManager.json';
+import { fetchUntilFirstMatchingEvent } from '@/services/events/filter-utils';
+import {
+  getCurrentBlockNumber,
+  getJsonRpcProvider,
+  getReadOnlyContract,
+} from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
-import type { EthereumAddress } from '@/types/data';
-
-function getContract(rpcUrl: string, address: EthereumAddress): Contract {
-  const provider = new JsonRpcProvider(rpcUrl);
-  return new Contract(address, FillManager.abi, provider);
-}
-
-export async function getCurrentBlockNumber(rpcUrl: string): Promise<number> {
-  const provider = new JsonRpcProvider(rpcUrl);
-  return provider.getBlockNumber();
-}
-
-export async function fetchUntilFirstMatchingEvent(
-  contract: {
-    queryFilter: (event: EventFilter, from: number, to: number) => Promise<Array<unknown>>;
-  },
-  filter: EventFilter,
-  fromBlockNumber: number,
-  toBlockNumber: number,
-  blockChunkSize = 2,
-): Promise<boolean> {
-  while (fromBlockNumber <= toBlockNumber) {
-    const targetBlockNumber = Math.min(fromBlockNumber + blockChunkSize, toBlockNumber);
-
-    try {
-      const events = await contract.queryFilter(filter, fromBlockNumber, targetBlockNumber);
-
-      if (events.length > 0) {
-        return true;
-      } else {
-        fromBlockNumber = targetBlockNumber + 1;
-      }
-    } catch (error: unknown) {
-      // TODO: Match certain errors? But what to do then? We can't simply fail.
-      console.error(error); // For debugging and learning purpose.
-      blockChunkSize = Math.floor(blockChunkSize / 2);
-    }
-  }
-
-  return false;
-}
 
 export async function checkForPastFulfillmentEvent(
   rpcUrl: string,
@@ -52,9 +13,12 @@ export async function checkForPastFulfillmentEvent(
   requestIdentifier: string,
   fromBlockNumber: number,
 ): Promise<boolean> {
-  const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, fillManagerAddress);
-  const currentBlockNumber = await provider.getBlockNumber();
+  const contract = getReadOnlyContract(
+    fillManagerAddress,
+    FillManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
+  const currentBlockNumber = await getCurrentBlockNumber(rpcUrl);
   const filter = contract.filters.RequestFilled(requestIdentifier);
   return fetchUntilFirstMatchingEvent(contract, filter, fromBlockNumber, currentBlockNumber);
 }
@@ -65,7 +29,11 @@ export function waitForFulfillment(
   requestIdentifier: string,
   fromBlockNumber: number,
 ): Cancelable<void> {
-  const contract = getContract(rpcUrl, fillManagerAddress);
+  const contract = getReadOnlyContract(
+    fillManagerAddress,
+    FillManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
   const eventFilter = contract.filters.RequestFilled(requestIdentifier);
   const promise = new Promise<void>((resolve) => {
     const cleanUpAndResolve = () => {

@@ -1,92 +1,167 @@
-import { fetchUntilFirstMatchingEvent } from '@/services/transactions/fill-manager';
+import { flushPromises } from '@vue/test-utils';
+
+import * as eventFiltersService from '@/services/events/filter-utils';
+import {
+  checkForPastFulfillmentEvent,
+  waitForFulfillment,
+} from '@/services/transactions/fill-manager';
+import * as transactionUtils from '@/services/transactions/utils';
+import {
+  getRandomEthereumAddress,
+  getRandomNumber,
+  getRandomString,
+  getRandomUrl,
+} from '~/utils/data_generators';
+import { MockedFillManagerContract } from '~/utils/mocks/beamer';
+
+vi.mock('@/services/transactions/utils');
+vi.mock('ethers');
+vi.mock('@/services/events/filters');
+
+function createConfig(options?: {
+  rpcUrl?: string;
+  fillManagerAddress?: string;
+  requestIdentifier?: string;
+  fromBlockNumber?: number;
+}) {
+  return {
+    rpcUrl: options?.rpcUrl ?? getRandomUrl('rpc'),
+    fillManagerAddress: options?.fillManagerAddress ?? getRandomEthereumAddress(),
+    requestIdentifier: options?.requestIdentifier ?? getRandomString(),
+    fromBlockNumber: options?.fromBlockNumber ?? getRandomNumber(),
+  };
+}
+
+function mockGetContract(): MockedFillManagerContract {
+  const contract = new MockedFillManagerContract();
+
+  Object.defineProperties(transactionUtils, {
+    getReadOnlyContract: {
+      value: vi.fn().mockReturnValue(contract),
+    },
+    getReadWriteContract: {
+      value: vi.fn().mockReturnValue(contract),
+    },
+  });
+
+  return contract;
+}
 
 describe('fill-manager', () => {
-  describe('fetchUntilFirstMatchingEvent()', () => {
-    beforeEach(() => {
-      global.console.error = vi.fn();
+  beforeEach(() => {
+    mockGetContract();
+
+    Object.defineProperty(transactionUtils, 'getCurrentBlockNumber', {
+      value: vi.fn(),
     });
 
-    it('does nothing if block range is negative and returns false', async () => {
-      const contract = { queryFilter: vi.fn() };
+    Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
+      value: vi.fn(),
+    });
+  });
 
-      const found = await fetchUntilFirstMatchingEvent(contract, {}, 2, 1);
+  describe('checkForPastFulfillmentEvent()', () => {
+    it('calls fetchUntilFirstMatchingEvent with the right parameters', async () => {
+      const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig({
+        fromBlockNumber: 1,
+      });
 
-      expect(contract.queryFilter).not.toHaveBeenCalled();
-      expect(found).toBeFalsy();
+      const toBlockNumber = 10;
+
+      const contract = mockGetContract();
+      const filter = 'fake-filter';
+      contract.filters.RequestFilled = vi.fn().mockReturnValue(filter);
+
+      Object.defineProperty(transactionUtils, 'getCurrentBlockNumber', {
+        value: vi.fn().mockReturnValue(toBlockNumber),
+      });
+
+      await checkForPastFulfillmentEvent(
+        rpcUrl,
+        fillManagerAddress,
+        requestIdentifier,
+        fromBlockNumber,
+      );
+
+      expect(eventFiltersService.fetchUntilFirstMatchingEvent).toHaveBeenNthCalledWith(
+        1,
+        contract,
+        filter,
+        fromBlockNumber,
+        toBlockNumber,
+      );
+    });
+    it('returns the result from the event filter operation', async () => {
+      const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
+
+      Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
+        value: vi.fn().mockResolvedValue(true),
+      });
+
+      await expect(
+        checkForPastFulfillmentEvent(
+          rpcUrl,
+          fillManagerAddress,
+          requestIdentifier,
+          fromBlockNumber,
+        ),
+      ).resolves.toBe(true);
+    });
+  });
+
+  describe('waitForFulfillment()', () => {
+    it('initiates the awaitable operation for finding a fulfillment event', async () => {
+      const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
+
+      const contract = mockGetContract();
+
+      waitForFulfillment(rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber);
+      await flushPromises();
+
+      expect(contract.on).toHaveBeenCalled();
+      expect(eventFiltersService.fetchUntilFirstMatchingEvent).toHaveBeenCalled();
+      expect(contract.removeAllListeners).not.toHaveBeenCalled();
     });
 
-    it('queries for events multiple times per chunk size', async () => {
-      const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
+    it('resolves & stops listening for fulfillment events when a matching event was found', async () => {
+      const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-      await fetchUntilFirstMatchingEvent(contract, {}, 1, 9, 2);
+      const contract = mockGetContract();
 
-      expect(contract.queryFilter).toHaveBeenCalledTimes(3);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 3);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(2, expect.anything(), 4, 6);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(3, expect.anything(), 7, 9);
+      Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
+        value: vi.fn().mockResolvedValue(true),
+      });
+
+      const { promise } = waitForFulfillment(
+        rpcUrl,
+        fillManagerAddress,
+        requestIdentifier,
+        fromBlockNumber,
+      );
+
+      await expect(promise).resolves.toBeUndefined();
+      expect(contract.removeAllListeners).toHaveBeenCalled();
     });
 
-    it('last event query reduces chunk size to match final block number', async () => {
-      const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
+    describe('cancel()', () => {
+      it('can be executed in order to stop listening for fulfillment events', () => {
+        const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-      await fetchUntilFirstMatchingEvent(contract, {}, 1, 5, 2);
+        const contract = mockGetContract();
 
-      expect(contract.queryFilter).toHaveBeenCalledTimes(2);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 3);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(2, expect.anything(), 4, 5);
-    });
+        const { cancel } = waitForFulfillment(
+          rpcUrl,
+          fillManagerAddress,
+          requestIdentifier,
+          fromBlockNumber,
+        );
 
-    it('returns true if event got found', async () => {
-      const contract = { queryFilter: vi.fn().mockResolvedValue(['fake-event']) };
+        expect(contract.on).toHaveBeenCalled();
 
-      const found = await fetchUntilFirstMatchingEvent(contract, {}, 1, 2);
+        cancel();
 
-      expect(found).toBeTruthy();
-    });
-
-    it('returns false if no event was found', async () => {
-      const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
-
-      const found = await fetchUntilFirstMatchingEvent(contract, {}, 1, 2);
-
-      expect(contract.queryFilter).toHaveBeenCalled();
-      expect(found).toBeFalsy();
-    });
-
-    it('stops quering events once an event was found', async () => {
-      const contract = {
-        queryFilter: vi
-          .fn()
-          .mockReturnValueOnce([])
-          .mockReturnValueOnce(['fake-event'])
-          .mockResolvedValue([]),
-      };
-
-      await fetchUntilFirstMatchingEvent(contract, {}, 1, 9, 2);
-
-      expect(contract.queryFilter).toHaveBeenCalledTimes(2);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 3);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(2, expect.anything(), 4, 6);
-      expect(contract.queryFilter).not.toHaveBeenCalledWith(expect.anything(), 7, 9);
-    });
-
-    it('reduces the chunk size by half with every error and retries', async () => {
-      const contract = {
-        queryFilter: vi
-          .fn()
-          .mockRejectedValueOnce(null)
-          .mockRejectedValueOnce(null)
-          .mockResolvedValue([]),
-      };
-
-      await fetchUntilFirstMatchingEvent(contract, {}, 1, 6, 4);
-
-      expect(contract.queryFilter).toHaveBeenCalledTimes(5);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 5);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(2, expect.anything(), 1, 3);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(3, expect.anything(), 1, 2);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(4, expect.anything(), 3, 4);
-      expect(contract.queryFilter).toHaveBeenNthCalledWith(5, expect.anything(), 5, 6);
+        expect(contract.removeAllListeners).toHaveBeenCalled();
+      });
     });
   });
 });
