@@ -52,6 +52,7 @@ class Context:
     config: Config
     web3_l1: Web3
     task_pool: Executor
+    claim_request_extension: int
     l1_resolutions: dict[tuple[RequestId, ClaimId], Future]
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
 
