@@ -2,7 +2,7 @@ import type { JsonRpcSigner } from '@ethersproject/providers';
 
 import type { StepData } from '@/actions/steps';
 import { MultiStepAction, Step } from '@/actions/steps';
-import { getCurrentBlockNumber, waitForFulfillment } from '@/services/transactions/fill-manager';
+import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   failWhenRequestExpires,
   getRequestData,
@@ -12,6 +12,7 @@ import {
   withdrawRequest,
 } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
+import { getCurrentBlockNumber } from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';

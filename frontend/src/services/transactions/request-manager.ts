@@ -1,19 +1,23 @@
 import type { JsonRpcSigner, TransactionResponse } from '@ethersproject/providers';
-import { JsonRpcProvider } from '@ethersproject/providers';
 import type { BigNumberish } from 'ethers';
-import { BigNumber, Contract } from 'ethers';
+import { BigNumber } from 'ethers';
 
 import RequestManager from '@/assets/RequestManager.json';
-import { getContract } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
+
+import { getJsonRpcProvider, getReadOnlyContract, getReadWriteContract } from './utils';
 
 export async function getTransferLimit(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const contract = getReadOnlyContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
 
   return new UInt256(await contract.transferLimit());
 }
@@ -24,7 +28,11 @@ export async function getAmountBeforeFees(
   requestManagerAddress: string,
 ): Promise<UInt256> {
   const PARTS_IN_MILLION = new UInt256('1000000');
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const contract = getReadOnlyContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
   const minLpFeeWei: UInt256 = new UInt256(await contract.minLpFee());
   const lpFeePartsPerMillion: UInt256 = new UInt256(await contract.lpFeePPM());
   const protocolFeePartsPerMillion: UInt256 = new UInt256(await contract.protocolFeePPM());
@@ -53,7 +61,11 @@ export async function getMinRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const contract = getReadOnlyContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
   const minLpFee: BigNumberish = await contract.minLpFee();
   return new UInt256(minLpFee.toString());
 }
@@ -63,7 +75,11 @@ export async function getRequestFee(
   requestManagerAddress: string,
   transferAmount: UInt256,
 ): Promise<UInt256> {
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const contract = getReadOnlyContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
   const fetchedAmount: BigNumberish = await contract.totalFee(
     BigNumber.from(transferAmount.asString),
   );
@@ -80,7 +96,11 @@ export async function sendRequestTransaction(
   targetAccount: EthereumAddress,
   validityPeriod: UInt256,
 ): Promise<string> {
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
+  const requestManagerContract = getReadWriteContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    signer,
+  );
 
   const requestParameter = [
     targetChainIdentifier,
@@ -114,8 +134,8 @@ export async function getRequestIdentifier(
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
 ): Promise<string> {
-  const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const provider = getJsonRpcProvider(rpcUrl);
+  const contract = getReadOnlyContract(requestManagerAddress, RequestManager.abi, provider);
   const receipt = await provider.waitForTransaction(transactionHash, 1);
   if (receipt) {
     const event = contract.interface.parseLog(receipt.logs[0]);
@@ -142,7 +162,11 @@ export async function getRequestData(
   requestManagerAddress: string,
   requestIdentifier: string,
 ): Promise<RequestData & RequestDataDerivedProperties> {
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const contract = getReadOnlyContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
   const request: RequestData | undefined = await contract.requests(requestIdentifier);
 
   if (request !== undefined) {
@@ -170,7 +194,7 @@ export async function getRequestExpiryInfo(
     requestManagerAddress,
     requestIdentifier,
   );
-  const provider = new JsonRpcProvider(rpcUrl);
+  const provider = getJsonRpcProvider(rpcUrl);
   const block = await provider.getBlock('latest');
   const validityExpired = validUntil.lt(block.timestamp);
   const noActiveClaims = activeClaims.eq(0);
@@ -191,8 +215,8 @@ export function failWhenRequestExpires(
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
 ): Cancelable<void> {
-  const provider = new JsonRpcProvider(rpcUrl);
-  const contract = getContract(rpcUrl, requestManagerAddress, RequestManager.abi);
+  const provider = getJsonRpcProvider(rpcUrl);
+  const contract = getReadOnlyContract(requestManagerAddress, RequestManager.abi, provider);
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const promise = new Promise<void>((_, reject) => {
@@ -273,7 +297,11 @@ export async function withdrawRequest(
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
 ): Promise<void> {
-  const requestManagerContract = new Contract(requestManagerAddress, RequestManager.abi, signer);
+  const requestManagerContract = getReadWriteContract(
+    requestManagerAddress,
+    RequestManager.abi,
+    signer,
+  );
 
   const requestParameter = [requestIdentifier];
 

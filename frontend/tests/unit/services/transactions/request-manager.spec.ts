@@ -8,12 +8,12 @@ vi.mock('@/services/transactions/utils');
 const PARTS_IN_PERCENT = 100;
 const PARTS_IN_MILLION = 1000000;
 
-function mockGetContractReturnValue(options?: {
+function mockGetReadOnlyContractReturnValue(options?: {
   minLpFeeWei?: UInt256;
   lpFeePartsPerMillion?: UInt256;
   protocolFeePartsPerMillion?: UInt256;
 }) {
-  Object.defineProperty(transactionUtils, 'getContract', {
+  Object.defineProperty(transactionUtils, 'getReadOnlyContract', {
     value: vi.fn().mockReturnValue({
       minLpFee: vi.fn().mockReturnValue(options?.minLpFeeWei?.asString ?? '0'),
       lpFeePPM: vi.fn().mockReturnValue(options?.lpFeePartsPerMillion?.asString ?? '0'),
@@ -48,7 +48,7 @@ describe('request-manager', () => {
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
 
-        mockGetContractReturnValue({
+        mockGetReadOnlyContractReturnValue({
           minLpFeeWei,
           lpFeePartsPerMillion,
           protocolFeePartsPerMillion,
@@ -90,7 +90,7 @@ describe('request-manager', () => {
         const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
 
-        mockGetContractReturnValue({ minLpFeeWei, lpFeePartsPerMillion });
+        mockGetReadOnlyContractReturnValue({ minLpFeeWei, lpFeePartsPerMillion });
 
         expect(getAmountBeforeFees(totalAmountWei, rpcUrl, requestManagerAddress)).rejects.toThrow(
           'Total amount is not high enough to cover the fees.',
@@ -110,7 +110,7 @@ describe('request-manager', () => {
         const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
         const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
 
-        mockGetContractReturnValue({
+        mockGetReadOnlyContractReturnValue({
           minLpFeeWei,
           lpFeePartsPerMillion,
           protocolFeePartsPerMillion,
