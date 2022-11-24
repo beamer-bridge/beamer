@@ -56,6 +56,8 @@ class Agent:
         if not request_manager.functions.allowedLps(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted on RequestManager")
 
+        claim_request_extension = request_manager.functions.claimRequestExtension().call()
+
         self.context = Context(
             requests=Tracker(),
             claims=Tracker(),
@@ -67,6 +69,7 @@ class Agent:
             config=config,
             web3_l1=w3_l1,
             task_pool=self._task_pool,
+            claim_request_extension=claim_request_extension,
             l1_resolutions={},
         )
 
