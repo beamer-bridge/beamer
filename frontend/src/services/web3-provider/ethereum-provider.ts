@@ -1,6 +1,5 @@
 import type { Block, JsonRpcSigner } from '@ethersproject/providers';
 import { getNetwork, Web3Provider } from '@ethersproject/providers';
-import type { Contract } from 'ethers';
 import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import EventEmitter from 'events';
@@ -73,14 +72,16 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
           decimals: 18,
         },
       };
+
       await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
     } catch (error) {
+      console.error(error);
       return false;
     }
     return true;
   }
 
-  async addToken(token: Token): Promise<void> {
+  async addToken(token: Token): Promise<boolean> {
     try {
       const wasAdded = await this.externalProvider.request({
         method: 'wallet_watchAsset',
@@ -93,11 +94,11 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
           },
         },
       });
-      if (!wasAdded) {
-        throw new Error("Couldn't add token to MetaMask");
-      }
+
+      return !!wasAdded;
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      return false;
     }
   }
 
@@ -109,10 +110,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
     return this.web3Provider;
   }
 
-  connectContract(contract: Contract): Contract {
-    return contract.connect(this.web3Provider);
-  }
-
   async getChainId(): Promise<number> {
     const { chainId } = await this.web3Provider.getNetwork();
     return chainId;
@@ -120,15 +117,16 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
 
   async tryAccessingDefaultSigner(): Promise<void> {
     const accounts = await this.web3Provider.listAccounts();
-    this.newDefaultSigner(accounts);
-  }
-
-  newDefaultSigner(accounts: string[]): void {
     if (accounts.length === 0) {
       return this.disconnect();
     }
-    this.signer.value = this.web3Provider.getSigner(accounts[0]);
-    this.signerAddress.value = accounts[0];
+
+    this.setSigner(accounts[0]);
+  }
+
+  setSigner(account: string): void {
+    this.signer.value = this.web3Provider.getSigner(account);
+    this.signerAddress.value = account;
   }
 
   disconnect(): void {
@@ -138,9 +136,7 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   }
 
   listenToEvents(): void {
-    this.externalProvider.on('accountsChanged', (accounts: string[]) =>
-      this.newDefaultSigner(accounts),
-    );
+    this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
     this.externalProvider.on('chainChanged', (chainId: string) => {
       this.chainId.value = BigNumber.from(chainId).toNumber();
     });
