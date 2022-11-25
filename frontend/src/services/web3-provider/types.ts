@@ -4,7 +4,6 @@ import type {
   JsonRpcSigner,
   Web3Provider,
 } from '@ethersproject/providers';
-import type { Contract } from 'ethers';
 import type { Ref, ShallowRef } from 'vue';
 
 import type { Chain, Token } from '@/types/data';
@@ -16,10 +15,9 @@ export interface IEthereumProvider {
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   getProvider(): Web3Provider;
-  connectContract(contract: Contract): Contract;
   switchChainSafely(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
-  addToken(token: Token): Promise<void>;
+  addToken(token: Token): Promise<boolean>;
 }
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;
