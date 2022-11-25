@@ -2,6 +2,7 @@
 
 CODE_DIRS = beamer/ scripts/
 CONTRACTS = "contracts/**/*.sol"
+IMAGE_NAME := beamer-agent
 
 all: lint
 
@@ -25,7 +26,9 @@ dist-exe:
 	shiv -c beamer-agent -o dist/beamer-agent .
 
 container-image: relayers
-	DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.agent -t beamer-agent .
+	DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.agent \
+								   -t $(IMAGE_NAME):$(shell git describe --tags) \
+								   -t $(IMAGE_NAME):sha-$(shell git rev-parse HEAD) .
 
 relayers:
 	yarn --cwd relayer install
