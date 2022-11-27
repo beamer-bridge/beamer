@@ -6,8 +6,6 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore TODO: Install & use type declarations once we migrate to WalletConnect v2
-import WalletConnectUMD from '@walletconnect/web3-provider/dist/umd/index.min.js';
-
-const WalletConnect = WalletConnectUMD.default;
+import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
 
 export { detectEthereumProvider, MetaMaskOnboarding, WalletConnect };

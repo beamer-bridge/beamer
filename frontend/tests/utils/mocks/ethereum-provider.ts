@@ -27,6 +27,13 @@ export class MockedEip1193Provider implements Eip1193Provider {
   request = vi.fn();
   on = vi.fn();
 }
+export class MockedWalletConnectConnector extends MockedEip1193Provider {
+  constructor(public connected: boolean = false) {
+    super();
+  }
+
+  enable = vi.fn();
+}
 export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
