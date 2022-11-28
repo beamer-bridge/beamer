@@ -1,25 +1,28 @@
 import type { JsonRpcSigner, TransactionResponse } from '@ethersproject/providers';
-import type { BigNumberish } from 'ethers';
-import { BigNumber } from 'ethers';
 
-import RequestManager from '@/assets/RequestManager.json';
+import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress } from '@/types/data';
+import type { RequestManager } from '@/types/ethers-contracts';
 import { UInt256 } from '@/types/uint-256';
 
-import { getJsonRpcProvider, getReadOnlyContract, getReadWriteContract } from './utils';
+import {
+  getJsonRpcProvider,
+  getLatestBlock,
+  getReadOnlyContract,
+  getReadWriteContract,
+} from './utils';
 
 export async function getTransferLimit(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-
-  return new UInt256(await contract.transferLimit());
+  return new UInt256((await contract.transferLimit()).toString());
 }
 
 export async function getAmountBeforeFees(
@@ -27,16 +30,16 @@ export async function getAmountBeforeFees(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const PARTS_IN_MILLION = new UInt256('1000000');
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const minLpFeeWei: UInt256 = new UInt256(await contract.minLpFee());
-  const lpFeePartsPerMillion: UInt256 = new UInt256(await contract.lpFeePPM());
-  const protocolFeePartsPerMillion: UInt256 = new UInt256(await contract.protocolFeePPM());
+  const minLpFeeWei = new UInt256((await contract.minLpFee()).toString());
+  const lpFeePartsPerMillion = new UInt256((await contract.lpFeePPM()).toString());
+  const protocolFeePartsPerMillion = new UInt256((await contract.protocolFeePPM()).toString());
 
+  const PARTS_IN_MILLION = new UInt256('1000000');
   const lpFeePPMAmount = totalAmountWei.multiply(lpFeePartsPerMillion).divide(PARTS_IN_MILLION);
 
   if (lpFeePPMAmount.gte(minLpFeeWei)) {
@@ -61,13 +64,12 @@ export async function getMinRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const minLpFee: BigNumberish = await contract.minLpFee();
-  return new UInt256(minLpFee.toString());
+  return new UInt256((await contract.minLpFee()).toString());
 }
 
 export async function getRequestFee(
@@ -75,15 +77,12 @@ export async function getRequestFee(
   requestManagerAddress: string,
   transferAmount: UInt256,
 ): Promise<UInt256> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const fetchedAmount: BigNumberish = await contract.totalFee(
-    BigNumber.from(transferAmount.asString),
-  );
-  return new UInt256(fetchedAmount.toString());
+  return new UInt256((await contract.totalFee(transferAmount.asBigNumber)).toString());
 }
 
 export async function sendRequestTransaction(
@@ -96,21 +95,19 @@ export async function sendRequestTransaction(
   targetAccount: EthereumAddress,
   validityPeriod: UInt256,
 ): Promise<string> {
-  const requestManagerContract = getReadWriteContract(
+  const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     signer,
   );
-
   const requestParameter = [
     targetChainIdentifier,
     sourceTokenAddress,
     targetTokenAddress,
     targetAccount,
-    BigNumber.from(amount.asString),
-    BigNumber.from(validityPeriod.asString),
-  ];
-
+    amount.asBigNumber,
+    validityPeriod.asBigNumber,
+  ] as const;
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
       ...requestParameter,
@@ -135,7 +132,11 @@ export async function getRequestIdentifier(
   transactionHash: string,
 ): Promise<string> {
   const provider = getJsonRpcProvider(rpcUrl);
-  const contract = getReadOnlyContract(requestManagerAddress, RequestManager.abi, provider);
+  const contract = getReadOnlyContract<RequestManager>(
+    requestManagerAddress,
+    RequestManagerDeployment.abi,
+    provider,
+  );
   const receipt = await provider.waitForTransaction(transactionHash, 1);
   if (receipt) {
     const event = contract.interface.parseLog(receipt.logs[0]);
@@ -147,10 +148,10 @@ export async function getRequestIdentifier(
   throw new Error("Request Failed. Couldn't retrieve Request ID");
 }
 
-type RequestData = {
-  validUntil: BigNumber;
-  activeClaims: BigNumber;
-  withdrawClaimId: BigNumber;
+export type RequestData = {
+  validUntil: UInt256;
+  activeClaims: UInt256;
+  withdrawClaimId: UInt256;
 };
 
 type RequestDataDerivedProperties = {
@@ -162,52 +163,85 @@ export async function getRequestData(
   requestManagerAddress: string,
   requestIdentifier: string,
 ): Promise<RequestData & RequestDataDerivedProperties> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const request: RequestData | undefined = await contract.requests(requestIdentifier);
+
+  const request = await contract.requests(requestIdentifier);
 
   if (request !== undefined) {
     return {
-      ...request,
+      validUntil: new UInt256(request.validUntil.toString()),
+      activeClaims: new UInt256(request.activeClaims.toString()),
+      withdrawClaimId: new UInt256(request.withdrawClaimId.toString()),
       withdrawn: !request.withdrawClaimId.isZero(),
     };
   } else {
     throw new Error('No request known for this identifier!');
   }
 }
-type RequestExpiryInfo = {
-  validityExpired: boolean;
-  noActiveClaims: boolean;
-  withdrawn: boolean;
-  timeToExpiredMillis: number;
-};
-export async function getRequestExpiryInfo(
+
+export function getTimeToExpiredMilliseconds(validUntil: UInt256): number {
+  const timestampNowMilliseconds = new UInt256(Date.now().toString());
+  try {
+    return validUntil.multiply(new UInt256('1000')).subtract(timestampNowMilliseconds).asNumber;
+  } catch (e) {
+    return 0;
+  }
+}
+
+export function isRequestExpiredByLocalClock(validUntil: UInt256) {
+  return getTimeToExpiredMilliseconds(validUntil) === 0;
+}
+
+export async function isRequestExpiredByLatestBlock(
+  validUntil: UInt256,
   rpcUrl: string,
-  requestManagerAddress: string,
+): Promise<boolean> {
+  const block = await getLatestBlock(rpcUrl);
+  const validityExpired = validUntil.lt(new UInt256(block.timestamp.toString()));
+
+  return validityExpired;
+}
+
+export function isRequestClaimed(claimCount: UInt256): boolean {
+  return !claimCount.isZero();
+}
+
+export function waitUntilClaimsWithdrawn(
+  rpcUrl: string,
+  requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
-): Promise<RequestExpiryInfo> {
-  const { validUntil, activeClaims, withdrawn } = await getRequestData(
-    rpcUrl,
-    requestManagerAddress,
-    requestIdentifier,
-  );
+  activeClaimCount: number,
+): Cancelable<void> {
   const provider = getJsonRpcProvider(rpcUrl);
-  const block = await provider.getBlock('latest');
-  const validityExpired = validUntil.lt(block.timestamp);
-  const noActiveClaims = activeClaims.eq(0);
-
-  const timeNow = BigNumber.from(Date.now());
-  const timeToExpiredMillis = Math.max(validUntil.mul(1000).sub(timeNow).toNumber(), 0);
-
-  return {
-    validityExpired,
-    noActiveClaims,
-    withdrawn,
-    timeToExpiredMillis,
+  const contract = getReadOnlyContract<RequestManager>(
+    requestManagerAddress,
+    RequestManagerDeployment.abi,
+    provider,
+  );
+  const cancel = () => {
+    contract.removeAllListeners();
   };
+
+  const queryFilter = contract.filters.ClaimStakeWithdrawn(undefined, requestIdentifier);
+
+  const promise = new Promise<void>((resolve) => {
+    let claimCount = activeClaimCount;
+    if (claimCount > 0) {
+      contract.on(queryFilter, () => {
+        if (--claimCount == 0) {
+          resolve();
+        }
+      });
+    } else {
+      resolve();
+    }
+  });
+
+  return { cancel, promise };
 }
 
 export function failWhenRequestExpires(
@@ -216,73 +250,62 @@ export function failWhenRequestExpires(
   requestIdentifier: string,
 ): Cancelable<void> {
   const provider = getJsonRpcProvider(rpcUrl);
-  const contract = getReadOnlyContract(requestManagerAddress, RequestManager.abi, provider);
   let timeout: ReturnType<typeof setTimeout> | null = null;
+  let cancelWaitUntilClaimsWithdrawn: (() => void) | null = null;
+
+  const cleanUp = () => {
+    provider.removeAllListeners();
+    if (cancelWaitUntilClaimsWithdrawn !== null) {
+      cancelWaitUntilClaimsWithdrawn();
+    }
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
 
   const promise = new Promise<void>((_, reject) => {
     const cleanUpAndReject = () => {
-      provider.removeAllListeners();
-      contract.removeAllListeners();
+      cleanUp();
       reject(new RequestExpiredError());
     };
 
-    const attachClaimWithdrawnListener = async () => {
-      const eventFilter = contract.filters.ClaimStakeWithdrawn(undefined, requestIdentifier);
-
-      contract.on(eventFilter, async () => {
-        const { activeClaims } = await getRequestData(
-          rpcUrl,
-          requestManagerAddress,
-          requestIdentifier,
-        );
-        if (activeClaims.eq(0)) {
-          cleanUpAndReject();
-        }
-      });
-    };
-
     const configureListeners = async () => {
-      const requestExpiryInfo = await getRequestExpiryInfo(
+      const requestData = await getRequestData(rpcUrl, requestManagerAddress, requestIdentifier);
+      const validityExpiredByLatestBlock = await isRequestExpiredByLatestBlock(
+        requestData.validUntil,
         rpcUrl,
-        requestManagerAddress,
-        requestIdentifier,
+      );
+      const validityExpiredByLocalClock = await isRequestExpiredByLocalClock(
+        requestData.validUntil,
       );
 
-      // If not expired by sequencer clock
-      if (!requestExpiryInfo.validityExpired) {
-        // And expired by our clock
-        if (requestExpiryInfo.timeToExpiredMillis === 0) {
-          // wait on new blocks until expired by sequencer clock
-          provider.once('block', configureListeners);
-        }
-        // sleep until expired by our clock
-        else {
-          timeout = setTimeout(configureListeners, requestExpiryInfo.timeToExpiredMillis);
-        }
-      } else {
-        if (requestExpiryInfo.withdrawn) {
+      if (validityExpiredByLatestBlock) {
+        if (isRequestClaimed(requestData.activeClaims)) {
+          const { promise, cancel } = waitUntilClaimsWithdrawn(
+            rpcUrl,
+            requestManagerAddress,
+            requestIdentifier,
+            requestData.activeClaims.asNumber,
+          );
+
+          cancelWaitUntilClaimsWithdrawn = cancel;
+          promise.then(() => configureListeners());
+        } else {
           return cleanUpAndReject();
         }
-        if (!requestExpiryInfo.noActiveClaims) {
-          return attachClaimWithdrawnListener();
-        }
-
-        return cleanUpAndReject();
+      } else if (validityExpiredByLocalClock) {
+        provider.once('block', configureListeners);
+      } else {
+        const timeToExpiredMillis = getTimeToExpiredMilliseconds(requestData.validUntil);
+        timeout = setTimeout(configureListeners, timeToExpiredMillis);
       }
     };
 
     configureListeners();
   });
 
-  const cancel = () => {
-    provider.removeAllListeners();
-    contract.removeAllListeners();
-    if (timeout !== null) {
-      clearTimeout(timeout);
-      timeout = null;
-    }
-  };
-  return { promise, cancel };
+  return { promise, cancel: cleanUp };
 }
 
 export class RequestExpiredError extends Error {
@@ -297,13 +320,13 @@ export async function withdrawRequest(
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
 ): Promise<void> {
-  const requestManagerContract = getReadWriteContract(
+  const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
-    RequestManager.abi,
+    RequestManagerDeployment.abi,
     signer,
   );
 
-  const requestParameter = [requestIdentifier];
+  const requestParameter = [requestIdentifier] as const;
 
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.withdrawExpiredRequest(
