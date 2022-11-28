@@ -27,6 +27,29 @@ from beamer.tests.constants import FILL_ID
 from beamer.typing import FillId, Termination
 
 
+@pytest.mark.parametrize("claimable", [True, False])
+def test_claim_after_expiry(claim_request_extension, claimable):
+    context, config = make_context()
+    valid_until = TIMESTAMP - claim_request_extension
+    assert valid_until > 0
+    
+    if claimable:
+        valid_until += 1
+
+    request = make_request(valid_until)
+
+    context.requests.add(request.id, request)
+    request.filler = config.account.address
+    request.try_to_fill()
+
+    assert request.is_filled  # pylint:disable=no-member
+    claim_request(request, context)
+    if claimable:
+        assert request.is_claimed  # pylint:disable=no-member
+    else:
+        assert request.is_ignored  # pylint:disable=no-member
+
+
 def test_skip_not_self_filled():
     context, _ = make_context()
     request = make_request()
@@ -38,10 +61,11 @@ def test_skip_not_self_filled():
     assert request.is_pending  # pylint:disable=no-member
 
 
-def test_ignore_expired():
+def test_ignore_expired(claim_request_extension):
     context, config = make_context()
-
-    request = make_request()
+    valid_until = TIMESTAMP - claim_request_extension
+    assert valid_until > 0
+    request = make_request(valid_until=valid_until)
     request.filler = config.account.address
     context.requests.add(request.id, request)
 
