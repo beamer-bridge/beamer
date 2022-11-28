@@ -145,10 +145,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     uint256 public immutable challengePeriodExtension;
 
     /// The minimum validity period of a request.
-    uint256 public constant MIN_VALIDITY_PERIOD = 5 minutes;
+    uint256 public constant MIN_VALIDITY_PERIOD = 30 minutes;
 
     /// The maximum validity period of a request.
-    uint256 public constant MAX_VALIDITY_PERIOD = 30 minutes;
+    uint256 public constant MAX_VALIDITY_PERIOD = 48 hours;
 
     /// withdrawClaimId is set to this value when an expired request gets withdrawn by the sender
     uint256 public constant CLAIM_ID_WITHDRAWN_EXPIRED = type(uint256).max;
