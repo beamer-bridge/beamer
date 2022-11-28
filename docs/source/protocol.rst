@@ -10,6 +10,7 @@ Summary
 .. code::
 
     claimStake = k * avg\_gp\_l2a * (gas_{challenge} + gas_{withdraw})
+    claimRequestExtension = max(offline rollup) = 1 day
     claimPeriod = max(offline rollup) = 1 day
     challengePeriod = finalityPeriod[targetRollup] + buffer = 8 days
     challengePeriodExtension = 1 day
@@ -61,6 +62,23 @@ Proposed Values
 
 We propose a value of ``k = 1.3`` so that honest challengers are rewarded with a minimum of 30% of the challenge gas
 costs. The other parameters should be determined at time of deployment.
+
+claimRequestExtension
+---------------------
+
+``claimRequestExtension`` defines the period after a request expiry in which an agent is still
+allowed to make a claim for this request.
+
+The minimum claim request extension must ensure that the honest agent is able to claim a request. After the time has
+passed, no claiming is possible anymore. This is necessary so that an expired request can be withdrawn by the user
+eventually. Practical influencing factors also include experienced downtimes of existing rollups. Experienced downtimes
+were as high as 17 hours.
+
+
+Proposed Values
+^^^^^^^^^^^^^^^
+
+``claimRequestExtension = 1 day``
 
 claimPeriod
 -----------
@@ -135,6 +153,9 @@ expiration times. While setting a very low expiration time most likely leads to 
 by any LP, an upper boundary ensures that funds can eventually be withdrawn. With the current setup
 of fixed fees and a race between LPs, we introduce a safety net for LPs to ensure that there is
 enough time to register a claim of a filled request *before* it expires.
+An LP is able to claim a request after its expiry date. The period in which an LP can do that is
+defined by ``claimRequestExtension``. Note that during this time, the user can also withdraw the funds
+if there are no active claims.
 
 Proposed Values
 ^^^^^^^^^^^^^^^
