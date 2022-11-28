@@ -337,7 +337,7 @@ def claim_request(request: Request, context: Context) -> None:
         return
 
     block = context.latest_blocks[request.source_chain_id]
-    if block["timestamp"] >= request.valid_until:
+    if block["timestamp"] >= request.valid_until + context.claim_request_extension:
         log.info("Request expired, ignoring", request=request)
         request.ignore()
         return
