@@ -91,7 +91,7 @@ describe('transfer', () => {
       getRequestIdentifier: { value: vi.fn().mockResolvedValue(1) },
       getRequestData: {
         value: vi.fn().mockResolvedValue({
-          withdrawInfo: { filler: '0x0000000000000000000000000000000000000000' },
+          withdrawn: false,
         }),
       },
       failWhenRequestExpires: {
