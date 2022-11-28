@@ -27,6 +27,14 @@ export class UInt256 implements Encodable<UInt256Data> {
     return this.value.toString();
   }
 
+  get asNumber(): number {
+    return this.value.toNumber();
+  }
+
+  get asBigNumber(): BigNumber {
+    return this.value;
+  }
+
   public format(decimals: number): string {
     return utils.formatUnits(this.value, decimals);
   }
@@ -53,6 +61,10 @@ export class UInt256 implements Encodable<UInt256Data> {
 
   public isZero(): boolean {
     return this.value.isZero();
+  }
+
+  public lt(value: UInt256): boolean {
+    return this.value.lt(value.value);
   }
 
   public lte(value: UInt256): boolean {

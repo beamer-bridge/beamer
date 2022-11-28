@@ -105,6 +105,10 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
     return this.web3Provider.getBlock('latest');
   }
 
+  getProvider(): Web3Provider {
+    return this.web3Provider;
+  }
+
   connectContract(contract: Contract): Contract {
     return contract.connect(this.web3Provider);
   }

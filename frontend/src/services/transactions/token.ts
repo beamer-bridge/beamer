@@ -1,9 +1,11 @@
 import type { JsonRpcSigner, Listener } from '@ethersproject/providers';
-import { BigNumber, Contract } from 'ethers';
+import type { Contract } from 'ethers';
 
-import StandardToken from '@/assets/StandardToken.json';
+import StandardTokenDeployment from '@/assets/StandardToken.json';
+import { getReadOnlyContract, getReadWriteContract } from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress, Token } from '@/types/data';
+import type { StandardToken } from '@/types/ethers-contracts';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
@@ -13,23 +15,22 @@ export async function ensureTokenAllowance(
   allowedSpender: string,
   minimumRequiredAmount: UInt256,
 ): Promise<void> {
-  const tokenContract = new Contract(tokenAddress, StandardToken.abi, signer);
+  const tokenContract = getReadWriteContract<StandardToken>(
+    tokenAddress,
+    StandardTokenDeployment.abi,
+    signer,
+  );
   const signerAddress = await signer.getAddress();
-  const allowance: BigNumber = await tokenContract.allowance(signerAddress, allowedSpender);
-  const approvalAmount = BigNumber.from(minimumRequiredAmount.asString);
-  if (allowance.lt(approvalAmount)) {
-    const transaction = await tokenContract.approve(allowedSpender, approvalAmount);
+  const allowance = new UInt256(
+    (await tokenContract.allowance(signerAddress, allowedSpender)).toString(),
+  );
+  if (allowance.lt(minimumRequiredAmount)) {
+    const transaction = await tokenContract.approve(
+      allowedSpender,
+      minimumRequiredAmount.asBigNumber,
+    );
     await transaction.wait();
   }
-}
-
-export async function getTokenDecimals(
-  provider: IEthereumProvider,
-  tokenAddress: string,
-): Promise<BigNumber> {
-  const tokenContract = new Contract(tokenAddress, StandardToken.abi);
-  const connectedContract = provider.connectContract(tokenContract);
-  return await connectedContract.decimals();
 }
 
 export async function getTokenBalance(
@@ -37,10 +38,13 @@ export async function getTokenBalance(
   token: Token,
   accountAddress: string,
 ): Promise<TokenAmount> {
-  const tokenContract = new Contract(token.address, StandardToken.abi);
-  const connectedContract = provider.connectContract(tokenContract);
-  const balance: BigNumber = await connectedContract.balanceOf(accountAddress);
-  return TokenAmount.new(new UInt256(balance.toString()), token);
+  const tokenContract = getReadOnlyContract<StandardToken>(
+    token.address,
+    StandardTokenDeployment.abi,
+    provider.getProvider(),
+  );
+  const balance = new UInt256((await tokenContract.balanceOf(accountAddress)).toString());
+  return TokenAmount.new(balance, token);
 }
 
 export function listenOnTokenBalanceChange(options: {
@@ -50,8 +54,10 @@ export function listenOnTokenBalanceChange(options: {
   onReduce: Listener;
   onIncrease: Listener;
 }): Contract {
-  const tokenContract = options.provider.connectContract(
-    new Contract(options.token.address, StandardToken.abi),
+  const tokenContract = getReadOnlyContract<StandardToken>(
+    options.token.address,
+    StandardTokenDeployment.abi,
+    options.provider.getProvider(),
   );
 
   const sendFilter = tokenContract.filters.Transfer(options.addressToListen, undefined);
