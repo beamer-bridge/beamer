@@ -120,7 +120,7 @@ def test_fee_data_updatable_by_owner(deployer, request_manager):
 def test_fee_reimbursed_on_expiration(request_manager, token):
     (requester,) = alloc_accounts(1)
     transfer_amount = 23_000_000
-    validity_period = 60 * 5
+    validity_period = request_manager.MIN_VALIDITY_PERIOD()
 
     request_manager.updateFeeData(*_NONZERO_FEE_DATA)
     request_id = make_request(
@@ -146,7 +146,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
 def test_insufficient_lp_fee(request_manager, token):
     (requester,) = alloc_accounts(1)
     amount = 23_000_000
-    validity_period = 60 * 5
+    validity_period = request_manager.MIN_VALIDITY_PERIOD()
 
     assert request_manager.lpFee(amount) > 0
     token.mint(requester, amount, {"from": requester})
