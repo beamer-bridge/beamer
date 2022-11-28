@@ -1,3 +1,4 @@
+
 .. _contract_parameters:
 
 Contract Parameters
@@ -13,8 +14,8 @@ Summary
     claimPeriod = max(offline rollup) = 1 day
     challengePeriod = finalityPeriod[targetRollup] + buffer = 8 days
     challengePeriodExtension = 1 day
-    minValidityPeriod = 5 minutes
-    maxValidityPeriod = 30 minutes
+    minValidityPeriod = 30 minutes
+    maxValidityPeriod = 48 hours
 
 claimStake
 ----------
@@ -141,5 +142,5 @@ Proposed Values
 
 .. code::
 
-    minValidityPeriod = 5 minutes
-    maxValidityPeriod = 30 minutes
+    minValidityPeriod = 30 minutes
+    maxValidityPeriod = 48 hours
