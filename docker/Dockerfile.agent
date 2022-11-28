@@ -10,4 +10,8 @@ WORKDIR /src
 RUN pip install poetry
 RUN poetry install --no-dev --no-interaction --no-ansi -vvv
 
+LABEL org.opencontainers.image.licenses "MIT"
+LABEL org.opencontainers.image.source "https://github.com/beamer-bridge/beamer"
+LABEL org.opencontainers.image.description "An agent that can be used to participate in the Beamer bridge protocol."
+
 ENTRYPOINT ["poetry", "run", "beamer-agent"]
