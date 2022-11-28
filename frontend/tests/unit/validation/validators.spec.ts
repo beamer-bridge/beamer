@@ -75,16 +75,16 @@ describe('validators', () => {
   });
 
   describe('makeNotSameAsChainValidator()', () => {
-    const chainOne = generateChain();
+    const chainOne = generateChain({ identifier: 1 });
     const validator = makeNotSameAsChainValidator(chainOne);
 
     it('returns true when chains are different', () => {
-      const chainTwo = generateChain();
+      const chainTwo = generateChain({ identifier: 2 });
       expect(validator(chainTwo)).toBe(true);
     });
 
     it('returns false when both chains are same', () => {
-      const chainTwo = chainOne;
+      const chainTwo = generateChain({ identifier: 1 });
       expect(validator(chainTwo)).toBe(false);
     });
   });
