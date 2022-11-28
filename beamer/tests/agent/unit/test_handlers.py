@@ -32,7 +32,7 @@ def test_claim_after_expiry(claim_request_extension, claimable):
     context, config = make_context()
     valid_until = TIMESTAMP - claim_request_extension
     assert valid_until > 0
-    
+
     if claimable:
         valid_until += 1
 
