@@ -5,7 +5,7 @@ from brownie.convert import to_bytes
 from eth_utils import to_hex
 
 from beamer.tests.agent.utils import make_address
-from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION
+from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION, RM_R_FIELD_VALID_UNTIL
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
 from beamer.typing import ClaimId, FillId, RequestId, Termination
 
@@ -294,6 +294,31 @@ def test_claim_nonexistent_request(request_manager):
     (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     with brownie.reverts("requestId not valid"):
         request_manager.claimRequest(1234, FILL_ID, {"from": claimer})
+
+
+def test_claim_request_extension(request_manager, token, claim_stake):
+    """
+    Test that claiming is allowed around expiry
+    and will revert after validUntil + claimRequestExtension
+    """
+    (requester,) = alloc_accounts(1)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+    token.mint(requester, 1, {"from": requester})
+    request_id = make_request(request_manager, token, requester, requester, 1)
+
+    valid_until = request_manager.requests(request_id)[RM_R_FIELD_VALID_UNTIL]
+    claim_request_extension = request_manager.claimRequestExtension()
+    # test that request expiration does not prevent claiming
+    timestamps = [valid_until - 1, valid_until, valid_until + claim_request_extension - 1]
+
+    for timestamp in timestamps:
+        chain.sleep(timestamp - chain.time())
+        request_manager.claimRequest(request_id, FILL_ID, {"from": claimer, "value": claim_stake})
+
+    # validUntil + claimRequestExtension
+    chain.sleep(1)
+    with brownie.reverts("Request cannot be claimed anymore"):
+        request_manager.claimRequest(request_id, FILL_ID, {"from": claimer, "value": claim_stake})
 
 
 def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_period):
