@@ -31,8 +31,8 @@ relayers:
 	yarn --cwd relayer install
 	yarn --cwd relayer build
 	yarn --cwd relayer add pkg
-	yarn --cwd relayer run pkg -t node16-linux-x64 -o relayer-node16-linux-x64 build/src/service.js
-	yarn --cwd relayer run pkg -t node16-macos-x64 -o relayer-node16-macos-x64 build/src/service.js
+	yarn --cwd relayer run pkg -t node18-linux-x64 -o relayer-node18-linux-x64 build/src/service.js
+	yarn --cwd relayer run pkg -t node18-macos-x64 -o relayer-node18-macos-x64 build/src/service.js
 
 docs:
 	make -C docs html
