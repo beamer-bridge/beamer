@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
           cache: 'yarn'
           cache-dependency-path: relayer/yarn.lock
 
@@ -43,7 +43,7 @@ jobs:
         working-directory: relayer/
         run: |
           yarn add pkg
-          yarn run pkg -t node16-linux-x64 -o relayer build/src/service.js
+          yarn run pkg -t node18-linux-x64 -o relayer build/src/service.js
 
       - uses: actions/upload-artifact@v3
         with:
