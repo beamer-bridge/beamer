@@ -17,6 +17,7 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
 
   init = vi.fn();
   getLatestBlock = vi.fn();
+  getProvider = vi.fn();
   connectContract = vi.fn();
   switchChainSafely = vi.fn();
   switchChain = vi.fn();

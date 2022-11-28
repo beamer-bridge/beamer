@@ -4,6 +4,7 @@ import * as ethers from 'ethers';
 import {
   getCurrentBlockNumber,
   getJsonRpcProvider,
+  getLatestBlock,
   getReadOnlyContract,
   getReadWriteContract,
 } from '@/services/transactions/utils';
@@ -13,6 +14,20 @@ vi.mock('@ethersproject/providers');
 vi.mock('ethers');
 
 describe('utils', () => {
+  describe('getLatestBlock()', () => {
+    it('returns the latest block for the network found on the provided RPC url', () => {
+      const rpcUrl = getRandomUrl('rpc');
+      const getBlock = vi.fn();
+
+      Object.defineProperty(providers, 'JsonRpcProvider', {
+        value: vi.fn().mockReturnValue({ getBlock }),
+      });
+
+      getLatestBlock(rpcUrl);
+
+      expect(getBlock).toHaveBeenCalledWith('latest');
+    });
+  });
   describe('getCurrentBlockNumber()', () => {
     it('returns the current block number for the network found on the provided RPC url', async () => {
       const rpcUrl = getRandomUrl('rpc');

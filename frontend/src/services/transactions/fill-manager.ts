@@ -1,4 +1,4 @@
-import FillManager from '@/assets/FillManager.json';
+import FillManagerDeployment from '@/assets/FillManager.json';
 import { fetchUntilFirstMatchingEvent } from '@/services/events/filter-utils';
 import {
   getCurrentBlockNumber,
@@ -6,6 +6,7 @@ import {
   getReadOnlyContract,
 } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
+import type { FillManager } from '@/types/ethers-contracts';
 
 export async function checkForPastFulfillmentEvent(
   rpcUrl: string,
@@ -13,9 +14,9 @@ export async function checkForPastFulfillmentEvent(
   requestIdentifier: string,
   fromBlockNumber: number,
 ): Promise<boolean> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<FillManager>(
     fillManagerAddress,
-    FillManager.abi,
+    FillManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
   const currentBlockNumber = await getCurrentBlockNumber(rpcUrl);
@@ -29,9 +30,9 @@ export function waitForFulfillment(
   requestIdentifier: string,
   fromBlockNumber: number,
 ): Cancelable<void> {
-  const contract = getReadOnlyContract(
+  const contract = getReadOnlyContract<FillManager>(
     fillManagerAddress,
-    FillManager.abi,
+    FillManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
   const eventFilter = contract.filters.RequestFilled(requestIdentifier);

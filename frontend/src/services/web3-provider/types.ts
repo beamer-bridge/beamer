@@ -1,4 +1,9 @@
-import type { Block, ExternalProvider, JsonRpcSigner } from '@ethersproject/providers';
+import type {
+  Block,
+  ExternalProvider,
+  JsonRpcSigner,
+  Web3Provider,
+} from '@ethersproject/providers';
 import type { Contract } from 'ethers';
 import type { Ref, ShallowRef } from 'vue';
 
@@ -10,6 +15,7 @@ export interface IEthereumProvider {
   chainId: Ref<number>;
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
+  getProvider(): Web3Provider;
   connectContract(contract: Contract): Contract;
   switchChainSafely(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
