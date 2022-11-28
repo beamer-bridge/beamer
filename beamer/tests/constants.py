@@ -5,6 +5,7 @@ FILL_ID = FillId("abc".zfill(64))
 FILL_ID_EMPTY = FillId(bytes(32))
 
 # request fields
+RM_R_FIELD_VALID_UNTIL = 4
 RM_R_FIELD_LP_FEE = 5
 RM_R_FIELD_PROTOCOL_FEE = 6
 RM_R_FIELD_FILLER = 9
