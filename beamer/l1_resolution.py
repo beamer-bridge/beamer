@@ -10,7 +10,7 @@ from beamer.typing import URL
 
 log = structlog.get_logger(__name__)
 
-_RELAYER_NAMES = {"linux": "relayer-node16-linux-x64", "darwin": "relayer-node16-macos-x64"}
+_RELAYER_NAMES = {"linux": "relayer-node18-linux-x64", "darwin": "relayer-node18-macos-x64"}
 
 
 def get_relayer_executable() -> Path:
