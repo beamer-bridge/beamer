@@ -333,7 +333,7 @@ def whitelist(
 
     fill_manager = contracts["FillManager"]
 
-    if fill_manager.functions.allowedLPs(address).call():
+    if fill_manager.functions.allowedLps(address).call():
         print(f"Address '{to_checksum_address(address)}' is already whitelisted.")
         return
 
