@@ -11,4 +11,6 @@ venv/
 
 vetur.config.js
 
+beamer/data/relayers
+relayer/relayer-*-x64
 addresses.json
