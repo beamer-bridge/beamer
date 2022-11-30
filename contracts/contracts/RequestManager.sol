@@ -120,6 +120,17 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
     event FinalityPeriodUpdated(uint256 targetChainId, uint256 finalityPeriod);
 
+    /// Emitted when token object of a token address is updated.
+    ///
+    /// .. seealso:: :sol:func:`updateToken`
+    event TokenUpdated(
+        address tokenAddress,
+        uint256 transferLimit,
+        uint96 minLpFee,
+        uint32 lpFeePPM,
+        uint32 protocolFeePPM
+    );
+
     /// Emitted when a request has been resolved via L1 resolution.
     ///
     /// .. seealso:: :sol:func:`resolveRequest`
@@ -745,6 +756,28 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param newTransferLimit The new value for ``transferLimit``.
     function updateTransferLimit(uint256 newTransferLimit) external onlyOwner {
         transferLimit = newTransferLimit;
+    }
+
+    function updateToken(
+        address tokenAddress,
+        uint256 transferLimit,
+        uint96 minLpFee,
+        uint32 lpFeePPM,
+        uint32 protocolFeePPM
+    ) external onlyOwner {
+        Token storage token = tokens[tokenAddress];
+        token.transferLimit = transferLimit;
+        token.minLpFee = minLpFee;
+        token.lpFeePPM = lpFeePPM;
+        token.protocolFeePPM = protocolFeePPM;
+
+        emit TokenUpdated(
+            tokenAddress,
+            transferLimit,
+            minLpFee,
+            lpFeePPM,
+            protocolFeePPM
+        );
     }
 
     /// Set the finality period for the given target chain.
