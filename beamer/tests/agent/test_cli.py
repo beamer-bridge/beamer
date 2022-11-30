@@ -122,7 +122,6 @@ def test_cli(config, tmp_path, contracts, generate_options):
     options = generate_options(keyfile, deployment_dir, config)
     runner = CliRunner()
     result = runner.invoke(main, options)
-    print(result.output)
     assert result.exit_code == 0
 
 
