@@ -20,12 +20,12 @@ contract LpWhitelist is Ownable {
     /// .. seealso:: :sol:func:`removeAllowedLp`
     event LpRemoved(address lp);
 
-    /// The set of liquidity providers that are added to the whitelist.
+    /// The mapping indicating whether liquidity providers have allowance or not
     mapping(address => bool) public allowedLps;
 
-    /// Modifier to check whether the sender is whitelisted
-    modifier onlyWhitelist() {
-        require(allowedLps[msg.sender], "Sender not whitelisted");
+    /// Modifier to check whether the passed address is an allowed LP
+    modifier onlyAllowed(address addressToCheck) {
+        require(allowedLps[addressToCheck], "Not allowed");
         _;
     }
 
