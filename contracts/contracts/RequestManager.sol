@@ -197,32 +197,33 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// Maps ERC20 token address to tokens
     mapping(address => Token) public tokens;
 
-    /// The minimum fee, denominated in transfer token, paid to the liquidity provider.
-    uint256 public minLpFee = 5 ether; // 5e18
-
-    /// Liquidity provider fee percentage, expressed in ppm (parts per million).
-    uint256 public lpFeePPM = 1_000; // 0.1% of the token amount being transferred
-
-    /// Protocol fee percentage, expressed in ppm (parts per million).
-    uint256 public protocolFeePPM = 0; // 0% of the token amount being transferred
-
-    /// The maximum amount of tokens that can be transferred in a single request.
-    uint256 public transferLimit = 10000 ether; // 10000e18
-
-    /// Compute the liquidy provider fee that needs to be paid for a given transfer amount.
-    function lpFee(uint256 amount) public view returns (uint256) {
-        return Math.max(minLpFee, (amount * lpFeePPM) / 1_000_000);
+    /// Compute the liquidity provider fee that needs to be paid for a given transfer amount.
+    function lpFee(address tokenAddress, uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        Token storage token = tokens[tokenAddress];
+        return Math.max(token.minLpFee, (amount * token.lpFeePPM) / 1_000_000);
     }
 
     /// Compute the protocol fee that needs to be paid for a given transfer amount.
-    function protocolFee(uint256 amount) public view returns (uint256) {
-        return (amount * protocolFeePPM) / 1_000_000;
+    function protocolFee(address tokenAddress, uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return (amount * tokens[tokenAddress].protocolFeePPM) / 1_000_000;
     }
 
     /// Compute the total fee that needs to be paid for a given transfer amount.
     /// The total fee is the sum of the liquidity provider fee and the protocol fee.
-    function totalFee(uint256 amount) public view returns (uint256) {
-        return lpFee(amount) + protocolFee(amount);
+    function totalFee(address tokenAddress, uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return lpFee(tokenAddress, amount) + protocolFee(tokenAddress, amount);
     }
 
     // Modifiers
@@ -292,12 +293,18 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             validityPeriod <= MAX_VALIDITY_PERIOD,
             "Validity period too long"
         );
-        require(amount <= transferLimit, "Amount exceeds transfer limit");
+        require(
+            amount <= tokens[sourceTokenAddress].transferLimit,
+            "Amount exceeds transfer limit"
+        );
 
         IERC20 token = IERC20(sourceTokenAddress);
 
-        uint256 lpFeeTokenAmount = lpFee(amount);
-        uint256 protocolFeeTokenAmount = protocolFee(amount);
+        uint256 lpFeeTokenAmount = lpFee(sourceTokenAddress, amount);
+        uint256 protocolFeeTokenAmount = protocolFee(
+            sourceTokenAddress,
+            amount
+        );
 
         require(
             token.allowance(msg.sender, address(this)) >=
@@ -730,32 +737,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         IERC20 token = IERC20(tokenAddress);
         token.safeTransfer(recipient, amount);
-    }
-
-    /// Update fee parameters.
-    ///
-    /// .. note:: This function can only be called by the contract owner.
-    ///
-    /// @param newProtocolFeePPM The new value for ``protocolFeePPM``.
-    /// @param newLpFeePPM The new value for ``lpFeePPM``.
-    /// @param newMinLpFee The new value for ``minLpFee``.
-    function updateFeeData(
-        uint256 newProtocolFeePPM,
-        uint256 newLpFeePPM,
-        uint256 newMinLpFee
-    ) external onlyOwner {
-        protocolFeePPM = newProtocolFeePPM;
-        lpFeePPM = newLpFeePPM;
-        minLpFee = newMinLpFee;
-    }
-
-    /// Update the transfer amount limit.
-    ///
-    /// .. note:: This function can only be called by the contract owner.
-    ///
-    /// @param newTransferLimit The new value for ``transferLimit``.
-    function updateTransferLimit(uint256 newTransferLimit) external onlyOwner {
-        transferLimit = newTransferLimit;
     }
 
     function updateToken(
