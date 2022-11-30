@@ -84,7 +84,7 @@ contract FillManager is Ownable, LpWhitelist {
         address targetReceiverAddress,
         uint256 amount,
         uint96 nonce
-    ) external onlyWhitelist returns (bytes32) {
+    ) external onlyAllowed(msg.sender) returns (bytes32) {
         address _l1Resolver = l1Resolver;
         require(_l1Resolver != address(0), "Resolver address not set");
         bytes32 requestId = BeamerUtils.createRequestId(
@@ -98,8 +98,11 @@ contract FillManager is Ownable, LpWhitelist {
 
         require(fills[requestId] == bytes32(0), "Already filled");
 
-        IERC20 token = IERC20(targetTokenAddress);
-        token.safeTransferFrom(msg.sender, targetReceiverAddress, amount);
+        IERC20(targetTokenAddress).safeTransferFrom(
+            msg.sender,
+            targetReceiverAddress,
+            amount
+        );
 
         bytes32 fillId = generateFillId();
         fills[requestId] = fillId;

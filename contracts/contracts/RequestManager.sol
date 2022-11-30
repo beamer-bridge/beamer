@@ -369,7 +369,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         external
         payable
         validRequestId(requestId)
-        onlyWhitelist
+        onlyAllowed(msg.sender)
         returns (uint96)
     {
         Request storage request = requests[requestId];
