@@ -25,6 +25,10 @@ Compile the contracts::
 
     brownie compile
 
+Build the relayers::
+
+    make relayers
+
 Start ganache::
 
     ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
