@@ -56,6 +56,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         bytes32 fillId;
     }
 
+    struct Token {
+        uint256 transferLimit;
+        uint96 minLpFee;
+        uint32 lpFeePPM;
+        uint32 protocolFeePPM;
+        uint96 collectedProtocolFees;
+    }
+
     // Events
 
     /// Emitted when a new request has been created.
