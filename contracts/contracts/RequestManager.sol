@@ -740,6 +740,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint32 lpFeePPM,
         uint32 protocolFeePPM
     ) external onlyOwner {
+        require(lpFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
+        require(protocolFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
+
         Token storage token = tokens[tokenAddress];
         token.transferLimit = transferLimit;
         token.minLpFee = minLpFee;
