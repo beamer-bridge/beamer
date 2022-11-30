@@ -186,6 +186,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// Maps claim IDs to claims.
     mapping(uint256 => Claim) public claims;
 
+    /// Maps ERC20 token address to tokens
+    mapping(address => Token) public tokens;
+
     /// The minimum fee, denominated in transfer token, paid to the liquidity provider.
     uint256 public minLpFee = 5 ether; // 5e18
 
@@ -197,9 +200,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
     /// The maximum amount of tokens that can be transferred in a single request.
     uint256 public transferLimit = 10000 ether; // 10000e18
-
-    /// Maps ERC20 token addresses to related token amounts that belong to the protocol.
-    mapping(address => uint256) public collectedProtocolFees;
 
     /// Compute the liquidy provider fee that needs to be paid for a given transfer amount.
     function lpFee(uint256 amount) public view returns (uint256) {
@@ -654,7 +654,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
         request.withdrawClaimId = claimId;
 
-        collectedProtocolFees[request.sourceTokenAddress] += request
+        tokens[request.sourceTokenAddress].collectedProtocolFees += request
             .protocolFee;
 
         IERC20 token = IERC20(request.sourceTokenAddress);
@@ -692,9 +692,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         external
         onlyOwner
     {
-        uint256 amount = collectedProtocolFees[tokenAddress];
+        uint256 amount = tokens[tokenAddress].collectedProtocolFees;
         require(amount > 0, "Protocol fee is zero");
-        collectedProtocolFees[tokenAddress] = 0;
+        tokens[tokenAddress].collectedProtocolFees = 0;
 
         IERC20 token = IERC20(tokenAddress);
         token.safeTransfer(recipient, amount);
