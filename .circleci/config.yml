@@ -17,6 +17,10 @@ workflows:
           base-revision: main
           config-path: .circleci/workflows.yml
           mapping: |
+            Makefile backend-updated true
+            brownie-config.yaml backend-updated true
+            poetry.lock backend-updated true
+            pyproject.toml backend-updated true
             beamer/.* backend-updated true
             contracts/.* backend-updated true
             docker/.* backend-updated true
