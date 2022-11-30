@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional
 
 import click
 import structlog
-from eth_utils import to_canonical_address, to_checksum_address
+from eth_utils import to_canonical_address
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
@@ -332,15 +332,17 @@ def whitelist(
     """Whitelist a LP"""
 
     fill_manager = contracts["FillManager"]
+    request_manager = contracts["RequestManager"]
 
-    if fill_manager.functions.allowedLps(address).call():
-        print(f"Address '{to_checksum_address(address)}' is already whitelisted.")
-        return
+    if not request_manager.functions.allowedLps(address).call():
+        tx_hash = request_manager.functions.addAllowedLp(address).transact()
+        web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+        print(f"Whitelisted in request manager, tx_hash: {tx_hash.hex()}")
 
-    tx_hash = fill_manager.functions.addAllowedLp(address).transact()
-    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
-
-    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+    if not fill_manager.functions.allowedLps(address).call():
+        tx_hash = fill_manager.functions.addAllowedLp(address).transact()
+        web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
+        print(f"Whitelisted in fill manager, tx_hash: {tx_hash.hex()}")
 
 
 @cli.command("update-fee")
