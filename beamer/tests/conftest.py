@@ -83,6 +83,7 @@ def forward_state():
 @pytest.fixture
 def contracts(
     deployer,
+    token,
     forward_state,
     claim_stake,
     claim_request_extension,
@@ -127,6 +128,8 @@ def contracts(
     resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
 
     request_manager.setFinalityPeriod(l2_chain_id, finality_period)
+    request_manager.updateToken(token.address, 10_000e18, 5e18, 1_000, 0)
+
     return Contracts(
         l1_messenger=l1_messenger,
         l2_messenger=l2_messenger,
