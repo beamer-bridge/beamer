@@ -270,6 +270,7 @@ jobs:
           docker_layer_caching: true
       - checkout:
           path: ~/beamer
+      - restore-node-packages
       - run:
           name: Log in to github container registry
           command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
@@ -343,4 +344,7 @@ workflows:
         - <<pipeline.parameters.backend-updated>>
         - equal: [ main, <<pipeline.git.branch>> ]
     jobs:
-      - build-and-publish-container-image
+      - install-npm-packages
+      - build-and-publish-container-image:
+          requires:
+            - install-npm-packages
