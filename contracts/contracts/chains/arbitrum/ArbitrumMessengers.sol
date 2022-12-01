@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/vendor/arbitrum/IArbSys.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/vendor/arbitrum/IBridge.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/vendor/arbitrum/IInbox.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/vendor/arbitrum/IOutbox.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IArbSys.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IBridge.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IInbox.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IOutbox.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/access/Ownable.sol";
 
 import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";

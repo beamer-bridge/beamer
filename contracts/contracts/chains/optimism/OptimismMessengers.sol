@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 import "../../../interfaces/IMessenger.sol";
 
 import "../../RestrictedCalls.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/vendor/optimism/ICrossDomainMessenger.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/optimism/ICrossDomainMessenger.sol";
 import "./Lib_PredeployAddresses.sol";
 
 abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
