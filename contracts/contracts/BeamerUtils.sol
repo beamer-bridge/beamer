@@ -8,7 +8,7 @@ library BeamerUtils {
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount,
-        uint256 nonce
+        uint96 nonce
     ) internal pure returns (bytes32) {
         return
             keccak256(

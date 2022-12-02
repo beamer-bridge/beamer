@@ -83,7 +83,7 @@ contract FillManager is Ownable, LpWhitelist {
         address targetTokenAddress,
         address targetReceiverAddress,
         uint256 amount,
-        uint256 nonce
+        uint96 nonce
     ) external onlyWhitelist returns (bytes32) {
         address _l1Resolver = l1Resolver;
         require(_l1Resolver != address(0), "Resolver address not set");
