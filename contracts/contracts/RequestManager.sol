@@ -48,10 +48,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     struct Claim {
         bytes32 requestId;
         address claimer;
-        uint256 claimerStake;
-        mapping(address => uint256) challengersStakes;
+        uint96 claimerStake;
+        mapping(address => uint96) challengersStakes;
         address lastChallenger;
-        uint256 challengerStakeTotal;
+        uint96 challengerStakeTotal;
         uint256 withdrawnAmount;
         uint256 termination;
         bytes32 fillId;
@@ -100,9 +100,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         bytes32 indexed requestId,
         uint96 claimId,
         address claimer,
-        uint256 claimerStake,
+        uint96 claimerStake,
         address lastChallenger,
-        uint256 challengerStakeTotal,
+        uint96 challengerStakeTotal,
         uint256 termination,
         bytes32 fillId
     );
@@ -146,7 +146,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
     /// The minimum amount of source chain's native token that the claimer needs to
     /// provide when making a claim, as well in each round of the challenge game.
-    uint256 public immutable claimStake;
+    uint96 public immutable claimStake;
 
     /// The additional time given to claim a request. This value is added to the
     /// validity period of a request.
@@ -251,7 +251,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param _claimPeriod Claim period, in seconds.
     /// @param _challengePeriodExtension Challenge period extension, in seconds.
     constructor(
-        uint256 _claimStake,
+        uint96 _claimStake,
         uint256 _claimRequestExtension,
         uint256 _claimPeriod,
         uint256 _challengePeriodExtension
@@ -442,7 +442,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         Claim storage claim = claims[nonce];
         claim.requestId = requestId;
         claim.claimer = claimer;
-        claim.claimerStake = msg.value;
+        claim.claimerStake = uint96(msg.value);
         claim.termination = termination;
         claim.fillId = fillId;
 
@@ -450,7 +450,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             requestId,
             nonce,
             claimer,
-            msg.value,
+            uint96(msg.value),
             address(0),
             0,
             termination,
@@ -495,22 +495,26 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         Claim storage claim = claims[claimId];
         bytes32 requestId = claim.requestId;
         uint256 termination = claim.termination;
-        Request storage request = requests[requestId];
         require(block.timestamp < termination, "Claim expired");
-        require(request.filler == address(0), "Request already resolved");
         require(
-            !request.invalidFillIds[claim.fillId],
+            requests[requestId].filler == address(0),
+            "Request already resolved"
+        );
+        require(
+            !requests[requestId].invalidFillIds[claim.fillId],
             "Fill already invalidated"
         );
 
         uint256 periodExtension = challengePeriodExtension;
         address claimer = claim.claimer;
-        uint256 claimerStake = claim.claimerStake;
-        uint256 challengerStakeTotal = claim.challengerStakeTotal;
+        uint96 claimerStake = claim.claimerStake;
+        uint96 challengerStakeTotal = claim.challengerStakeTotal;
 
         if (claimerStake > challengerStakeTotal) {
             if (challengerStakeTotal == 0) {
-                periodExtension += finalityPeriods[request.targetChainId];
+                periodExtension += finalityPeriods[
+                    requests[requestId].targetChainId
+                ];
             }
             require(msg.sender != claimer, "Cannot challenge own claim");
             require(
@@ -526,12 +530,12 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         }
 
         if (msg.sender == claimer) {
-            claimerStake += msg.value;
+            claimerStake += uint96(msg.value);
             claim.claimerStake = claimerStake;
         } else {
             claim.lastChallenger = msg.sender;
-            claim.challengersStakes[msg.sender] += msg.value;
-            challengerStakeTotal += msg.value;
+            claim.challengersStakes[msg.sender] += uint96(msg.value);
+            challengerStakeTotal += uint96(msg.value);
             claim.challengerStakeTotal = challengerStakeTotal;
         }
 
@@ -643,8 +647,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         Request storage request = requests[claim.requestId];
         uint96 withdrawClaimId = request.withdrawClaimId;
         address claimer = claim.claimer;
-        uint256 claimerStake = claim.claimerStake;
-        uint256 challengerStakeTotal = claim.challengerStakeTotal;
+        uint96 claimerStake = claim.claimerStake;
+        uint96 challengerStakeTotal = claim.challengerStakeTotal;
         require(
             claim.withdrawnAmount < claimerStake + challengerStakeTotal,
             "Claim already withdrawn"
@@ -681,7 +685,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         }
 
         // Calculate withdraw scheme for claim stakes
-        uint256 ethToTransfer;
+        uint96 ethToTransfer;
         address stakeRecipient;
 
         if (claimValid) {
