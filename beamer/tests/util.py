@@ -222,7 +222,7 @@ def create_request_id(
 ):
     return keccak(
         encode_abi_packed(
-            ["uint256", "uint256", "address", "address", "uint256", "uint256"],
+            ["uint256", "uint256", "address", "address", "uint256", "uint96"],
             [
                 source_chain_id,
                 target_chain_id,

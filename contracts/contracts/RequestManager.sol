@@ -38,7 +38,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         uint96 lpFee;
         uint96 protocolFee;
         uint32 activeClaims;
-        uint256 withdrawClaimId;
+        uint96 withdrawClaimId;
         address filler;
         bytes32 fillId;
         mapping(bytes32 => bool) invalidFillIds;
@@ -68,7 +68,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         address targetTokenAddress,
         address targetAddress,
         uint256 amount,
-        uint256 nonce,
+        uint96 nonce,
         uint32 validUntil
     );
 
@@ -88,7 +88,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// .. seealso:: :sol:func:`claimRequest` :sol:func:`challengeClaim`
     event ClaimMade(
         bytes32 indexed requestId,
-        uint256 claimId,
+        uint96 claimId,
         address claimer,
         uint256 claimerStake,
         address lastChallenger,
@@ -104,7 +104,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     ///
     /// .. seealso:: :sol:func:`withdraw`
     event ClaimStakeWithdrawn(
-        uint256 claimId,
+        uint96 claimId,
         bytes32 indexed requestId,
         address claimReceiver
     );
@@ -155,7 +155,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     uint256 public constant MAX_VALIDITY_PERIOD = 48 hours;
 
     /// withdrawClaimId is set to this value when an expired request gets withdrawn by the sender
-    uint256 public constant CLAIM_ID_WITHDRAWN_EXPIRED = type(uint256).max;
+    uint96 public constant CLAIM_ID_WITHDRAWN_EXPIRED = type(uint96).max;
 
     // Variables
 
@@ -166,7 +166,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// A counter used to generate request and claim IDs.
     /// The variable holds the most recently used nonce and must
     /// be incremented to get the next nonce
-    uint256 public currentNonce;
+    uint96 public currentNonce;
 
     /// Maps target rollup chain IDs to finality periods.
     /// Finality periods are in seconds.
@@ -176,7 +176,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     mapping(bytes32 => Request) public requests;
 
     /// Maps claim IDs to claims.
-    mapping(uint256 => Claim) public claims;
+    mapping(uint96 => Claim) public claims;
 
     /// The minimum fee, denominated in transfer token, paid to the liquidity provider.
     uint256 public minLpFee = 5 ether; // 5e18
@@ -221,7 +221,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     }
 
     /// Check whether a given claim ID is valid.
-    modifier validClaimId(uint256 claimId) {
+    modifier validClaimId(uint96 claimId) {
         require(claims[claimId].claimer != address(0), "claimId not valid");
         _;
     }
@@ -290,7 +290,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
             "Insufficient allowance"
         );
 
-        uint256 nonce = currentNonce + 1;
+        uint96 nonce = currentNonce + 1;
         currentNonce = nonce;
 
         bytes32 requestId = BeamerUtils.createRequestId(
@@ -374,7 +374,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         payable
         validRequestId(requestId)
         onlyWhitelist
-        returns (uint256)
+        returns (uint96)
     {
         Request storage request = requests[requestId];
 
@@ -388,7 +388,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
         request.activeClaims += 1;
 
-        uint256 nonce = currentNonce + 1;
+        uint96 nonce = currentNonce + 1;
         currentNonce = nonce;
         uint256 termination = block.timestamp + claimPeriod;
 
@@ -440,7 +440,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     /// Alice and Bob, he would have to challenge with a stake of at least 16.
     ///
     /// @param claimId The claim ID.
-    function challengeClaim(uint256 claimId)
+    function challengeClaim(uint96 claimId)
         external
         payable
         validClaimId(claimId)
@@ -515,7 +515,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
     ///
     /// @param claimId The claim ID.
     /// @return The address of the deposit receiver.
-    function withdraw(uint256 claimId)
+    function withdraw(uint96 claimId)
         external
         validClaimId(claimId)
         returns (address)
@@ -557,14 +557,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         return claimReceiver;
     }
 
-    function resolveClaim(uint256 claimId)
+    function resolveClaim(uint96 claimId)
         private
         view
         returns (address, uint256)
     {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
-        uint256 withdrawClaimId = request.withdrawClaimId;
+        uint96 withdrawClaimId = request.withdrawClaimId;
         address claimer = claim.claimer;
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
@@ -639,7 +639,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         return (claimReceiver, ethToTransfer);
     }
 
-    function withdrawDeposit(Request storage request, uint256 claimId) private {
+    function withdrawDeposit(Request storage request, uint96 claimId) private {
         Claim storage claim = claims[claimId];
         address claimer = claim.claimer;
         emit DepositWithdrawn(claim.requestId, claimer);
