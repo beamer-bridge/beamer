@@ -244,3 +244,18 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     )
     assert token.balanceOf(request_manager) == protocol_fee_1 + protocol_fee_2
     assert token.balanceOf(claimer) == amount * 2 + lp_fee_1 + lp_fee_2
+
+
+def test_ppm_out_of_bound(request_manager, token):
+    ppm = 999_999
+
+    request_manager.updateToken(token.address, 0, 0, ppm, 0)
+    request_manager.updateToken(token.address, 0, 0, 0, ppm)
+
+    ppm = 1_000_000
+
+    with brownie.reverts("Maximum PPM of 999999 exceeded"):
+        request_manager.updateToken(token.address, 0, 0, ppm, 0)
+
+    with brownie.reverts("Maximum PPM of 999999 exceeded"):
+        request_manager.updateToken(token.address, 0, 0, 0, ppm)
