@@ -13,6 +13,7 @@ import web3
 from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak, to_canonical_address
 
+from beamer.tests.constants import RM_T_FIELD_TRANSFER_LIMIT
 from beamer.typing import RequestId
 
 
@@ -163,20 +164,32 @@ def earnings(w3, account):
     yield lambda: w3.eth.get_balance(address) + calculate_gas_spending() - balance_before
 
 
-def get_fee_data(request_manager):
-    return (
-        request_manager.protocolFeePPM(),
-        request_manager.lpFeePPM(),
-        request_manager.minLpFee(),
-    )
+# The function updates the token values partially whatever variable is in the params dictionary
+# This function works similar to adding a parameters dict to a transaction in web3.py
+def update_token(request_manager, token, params, *args, **kwargs):
+    token_data = list(request_manager.tokens(token.address))
+    fields = ["transfer_limit", "min_lp_fee", "lp_fee_ppm", "protocol_fee_ppm"]
+    new_token_data = tuple(params.get(key, token_data[i]) for i, key in enumerate(fields))
+    request_manager.updateToken(token.address, *new_token_data, *args, **kwargs)
+
+
+def get_token_data(request_manager, token_address):
+    return request_manager.tokens(token_address)
 
 
 @contextlib.contextmanager
-def temp_fee_data(request_manager, protocol_fee_ppm, lp_fee_ppm, min_lp_fee):
-    old_fee_data = get_fee_data(request_manager)
-    request_manager.updateFeeData(protocol_fee_ppm, lp_fee_ppm, min_lp_fee)
+def temp_fee_data(request_manager, token, min_lp_fee, lp_fee_ppm, protocol_fee_ppm):
+    old_token_data = get_token_data(request_manager, token)
+    request_manager.updateToken(
+        token.address,
+        old_token_data[RM_T_FIELD_TRANSFER_LIMIT],
+        min_lp_fee,
+        lp_fee_ppm,
+        protocol_fee_ppm,
+    )
     yield
-    request_manager.updateFeeData(*old_fee_data)
+    # the last element of token data is collectedProtocolFees which is not part of the update
+    request_manager.updateToken(token.address, *old_token_data[:-1])
 
 
 def make_request(
@@ -193,10 +206,10 @@ def make_request(
     if fee_data == "standard":
         fees_context = contextlib.nullcontext()
     else:
-        fees_context = temp_fee_data(request_manager, *fee_data)
+        fees_context = temp_fee_data(request_manager, token, *fee_data)
 
     with fees_context:
-        total_token_amount = amount + request_manager.totalFee(amount)
+        total_token_amount = amount + request_manager.totalFee(token.address, amount)
         if token.balanceOf(requester) < total_token_amount:
             token.mint(requester, total_token_amount, {"from": requester})
 

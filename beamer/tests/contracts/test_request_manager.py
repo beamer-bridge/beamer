@@ -5,8 +5,19 @@ from brownie.convert import to_bytes
 from eth_utils import to_hex
 
 from beamer.tests.agent.utils import make_address
-from beamer.tests.constants import FILL_ID, RM_C_FIELD_TERMINATION, RM_R_FIELD_VALID_UNTIL
-from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
+from beamer.tests.constants import (
+    FILL_ID,
+    RM_C_FIELD_TERMINATION,
+    RM_R_FIELD_VALID_UNTIL,
+    RM_T_FIELD_TRANSFER_LIMIT,
+)
+from beamer.tests.util import (
+    alloc_accounts,
+    alloc_whitelisted_accounts,
+    earnings,
+    make_request,
+    update_token,
+)
 from beamer.typing import ClaimId, FillId, RequestId, Termination
 
 
@@ -1291,25 +1302,44 @@ def test_contract_unpause(deployer, request_manager, token):
     )
 
 
-def test_transfer_limit_update_only_owner(deployer, request_manager):
+def test_transfer_limit_update_only_owner(deployer, request_manager, token):
     (random_guy,) = alloc_accounts(1)
-    original_transfer_limit = request_manager.transferLimit.call()
+    original_transfer_limit = request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT]
     new_transfer_limit = original_transfer_limit + 1
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        request_manager.updateTransferLimit(new_transfer_limit, {"from": random_guy.address})
+        update_token(
+            request_manager,
+            token,
+            dict(transfer_limit=new_transfer_limit),
+            {"from": random_guy.address},
+        )
 
-    assert request_manager.transferLimit.call() == original_transfer_limit
-    request_manager.updateTransferLimit(new_transfer_limit, {"from": deployer.address})
-    assert request_manager.transferLimit.call() == new_transfer_limit
+    assert (
+        request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == original_transfer_limit
+    )
+    update_token(
+        request_manager,
+        token,
+        dict(transfer_limit=new_transfer_limit),
+        {"from": deployer.address},
+    )
+    assert request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == new_transfer_limit
     # Also show that transfer limit can be decreased again
-    request_manager.updateTransferLimit(original_transfer_limit, {"from": deployer.address})
-    assert request_manager.transferLimit.call() == original_transfer_limit
+    update_token(
+        request_manager,
+        token,
+        dict(transfer_limit=original_transfer_limit),
+        {"from": deployer.address},
+    )
+    assert (
+        request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == original_transfer_limit
+    )
 
 
 def test_transfer_limit_requests(deployer, request_manager, token):
     (requester,) = alloc_accounts(1)
-    transfer_limit = request_manager.transferLimit.call()
+    transfer_limit = request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT]
 
     assert token.balanceOf(requester) == 0
     token.mint(requester, transfer_limit)
@@ -1322,8 +1352,12 @@ def test_transfer_limit_requests(deployer, request_manager, token):
     with brownie.reverts("Amount exceeds transfer limit"):
         make_request(request_manager, token, requester, requester, transfer_limit + 1)
 
-    request_manager.updateTransferLimit(transfer_limit + 1, {"from": deployer.address})
-
+    update_token(
+        request_manager,
+        token,
+        dict(transfer_limit=transfer_limit + 1),
+        {"from": deployer.address},
+    )
     make_request(request_manager, token, requester, requester, transfer_limit + 1)
 
     assert token.balanceOf(requester) == 0
