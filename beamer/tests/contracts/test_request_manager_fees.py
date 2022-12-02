@@ -6,16 +6,18 @@ from beamer.tests.constants import (
     RM_R_FIELD_LP_FEE,
     RM_R_FIELD_PROTOCOL_FEE,
     RM_T_FIELD_COLLECTED_PROTOCOL_FEES,
+    RM_T_FIELD_PROTOCOL_FEE_PPM,
 )
 from beamer.tests.util import (
     alloc_accounts,
     alloc_whitelisted_accounts,
     make_request,
     temp_fee_data,
+    update_token,
 )
 
 # Using this makes sure that we get nonzero fees when making requests.
-_NONZERO_FEE_DATA = 14_000, 15_000, 5e18
+_NONZERO_FEE_DATA = dict(min_lp_fee=5e8, lp_fee_ppm=15_000, protocol_fee_ppm=14_000)
 
 
 def test_fee_split_works(request_manager, token, claim_stake, claim_period):
@@ -23,7 +25,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     transfer_amount = 23_000_000
 
-    request_manager.updateFeeData(*_NONZERO_FEE_DATA)
+    update_token(request_manager, token, _NONZERO_FEE_DATA)
     request_id = make_request(
         request_manager,
         token,
@@ -33,13 +35,13 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
         fee_data="standard",
     )
 
-    lp_fee = request_manager.lpFee(transfer_amount)
+    lp_fee = request_manager.lpFee(token.address, transfer_amount)
     assert lp_fee > 0
 
-    protocol_fee = request_manager.protocolFee(transfer_amount)
+    protocol_fee = request_manager.protocolFee(token.address, transfer_amount)
     assert protocol_fee > 0
 
-    assert lp_fee + protocol_fee == request_manager.totalFee(transfer_amount)
+    assert lp_fee + protocol_fee == request_manager.totalFee(token.address, transfer_amount)
 
     # The request is not claimed yet, so no beamer fee has been collected yet
     assert request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES] == 0
@@ -53,7 +55,9 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
 
     # Update fees, which should not have any effect on the fee amounts that
     # were computed when the request was made.
-    request_manager.updateFeeData(17e9, 145_000, 21_000)
+    update_token(
+        request_manager, token, dict(min_lp_fee=17e9, lp_fee_ppm=145_000, protocol_fee_ppm=21_000)
+    )
 
     # Timetravel after claim period
     chain.mine(timedelta=claim_period)
@@ -66,10 +70,10 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     assert token.balanceOf(claimer) == transfer_amount + lp_fee
 
 
-def test_protocol_fee_is_zero(request_manager):
+def test_protocol_fee_is_zero(request_manager, token):
     # For the time being, the protocol fee percentage should be zero.
-    assert request_manager.protocolFeePPM() == 0
-    assert request_manager.protocolFee(23_000_000) == 0
+    assert request_manager.tokens(token.address)[RM_T_FIELD_PROTOCOL_FEE_PPM] == 0
+    assert request_manager.protocolFee(token.address, 23_000_000) == 0
 
 
 def test_protocol_fee_withdrawable_by_owner(
@@ -80,7 +84,12 @@ def test_protocol_fee_withdrawable_by_owner(
     (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     amount = 23_000_000
     request_id = make_request(
-        request_manager, token, requester, requester, amount, fee_data=_NONZERO_FEE_DATA
+        request_manager,
+        token,
+        requester,
+        requester,
+        amount,
+        fee_data=tuple(_NONZERO_FEE_DATA.values()),
     )
     protocol_fee = request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE]
 
@@ -107,24 +116,27 @@ def test_protocol_fee_withdrawable_by_owner(
     assert token.balanceOf(owner) == owner_token + protocol_fee
 
 
-def test_fee_data_updatable_by_owner(deployer, request_manager):
+def test_fee_data_updatable_by_owner(request_manager, token):
     (requester,) = alloc_accounts(1)
 
-    new_protocol_fee_ppm = 12_000
-    new_lp_fee_ppm = 13_000
-    new_min_lp_fee = 179e18
+    new_fee_data = dict(min_lp_fee=179e18, lp_fee_ppm=13_000, protocol_fee_ppm=12_000)
 
     with brownie.reverts("Ownable: caller is not the owner"):
-        request_manager.updateFeeData(
-            new_protocol_fee_ppm, new_lp_fee_ppm, new_min_lp_fee, {"from": requester}
+        update_token(
+            request_manager,
+            token,
+            new_fee_data,
+            {"from": requester},
         )
 
-    request_manager.updateFeeData(
-        new_protocol_fee_ppm, new_lp_fee_ppm, new_min_lp_fee, {"from": deployer}
+    update_token(
+        request_manager,
+        token,
+        new_fee_data,
     )
-    assert request_manager.protocolFeePPM() == new_protocol_fee_ppm
-    assert request_manager.lpFeePPM() == new_lp_fee_ppm
-    assert request_manager.minLpFee() == new_min_lp_fee
+
+    token_data = request_manager.tokens(token.address)
+    assert token_data[1:-1] == tuple(new_fee_data.values())
 
 
 def test_fee_reimbursed_on_expiration(request_manager, token):
@@ -132,7 +144,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
     transfer_amount = 23_000_000
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
 
-    request_manager.updateFeeData(*_NONZERO_FEE_DATA)
+    update_token(request_manager, token, _NONZERO_FEE_DATA)
     request_id = make_request(
         request_manager,
         token,
@@ -143,7 +155,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
         validity_period=validity_period,
     )
 
-    total_fee = request_manager.totalFee(transfer_amount)
+    total_fee = request_manager.totalFee(token.address, transfer_amount)
     assert total_fee > 0
 
     # Timetravel after validity period
@@ -158,7 +170,7 @@ def test_insufficient_lp_fee(request_manager, token):
     amount = 23_000_000
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
 
-    assert request_manager.lpFee(amount) > 0
+    assert request_manager.lpFee(token.address, amount) > 0
     token.mint(requester, amount, {"from": requester})
 
     # Approve just the amount, ignoring the LP fee and the protocol fee.
@@ -181,27 +193,27 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     (requester,) = alloc_accounts(1)
     (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
     amount = 9e18
-    fee_data_1 = 7_000, 8_000, 6e18
-    fee_data_2 = 31_000, 4_000, 1
+    fee_data_1 = 6e18, 8_000, 7_000
+    fee_data_2 = 1, 4_000, 31_000
 
     token.mint(requester, amount * 10, {"from": requester})
     token.approve(request_manager.address, 2**256 - 1, {"from": requester})
 
-    with temp_fee_data(request_manager, *fee_data_1):
+    with temp_fee_data(request_manager, token, *fee_data_1):
         request_id_1 = make_request(
             request_manager, token, requester, requester, amount, fee_data="standard"
         )
-        lp_fee_1 = request_manager.lpFee(amount)
-        protocol_fee_1 = request_manager.protocolFee(amount)
+        lp_fee_1 = request_manager.lpFee(token.address, amount)
+        protocol_fee_1 = request_manager.protocolFee(token.address, amount)
         assert lp_fee_1 == 6e18
         assert protocol_fee_1 == 63e15
 
-    with temp_fee_data(request_manager, *fee_data_2):
+    with temp_fee_data(request_manager, token, *fee_data_2):
         request_id_2 = make_request(
             request_manager, token, requester, requester, amount, fee_data="standard"
         )
-        lp_fee_2 = request_manager.lpFee(amount)
-        protocol_fee_2 = request_manager.protocolFee(amount)
+        lp_fee_2 = request_manager.lpFee(token.address, amount)
+        protocol_fee_2 = request_manager.protocolFee(token.address, amount)
         assert lp_fee_2 == 36e15
         assert protocol_fee_2 == 279e15
 
