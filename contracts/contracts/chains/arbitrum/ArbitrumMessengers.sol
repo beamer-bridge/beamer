@@ -35,18 +35,6 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
         return sender == caller;
     }
 
-    // This is copied verbatim from the Arbitrum Nitro repo.
-    // TODO: remove once OpenZeppelin is updated with new Nitro contracts.
-    // See https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3692.
-    function calculateRetryableSubmissionFee(
-        uint256 dataLength,
-        uint256 baseFee
-    ) public view returns (uint256) {
-        // Use current block basefee if baseFee parameter is 0
-        return
-            (1400 + 6 * dataLength) * (baseFee == 0 ? block.basefee : baseFee);
-    }
-
     function deposit() external payable {
         deposits[msg.sender] += msg.value;
     }
@@ -66,7 +54,7 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
         external
         restricted(block.chainid)
     {
-        uint256 submissionFee = calculateRetryableSubmissionFee(
+        uint256 submissionFee = inbox.calculateRetryableSubmissionFee(
             message.length,
             0
         );
