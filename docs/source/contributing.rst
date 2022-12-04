@@ -8,6 +8,20 @@ Requirements
 - `poetry <https://python-poetry.org>`_
 - `ganache <https://trufflesuite.com/ganache>`_ 7
 - `prettier-plugin-solidity <https://github.com/prettier-solidity/prettier-plugin-solidity>`_
+- `jq <https://stedolan.github.io/jq/>`_
+- `coreutils <https://formulae.brew.sh/formula/coreutils>`_
+
+
+Setting up the repository 
+-------------------------
+
+Clone the repository:: 
+    
+    git clone --recurse-submodules https://github.com/beamer-bridge/beamer.git
+    
+If you already have a repository, make sure the submodules are up to date:: 
+    
+    git submodule update
 
 
 Testing
@@ -75,8 +89,8 @@ Start ``beamer-agent``::
                  --account-password '' \
                  --config agent-ganache-local.conf \
                  --chain l1=http://localhost:8545 \
-                 --source-chain=l1 \\
-                 --target-chain=l1 \\
+                 --source-chain=l1 \
+                 --target-chain=l1 \
                  --deployment-dir deployments/ganache-local \
                  --log-level debug
 
