@@ -5,6 +5,7 @@ import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/token/ERC20/IERC20.s
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/token/ERC20/utils/SafeERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/utils/math/Math.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.3/contracts/security/Pausable.sol";
 
 import "./BeamerUtils.sol";
 import "./RestrictedCalls.sol";
@@ -22,7 +23,7 @@ import "./LpWhitelist.sol";
 ///
 ///   The functions resolveRequest and invalidateFill can only be called by
 ///   the :sol:contract:`Resolver` contract, via a chain-dependent messenger contract.
-contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
+contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -159,10 +160,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
 
     // Variables
 
-    /// Indicates whether the contract is deprecated. A deprecated contract
-    /// cannot be used to create new requests.
-    bool public deprecated;
-
     /// A counter used to generate request and claim IDs.
     /// The variable holds the most recently used nonce and must
     /// be incremented to get the next nonce
@@ -263,8 +260,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         address targetAddress,
         uint256 amount,
         uint256 validityPeriod
-    ) external returns (bytes32) {
-        require(deprecated == false, "Contract is deprecated");
+    ) external whenNotPaused returns (bytes32) {
         require(
             finalityPeriods[targetChainId] != 0,
             "Target rollup not supported"
@@ -734,18 +730,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         emit FinalityPeriodUpdated(targetChainId, finalityPeriod);
     }
 
-    /// Mark the contract as deprecated.
-    ///
-    /// Once the contract is deprecated, it cannot be used to create new
-    /// requests anymore. Withdrawing deposited funds and claim stakes
-    /// still works, though.
-    ///
-    /// .. note:: This function can only be called by the contract owner.
-    function deprecateContract() external onlyOwner {
-        require(deprecated == false, "Contract already deprecated");
-        deprecated = true;
-    }
-
     /// Returns whether a fill is invalidated or not
     ///
     /// Calling invalidateFill() will set this boolean to true,
@@ -819,5 +803,27 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls {
         request.invalidFillIds[fillId] = true;
 
         emit FillInvalidatedResolved(requestId, fillId);
+    }
+
+    /// Pauses the contract.
+    ///
+    /// Once the contract is paused, it cannot be used to create new
+    /// requests anymore. Withdrawing deposited funds and claim stakes
+    /// still works, though.
+    ///
+    /// .. note:: This function can only be called when the contract is not paused.
+    /// .. note:: This function can only be called by the contract owner.
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// Unpauses the contract.
+    ///
+    /// Once the contract is unpaused, it can be used normally.
+    ///
+    /// .. note:: This function can only be called when the contract is paused.
+    /// .. note:: This function can only be called by the contract owner.
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }
