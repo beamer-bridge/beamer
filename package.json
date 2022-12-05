@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "ganache": "^7.5.0",
+    "prettier": "^2.8.0",
+    "prettier-plugin-solidity": "1.0.0-beta.19",
+    "solhint": "^3.3.7"
+  },
+  "engines": {
+    "node": "18.x",
+    "yarn": "1.x",
+    "npm": "please-use-yarn"
+  }
+}
