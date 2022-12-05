@@ -11,7 +11,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 
 from beamer.typing import URL, Address, ChainId, TokenAmount
-from beamer.util import account_from_keyfile, make_web3, setup_logging
+from beamer.util import account_from_keyfile, make_web3, setup_logging, transact
 from scripts._util import contracts_for_web3, validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
@@ -329,7 +329,7 @@ def whitelist(
     contracts: dict[str, Contract],
     address: Address,
 ) -> None:
-    """Whitelist a LP"""
+    """Whitelist an LP"""
 
     fill_manager = contracts["FillManager"]
     request_manager = contracts["RequestManager"]
@@ -345,40 +345,33 @@ def whitelist(
         print(f"Whitelisted in fill manager, tx_hash: {tx_hash.hex()}")
 
 
-@cli.command("update-fee")
+@cli.command("update-token")
 @click.argument(
-    "protocol-fee-ppm",
-    type=int,
-    required=True,
+    "token-address", type=str, metavar="ADDRESS", callback=validate_address, help="token address"
 )
-@click.argument(
-    "lp-fee-ppm",
-    type=int,
-    required=True,
-)
-@click.argument(
-    "min-lp-fee",
-    type=int,
-    required=True,
-)
+@click.option("--transfer-limit", type=int, help="New transfer limit of token")
+@click.option("--min-lp-fee", type=int, help="New minimum lp fee")
+@click.option("lp-fee-ppm", type=int, help="New lp fee in ppm")
+@click.argument("protocol-fee-ppm", type=int, help="New protocol fee in ppm")
 @pass_args
-def update_fee(
-    web3: Web3,
+def update_token(
+    web3: Web3,  # pylint:disable=unused-argument
     contracts: dict[str, Contract],
-    protocol_fee_ppm: int,
-    lp_fee_ppm: int,
+    token_address: Address,
+    transfer_limit: int,
     min_lp_fee: int,
+    lp_fee_ppm: int,
+    protocol_fee_ppm: int,
 ) -> None:
-    """Update fee of Request Manager. Must be done by owner."""
+    """Update transfer limit and fees for a token in Request Manager. Must be done by owner."""
 
     request_manager = contracts["RequestManager"]
+    params = (transfer_limit, min_lp_fee, lp_fee_ppm, protocol_fee_ppm)
+    token_data = list(request_manager.functions.tokens(token_address).call())
+    new_token_data = tuple(value or token_data[i] for i, value in enumerate(params))
+    tx_receipt = transact(request_manager.functions.updateToken(token_address, new_token_data))
 
-    tx_hash = request_manager.functions.updateFeeData(
-        protocol_fee_ppm, lp_fee_ppm, min_lp_fee
-    ).transact()
-    web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
-
-    print(f"Transaction sent, tx_hash: {tx_hash.hex()}")
+    print(f"Transaction sent, tx_hash: {tx_receipt['hash']}")
 
 
 if __name__ == "__main__":
