@@ -1185,6 +1185,7 @@ def test_contract_pause(deployer, request_manager, token):
             amount,
         )
 
+
 def test_contract_unpause(deployer, request_manager, token):
     """Test that a contract can be unpaused"""
     (requester,) = alloc_accounts(1)
@@ -1193,7 +1194,7 @@ def test_contract_unpause(deployer, request_manager, token):
 
     with brownie.reverts("Ownable: caller is not the owner"):
         request_manager.unpause({"from": requester.address})
-    
+
     with brownie.reverts("Pausable: not paused"):
         request_manager.unpause({"from": deployer.address})
 
