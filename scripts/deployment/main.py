@@ -93,6 +93,7 @@ def deploy_beamer(
     assert web3.eth.chain_id == l2_config["chain_id"]
 
     deployed_contracts = []
+    token = None
     if deploy_mintable_token:
         token = deploy_contract(web3, ("MintableToken", int(1e18)))
         deployed_contracts.append(token)
@@ -158,6 +159,30 @@ def deploy_beamer(
         )
     )
 
+    tokens = l2_config.get("tokens", [])
+
+    for token_arguments in tokens:
+        token_address = token_arguments["token_address"]
+        if token_address == "mintable_token":
+            if token is None:
+                raise ValueError(
+                    "Expecting mintable token to be deployed. (option --deploy-mintable-token)"
+                )
+            token_address = token.address
+        decimals = (
+            web3.eth.contract(address=token_address, abi=CONTRACTS["MintableToken"][0])
+            .functions.decimals()
+            .call()
+        )
+        token_arguments = (
+            token_address,
+            int(float(token_arguments["transfer_limit"]) * pow(10, decimals)),
+            int(float(token_arguments["min_lp_fee"]) * pow(10, decimals)),
+            token_arguments["lp_fee_ppm"],
+            token_arguments["protocol_fee_ppm"],
+        )
+        transact(request_manager.functions.updateToken(*token_arguments))
+
     l1_contracts = {l1_messenger.name: l1_messenger}
     deployed_contracts.extend(
         [
@@ -166,6 +191,7 @@ def deploy_beamer(
             l2_messenger,
         ]
     )
+
     l2_contracts = {deployed.name: deployed for deployed in deployed_contracts}
     return l1_contracts, l2_contracts
 

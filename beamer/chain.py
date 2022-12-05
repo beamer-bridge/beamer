@@ -1,11 +1,9 @@
-import json
 import os
-import pathlib
 import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable
+from typing import Callable
 
 import structlog
 from web3 import Web3
@@ -17,19 +15,12 @@ from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.state_machine import Context, process_event
 from beamer.typing import BlockNumber, ChainId
-from beamer.util import TransactionFailed, transact
+from beamer.util import TransactionFailed, load_ERC20_abi, transact
 
 log = structlog.get_logger(__name__)
 
 
-def _load_ERC20_abi() -> list[Any]:
-    path = pathlib.Path(__file__)
-    path = path.parent.joinpath("data/abi/StandardToken.json")
-    with path.open("rt") as fp:
-        return json.load(fp)["abi"]
-
-
-_ERC20_ABI = _load_ERC20_abi()
+_ERC20_ABI = load_ERC20_abi()
 
 # The time we're waiting for our thread in stop(), in seconds.
 # This is also the maximum time a call to stop() would block.

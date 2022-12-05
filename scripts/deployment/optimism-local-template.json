@@ -17,7 +17,17 @@
                 "claim_request_extension": 3600,
                 "claim_period": 3600,
                 "challenge_period_extension": 3600
-            }
+            },
+            "tokens":
+                [
+                    {
+                        "token_address": "mintable_token",
+                        "transfer_limit": 1000,
+                        "min_lp_fee": 0,
+                        "lp_fee_ppm": 0,
+                        "protocol_fee_ppm": 0
+                    }
+                ]
         }
     ]
 }

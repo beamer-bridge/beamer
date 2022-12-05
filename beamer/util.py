@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import pathlib
 import random
 import sys
 import time
@@ -176,3 +177,10 @@ class TokenMatchChecker:
         source_token = source_chain_id, source_token_address
         target_token = target_chain_id, target_token_address
         return target_token in self._tokens.get(source_token, frozenset())
+
+
+def load_ERC20_abi() -> list[Any]:
+    path = pathlib.Path(__file__)
+    path = path.parent.joinpath("data/abi/StandardToken.json")
+    with path.open("rt") as fp:
+        return json.load(fp)["abi"]
