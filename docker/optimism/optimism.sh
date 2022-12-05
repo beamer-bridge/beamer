@@ -30,7 +30,7 @@ up() {
     # The current wait-for-sequencer.sh script in the optimism repo
     # has a bug in that it does not specify the configuration files.
     # So work around that here.
-    WAIT_FOR_SEQUENCER_SCRIPT=$(mktemp --suffix=-wait-for-sequencer.sh)
+    WAIT_FOR_SEQUENCER_SCRIPT=$(mktemp)-wait-for-sequencer.sh
     sed "s#docker-compose#docker-compose ${docker_compose_file}#" \
             "${OPTIMISM}/ops/scripts/wait-for-sequencer.sh" > ${WAIT_FOR_SEQUENCER_SCRIPT}
     sh ${WAIT_FOR_SEQUENCER_SCRIPT}
