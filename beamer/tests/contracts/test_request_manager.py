@@ -1153,7 +1153,8 @@ def test_withdrawal_state_of_new_request(token, request_manager):
     assert not request_manager.isWithdrawn(request_id)
 
 
-def test_deprecation(deployer, request_manager, token):
+def test_contract_pause(deployer, request_manager, token):
+    """Test that a contract can be paused"""
     (requester,) = alloc_accounts(1)
     amount = 17
     token.mint(requester, 2 * amount)
@@ -1166,16 +1167,16 @@ def test_deprecation(deployer, request_manager, token):
         amount,
     )
     with brownie.reverts("Ownable: caller is not the owner"):
-        request_manager.deprecateContract({"from": requester.address})
+        request_manager.pause({"from": requester.address})
 
-    assert not request_manager.deprecated()
-    request_manager.deprecateContract({"from": deployer.address})
-    assert request_manager.deprecated()
+    assert not request_manager.paused()
+    request_manager.pause({"from": deployer.address})
+    assert request_manager.paused()
 
-    with brownie.reverts("Contract already deprecated"):
-        request_manager.deprecateContract({"from": deployer.address})
+    with brownie.reverts("Pausable: paused"):
+        request_manager.pause({"from": deployer.address})
 
-    with brownie.reverts("Contract is deprecated"):
+    with brownie.reverts("Pausable: paused"):
         make_request(
             request_manager,
             token,
@@ -1183,6 +1184,31 @@ def test_deprecation(deployer, request_manager, token):
             requester,
             amount,
         )
+
+def test_contract_unpause(deployer, request_manager, token):
+    """Test that a contract can be unpaused"""
+    (requester,) = alloc_accounts(1)
+    amount = 17
+    token.mint(requester, 2 * amount)
+
+    with brownie.reverts("Ownable: caller is not the owner"):
+        request_manager.unpause({"from": requester.address})
+    
+    with brownie.reverts("Pausable: not paused"):
+        request_manager.unpause({"from": deployer.address})
+
+    request_manager.pause({"from": deployer.address})
+    assert request_manager.paused()
+    request_manager.unpause({"from": deployer.address})
+    assert not request_manager.paused()
+
+    make_request(
+        request_manager,
+        token,
+        requester,
+        requester,
+        amount,
+    )
 
 
 def test_transfer_limit_update_only_owner(deployer, request_manager):
