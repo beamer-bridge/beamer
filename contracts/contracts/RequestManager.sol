@@ -372,6 +372,31 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         onlyAllowed(msg.sender)
         returns (uint96)
     {
+        return claimRequest(msg.sender, requestId, fillId);
+    }
+
+    /// Claim that a request was filled by a claimer.
+    ///
+    /// The request must still be valid at call time.
+    /// The caller must provide the ``claimStake`` amount of source rollup's native
+    /// token.
+    /// Only the claimer may get the stake back later.
+    ///
+    /// @param claimer Address of the claimer.
+    /// @param requestId ID of the request.
+    /// @param fillId The fill ID.
+    /// @return The claim ID.
+    function claimRequest(
+        address claimer,
+        bytes32 requestId,
+        bytes32 fillId
+    )
+        public
+        payable
+        validRequestId(requestId)
+        onlyAllowed(claimer)
+        returns (uint96)
+    {
         Request storage request = requests[requestId];
 
         require(
@@ -390,7 +415,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         Claim storage claim = claims[nonce];
         claim.requestId = requestId;
-        claim.claimer = msg.sender;
+        claim.claimer = claimer;
         claim.claimerStake = msg.value;
         claim.termination = termination;
         claim.fillId = fillId;
@@ -398,7 +423,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         emit ClaimMade(
             requestId,
             nonce,
-            msg.sender,
+            claimer,
             msg.value,
             address(0),
             0,
