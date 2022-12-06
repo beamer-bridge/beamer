@@ -44,7 +44,7 @@ def test_fill_request(fill_manager, token):
     blacklist_tx = fill_manager.removeAllowedLp(filler)
     assert "LpRemoved" in blacklist_tx.events
 
-    with brownie.reverts("Sender not whitelisted"):
+    with brownie.reverts("Not allowed"):
         fill_manager.fillRequest(
             chain_id,
             token.address,

@@ -70,7 +70,7 @@ def test_claim(token, request_manager, claim_stake, deployer):
     blacklist_tx = request_manager.removeAllowedLp(claimer, {"from": deployer})
     assert "LpRemoved" in blacklist_tx.events
 
-    with brownie.reverts("Sender not whitelisted"):
+    with brownie.reverts("Not allowed"):
         request_manager.claimRequest(request_id, FILL_ID, {"from": claimer, "value": claim_stake})
 
 
@@ -97,6 +97,85 @@ def test_claim_with_different_stakes(token, request_manager, claim_stake):
 
     with brownie.reverts("Invalid stake amount"):
         request_manager.claimRequest(request_id, FILL_ID, {"from": claimer})
+
+
+def test_claim_on_behalf_of_other(token, request_manager, claim_stake, claim_period):
+    """
+    Test that making a claim on behalf of others creates correct claim
+    and claimer can withdraw afterwards
+    """
+    (
+        requester,
+        initiator,
+    ) = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+
+    transfer_amount = 92
+    initiator_eth_balance = web3.eth.get_balance(initiator.address)
+    claimer_eth_balance = web3.eth.get_balance(claimer.address)
+
+    token.mint(requester, transfer_amount, {"from": requester})
+    assert token.balanceOf(requester) == transfer_amount
+    assert token.balanceOf(initiator) == 0
+    assert token.balanceOf(claimer) == 0
+
+    request_id = make_request(
+        request_manager,
+        token=token,
+        requester=requester,
+        target_address=requester,
+        amount=transfer_amount,
+    )
+
+    claim_tx = request_manager.claimRequest(
+        claimer, request_id, FILL_ID, {"from": initiator, "value": claim_stake}
+    )
+    claim_id = claim_tx.return_value
+    expected_termination = (
+        request_manager.claimPeriod() + web3.eth.get_block("latest")["timestamp"]
+    )
+
+    assert "ClaimMade" in claim_tx.events
+    claim_event = claim_tx.events["ClaimMade"]
+    assert RequestId(claim_event["requestId"]) == request_id
+    assert claim_event["claimId"] == claim_id
+    assert claim_event["claimer"] == claimer
+    assert claim_event["claimerStake"] == claim_stake
+    assert claim_event["lastChallenger"] == brownie.ZERO_ADDRESS
+    assert claim_event["challengerStakeTotal"] == 0
+    assert claim_event["termination"] == expected_termination
+    assert claim_event["fillId"] == to_hex(FILL_ID)
+
+    assert web3.eth.get_balance(request_manager.address) == claim_stake
+    assert web3.eth.get_balance(initiator.address) == initiator_eth_balance - claim_stake
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance
+
+    chain.mine(timedelta=claim_period)
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
+
+    assert "DepositWithdrawn" in withdraw_tx.events
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
+    assert request_manager.isWithdrawn(request_id)
+
+    assert token.balanceOf(requester) == 0
+    assert token.balanceOf(initiator) == 0
+    assert token.balanceOf(claimer) == transfer_amount
+
+    assert web3.eth.get_balance(request_manager.address) == 0
+    assert web3.eth.get_balance(initiator.address) == initiator_eth_balance - claim_stake
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance + claim_stake
+
+
+def test_claimer_not_allowed(token, request_manager, claim_stake):
+    """Test that making a claim cannot be done for addresses which are not whitelisted"""
+    (requester, initiator, claimer) = alloc_accounts(3)
+    request_id = make_request(
+        request_manager, token=token, requester=requester, target_address=requester, amount=1
+    )
+    with brownie.reverts("Not allowed"):
+        request_manager.claimRequest(
+            claimer, request_id, FILL_ID, {"from": initiator, "value": claim_stake}
+        )
 
 
 def test_claim_challenge(request_manager, token, claim_stake):
