@@ -561,17 +561,47 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// of native tokens staked by the dishonest claimer.
     ///
     /// @param claimId The claim ID.
-    /// @return The address of the deposit receiver.
+    /// @return The claim stakes receiver.
     function withdraw(uint96 claimId)
         external
         validClaimId(claimId)
         returns (address)
     {
+        return withdraw(msg.sender, claimId);
+    }
+
+    /// Withdraw the deposit that the request submitter left with the contract,
+    /// as well as the staked native tokens associated with the claim.
+    ///
+    /// This function is called on behalf of a participant. Only a participant
+    /// may receive the funds if he is the winner of the challenge or the claim is valid.
+    ///
+    /// In case the caller of this function is a challenger that won the game,
+    /// they will only get their staked native tokens plus the reward in the form
+    /// of full (sole challenger) or partial (multiple challengers) amount
+    /// of native tokens staked by the dishonest claimer.
+    ///
+    /// @param claimId The claim ID.
+    /// @param participant The participant.
+    /// @return The claim stakes receiver.
+    function withdraw(address participant, uint96 claimId)
+        public
+        validClaimId(claimId)
+        returns (address)
+    {
         Claim storage claim = claims[claimId];
+        address claimer = claim.claimer;
+        require(
+            participant == claimer || claim.challengersStakes[participant] > 0,
+            "Not an active participant in this claim"
+        );
         bytes32 requestId = claim.requestId;
         Request storage request = requests[requestId];
 
-        (address claimReceiver, uint256 ethToTransfer) = resolveClaim(claimId);
+        (address claimReceiver, uint256 ethToTransfer) = resolveClaim(
+            participant,
+            claimId
+        );
 
         if (claim.challengersStakes[claimReceiver] > 0) {
             //Re-entrancy protection
@@ -597,14 +627,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         emit ClaimStakeWithdrawn(claimId, requestId, claimReceiver);
 
-        if (request.withdrawClaimId == 0 && claimReceiver == claim.claimer) {
+        if (request.withdrawClaimId == 0 && claimReceiver == claimer) {
             withdrawDeposit(request, claimId);
         }
 
         return claimReceiver;
     }
 
-    function resolveClaim(uint96 claimId)
+    function resolveClaim(address participant, uint96 claimId)
         private
         view
         returns (address, uint256)
@@ -615,7 +645,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address claimer = claim.claimer;
         uint256 claimerStake = claim.claimerStake;
         uint256 challengerStakeTotal = claim.challengerStakeTotal;
-        bytes32 claimFillId = claim.fillId;
         require(
             claim.withdrawnAmount < claimerStake + challengerStakeTotal,
             "Claim already withdrawn"
@@ -633,7 +662,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         if (filler != address(0)) {
             // Claim resolution via 1)
-            claimValid = filler == claimer && fillId == claimFillId;
+            claimValid = filler == claimer && fillId == claim.fillId;
         } else if (request.invalidFillIds[fillId]) {
             // Claim resolution via 2)
             claimValid = false;
@@ -641,7 +670,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             // Claim resolution via 3)
             claimValid =
                 claimer == claims[withdrawClaimId].claimer &&
-                claimFillId == claims[withdrawClaimId].fillId;
+                claim.fillId == claims[withdrawClaimId].fillId;
         } else {
             // Claim resolution via 4)
             require(
@@ -657,25 +686,24 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         if (claimValid) {
             // If claim is valid, all stakes go to the claimer
-            ethToTransfer = claimerStake + challengerStakeTotal;
             claimReceiver = claimer;
+            ethToTransfer = claimerStake + challengerStakeTotal;
         } else if (challengerStakeTotal > 0) {
-            // If claim is invalid, partial withdrawal by the sender
-            ethToTransfer = 2 * claim.challengersStakes[msg.sender];
-            claimReceiver = msg.sender;
-
+            // If claim is invalid, partial withdrawal by the participant
+            claimReceiver = participant;
+            ethToTransfer = 2 * claim.challengersStakes[claimReceiver];
             require(ethToTransfer > 0, "Challenger has nothing to withdraw");
         } else {
             // The unlikely event is possible that a false claim has no challenger
-            // If it is known that the claim is false then the claim stake goes to the platform
-            ethToTransfer = claimerStake;
+            // If it is known that the claim is false then the claimer stake goes to the platform
             claimReceiver = owner();
+            ethToTransfer = claimerStake;
         }
 
         // If the challenger wins and is the last challenger, he gets either
         // twice his stake plus the excess stake (if the claimer was winning), or
         // twice his stake minus the difference between the claimer and challenger stakes (if the claimer was losing)
-        if (msg.sender == claim.lastChallenger) {
+        if (claimReceiver == claim.lastChallenger) {
             if (claimerStake > challengerStakeTotal) {
                 ethToTransfer += (claimerStake - challengerStakeTotal);
             } else {
