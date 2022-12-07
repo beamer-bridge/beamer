@@ -442,8 +442,7 @@ def test_withdraw_without_challenge(request_manager, token, claim_stake, claim_p
     # Timetravel after claim period
     chain.mine(timedelta=claim_period)
 
-    # Even if the requester calls withdraw, the deposit goes to the claimer
-    withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "DepositWithdrawn" in withdraw_tx.events
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert request_manager.isWithdrawn(request_id)
@@ -567,8 +566,7 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     assert web3.eth.get_balance(request_manager.address) == 2 * claim_stake
 
     # The first claim gets withdrawn first
-    # Even if the requester calls withdraw, the deposit goes to the claimer1
-    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
+    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": claimer1})
     assert "DepositWithdrawn" in withdraw1_tx.events
     assert "ClaimStakeWithdrawn" in withdraw1_tx.events
 
@@ -587,7 +585,7 @@ def test_withdraw_with_two_claims(deployer, request_manager, token, claim_stake,
     # The other claim must be withdrawable, but the claim stakes go to the
     # contract owner as it is a false claim but no challenger exists.
     with earnings(web3, deployer) as owner_earnings:
-        withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
+        withdraw2_tx = request_manager.withdraw(claimer2, claim2_id, {"from": requester})
     assert "DepositWithdrawn" not in withdraw2_tx.events
     assert "ClaimStakeWithdrawn" in withdraw2_tx.events
 
@@ -725,8 +723,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
     assert web3.eth.get_balance(request_manager.address) == 3 * claim_stake + 1
 
     # The first claim gets withdrawn first
-    # Even if the requester calls withdraw, the deposit goes to the claimer1
-    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": requester})
+    withdraw1_tx = request_manager.withdraw(claim1_id, {"from": claimer1})
     assert "DepositWithdrawn" in withdraw1_tx.events
     assert "ClaimStakeWithdrawn" in withdraw1_tx.events
     assert request_manager.isWithdrawn(request_id)
@@ -744,7 +741,7 @@ def test_withdraw_with_two_claims_and_challenge(request_manager, token, claim_st
     with brownie.reverts("Claim already withdrawn"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
-    # The other claim must be withdrawable, but mustn't transfer tokens again
+    # The other claim must be withdrawable, but must not transfer tokens again
     request_manager.withdraw(claim2_id, {"from": challenger})
 
     assert token.balanceOf(requester) == 0
@@ -761,7 +758,7 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
     request_manager, token, claim_stake, claim_period, finality_period
 ):
     """Test withdraw when a request was claimed twice. The first claim fails, while the second
-    is successful and should be paid out the request funds."""
+    is successful and should pay out the request funds."""
     requester, challenger = alloc_accounts(2)
     claimer1, claimer2 = alloc_whitelisted_accounts(2, {request_manager})
     transfer_amount = 23
@@ -829,9 +826,10 @@ def test_withdraw_with_two_claims_first_unsuccessful_then_successful(
     with brownie.reverts("Claim already withdrawn"):
         request_manager.withdraw(claim1_id, {"from": claimer1})
 
-    # The other claim must be withdrawable, but mustn't transfer the request tokens again
-    withdraw2_tx = request_manager.withdraw(claim2_id, {"from": requester})
+    # The other claim must be withdrawable and should pay out the funds
+    withdraw2_tx = request_manager.withdraw(claim2_id, {"from": claimer2})
     assert "ClaimStakeWithdrawn" in withdraw2_tx.events
+    assert "DepositWithdrawn" in withdraw2_tx.events
 
     assert token.balanceOf(requester) == 0
     assert token.balanceOf(claimer1) == 0
@@ -1127,6 +1125,88 @@ def test_challenge_after_l1_resolution(request_manager, token, claim_stake, cont
         request_manager.challengeClaim(claim_id)
 
 
+def test_withdraw_on_behalf(
+    request_manager, token, claim_stake, finality_period, challenge_period_extension
+):
+    first_challenger, second_challenger, requester, other = alloc_accounts(4)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+
+    request_id = make_request(request_manager, token, requester, requester, 1)
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
+    claim_id = claim.return_value
+    first_challenger_eth_balance = web3.eth.get_balance(first_challenger.address)
+    second_challenger_eth_balance = web3.eth.get_balance(second_challenger.address)
+
+    # First challenger challenges
+    request_manager.challengeClaim(claim_id, {"from": first_challenger, "value": claim_stake + 1})
+    # Claimer outbids again
+    request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
+    # Second challenger challenges
+    request_manager.challengeClaim(claim_id, {"from": second_challenger, "value": claim_stake + 1})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=finality_period + challenge_period_extension)
+
+    request_manager.withdraw(second_challenger, claim_id, {"from": first_challenger})
+
+    # second challenger should have won claim stake which is the excess amount the
+    # claimer put in
+    assert (
+        web3.eth.get_balance(second_challenger.address)
+        == second_challenger_eth_balance + claim_stake
+    )
+
+    assert (
+        web3.eth.get_balance(first_challenger.address)
+        == first_challenger_eth_balance - claim_stake - 1
+    )
+
+    # After the stakes are withdrawn for the second challenger
+    # he is not an active participant anymore
+    with brownie.reverts("Not an active participant in this claim"):
+        request_manager.withdraw(claim_id, {"from": second_challenger})
+
+    request_manager.withdraw(first_challenger, claim_id, {"from": other})
+
+    assert (
+        web3.eth.get_balance(first_challenger.address)
+        == first_challenger_eth_balance + claim_stake + 1
+    )
+
+
+def test_withdraw_on_behalf_of_challenger_claimer_wins(
+    request_manager, token, claim_stake, finality_period, challenge_period_extension
+):
+    challenger, requester = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, {request_manager})
+
+    claimer_eth_balance = web3.eth.get_balance(claimer.address)
+    challenger_eth_balance = web3.eth.get_balance(challenger.address)
+
+    request_id = make_request(request_manager, token, requester, requester, 1)
+    claim = request_manager.claimRequest(
+        request_id, FILL_ID, {"from": claimer, "value": claim_stake}
+    )
+    claim_id = claim.return_value
+
+    # First challenger challenges
+    request_manager.challengeClaim(claim_id, {"from": challenger, "value": claim_stake + 1})
+    # Claimer outbids again
+    request_manager.challengeClaim(claim_id, {"from": claimer, "value": claim_stake + 1})
+
+    # Timetravel after claim period
+    chain.mine(timedelta=finality_period + challenge_period_extension)
+
+    withdraw_tx = request_manager.withdraw(challenger, claim_id, {"from": challenger})
+    assert "ClaimStakeWithdrawn" in withdraw_tx.events
+    assert "DepositWithdrawn" in withdraw_tx.events
+
+    assert web3.eth.get_balance(claimer.address) == claimer_eth_balance + claim_stake + 1
+    assert web3.eth.get_balance(challenger.address) == challenger_eth_balance - claim_stake - 1
+
+
 def test_withdraw_two_challengers(
     request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
@@ -1173,7 +1253,7 @@ def test_withdraw_two_challengers(
         request_manager.withdraw(claim_id, {"from": first_withdrawer})
 
         # Challenger cannot withdraw twice
-        with brownie.reverts("Challenger has nothing to withdraw"):
+        with brownie.reverts("Not an active participant in this claim"):
             request_manager.withdraw(claim_id, {"from": first_withdrawer})
         with brownie.reverts("Challenger has nothing to withdraw"):
             request_manager.withdraw(claim_id, {"from": claimer})

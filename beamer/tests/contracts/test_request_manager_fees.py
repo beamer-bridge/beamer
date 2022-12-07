@@ -62,8 +62,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     # Timetravel after claim period
     chain.mine(timedelta=claim_period)
 
-    # Even if the requester calls withdraw, the funds go to the claimer
-    withdraw_tx = request_manager.withdraw(claim_id, {"from": requester})
+    withdraw_tx = request_manager.withdraw(claim_id, {"from": claimer})
     assert "ClaimStakeWithdrawn" in withdraw_tx.events
     assert request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES] == protocol_fee
     assert token.balanceOf(request_manager) == protocol_fee
