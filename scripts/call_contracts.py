@@ -83,7 +83,7 @@ def cli(ctx: Any, deployment_dir: Path, keystore_file: Path, password: str, eth_
 @click.option(
     "--validity-period",
     type=int,
-    default=15 * 60,
+    default=30 * 60,
     help="Period until the request is expired",
 )
 @cli.command("request")
