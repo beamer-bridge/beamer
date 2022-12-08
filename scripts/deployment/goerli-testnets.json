@@ -1,0 +1,61 @@
+{
+  "L1": {
+    "name": "Goerli",
+    "rpc": "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+    "chain_id": 5
+  },
+  "L2": [
+    {
+      "name": "Arbitrum Goerli",
+      "rpc": "https://goerli-rollup.arbitrum.io/rpc",
+      "chain_id": 421613,
+      "l1_messenger": [
+        "ArbitrumL1Messenger",
+        "0xaf4159A80B6Cc41ED517DB1c453d1Ef5C2e4dB72",
+        "0x6BEbC4925716945D46F0Ec336D5C2564F419682C"
+      ],
+      "l2_messenger": "ArbitrumL2Messenger",
+      "finality_period": 18000,
+      "request_manager_arguments": {
+        "claim_stake": 0.00047,
+        "claim_request_extension": 900,
+        "claim_period": 900,
+        "challenge_period_extension": 900
+      }
+    },
+    {
+      "name": "Optimism Goerli",
+      "rpc": "https://goerli.optimism.io",
+      "chain_id": 420,
+      "l1_messenger": [
+        "OptimismL1Messenger",
+        "0x5086d1eEF304eb5284A0f6720f79403b4e9bE294"
+      ],
+      "l2_messenger": "OptimismL2Messenger",
+      "finality_period": 1800,
+      "request_manager_arguments": {
+        "claim_stake": 0.00047,
+        "claim_request_extension": 900,
+        "claim_period": 900,
+        "challenge_period_extension": 900
+      }
+    },
+    {
+      "name": "Boba Goerli",
+      "rpc": "https://goerli.boba.network/",
+      "chain_id": 2888,
+      "l1_messenger": [
+        "OptimismL1Messenger",
+        "0xA6fA0867F39f3A3af7433C8A43f23bf26Efd1a48"
+      ],
+      "l2_messenger": "OptimismL2Messenger",
+      "finality_period": 1800,
+      "request_manager_arguments": {
+        "claim_stake": 0.00047,
+        "claim_request_extension": 900,
+        "claim_period": 900,
+        "challenge_period_extension": 900
+      }
+    }
+  ]
+}
