@@ -6,11 +6,10 @@ Requirements
 
 - `Python <https://www.python.org>`_ 3.10
 - `poetry <https://python-poetry.org>`_
-- `ganache <https://trufflesuite.com/ganache>`_ 7
-- `prettier-plugin-solidity <https://github.com/prettier-solidity/prettier-plugin-solidity>`_
 - `jq <https://stedolan.github.io/jq/>`_
 - `coreutils <https://formulae.brew.sh/formula/coreutils>`_
-
+- `Node.js <https://nodejs.org/en/download/>`_ 18.x
+- `Yarn <https://classic.yarnpkg.com/en/>`_ 1.x
 
 Setting up the repository 
 -------------------------
@@ -27,7 +26,11 @@ If you already have a repository, make sure the submodules are up to date::
 Testing
 -------
 
-First make sure beamer is installed::
+First make sure that the node dependencies are installed::
+
+    yarn install
+
+Then, install python dependencies::
 
     poetry install
 
@@ -45,7 +48,7 @@ Build the relayers::
 
 Start ganache::
 
-    ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
+    yarn run ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
             --wallet.mnemonic brownie --server.port 8545 --chain.chainId 1337
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
