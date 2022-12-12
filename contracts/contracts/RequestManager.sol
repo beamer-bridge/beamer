@@ -75,6 +75,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint256 targetChainId,
         address sourceTokenAddress,
         address targetTokenAddress,
+        address indexed sourceAddress,
         address targetAddress,
         uint256 amount,
         uint96 nonce,
@@ -298,8 +299,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             "Amount exceeds transfer limit"
         );
 
-        IERC20 token = IERC20(sourceTokenAddress);
-
         uint256 lpFeeTokenAmount = lpFee(sourceTokenAddress, amount);
         uint256 protocolFeeTokenAmount = protocolFee(
             sourceTokenAddress,
@@ -307,7 +306,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         );
 
         require(
-            token.allowance(msg.sender, address(this)) >=
+            IERC20(sourceTokenAddress).allowance(msg.sender, address(this)) >=
                 amount + lpFeeTokenAmount + protocolFeeTokenAmount,
             "Insufficient allowance"
         );
@@ -338,13 +337,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             targetChainId,
             sourceTokenAddress,
             targetTokenAddress,
+            msg.sender,
             targetAddress,
             amount,
             nonce,
             uint32(block.timestamp + validityPeriod)
         );
 
-        token.safeTransferFrom(
+        IERC20(sourceTokenAddress).safeTransferFrom(
             msg.sender,
             address(this),
             amount + lpFeeTokenAmount + protocolFeeTokenAmount
