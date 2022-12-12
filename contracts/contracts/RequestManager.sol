@@ -401,7 +401,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         return claimRequest(msg.sender, requestId, fillId);
     }
 
-    /// Claim that a request was filled by a claimer.
+    /// Claim that a request was filled.
     ///
     /// The request must still be valid at call time.
     /// The caller must provide the ``claimStake`` amount of source rollup's native
