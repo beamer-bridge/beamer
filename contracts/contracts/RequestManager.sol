@@ -115,7 +115,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     event ClaimStakeWithdrawn(
         uint96 claimId,
         bytes32 indexed requestId,
-        address claimReceiver
+        address stakeRecipient
     );
 
     event FinalityPeriodUpdated(uint256 targetChainId, uint256 finalityPeriod);
@@ -598,14 +598,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         bytes32 requestId = claim.requestId;
         Request storage request = requests[requestId];
 
-        (address claimReceiver, uint256 ethToTransfer) = resolveClaim(
+        (address stakeRecipient, uint256 ethToTransfer) = resolveClaim(
             participant,
             claimId
         );
 
-        if (claim.challengersStakes[claimReceiver] > 0) {
+        if (claim.challengersStakes[stakeRecipient] > 0) {
             //Re-entrancy protection
-            claim.challengersStakes[claimReceiver] = 0;
+            claim.challengersStakes[stakeRecipient] = 0;
         }
 
         uint256 withdrawnAmount = claim.withdrawnAmount;
@@ -622,16 +622,16 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             "Amount to withdraw too large"
         );
 
-        (bool sent, ) = claimReceiver.call{value: ethToTransfer}("");
+        (bool sent, ) = stakeRecipient.call{value: ethToTransfer}("");
         require(sent, "Failed to send Ether");
 
-        emit ClaimStakeWithdrawn(claimId, requestId, claimReceiver);
+        emit ClaimStakeWithdrawn(claimId, requestId, stakeRecipient);
 
-        if (request.withdrawClaimId == 0 && claimReceiver == claimer) {
+        if (request.withdrawClaimId == 0 && stakeRecipient == claimer) {
             withdrawDeposit(request, claimId);
         }
 
-        return claimReceiver;
+        return stakeRecipient;
     }
 
     function resolveClaim(address participant, uint96 claimId)
@@ -682,28 +682,28 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         // Calculate withdraw scheme for claim stakes
         uint256 ethToTransfer;
-        address claimReceiver;
+        address stakeRecipient;
 
         if (claimValid) {
             // If claim is valid, all stakes go to the claimer
-            claimReceiver = claimer;
+            stakeRecipient = claimer;
             ethToTransfer = claimerStake + challengerStakeTotal;
         } else if (challengerStakeTotal > 0) {
             // If claim is invalid, partial withdrawal by the participant
-            claimReceiver = participant;
-            ethToTransfer = 2 * claim.challengersStakes[claimReceiver];
+            stakeRecipient = participant;
+            ethToTransfer = 2 * claim.challengersStakes[stakeRecipient];
             require(ethToTransfer > 0, "Challenger has nothing to withdraw");
         } else {
             // The unlikely event is possible that a false claim has no challenger
             // If it is known that the claim is false then the claimer stake goes to the platform
-            claimReceiver = owner();
+            stakeRecipient = owner();
             ethToTransfer = claimerStake;
         }
 
         // If the challenger wins and is the last challenger, he gets either
         // twice his stake plus the excess stake (if the claimer was winning), or
         // twice his stake minus the difference between the claimer and challenger stakes (if the claimer was losing)
-        if (claimReceiver == claim.lastChallenger) {
+        if (stakeRecipient == claim.lastChallenger) {
             if (claimerStake > challengerStakeTotal) {
                 ethToTransfer += (claimerStake - challengerStakeTotal);
             } else {
@@ -711,7 +711,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             }
         }
 
-        return (claimReceiver, ethToTransfer);
+        return (stakeRecipient, ethToTransfer);
     }
 
     function withdrawDeposit(Request storage request, uint96 claimId) private {
