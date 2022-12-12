@@ -111,7 +111,7 @@ class ClaimMade(ClaimEvent):
 @dataclass(frozen=True)
 class ClaimStakeWithdrawn(ClaimEvent):
     request_id: RequestId
-    claim_receiver: ChecksumAddress
+    stake_recipient: ChecksumAddress
 
 
 @dataclass(frozen=True)
