@@ -72,6 +72,7 @@ class RequestCreated(RequestEvent):
     target_chain_id: ChainId
     source_token_address: ChecksumAddress
     target_token_address: ChecksumAddress
+    source_address: ChecksumAddress
     target_address: ChecksumAddress
     amount: TokenAmount
     nonce: Nonce
