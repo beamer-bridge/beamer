@@ -101,7 +101,7 @@ def submit_request(
 
     request_manager = contracts["RequestManager"]
     token = contracts["MintableToken"]
-    total = amount + request_manager.functions.totalFee(amount).call()
+    total = amount + request_manager.functions.totalFee(token.address, amount).call()
     tx_hash = token.functions.approve(request_manager.address, total).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
