@@ -29,3 +29,7 @@ workflows:
             docs/.* docs-updated true
             frontend/.* frontend-updated true
             subgraph/.* subgraph-updated true
+            .circleci/.* frontend-updated true             
+            .circleci/.* backend-updated true              
+            .circleci/.* docs-updated true                 
+            .circleci/.* subgraph-updated true
