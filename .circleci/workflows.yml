@@ -26,7 +26,7 @@ commands:
       # Restore node runtime and packages at /opt/circleci/.nvm
       - restore_cache:
           name: Restore node runtime and packages
-          key: node18-packages-v10
+          key: node18-packages-v11
       - run: echo "nvm use default" >> "${BASH_ENV}"
 
   initialize-environment:
@@ -122,9 +122,7 @@ jobs:
             # Remove other versions so they don't end up in the cache.
             for x in $(ls -1 ${NVM_DIR}/versions/node | grep -v $(nvm version default)); do nvm uninstall $x; done
       - run: npm install yarn --location=global
-      - run: npm install solhint --location=global
-      - run: npm install ganache --location=global
-      - run: npm install prettier prettier-plugin-solidity@1.0.0-beta.19 --location=global
+      - run: yarn install --frozen-lockfile
       - save_cache:
           key: node18-packages-v10
           paths:
