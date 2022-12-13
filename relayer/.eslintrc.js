@@ -13,7 +13,7 @@ module.exports = {
     ecmaVersion: 12
   },
   plugins: [
-    "@typescript-eslint"
+    "@typescript-eslint",
   ],
   rules: {
     indent: [
