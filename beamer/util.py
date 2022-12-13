@@ -64,9 +64,12 @@ def transact(
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
-    return func.web3.eth.wait_for_transaction_receipt(
+    receipt = func.web3.eth.wait_for_transaction_receipt(
         txn_hash, timeout=timeout, poll_latency=poll_latency
     )
+    if receipt.status == 0:  # type: ignore
+        raise TransactionFailed("unknown error")
+    return receipt
 
 
 def setup_logging(log_level: str, log_json: bool) -> None:
