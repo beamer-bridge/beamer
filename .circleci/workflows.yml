@@ -114,7 +114,7 @@ jobs:
       - attach_workspace:
           at: /
       - restore_cache:
-          key: node18-packages-v10
+          key: node18-packages-v11
       - run:
           name: Install node v18
           command: |
@@ -124,7 +124,7 @@ jobs:
       - run: npm install yarn --location=global
       - run: yarn install --frozen-lockfile
       - save_cache:
-          key: node18-packages-v10
+          key: node18-packages-v11
           paths:
             - /opt/circleci/.nvm/versions
             - /opt/circleci/.nvm/alias/default
