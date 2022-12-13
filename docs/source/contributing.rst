@@ -6,6 +6,7 @@ Requirements
 
 - `Python <https://www.python.org>`_ 3.10
 - `poetry <https://python-poetry.org>`_
+- `ganache <https://trufflesuite.com/ganache>`_ 7
 - `jq <https://stedolan.github.io/jq/>`_
 - `coreutils <https://formulae.brew.sh/formula/coreutils>`_
 - `Node.js <https://nodejs.org/en/download/>`_ 18.x
@@ -48,7 +49,7 @@ Build the relayers::
 
 Start ganache::
 
-    yarn run ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
+    ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
             --wallet.mnemonic brownie --server.port 8545 --chain.chainId 1337
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
