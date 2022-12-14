@@ -341,12 +341,12 @@ workflows:
       - build-and-test-frontend
 
   build-and-publish-container-image:
-    when:
-      and:
-        - <<pipeline.parameters.backend-updated>>
-        - equal: [ main, <<pipeline.git.branch>> ]
+    when: <<pipeline.parameters.backend-updated>>
     jobs:
-      - install-npm-packages
+      - checkout
+      - install-npm-packages:
+          requires:
+            - checkout
       - build-and-publish-container-image:
           requires:
             - install-npm-packages
