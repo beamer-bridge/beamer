@@ -26,7 +26,7 @@ commands:
       # Restore node runtime and packages at /opt/circleci/.nvm
       - restore_cache:
           name: Restore node runtime and packages
-          key: node18-packages-v12
+          key: node18-packages-v17
       - run: echo "nvm use default" >> "${BASH_ENV}"
 
   initialize-environment:
@@ -114,7 +114,7 @@ jobs:
       - attach_workspace:
           at: /
       - restore_cache:
-          key: node18-packages-v12
+          key: node18-packages-v17
       - run:
           name: Install node v18
           command: |
@@ -125,10 +125,11 @@ jobs:
       - run: npm install ganache --location=global
       - run: yarn install --frozen-lockfile
       - save_cache:
-          key: node18-packages-v12
+          key: node18-packages-v17
           paths:
             - /opt/circleci/.nvm/versions
             - /opt/circleci/.nvm/alias/default
+            - /home/circleci/beamer/node_modules
 
   create-relayers:
     executor: vm
@@ -285,7 +286,9 @@ workflows:
     when: <<pipeline.parameters.backend-updated>>
     jobs:
       - checkout
-      - install-npm-packages
+      - install-npm-packages:
+          requires:
+            - checkout
       - install-python:
           requires:
             - checkout
