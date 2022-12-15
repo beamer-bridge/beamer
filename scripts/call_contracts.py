@@ -346,13 +346,11 @@ def whitelist(
 
 
 @cli.command("update-token")
-@click.argument(
-    "token-address", type=str, metavar="ADDRESS", callback=validate_address, help="token address"
-)
+@click.argument("token-address", type=str, metavar="ADDRESS", callback=validate_address)
 @click.option("--transfer-limit", type=int, help="New transfer limit of token")
 @click.option("--min-lp-fee", type=int, help="New minimum lp fee")
 @click.option("lp-fee-ppm", type=int, help="New lp fee in ppm")
-@click.argument("protocol-fee-ppm", type=int, help="New protocol fee in ppm")
+@click.argument("protocol-fee-ppm", type=int)
 @pass_args
 def update_token(
     web3: Web3,  # pylint:disable=unused-argument
@@ -371,7 +369,7 @@ def update_token(
     new_token_data = tuple(value or token_data[i] for i, value in enumerate(params))
     tx_receipt = transact(request_manager.functions.updateToken(token_address, new_token_data))
 
-    print(f"Transaction sent, tx_hash: {tx_receipt['hash']}")
+    print(f"Transaction sent, tx_hash: {tx_receipt['transactionHash'].hex()}")
 
 
 @cli.command("invalidate-fill")
