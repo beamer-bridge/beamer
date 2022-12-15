@@ -374,5 +374,26 @@ def update_token(
     print(f"Transaction sent, tx_hash: {tx_receipt['hash']}")
 
 
+@cli.command("invalidate-fill")
+@click.argument("request-id", type=str, callback=validate_bytes)
+@click.argument("fill-id", type=str, callback=validate_bytes)
+@click.argument("source-chain-id", type=int)
+@pass_args
+def invalidate_fill(
+    web3: Web3,  # pylint:disable=unused-argument
+    contracts: dict[str, Contract],
+    request_id: str,
+    fill_id: str,
+    source_chain_id: int,
+) -> None:
+    """Invalidate a fill ID."""
+
+    fill_manager = contracts["FillManager"]
+    func = fill_manager.functions.invalidateFill(request_id, fill_id, source_chain_id)
+    tx_receipt = transact(func)
+
+    print(f"Transaction sent, tx_hash: {tx_receipt['transactionHash'].hex()}")
+
+
 if __name__ == "__main__":
     cli()
