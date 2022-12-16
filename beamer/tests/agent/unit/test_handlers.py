@@ -1,11 +1,14 @@
 from copy import deepcopy
+from typing import cast
 from unittest.mock import patch
 
 import pytest
+from eth_typing import BlockNumber, HexStr
 from hexbytes import HexBytes
-from web3.types import ChecksumAddress, Wei
+from web3.datastructures import AttributeDict
+from web3.types import ChecksumAddress, TxReceipt, Wei
 
-from beamer.chain import claim_request, process_claims, process_requests
+from beamer.chain import claim_request, fill_request, process_claims, process_requests
 from beamer.events import InitiateL1ResolutionEvent, RequestResolved
 from beamer.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
@@ -25,6 +28,30 @@ from beamer.tests.agent.unit.utils import (
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
 from beamer.typing import FillId, Termination
+from beamer.util import load_ERC20_abi
+
+
+ERC2O_ABI = load_ERC20_abi()
+
+
+def get_tx_receipt(status, tx_hash) -> TxReceipt:
+    data = {
+        "status": status,
+        "transactionHash": tx_hash,
+        "blockHash": HexBytes(0),
+        "blockNumber": BlockNumber(1),
+        "contractAddress": None,
+        "cumulativeGasUsed": 0,
+        "effectiveGasPrice": 1,
+        "gasUsed": Wei(1),
+        "from": ADDRESS1,
+        "logs": [],
+        "logsBloom": HexBytes(0),
+        "root": HexStr("1"),
+        "to": ADDRESS1,
+        "transactionIndex": 1,
+    }
+    return cast(TxReceipt, AttributeDict(data))
 
 
 @pytest.mark.parametrize("claimable", [True, False])
@@ -48,6 +75,57 @@ def test_claim_after_expiry(claim_request_extension, claimable):
         assert request.is_claimed  # pylint:disable=no-member
     else:
         assert request.is_ignored  # pylint:disable=no-member
+
+
+# First request will be completed without any issue as expected
+# Second request will be in pending for some time and when validity expires, it will be ignored.
+# Second tx receipt status is indicating the failure
+def test_fill_request_transaction_status():
+    context, _ = make_context()
+    request = make_request(TIMESTAMP + 2)
+
+    context.requests.add(request.id, request)
+    assert request.pending
+    w3 = context.fill_manager.web3
+    token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
+    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000  # type: ignore
+    func = context.fill_manager.functions.fillRequest(
+        sourceChainId=request.source_chain_id,
+        targetTokenAddress=request.target_token_address,
+        targetReceiverAddress=request.target_address,
+        amount=request.amount,
+        nonce=request.nonce,
+    )
+    func.transact.return_value = 1  # type: ignore
+    func_eth = func.web3.eth
+    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(  # type: ignore
+        1, HexBytes("0x1")
+    )
+    fill_request(request, context)
+    assert request.filled
+
+    context, _ = make_context()
+    request = make_request(TIMESTAMP + 2)
+
+    context.requests.add(request.id, request)
+    w3 = context.fill_manager.web3
+    token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
+    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000  # type: ignore
+    func = context.fill_manager.functions.fillRequest(
+        sourceChainId=request.source_chain_id,
+        targetTokenAddress=request.target_token_address,
+        targetReceiverAddress=request.target_address,
+        amount=request.amount,
+        nonce=request.nonce,
+    )
+
+    func.transact.return_value = 2  # type: ignore
+    func_eth = func.web3.eth
+    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(  # type: ignore
+        0, HexBytes("0x0")
+    )
+    fill_request(request, context)
+    assert request.pending
 
 
 def test_skip_not_self_filled():

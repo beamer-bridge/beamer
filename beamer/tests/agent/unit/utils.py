@@ -158,7 +158,13 @@ def make_context() -> Tuple[Context, Config]:
                     "number": BlockNumber(42),
                     "timestamp": TIMESTAMP,
                 }
-            )
+            ),
+            TARGET_CHAIN_ID: BlockData(
+                {
+                    "number": BlockNumber(43),
+                    "timestamp": Timestamp(458),
+                }
+            ),
         },
         config=config,
         web3_l1=MagicMock(),
