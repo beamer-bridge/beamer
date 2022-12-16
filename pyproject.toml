@@ -22,7 +22,7 @@ toml = "^0.10.2"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
 black = "^22.1"
-isort = "^5.10.1"
+isort = "^5.11.2"
 flake8 = "^6.0.0"
 flake8-tuple = "^0.4.1"
 flake8-bugbear = "^22.12.6"
