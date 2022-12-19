@@ -35,3 +35,14 @@ async function main() {
 if (require.main === module) {
   main();
 }
+
+process
+  .on("unhandledRejection", (reason) => {
+    console.error(new Date().toUTCString() + " Unhandled Rejection:", reason);
+    process.exit(1);
+  })
+  .on("uncaughtException", (error) => {
+    console.error(new Date().toUTCString() + " Uncaught Exception:", error.message);
+    console.error(error.stack);
+    process.exit(1);
+  });
