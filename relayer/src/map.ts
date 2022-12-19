@@ -1,10 +1,11 @@
-import { ArbitrumRelayerService } from "./services/arbitrum";
-import { OptimismRelayerService } from "./services/optimism";
+import { ArbitrumRelayerService, BobaRelayerService, OptimismRelayerService } from "./services";
 import type { BaseRelayerService, BaseRelayerServiceConstructor } from "./services/types";
 
 export const SERVICES: Record<number, BaseRelayerServiceConstructor> = {
   42161: ArbitrumRelayerService,
   421613: ArbitrumRelayerService,
+  2888: BobaRelayerService,
+  288: BobaRelayerService,
   10: OptimismRelayerService,
   420: OptimismRelayerService,
 };
