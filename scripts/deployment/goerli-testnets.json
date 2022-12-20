@@ -21,7 +21,16 @@
         "claim_request_extension": 900,
         "claim_period": 900,
         "challenge_period_extension": 900
-      }
+      },
+      "tokens": [
+        {
+          "token_address": "mintable_token",
+          "transfer_limit": 10000,
+          "min_lp_fee": 1,
+          "lp_fee_ppm": 3000,
+          "protocol_fee_ppm": 0
+        }
+      ]
     },
     {
       "name": "Optimism Goerli",
@@ -38,7 +47,16 @@
         "claim_request_extension": 900,
         "claim_period": 900,
         "challenge_period_extension": 900
-      }
+      },
+      "tokens": [
+        {
+          "token_address": "mintable_token",
+          "transfer_limit": 10000,
+          "min_lp_fee": 1,
+          "lp_fee_ppm": 3000,
+          "protocol_fee_ppm": 0
+        }
+      ]
     },
     {
       "name": "Boba Goerli",
@@ -55,7 +73,16 @@
         "claim_request_extension": 900,
         "claim_period": 900,
         "challenge_period_extension": 900
-      }
+      },
+      "tokens": [
+        {
+          "token_address": "mintable_token",
+          "transfer_limit": 10000,
+          "min_lp_fee": 1,
+          "lp_fee_ppm": 3000,
+          "protocol_fee_ppm": 0
+        }
+      ]
     }
   ]
 }

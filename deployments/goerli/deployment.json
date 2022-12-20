@@ -1,23 +1,23 @@
 {
-  "beamer_commit": "ae00b47c6b1b99acbf77a79e103531f723ee0ca6",
+  "beamer_commit": "3096300c3129b31356f048c3982cbf38ef31d1ef",
   "deployer": "0xeDD5273fa20Ca7E1adf3d9D9cC3Bc998Fe3e63A3",
   "L1": {
     "Resolver": {
-      "address": "0xedf42C10177Bb19E4AeaAC374c23DA29cfAD2DB1",
-      "deployment_block": 8098778,
+      "address": "0x72bA6ed8A14809cfc9B8CA4A820ee666ce338856",
+      "deployment_block": 8169278,
       "deployment_args": []
     },
     "ArbitrumL1Messenger": {
-      "address": "0xCaf560790596E05abcDb6dA9A0ABfaf216bcAF8b",
-      "deployment_block": 8098779,
+      "address": "0xaD6DA69BB841028CEb4c9bC5efa8a07E41FD67E5",
+      "deployment_block": 8169279,
       "deployment_args": [
         "0xaf4159A80B6Cc41ED517DB1c453d1Ef5C2e4dB72",
         "0x6BEbC4925716945D46F0Ec336D5C2564F419682C"
       ]
     },
     "OptimismL1Messenger": {
-      "address": "0xd5281c2a23e0C7bb39DF57C51b09c765aCAF7D2d",
-      "deployment_block": 8098791,
+      "address": "0x939253aAcb447e25D21D369Ea638DE3B40b33985",
+      "deployment_block": 8169290,
       "deployment_args": [
         "0xA6fA0867F39f3A3af7433C8A43f23bf26Efd1a48"
       ]
@@ -26,15 +26,15 @@
   "L2": {
     "421613": {
       "MintableToken": {
-        "address": "0x9eb08d60F72d207da1386BdFD067A1bfa87bE8c5",
-        "deployment_block": 2433973,
+        "address": "0xf1168c58B95C5236727A1ABE26D0e3199458B548",
+        "deployment_block": 3229193,
         "deployment_args": [
           1000000000000000000
         ]
       },
       "RequestManager": {
-        "address": "0xedf42C10177Bb19E4AeaAC374c23DA29cfAD2DB1",
-        "deployment_block": 2433982,
+        "address": "0x7684dC50EEdc7AA8Bd4D543353b2E2359e903da7",
+        "deployment_block": 3229213,
         "deployment_args": [
           470000000000000,
           900,
@@ -43,29 +43,29 @@
         ]
       },
       "FillManager": {
-        "address": "0x596A2a833Cd92AD2b3046Bd492142Bee0F71347a",
-        "deployment_block": 2433987,
+        "address": "0xB4D2ED7De3152ab1B04c628C7A55fb83E0A004a1",
+        "deployment_block": 3229218,
         "deployment_args": [
-          "0x8D02b550487Be91EF5947aBa3061FeD4564779b6"
+          "0xd66C359E688031834Ec85e49fB9753a102fbdFa5"
         ]
       },
       "ArbitrumL2Messenger": {
-        "address": "0x8D02b550487Be91EF5947aBa3061FeD4564779b6",
-        "deployment_block": 2433981,
+        "address": "0xd66C359E688031834Ec85e49fB9753a102fbdFa5",
+        "deployment_block": 3229210,
         "deployment_args": []
       }
     },
     "420": {
       "MintableToken": {
-        "address": "0xF570Cd6C67ac2Ef87E4acFe6e4C001cFe494507c",
-        "deployment_block": 3292813,
+        "address": "0x66c538Ba7402C37eEaFd1Df5026FF23431B9d653",
+        "deployment_block": 3593918,
         "deployment_args": [
           1000000000000000000
         ]
       },
       "RequestManager": {
-        "address": "0xB787853125621567354caA4D8062F323B8480e4E",
-        "deployment_block": 3292834,
+        "address": "0x9d3F5EE65BF588C89d690272D0984774Fb77590A",
+        "deployment_block": 3593934,
         "deployment_args": [
           470000000000000,
           900,
@@ -74,29 +74,29 @@
         ]
       },
       "FillManager": {
-        "address": "0xA76a2c985Ee8A620D35b2aB6d713d3cF87474676",
-        "deployment_block": 3292843,
+        "address": "0x499e036E88afCD8Bec78638c70d03140816E2647",
+        "deployment_block": 3593940,
         "deployment_args": [
-          "0x635944817534e4A7A189F7e1743CA1e03Fa074e5"
+          "0x2910134d4bD15E11Ed07C3d5d78E9d729f3ab080"
         ]
       },
       "OptimismL2Messenger": {
-        "address": "0x635944817534e4A7A189F7e1743CA1e03Fa074e5",
-        "deployment_block": 3292830,
+        "address": "0x2910134d4bD15E11Ed07C3d5d78E9d729f3ab080",
+        "deployment_block": 3593932,
         "deployment_args": []
       }
     },
     "2888": {
       "MintableToken": {
-        "address": "0x4a0Fb125Aedf5898e3bC2A2d42a4ECeE9efE3359",
-        "deployment_block": 527,
+        "address": "0x8f4aA3BD1eA3De8BeAAe075Bd48026cf38B33b1a",
+        "deployment_block": 952,
         "deployment_args": [
           1000000000000000000
         ]
       },
       "RequestManager": {
-        "address": "0xF570Cd6C67ac2Ef87E4acFe6e4C001cFe494507c",
-        "deployment_block": 529,
+        "address": "0xF6435be3468005A197D1CEf25a992E07f3316F26",
+        "deployment_block": 954,
         "deployment_args": [
           470000000000000,
           900,
@@ -105,15 +105,15 @@
         ]
       },
       "FillManager": {
-        "address": "0x375edA2258E1e28C03d41989F2Cc90E8620830F9",
-        "deployment_block": 532,
+        "address": "0x9d3F5EE65BF588C89d690272D0984774Fb77590A",
+        "deployment_block": 957,
         "deployment_args": [
-          "0x42eB9433fCb0afFFdce4879d0D7E85214ED0Ca58"
+          "0xC124B3c660263216b77403E22Bb4bD2f115527fb"
         ]
       },
       "OptimismL2Messenger": {
-        "address": "0x42eB9433fCb0afFFdce4879d0D7E85214ED0Ca58",
-        "deployment_block": 528,
+        "address": "0xC124B3c660263216b77403E22Bb4bD2f115527fb",
+        "deployment_block": 953,
         "deployment_args": []
       }
     }
