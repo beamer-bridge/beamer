@@ -432,6 +432,7 @@ def _handle_initiate_l1_resolution(
             run_relayer_for_tx,
             context.config.l1_rpc_url,
             context.config.l2b_rpc_url,
+            context.config.l2a_rpc_url,
             context.config.account.key,
             request.fill_tx,
         )
@@ -481,6 +482,7 @@ def _handle_initiate_l1_invalidation(
             run_relayer_for_tx,
             context.config.l1_rpc_url,
             context.config.l2b_rpc_url,
+            context.config.l2a_rpc_url,
             context.config.account.key,
             claim.invalidation_tx,
         )

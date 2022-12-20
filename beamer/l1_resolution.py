@@ -24,7 +24,13 @@ def get_relayer_executable() -> Path:
     return path.resolve()
 
 
-def run_relayer_for_tx(l1_rpc: URL, l2_rpc: URL, privkey: str, tx_hash: HexBytes) -> None:
+def run_relayer_for_tx(
+    l1_rpc: URL,
+    l2_relay_from_rpc_url: URL,
+    l2_relay_to_rpc_url: URL,
+    privkey: str,
+    tx_hash: HexBytes,
+) -> None:
     relayer = get_relayer_executable()
 
     if not relayer.exists():
@@ -34,15 +40,15 @@ def run_relayer_for_tx(l1_rpc: URL, l2_rpc: URL, privkey: str, tx_hash: HexBytes
     subprocess.run(
         [
             str(relayer),
-            "--l1RpcURL",
+            "--l1-rpc-url",
             l1_rpc,
-            "--l2RelayToRpcURL",
-            l2_rpc,
-            "--l2RelayFromRpcURL",
-            l2_rpc,
-            "--walletPrivateKey",
+            "--l2-relay-to-rpc-url",
+            l2_relay_to_rpc_url,
+            "--l2-relay-from-rpc-url",
+            l2_relay_from_rpc_url,
+            "--wallet-private-key",
             privkey,
-            "--l2TransactionHash",
+            "--l2-transaction-hash",
             tx_hash,
         ],
         capture_output=True,

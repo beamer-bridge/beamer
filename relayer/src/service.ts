@@ -5,12 +5,12 @@ import { killOnParentProcessChange } from "./common/process";
 import { program } from "commander";
 
 program
-  .requiredOption("--l1RpcURL <URL>", "RPC Provider URL for layer 1")
-  .requiredOption("--l2RelayToRpcURL <URL>", "RPC Provider URL for relay destination rollup")
-  .requiredOption("--l2RelayFromRpcURL <URL>", "RPC Provider URL for relay source rollup")
-  .requiredOption("--walletPrivateKey <hash>", "Private key for the layer 1 wallet")
+  .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
+  .requiredOption("--l2-relay-to-rpc-url <URL>", "RPC Provider URL for relay destination rollup")
+  .requiredOption("--l2-relay-from-rpc-url <URL>", "RPC Provider URL for relay source rollup")
+  .requiredOption("--wallet-private-key <hash>", "Private key for the layer 1 wallet")
   .requiredOption(
-    "--l2TransactionHash <hash>",
+    "--l2-transaction-hash <hash>",
     "Layer 2 transaction hash that needs to be relayed",
   );
 
