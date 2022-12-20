@@ -1,0 +1,8 @@
+{
+  "identifier": 421613,
+  "explorerUrl": "https://goerli.arbiscan.io",
+  "rpcUrl": "https://goerli-rollup.arbitrum.io/rpc",
+  "name": "Arbitrum Goerli",
+  "imageUrl": "/images/arbitrum.svg",
+  "tokenSymbols": ["TST"]
+}

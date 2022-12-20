@@ -1,0 +1,8 @@
+{
+  "identifier": 2888,
+  "explorerUrl": "https://testnet.bobascan.com/",
+  "rpcUrl": "https://goerli.boba.network/",
+  "name": "Boba Goerli",
+  "imageUrl": "/images/boba.svg",
+  "tokenSymbols": ["TST"]
+}
