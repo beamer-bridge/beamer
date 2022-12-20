@@ -1,0 +1,8 @@
+{
+  "identifier": 420,
+  "explorerUrl": "https://goerli-optimism.etherscan.io/",
+  "rpcUrl": "https://goerli.optimism.io",
+  "name": "Optimism Goerli",
+  "imageUrl": "/images/optimism.svg",
+  "tokenSymbols": ["TST"]
+}
