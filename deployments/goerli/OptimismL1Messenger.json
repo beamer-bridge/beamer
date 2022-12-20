@@ -191,39 +191,39 @@
     "absolutePath": "contracts/contracts/chains/optimism/OptimismMessengers.sol",
     "exportedSymbols": {
       "Context": [
-        5725
+        5851
       ],
       "ICrossDomainMessenger": [
-        5663
+        5829
       ],
       "IMessenger": [
-        3373
+        3539
       ],
       "Lib_PredeployAddresses": [
-        5703
+        2859
       ],
       "OptimismL1Messenger": [
-        2768
+        2934
       ],
       "OptimismL2Messenger": [
-        2782
+        2948
       ],
       "OptimismMessengerBase": [
-        2753
+        2919
       ],
       "Ownable": [
-        2992
+        3158
       ],
       "RestrictedCalls": [
-        2424
+        2550
       ]
     },
-    "id": 2783,
+    "id": 2949,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 2695,
+        "id": 2861,
         "literals": [
           "solidity",
           "^",
@@ -236,11 +236,11 @@
       {
         "absolutePath": "contracts/interfaces/IMessenger.sol",
         "file": "../../../interfaces/IMessenger.sol",
-        "id": 2696,
+        "id": 2862,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2783,
-        "sourceUnit": 3374,
+        "scope": 2949,
+        "sourceUnit": 3540,
         "src": "58:44:26",
         "symbolAliases": [],
         "unitAlias": ""
@@ -248,11 +248,11 @@
       {
         "absolutePath": "contracts/contracts/RestrictedCalls.sol",
         "file": "../../RestrictedCalls.sol",
-        "id": 2697,
+        "id": 2863,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2783,
-        "sourceUnit": 2425,
+        "scope": 2949,
+        "sourceUnit": 2551,
         "src": "104:35:26",
         "symbolAliases": [],
         "unitAlias": ""
@@ -260,11 +260,11 @@
       {
         "absolutePath": "/Users/gb/.brownie/packages/OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/optimism/ICrossDomainMessenger.sol",
         "file": "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/optimism/ICrossDomainMessenger.sol",
-        "id": 2698,
+        "id": 2864,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2783,
-        "sourceUnit": 5664,
+        "scope": 2949,
+        "sourceUnit": 5830,
         "src": "140:103:26",
         "symbolAliases": [],
         "unitAlias": ""
@@ -272,11 +272,11 @@
       {
         "absolutePath": "contracts/contracts/chains/optimism/Lib_PredeployAddresses.sol",
         "file": "./Lib_PredeployAddresses.sol",
-        "id": 2699,
+        "id": 2865,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2783,
-        "sourceUnit": 5704,
+        "scope": 2949,
+        "sourceUnit": 2860,
         "src": "244:38:26",
         "symbolAliases": [],
         "unitAlias": ""
@@ -286,25 +286,25 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2700,
+              "id": 2866,
               "name": "IMessenger",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 3373,
+              "referencedDeclaration": 3539,
               "src": "327:10:26"
             },
-            "id": 2701,
+            "id": 2867,
             "nodeType": "InheritanceSpecifier",
             "src": "327:10:26"
           },
           {
             "baseName": {
-              "id": 2702,
+              "id": 2868,
               "name": "RestrictedCalls",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 2424,
+              "referencedDeclaration": 2550,
               "src": "339:15:26"
             },
-            "id": 2703,
+            "id": 2869,
             "nodeType": "InheritanceSpecifier",
             "src": "339:15:26"
           }
@@ -313,13 +313,13 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 2753,
+        "id": 2919,
         "linearizedBaseContracts": [
-          2753,
-          2424,
-          2992,
-          5725,
-          3373
+          2919,
+          2550,
+          3158,
+          5851,
+          3539
         ],
         "name": "OptimismMessengerBase",
         "nameLocation": "302:21:26",
@@ -327,12 +327,12 @@
         "nodes": [
           {
             "constant": true,
-            "id": 2706,
+            "id": 2872,
             "mutability": "constant",
             "name": "MESSAGE_GAS_LIMIT",
             "nameLocation": "385:17:26",
             "nodeType": "VariableDeclaration",
-            "scope": 2753,
+            "scope": 2919,
             "src": "361:53:26",
             "stateVariable": true,
             "storageLocation": "default",
@@ -341,7 +341,7 @@
               "typeString": "uint32"
             },
             "typeName": {
-              "id": 2704,
+              "id": 2870,
               "name": "uint32",
               "nodeType": "ElementaryTypeName",
               "src": "361:6:26",
@@ -352,7 +352,7 @@
             },
             "value": {
               "hexValue": "315f3030305f303030",
-              "id": 2705,
+              "id": 2871,
               "isConstant": false,
               "isLValue": false,
               "isPure": true,
@@ -371,33 +371,33 @@
           {
             "constant": false,
             "functionSelector": "77897238",
-            "id": 2709,
+            "id": 2875,
             "mutability": "mutable",
             "name": "nativeMessenger",
             "nameLocation": "450:15:26",
             "nodeType": "VariableDeclaration",
-            "scope": 2753,
+            "scope": 2919,
             "src": "421:44:26",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
               "typeString": "contract ICrossDomainMessenger"
             },
             "typeName": {
-              "id": 2708,
+              "id": 2874,
               "nodeType": "UserDefinedTypeName",
               "pathNode": {
-                "id": 2707,
+                "id": 2873,
                 "name": "ICrossDomainMessenger",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 5663,
+                "referencedDeclaration": 5829,
                 "src": "421:21:26"
               },
-              "referencedDeclaration": 5663,
+              "referencedDeclaration": 5829,
               "src": "421:21:26",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                 "typeString": "contract ICrossDomainMessenger"
               }
             },
@@ -405,10 +405,10 @@
           },
           {
             "baseFunctions": [
-              3372
+              3538
             ],
             "body": {
-              "id": 2731,
+              "id": 2897,
               "nodeType": "Block",
               "src": "583:135:26",
               "statements": [
@@ -418,7 +418,7 @@
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
                     },
-                    "id": 2729,
+                    "id": 2895,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -428,17 +428,17 @@
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       },
-                      "id": 2723,
+                      "id": 2889,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "leftExpression": {
-                        "id": 2718,
+                        "id": 2884,
                         "name": "courier",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2713,
+                        "referencedDeclaration": 2879,
                         "src": "612:7:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -450,14 +450,14 @@
                       "rightExpression": {
                         "arguments": [
                           {
-                            "id": 2721,
+                            "id": 2887,
                             "name": "nativeMessenger",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 2709,
+                            "referencedDeclaration": 2875,
                             "src": "631:15:26",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                               "typeString": "contract ICrossDomainMessenger"
                             }
                           }
@@ -465,11 +465,11 @@
                         "expression": {
                           "argumentTypes": [
                             {
-                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                               "typeString": "contract ICrossDomainMessenger"
                             }
                           ],
-                          "id": 2720,
+                          "id": 2886,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -481,14 +481,14 @@
                             "typeString": "type(address)"
                           },
                           "typeName": {
-                            "id": 2719,
+                            "id": 2885,
                             "name": "address",
                             "nodeType": "ElementaryTypeName",
                             "src": "623:7:26",
                             "typeDescriptions": {}
                           }
                         },
-                        "id": 2722,
+                        "id": 2888,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -516,17 +516,17 @@
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       },
-                      "id": 2728,
+                      "id": 2894,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "leftExpression": {
-                        "id": 2724,
+                        "id": 2890,
                         "name": "caller",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2711,
+                        "referencedDeclaration": 2877,
                         "src": "663:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -540,32 +540,32 @@
                         "expression": {
                           "argumentTypes": [],
                           "expression": {
-                            "id": 2725,
+                            "id": 2891,
                             "name": "nativeMessenger",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 2709,
+                            "referencedDeclaration": 2875,
                             "src": "673:15:26",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                              "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                               "typeString": "contract ICrossDomainMessenger"
                             }
                           },
-                          "id": 2726,
+                          "id": 2892,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "xDomainMessageSender",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 5652,
+                          "referencedDeclaration": 5818,
                           "src": "673:36:26",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_external_view$__$returns$_t_address_$",
                             "typeString": "function () view external returns (address)"
                           }
                         },
-                        "id": 2727,
+                        "id": 2893,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -592,15 +592,15 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 2717,
-                  "id": 2730,
+                  "functionReturnParameters": 2883,
+                  "id": 2896,
                   "nodeType": "Return",
                   "src": "593:118:26"
                 }
               ]
             },
             "functionSelector": "845c5443",
-            "id": 2732,
+            "id": 2898,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -608,17 +608,17 @@
             "nameLocation": "481:11:26",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2714,
+              "id": 2880,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2711,
+                  "id": 2877,
                   "mutability": "mutable",
                   "name": "caller",
                   "nameLocation": "501:6:26",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2732,
+                  "scope": 2898,
                   "src": "493:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -627,7 +627,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2710,
+                    "id": 2876,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "493:7:26",
@@ -641,12 +641,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 2713,
+                  "id": 2879,
                   "mutability": "mutable",
                   "name": "courier",
                   "nameLocation": "517:7:26",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2732,
+                  "scope": 2898,
                   "src": "509:15:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -655,7 +655,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2712,
+                    "id": 2878,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "509:7:26",
@@ -671,17 +671,17 @@
               "src": "492:33:26"
             },
             "returnParameters": {
-              "id": 2717,
+              "id": 2883,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2716,
+                  "id": 2882,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2732,
+                  "scope": 2898,
                   "src": "573:4:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -690,7 +690,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 2715,
+                    "id": 2881,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "573:4:26",
@@ -704,7 +704,7 @@
               ],
               "src": "572:6:26"
             },
-            "scope": 2753,
+            "scope": 2919,
             "src": "472:246:26",
             "stateMutability": "view",
             "virtual": false,
@@ -712,10 +712,10 @@
           },
           {
             "baseFunctions": [
-              3362
+              3528
             ],
             "body": {
-              "id": 2751,
+              "id": 2917,
               "nodeType": "Block",
               "src": "840:80:26",
               "statements": [
@@ -723,11 +723,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 2746,
+                        "id": 2912,
                         "name": "target",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2734,
+                        "referencedDeclaration": 2900,
                         "src": "878:6:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -735,11 +735,11 @@
                         }
                       },
                       {
-                        "id": 2747,
+                        "id": 2913,
                         "name": "message",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2736,
+                        "referencedDeclaration": 2902,
                         "src": "886:7:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bytes_calldata_ptr",
@@ -747,11 +747,11 @@
                         }
                       },
                       {
-                        "id": 2748,
+                        "id": 2914,
                         "name": "MESSAGE_GAS_LIMIT",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2706,
+                        "referencedDeclaration": 2872,
                         "src": "895:17:26",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint32",
@@ -775,32 +775,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 2743,
+                        "id": 2909,
                         "name": "nativeMessenger",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2709,
+                        "referencedDeclaration": 2875,
                         "src": "850:15:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                          "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                           "typeString": "contract ICrossDomainMessenger"
                         }
                       },
-                      "id": 2745,
+                      "id": 2911,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "sendMessage",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 5662,
+                      "referencedDeclaration": 5828,
                       "src": "850:27:26",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_bytes_memory_ptr_$_t_uint32_$returns$__$",
                         "typeString": "function (address,bytes memory,uint32) external"
                       }
                     },
-                    "id": 2749,
+                    "id": 2915,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -815,14 +815,14 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 2750,
+                  "id": 2916,
                   "nodeType": "ExpressionStatement",
                   "src": "850:63:26"
                 }
               ]
             },
             "functionSelector": "bb5ddb0f",
-            "id": 2752,
+            "id": 2918,
             "implemented": true,
             "kind": "function",
             "modifiers": [
@@ -830,7 +830,7 @@
                 "arguments": [
                   {
                     "expression": {
-                      "id": 2739,
+                      "id": 2905,
                       "name": "block",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -841,7 +841,7 @@
                         "typeString": "block"
                       }
                     },
-                    "id": 2740,
+                    "id": 2906,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -855,13 +855,13 @@
                     }
                   }
                 ],
-                "id": 2741,
+                "id": 2907,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 2738,
+                  "id": 2904,
                   "name": "restricted",
                   "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 2423,
+                  "referencedDeclaration": 2549,
                   "src": "810:10:26"
                 },
                 "nodeType": "ModifierInvocation",
@@ -872,17 +872,17 @@
             "nameLocation": "733:11:26",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2737,
+              "id": 2903,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2734,
+                  "id": 2900,
                   "mutability": "mutable",
                   "name": "target",
                   "nameLocation": "753:6:26",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2752,
+                  "scope": 2918,
                   "src": "745:14:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -891,7 +891,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2733,
+                    "id": 2899,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "745:7:26",
@@ -905,12 +905,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 2736,
+                  "id": 2902,
                   "mutability": "mutable",
                   "name": "message",
                   "nameLocation": "776:7:26",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2752,
+                  "scope": 2918,
                   "src": "761:22:26",
                   "stateVariable": false,
                   "storageLocation": "calldata",
@@ -919,7 +919,7 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 2735,
+                    "id": 2901,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
                     "src": "761:5:26",
@@ -934,19 +934,19 @@
               "src": "744:40:26"
             },
             "returnParameters": {
-              "id": 2742,
+              "id": 2908,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "840:0:26"
             },
-            "scope": 2753,
+            "scope": 2919,
             "src": "724:196:26",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 2783,
+        "scope": 2949,
         "src": "284:638:26",
         "usedErrors": []
       },
@@ -955,13 +955,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2754,
+              "id": 2920,
               "name": "OptimismMessengerBase",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 2753,
+              "referencedDeclaration": 2919,
               "src": "956:21:26"
             },
-            "id": 2755,
+            "id": 2921,
             "nodeType": "InheritanceSpecifier",
             "src": "956:21:26"
           }
@@ -970,14 +970,14 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 2768,
+        "id": 2934,
         "linearizedBaseContracts": [
-          2768,
-          2753,
-          2424,
-          2992,
-          5725,
-          3373
+          2934,
+          2919,
+          2550,
+          3158,
+          5851,
+          3539
         ],
         "name": "OptimismL1Messenger",
         "nameLocation": "933:19:26",
@@ -985,26 +985,26 @@
         "nodes": [
           {
             "body": {
-              "id": 2766,
+              "id": 2932,
               "nodeType": "Block",
               "src": "1016:68:26",
               "statements": [
                 {
                   "expression": {
-                    "id": 2764,
+                    "id": 2930,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 2760,
+                      "id": 2926,
                       "name": "nativeMessenger",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2709,
+                      "referencedDeclaration": 2875,
                       "src": "1026:15:26",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                         "typeString": "contract ICrossDomainMessenger"
                       }
                     },
@@ -1013,11 +1013,11 @@
                     "rightHandSide": {
                       "arguments": [
                         {
-                          "id": 2762,
+                          "id": 2928,
                           "name": "messenger_",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 2757,
+                          "referencedDeclaration": 2923,
                           "src": "1066:10:26",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -1032,18 +1032,18 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 2761,
+                        "id": 2927,
                         "name": "ICrossDomainMessenger",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5663,
+                        "referencedDeclaration": 5829,
                         "src": "1044:21:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ICrossDomainMessenger_$5663_$",
+                          "typeIdentifier": "t_type$_t_contract$_ICrossDomainMessenger_$5829_$",
                           "typeString": "type(contract ICrossDomainMessenger)"
                         }
                       },
-                      "id": 2763,
+                      "id": 2929,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1054,23 +1054,23 @@
                       "src": "1044:33:26",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                         "typeString": "contract ICrossDomainMessenger"
                       }
                     },
                     "src": "1026:51:26",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                      "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                       "typeString": "contract ICrossDomainMessenger"
                     }
                   },
-                  "id": 2765,
+                  "id": 2931,
                   "nodeType": "ExpressionStatement",
                   "src": "1026:51:26"
                 }
               ]
             },
-            "id": 2767,
+            "id": 2933,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
@@ -1078,17 +1078,17 @@
             "nameLocation": "-1:-1:-1",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2758,
+              "id": 2924,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2757,
+                  "id": 2923,
                   "mutability": "mutable",
                   "name": "messenger_",
                   "nameLocation": "1004:10:26",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2767,
+                  "scope": 2933,
                   "src": "996:18:26",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1097,7 +1097,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2756,
+                    "id": 2922,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "996:7:26",
@@ -1113,19 +1113,19 @@
               "src": "995:20:26"
             },
             "returnParameters": {
-              "id": 2759,
+              "id": 2925,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1016:0:26"
             },
-            "scope": 2768,
+            "scope": 2934,
             "src": "984:100:26",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 2783,
+        "scope": 2949,
         "src": "924:162:26",
         "usedErrors": []
       },
@@ -1134,13 +1134,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2769,
+              "id": 2935,
               "name": "OptimismMessengerBase",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 2753,
+              "referencedDeclaration": 2919,
               "src": "1120:21:26"
             },
-            "id": 2770,
+            "id": 2936,
             "nodeType": "InheritanceSpecifier",
             "src": "1120:21:26"
           }
@@ -1149,14 +1149,14 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 2782,
+        "id": 2948,
         "linearizedBaseContracts": [
-          2782,
-          2753,
-          2424,
-          2992,
-          5725,
-          3373
+          2948,
+          2919,
+          2550,
+          3158,
+          5851,
+          3539
         ],
         "name": "OptimismL2Messenger",
         "nameLocation": "1097:19:26",
@@ -1164,26 +1164,26 @@
         "nodes": [
           {
             "body": {
-              "id": 2780,
+              "id": 2946,
               "nodeType": "Block",
               "src": "1162:128:26",
               "statements": [
                 {
                   "expression": {
-                    "id": 2778,
+                    "id": 2944,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 2773,
+                      "id": 2939,
                       "name": "nativeMessenger",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2709,
+                      "referencedDeclaration": 2875,
                       "src": "1172:15:26",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                         "typeString": "contract ICrossDomainMessenger"
                       }
                     },
@@ -1193,25 +1193,25 @@
                       "arguments": [
                         {
                           "expression": {
-                            "id": 2775,
+                            "id": 2941,
                             "name": "Lib_PredeployAddresses",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5703,
+                            "referencedDeclaration": 2859,
                             "src": "1225:22:26",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_type$_t_contract$_Lib_PredeployAddresses_$5703_$",
+                              "typeIdentifier": "t_type$_t_contract$_Lib_PredeployAddresses_$2859_$",
                               "typeString": "type(library Lib_PredeployAddresses)"
                             }
                           },
-                          "id": 2776,
+                          "id": 2942,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "L2_CROSS_DOMAIN_MESSENGER",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 5684,
+                          "referencedDeclaration": 2840,
                           "src": "1225:48:26",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -1226,18 +1226,18 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 2774,
+                        "id": 2940,
                         "name": "ICrossDomainMessenger",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5663,
+                        "referencedDeclaration": 5829,
                         "src": "1190:21:26",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_ICrossDomainMessenger_$5663_$",
+                          "typeIdentifier": "t_type$_t_contract$_ICrossDomainMessenger_$5829_$",
                           "typeString": "type(contract ICrossDomainMessenger)"
                         }
                       },
-                      "id": 2777,
+                      "id": 2943,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1248,23 +1248,23 @@
                       "src": "1190:93:26",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                        "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                         "typeString": "contract ICrossDomainMessenger"
                       }
                     },
                     "src": "1172:111:26",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5663",
+                      "typeIdentifier": "t_contract$_ICrossDomainMessenger_$5829",
                       "typeString": "contract ICrossDomainMessenger"
                     }
                   },
-                  "id": 2779,
+                  "id": 2945,
                   "nodeType": "ExpressionStatement",
                   "src": "1172:111:26"
                 }
               ]
             },
-            "id": 2781,
+            "id": 2947,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
@@ -1272,25 +1272,25 @@
             "nameLocation": "-1:-1:-1",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 2771,
+              "id": 2937,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1159:2:26"
             },
             "returnParameters": {
-              "id": 2772,
+              "id": 2938,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1162:0:26"
             },
-            "scope": 2782,
+            "scope": 2948,
             "src": "1148:142:26",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 2783,
+        "scope": 2949,
         "src": "1088:204:26",
         "usedErrors": []
       }
