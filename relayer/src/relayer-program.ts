@@ -1,6 +1,7 @@
-import type { BaseRelayerService } from "./services/types";
-import { createRelayer } from "./map";
 import { getNetworkId } from "./common/network";
+import { createRelayer } from "./map";
+import type { BaseRelayerService } from "./services/types";
+
 export type ProgramOptions = {
   l1RpcUrl: string;
   l2RelayFromRpcUrl: string;
@@ -12,10 +13,11 @@ export type ProgramOptions = {
 export function validateArgs(args: ProgramOptions): Array<string> {
   const validationErrors = [];
 
-  if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66)
+  if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66) {
     validationErrors.push(
       `Invalid argument value for "--l2-transaction-hash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
     );
+  }
 
   return validationErrors;
 }

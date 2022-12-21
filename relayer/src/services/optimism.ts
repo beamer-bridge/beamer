@@ -1,4 +1,5 @@
-import { CrossChainMessenger, MessageStatus, MessageReceiptStatus } from "@eth-optimism/sdk";
+import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
+
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 

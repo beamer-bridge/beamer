@@ -13,12 +13,23 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 12,
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["@typescript-eslint", "simple-import-sort", "import"],
   rules: {
-    indent: ["error", 2],
-    "linebreak-style": ["error", "unix"],
-    quotes: ["error", "double"],
-    semi: ["error", "always"],
+    "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
+    "sort-imports": "off",
+    "import/order": "off",
+    "import/export": "off",
+    "import/first": "warn",
+    "import/newline-after-import": "warn",
+    "import/no-extraneous-dependencies": "warn",
+    "import/no-duplicates": "warn",
+    "simple-import-sort/imports": "warn",
+    "simple-import-sort/exports": "warn",
     "@typescript-eslint/consistent-type-imports": "warn",
+    curly: "error",
+  },
+  globals: {
+    process: "readonly",
   },
 };
