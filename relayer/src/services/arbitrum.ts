@@ -1,15 +1,16 @@
 import {
-  L2TransactionReceipt,
-  L2ToL1MessageStatus,
   L1ToL2MessageGasEstimator,
-  L1TransactionReceipt,
   L1ToL2MessageStatus,
+  L1TransactionReceipt,
+  L2ToL1MessageStatus,
+  L2TransactionReceipt,
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
+import { BigNumber, Contract } from "ethers";
+
+import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
-import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
-import { BigNumber, Contract } from "ethers";
 
 const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   42161: {

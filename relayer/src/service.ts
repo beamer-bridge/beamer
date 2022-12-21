@@ -1,9 +1,9 @@
-import type { ProgramOptions } from "./relayer-program";
-import { validateArgs } from "./relayer-program";
-import { RelayerProgram } from "./relayer-program";
-import { ppid } from "process";
-import { killOnParentProcessChange } from "./common/process";
 import { program } from "commander";
+import { ppid } from "process";
+
+import { killOnParentProcessChange } from "./common/process";
+import type { ProgramOptions } from "./relayer-program";
+import { RelayerProgram, validateArgs } from "./relayer-program";
 
 program
   .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
