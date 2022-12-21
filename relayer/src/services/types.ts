@@ -36,6 +36,6 @@ export abstract class BaseRelayerService {
   }
 
   abstract prepare(): Promise<boolean>;
-  abstract relayTxToL1(l2TransactionHash: string): Promise<TransactionHash>;
+  abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash>;
   abstract finalize(l1TransactionHash: TransactionHash): Promise<void>;
 }

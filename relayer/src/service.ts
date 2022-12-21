@@ -1,4 +1,5 @@
 import type { ProgramOptions } from "./relayer-program";
+import { validateArgs } from "./relayer-program";
 import { RelayerProgram } from "./relayer-program";
 import { ppid } from "process";
 import { killOnParentProcessChange } from "./common/process";
@@ -17,6 +18,12 @@ program
 program.parse(process.argv);
 
 const args: ProgramOptions = program.opts();
+const argValidationErrors = validateArgs(args);
+
+if (argValidationErrors.length) {
+  console.error(argValidationErrors.join("\n"));
+  process.exit(1);
+}
 
 async function main() {
   const startPpid = ppid;

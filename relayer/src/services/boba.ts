@@ -29,9 +29,6 @@ export class BobaRelayerService extends BaseRelayerService {
   async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
     console.log("Boba outbox execution.");
 
-    if (!l2TransactionHash.startsWith("0x") || l2TransactionHash.trim().length != 66)
-      throw new Error(`Hmm, ${l2TransactionHash} doesn't look like a valid txn hash...`);
-
     const messenger = new CrossChainMessenger({
       contracts: {
         l1: L1_CONTRACTS[await this.getL2ChainId()],
