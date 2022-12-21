@@ -140,7 +140,7 @@ SUPPORTED_CONNECTED_L2S = {
     # Rinkeby
     4: frozenset({421611, 28, 588}),  # Arbitrum, Boba, Metis
     # Goerli
-    5: frozenset({420}),  # Optimism
+    5: frozenset({421613, 420, 2888}),  # Arbitrum, Optimism, Boba
     # Kovan
     42: frozenset({69}),  # Optimism
 }
