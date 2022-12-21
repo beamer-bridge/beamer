@@ -6,6 +6,7 @@ import {
   L1ToL2MessageStatus,
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
+import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
 import { BigNumber, Contract } from "ethers";
@@ -68,15 +69,8 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return true;
   }
 
-  async relayTxToL1(l2TransactionHash: string): Promise<string | undefined> {
+  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string | undefined> {
     console.log("Arbitrum outbox execution");
-
-    /**
-   / * We start with a txn hash; we assume this is transaction that triggered an L2 to L1 Message on L2 (i.e., ArbSys.sendTxToL1)
-  */
-
-    if (!l2TransactionHash.startsWith("0x") || l2TransactionHash.trim().length != 66)
-      throw new Error(`Hmm, ${l2TransactionHash} doesn't look like a txn hash...`);
 
     /**
      * First, let's find the Arbitrum txn from the txn hash provided

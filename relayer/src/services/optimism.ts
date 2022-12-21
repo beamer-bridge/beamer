@@ -10,9 +10,6 @@ export class OptimismRelayerService extends BaseRelayerService {
   async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
     console.log("Optimism outbox execution.");
 
-    if (!l2TransactionHash.startsWith("0x") || l2TransactionHash.trim().length != 66)
-      throw new Error(`Hmm, ${l2TransactionHash} doesn't look like a valid txn hash...`);
-
     const messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.l1Wallet,
       l2SignerOrProvider: this.l2RpcProvider,
