@@ -2,9 +2,9 @@ import type { BaseRelayerService } from "./services/types";
 import { createRelayer } from "./map";
 import { getNetworkId } from "./common/network";
 export type ProgramOptions = {
-  l1RpcURL: string;
-  l2RelayFromRpcURL: string;
-  l2RelayToRpcURL: string;
+  l1RpcUrl: string;
+  l2RelayFromRpcUrl: string;
+  l2RelayToRpcUrl: string;
   walletPrivateKey: string;
   l2TransactionHash: string;
 };
@@ -14,7 +14,7 @@ export function validateArgs(args: ProgramOptions): Array<string> {
 
   if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66)
     validationErrors.push(
-      `Invalid argument value for "--l2TransactionHash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
+      `Invalid argument value for "--l2-transaction-hash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
     );
 
   return validationErrors;
@@ -27,20 +27,20 @@ export class RelayerProgram {
   ) {}
 
   static async createFromArgs(options: ProgramOptions): Promise<RelayerProgram> {
-    const fromL2ChainId = await getNetworkId(options.l2RelayFromRpcURL);
-    const toL2ChainId = await getNetworkId(options.l2RelayToRpcURL);
+    const fromL2ChainId = await getNetworkId(options.l2RelayFromRpcUrl);
+    const toL2ChainId = await getNetworkId(options.l2RelayToRpcUrl);
 
     const relayerFrom = createRelayer(fromL2ChainId, [
       {
-        l1RpcURL: options.l1RpcURL,
-        l2RpcURL: options.l2RelayFromRpcURL,
+        l1RpcURL: options.l1RpcUrl,
+        l2RpcURL: options.l2RelayFromRpcUrl,
         privateKey: options.walletPrivateKey,
       },
     ]);
     const relayerTo = createRelayer(toL2ChainId, [
       {
-        l1RpcURL: options.l1RpcURL,
-        l2RpcURL: options.l2RelayToRpcURL,
+        l1RpcURL: options.l1RpcUrl,
+        l2RpcURL: options.l2RelayToRpcUrl,
         privateKey: options.walletPrivateKey,
       },
     ]);
