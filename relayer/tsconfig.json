@@ -12,9 +12,15 @@
     "noLib": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "typeRoots": ["node_modules/@types"],
-    "outDir": "build"
+    "outDir": "build",
+    "types": ["node", "jest"],
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "~/*": ["tests/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.json"],
+  "include": ["src/**/*.ts", "src/**/*.json", "tests/**/*.ts",],
   "exclude": ["node_modules", "dist"]
 }

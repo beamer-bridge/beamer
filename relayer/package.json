@@ -16,7 +16,8 @@
     "start": "ts-node ./src/service.ts",
     "lint": "eslint --ext .js,.ts --ignore-path .gitignore --max-warnings 0 .",
     "lint:fix": "eslint --ext .js,.ts --ignore-path .gitignore --fix .",
-    "test": "jest"
+    "test:unit": "jest unit",
+    "test:coverage": "jest --collect-coverage"
   },
   "dependencies": {
     "@arbitrum/sdk": "3.0.0",
