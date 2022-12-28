@@ -1,7 +1,7 @@
 import { ArbitrumRelayerService, BobaRelayerService, OptimismRelayerService } from "./services";
-import type { BaseRelayerService, BaseRelayerServiceConstructor } from "./services/types";
+import type { BaseRelayerService, ExtendedRelayerService } from "./services/types";
 
-export const SERVICES: Record<number, BaseRelayerServiceConstructor> = {
+export const SERVICES: Record<number, ExtendedRelayerService> = {
   42161: ArbitrumRelayerService,
   421613: ArbitrumRelayerService,
   2888: BobaRelayerService,
@@ -12,11 +12,11 @@ export const SERVICES: Record<number, BaseRelayerServiceConstructor> = {
 
 export function createRelayer(
   networkId: number,
-  args: ConstructorParameters<BaseRelayerServiceConstructor>,
+  args: ConstructorParameters<typeof BaseRelayerService>,
 ): BaseRelayerService {
   const Relayer = SERVICES[networkId];
 
-  if (networkId) {
+  if (Relayer) {
     return new Relayer(...args);
   } else {
     const errorMessage = `No relayer program found for ${networkId}!`;
