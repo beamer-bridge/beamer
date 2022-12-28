@@ -21,6 +21,7 @@ export function validateArgs(args: ProgramOptions): Array<string> {
 
   return validationErrors;
 }
+
 export class RelayerProgram {
   constructor(
     readonly l2RelayerFrom: BaseRelayerService,
@@ -33,18 +34,14 @@ export class RelayerProgram {
     const toL2ChainId = await getNetworkId(options.l2RelayToRpcUrl);
 
     const relayerFrom = createRelayer(fromL2ChainId, [
-      {
-        l1RpcURL: options.l1RpcUrl,
-        l2RpcURL: options.l2RelayFromRpcUrl,
-        privateKey: options.walletPrivateKey,
-      },
+      options.l1RpcUrl,
+      options.l2RelayFromRpcUrl,
+      options.walletPrivateKey,
     ]);
     const relayerTo = createRelayer(toL2ChainId, [
-      {
-        l1RpcURL: options.l1RpcUrl,
-        l2RpcURL: options.l2RelayToRpcUrl,
-        privateKey: options.walletPrivateKey,
-      },
+      options.l1RpcUrl,
+      options.l2RelayToRpcUrl,
+      options.walletPrivateKey,
     ]);
 
     return new this(relayerFrom, relayerTo, options.l2TransactionHash);

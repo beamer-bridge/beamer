@@ -2,21 +2,24 @@ import type { Provider } from "@ethersproject/providers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Wallet } from "ethers";
 
+import type { ArbitrumRelayerService } from "./arbitrum";
+import type { BobaRelayerService } from "./boba";
+import type { OptimismRelayerService } from "./optimism";
+
 export type TransactionHash = string;
 
-export type BaseRelayerServiceConstructor = new (params: {
-  l1RpcURL: string;
-  l2RpcURL: string;
-  privateKey: string;
-}) => BaseRelayerService;
+export type ExtendedRelayerService =
+  | typeof ArbitrumRelayerService
+  | typeof BobaRelayerService
+  | typeof OptimismRelayerService;
 
 export abstract class BaseRelayerService {
   readonly l1Wallet: Wallet;
   readonly l2Wallet: Wallet;
 
-  constructor(params: { l1RpcURL: string; l2RpcURL: string; privateKey: string }) {
-    this.l1Wallet = new Wallet(params.privateKey, new JsonRpcProvider(params.l1RpcURL));
-    this.l2Wallet = new Wallet(params.privateKey, new JsonRpcProvider(params.l2RpcURL));
+  constructor(l1RpcURL: string, l2RpcURL: string, privateKey: string) {
+    this.l1Wallet = new Wallet(privateKey, new JsonRpcProvider(l1RpcURL));
+    this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
   }
 
   get l2RpcProvider(): Provider {
