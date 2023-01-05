@@ -149,6 +149,8 @@ def make_context() -> Tuple[Context, Config]:
     context = Context(
         requests=Tracker(),
         claims=Tracker(),
+        source_chain_id=SOURCE_CHAIN_ID,
+        target_chain_id=TARGET_CHAIN_ID,
         request_manager=MagicMock(),
         fill_manager=MagicMock(),
         match_checker=checker,
