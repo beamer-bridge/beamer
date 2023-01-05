@@ -28,7 +28,7 @@ def run_relayer_for_tx(
     l1_rpc: URL,
     l2_relay_from_rpc_url: URL,
     l2_relay_to_rpc_url: URL,
-    privkey: str,
+    privkey: HexBytes,
     tx_hash: HexBytes,
 ) -> None:
     relayer = get_relayer_executable()
@@ -47,9 +47,9 @@ def run_relayer_for_tx(
             "--l2-relay-from-rpc-url",
             l2_relay_from_rpc_url,
             "--wallet-private-key",
-            privkey,
+            privkey.hex(),
             "--l2-transaction-hash",
-            tx_hash,
+            tx_hash.hex(),
         ],
         capture_output=True,
         encoding="utf-8",
