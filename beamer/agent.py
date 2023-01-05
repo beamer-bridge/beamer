@@ -65,6 +65,8 @@ class Agent:
         self.context = Context(
             requests=Tracker(),
             claims=Tracker(),
+            source_chain_id=ChainId(w3_l2a.eth.chain_id),
+            target_chain_id=ChainId(w3_l2b.eth.chain_id),
             request_manager=request_manager,
             fill_manager=fill_manager,
             match_checker=config.token_match_checker,

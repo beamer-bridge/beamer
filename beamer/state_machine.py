@@ -44,6 +44,8 @@ log = structlog.get_logger(__name__)
 class Context:
     requests: Tracker[RequestId, Request]
     claims: Tracker[ClaimId, Claim]
+    source_chain_id: ChainId
+    target_chain_id: ChainId
     request_manager: Contract
     fill_manager: Contract
     match_checker: TokenMatchChecker
@@ -198,6 +200,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
 def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
+
     if request is None:
         return False, None
 
