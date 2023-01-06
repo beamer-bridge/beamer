@@ -269,12 +269,14 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     if request.is_pending and event.claimer == context.address:
         return False, None
 
+    if request.is_filled and event.claimer == context.address:
+        request.try_to_claim()
+
     claim = context.claims.get(event.claim_id)
 
     if claim is None:
         if event.last_challenger != ADDRESS_ZERO:
             return False, None
-
         challenge_back_off_timestamp = int(time.time())
         # if fill event is not fetched yet, wait `_fill_wait_time`
         # to give the target chain time to sync before challenging
