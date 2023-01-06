@@ -87,12 +87,8 @@ jobs:
 
       - run: pyenv install --skip-existing 3.10.6
       - run: pyenv global 3.10.6
-      - run: pip install -U pip poetry
-
-      - restore_cache:
-          keys:
-            - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v4
+      - run: pip install -U pip poetry==1.2.2
+      - restore-python-packages
       - run: poetry install
       - run: echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
 
