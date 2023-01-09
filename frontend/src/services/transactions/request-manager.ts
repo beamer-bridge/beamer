@@ -2,8 +2,9 @@ import type { JsonRpcSigner, TransactionResponse } from '@ethersproject/provider
 
 import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
-import type { EthereumAddress } from '@/types/data';
+import type { EthereumAddress, TokenAttributes } from '@/types/data';
 import type { RequestManager } from '@/types/ethers-contracts';
+import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 import {
@@ -13,16 +14,26 @@ import {
   getReadWriteContract,
 } from './utils';
 
-export async function getTransferLimit(
+export async function getTokenAttributes(
   rpcUrl: string,
   requestManagerAddress: string,
-): Promise<UInt256> {
+  tokenAddress: string,
+): Promise<TokenAttributes> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
     RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  return new UInt256((await contract.transferLimit()).toString());
+
+  const tokenDefinition = await contract.tokens(tokenAddress);
+
+  return {
+    transferLimit: new UInt256(tokenDefinition.transferLimit.toString()),
+    minLpFee: new UInt256(tokenDefinition.minLpFee.toString()),
+    lpFeePPM: new UInt256(tokenDefinition.lpFeePPM.toString()),
+    protocolFeePPM: new UInt256(tokenDefinition.protocolFeePPM.toString()),
+    collectedProtocolFees: new UInt256(tokenDefinition.collectedProtocolFees.toString()),
+  };
 }
 
 export async function getAmountBeforeFees(
@@ -59,19 +70,6 @@ export async function getAmountBeforeFees(
     }
   }
 }
-
-export async function getMinRequestFee(
-  rpcUrl: string,
-  requestManagerAddress: string,
-): Promise<UInt256> {
-  const contract = getReadOnlyContract<RequestManager>(
-    requestManagerAddress,
-    RequestManagerDeployment.abi,
-    getJsonRpcProvider(rpcUrl),
-  );
-  return new UInt256((await contract.minLpFee()).toString());
-}
-
 export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
