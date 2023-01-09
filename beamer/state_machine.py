@@ -204,6 +204,8 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
 def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
+    if event.source_chain_id != context.source_chain_id:
+        return True, None
 
     if request is None:
         return False, None
