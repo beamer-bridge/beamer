@@ -64,7 +64,7 @@ describe('UInt256', () => {
       const newNumber = new UInt256(encodedData);
       const newEncodedData = newNumber.encode();
 
-      expect(encodedData).toMatch(newEncodedData);
+      expect(encodedData).toEqual(newEncodedData);
     });
   });
 
