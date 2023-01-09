@@ -68,17 +68,22 @@ export async function getAmountBeforeFees(
     }
   }
 }
+
 export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
-  transferAmount: UInt256,
+  transferAmount: TokenAmount,
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
     RequestManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  return new UInt256((await contract.totalFee(transferAmount.asBigNumber)).toString());
+  return new UInt256(
+    (
+      await contract.totalFee(transferAmount.token.address, transferAmount.uint256.asBigNumber)
+    ).toString(),
+  );
 }
 
 export async function sendRequestTransaction(

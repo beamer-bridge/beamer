@@ -30,7 +30,7 @@ export function useRequestFee(
       const requestFee = await getRequestFee(
         rpcUrl.value,
         requestManagerAddress.value,
-        requestAmount.value.uint256,
+        requestAmount.value,
       );
       amount.value = TokenAmount.new(requestFee, requestAmount.value.token);
     } catch (exception: unknown) {
