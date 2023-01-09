@@ -37,32 +37,30 @@ export async function getTokenAttributes(
 }
 
 export async function getAmountBeforeFees(
-  totalAmountWei: UInt256,
+  totalAmount: TokenAmount,
   rpcUrl: string,
   requestManagerAddress: string,
 ): Promise<UInt256> {
-  const contract = getReadOnlyContract<RequestManager>(
+  const { minLpFee, lpFeePPM, protocolFeePPM } = await getTokenAttributes(
+    rpcUrl,
     requestManagerAddress,
-    RequestManagerDeployment.abi,
-    getJsonRpcProvider(rpcUrl),
+    totalAmount.token.address,
   );
-  const minLpFeeWei = new UInt256((await contract.minLpFee()).toString());
-  const lpFeePartsPerMillion = new UInt256((await contract.lpFeePPM()).toString());
-  const protocolFeePartsPerMillion = new UInt256((await contract.protocolFeePPM()).toString());
 
   const PARTS_IN_MILLION = new UInt256('1000000');
-  const lpFeePPMAmount = totalAmountWei.multiply(lpFeePartsPerMillion).divide(PARTS_IN_MILLION);
+  const totalAmountWei = totalAmount.uint256;
+  const lpFeePPMAmount = totalAmountWei.multiply(lpFeePPM).divide(PARTS_IN_MILLION);
 
-  if (lpFeePPMAmount.gte(minLpFeeWei)) {
+  if (lpFeePPMAmount.gte(minLpFee)) {
     return totalAmountWei
       .multiply(PARTS_IN_MILLION)
-      .divide(PARTS_IN_MILLION.add(protocolFeePartsPerMillion).add(lpFeePartsPerMillion));
+      .divide(PARTS_IN_MILLION.add(protocolFeePPM).add(lpFeePPM));
   } else {
     try {
       return totalAmountWei
         .multiply(PARTS_IN_MILLION)
-        .divide(PARTS_IN_MILLION.add(protocolFeePartsPerMillion))
-        .subtract(minLpFeeWei);
+        .divide(PARTS_IN_MILLION.add(protocolFeePPM))
+        .subtract(minLpFee);
     } catch (e) {
       throw new Error(
         'Cannot derive base amount. Total amount is not high enough to cover the fees.',
