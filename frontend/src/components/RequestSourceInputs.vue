@@ -145,12 +145,11 @@ import Spinner from '@/components/Spinner.vue';
 import { getChainSelectorOption, useChainSelection } from '@/composables/useChainSelection';
 import { useFaucet } from '@/composables/useFaucet';
 import { useMaxTransferableTokenAmount } from '@/composables/useMaxTransferableTokenAmount';
-import { useMinRequestFee } from '@/composables/useMinRequestFee';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
+import { useTokenAttributes } from '@/composables/useTokenAttributes';
 import { useTokenBalance } from '@/composables/useTokenBalance';
 import { useTokenSelection } from '@/composables/useTokenSelection';
-import { useTransferLimit } from '@/composables/useTransferLimit';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { usePortals } from '@/stores/portals';
@@ -250,9 +249,9 @@ const {
   computed(() => selectedSourceChain.value?.value),
 );
 
-const { transferLimitTokenAmount } = useTransferLimit(
+const { transferLimitTokenAmount, formattedMinFee } = useTokenAttributes(
   computed(() => selectedSourceChain.value?.value),
-  computed(() => selectedToken?.value?.value),
+  computed(() => selectedToken.value?.value),
 );
 
 const {
@@ -263,10 +262,6 @@ const {
 } = useFaucet(
   signerAddress,
   computed(() => selectedSourceChain.value?.value.identifier),
-);
-const { formattedMinFee } = useMinRequestFee(
-  computed(() => selectedSourceChain?.value?.value),
-  computed(() => selectedToken.value?.value),
 );
 
 const totalRequestTokenAmount = computed(() => {
