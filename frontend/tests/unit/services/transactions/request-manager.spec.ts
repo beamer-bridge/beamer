@@ -4,12 +4,11 @@ import { flushPromises } from '@vue/test-utils';
 import {
   failWhenRequestExpires,
   getAmountBeforeFees,
-  getMinRequestFee,
   getRequestData,
   getRequestFee,
   getRequestIdentifier,
   getTimeToExpiredMilliseconds,
-  getTransferLimit,
+  getTokenAttributes,
   isRequestClaimed,
   isRequestExpiredByLatestBlock,
   isRequestExpiredByLocalClock,
@@ -18,19 +17,17 @@ import {
   withdrawRequest,
 } from '@/services/transactions/request-manager';
 import * as transactionUtils from '@/services/transactions/utils';
+import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 import {
+  generateToken,
   getRandomEthereumAddress,
   getRandomNumber,
   getRandomString,
   getRandomUrl,
 } from '~/utils/data_generators';
-import { MockedRequest, MockedRequestManagerContract } from '~/utils/mocks/beamer';
-import {
-  MockedBigNumber,
-  MockedTransaction,
-  MockedTransactionReceipt,
-} from '~/utils/mocks/ethers';
+import { MockedRequest, MockedRequestManagerContract, MockedToken } from '~/utils/mocks/beamer';
+import { MockedTransaction, MockedTransactionReceipt } from '~/utils/mocks/ethers';
 
 vi.mock('@/services/transactions/utils');
 vi.mock('@ethersproject/providers');
@@ -66,26 +63,8 @@ function mockGetProvider() {
   return provider;
 }
 
-function mockGetContract(options?: {
-  minLpFeeWei?: string;
-  lpFeePartsPerMillion?: string;
-  protocolFeePartsPerMillion?: string;
-  totalFee?: string;
-  transferLimit?: string;
-}) {
+function mockGetContract(): MockedRequestManagerContract {
   const contract = new MockedRequestManagerContract();
-
-  contract.minLpFee = vi.fn().mockReturnValue(new MockedBigNumber(options?.minLpFeeWei ?? '0'));
-  contract.lpFeePPM = vi
-    .fn()
-    .mockReturnValue(new MockedBigNumber(options?.lpFeePartsPerMillion ?? '0'));
-  contract.protocolFeePPM = vi
-    .fn()
-    .mockReturnValue(new MockedBigNumber(options?.protocolFeePartsPerMillion ?? '0'));
-  contract.transferLimit = vi
-    .fn()
-    .mockReturnValue(new MockedBigNumber(options?.transferLimit ?? '0'));
-  contract.totalFee = vi.fn().mockReturnValue(new MockedBigNumber(options?.totalFee ?? '0'));
 
   Object.defineProperties(transactionUtils, {
     getReadOnlyContract: {
@@ -112,47 +91,60 @@ describe('request-manager', () => {
     mockGetLatestBlock();
     mockGetProvider();
   });
-  describe('getTransferLimit()', () => {
-    it('returns the transfer limit amount', async () => {
-      mockGetContract({
-        transferLimit: '100',
-      });
 
-      const transferLimit = await getTransferLimit(RPC_URL, REQUEST_MANAGER_ADDRESS);
+  describe('getTokenAttributes()', () => {
+    it('returns all the attributes related to a token', async () => {
+      const token = new MockedToken();
+      const contract = mockGetContract();
+      contract.tokens = vi.fn().mockReturnValue(token);
 
-      expect(transferLimit.asString).toBe('100');
+      const tokenAttributes = await getTokenAttributes(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        getRandomEthereumAddress(),
+      );
+
+      expect(tokenAttributes).not.toBeUndefined();
+      expect(Object.keys(tokenAttributes)).toEqual([
+        'transferLimit',
+        'minLpFee',
+        'lpFeePPM',
+        'protocolFeePPM',
+        'collectedProtocolFees',
+      ]);
     });
   });
+
   describe('getAmountBeforeFees()', () => {
     describe('when percentage lp fee is higher than the minimal lp fee for the provided token amount', () => {
       it('returns the amount before fees for the provided total amount by using percentage fees', async () => {
         const DECIMALS = 4;
+        const token = generateToken({ decimals: DECIMALS });
 
         const minLpFee = 0.001;
         const lpFeePercent = 0.3;
         const protocolFeePercent = 0.3;
 
-        const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
-        const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
-        const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
-
-        mockGetContract({
-          minLpFeeWei: minLpFeeWei.asString,
-          lpFeePartsPerMillion: lpFeePartsPerMillion.asString,
-          protocolFeePartsPerMillion: protocolFeePartsPerMillion.asString,
-        });
+        const contract = mockGetContract();
+        contract.tokens = vi.fn().mockReturnValue(
+          new MockedToken({
+            minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
+            lpFeePPM: transformPercentToPPM(lpFeePercent),
+            protocolFeePPM: transformPercentToPPM(protocolFeePercent),
+          }),
+        );
 
         const totalAmounts = [
-          UInt256.parse('10', DECIMALS),
-          UInt256.parse('100', DECIMALS),
-          UInt256.parse('1000', DECIMALS),
+          TokenAmount.parse('10', token),
+          TokenAmount.parse('100', token),
+          TokenAmount.parse('1000', token),
         ];
         const expectedResult = [
           new UInt256('99403'),
           new UInt256('994035'),
           new UInt256('9940357'),
         ];
-        const testCases = [
+        const testCases: Array<[TokenAmount, UInt256]> = [
           [totalAmounts[0], expectedResult[0]],
           [totalAmounts[1], expectedResult[1]],
           [totalAmounts[2], expectedResult[2]],
@@ -167,19 +159,21 @@ describe('request-manager', () => {
     describe('when percentage lp fee is lower than the minimal lp fee for the provided token amount', () => {
       it('throws an exception when the base amount goes in the negative number range', async () => {
         const DECIMALS = 0;
+        const token = generateToken({ decimals: DECIMALS });
 
         const totalAmountDecimal = 1;
         const minLpFee = 2;
         const lpFeePercent = 0.3;
 
-        const totalAmountWei = UInt256.parse(totalAmountDecimal.toString(), DECIMALS);
-        const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
-        const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
+        const totalAmountWei = TokenAmount.parse(totalAmountDecimal.toString(), token);
 
-        mockGetContract({
-          minLpFeeWei: minLpFeeWei.asString,
-          lpFeePartsPerMillion: lpFeePartsPerMillion.asString,
-        });
+        const contract = mockGetContract();
+        contract.tokens = vi.fn().mockReturnValue(
+          new MockedToken({
+            minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
+            lpFeePPM: transformPercentToPPM(lpFeePercent),
+          }),
+        );
 
         expect(
           getAmountBeforeFees(totalAmountWei, RPC_URL, REQUEST_MANAGER_ADDRESS),
@@ -188,32 +182,32 @@ describe('request-manager', () => {
 
       it('returns the amount before fees for the provided total amount by using protocol percentage fee & minimal lp fee in units', async () => {
         const DECIMALS = 4;
+        const token = generateToken({ decimals: DECIMALS });
 
         const minLpFee = 1;
         const lpFeePercent = 0.003;
         const protocolFeePercent = 0.3;
 
-        const minLpFeeWei = UInt256.parse(minLpFee.toString(), DECIMALS);
-        const lpFeePartsPerMillion = new UInt256(transformPercentToPPM(lpFeePercent));
-        const protocolFeePartsPerMillion = new UInt256(transformPercentToPPM(protocolFeePercent));
-
-        mockGetContract({
-          minLpFeeWei: minLpFeeWei.asString,
-          lpFeePartsPerMillion: lpFeePartsPerMillion.asString,
-          protocolFeePartsPerMillion: protocolFeePartsPerMillion.asString,
-        });
+        const contract = mockGetContract();
+        contract.tokens = vi.fn().mockReturnValue(
+          new MockedToken({
+            minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
+            lpFeePPM: transformPercentToPPM(lpFeePercent),
+            protocolFeePPM: transformPercentToPPM(protocolFeePercent),
+          }),
+        );
 
         const totalAmounts = [
-          UInt256.parse('10', DECIMALS),
-          UInt256.parse('100', DECIMALS),
-          UInt256.parse('1000', DECIMALS),
+          TokenAmount.parse('10', token),
+          TokenAmount.parse('100', token),
+          TokenAmount.parse('1000', token),
         ];
         const expectedResult = [
           new UInt256('89700'),
           new UInt256('987008'),
           new UInt256('9960089'),
         ];
-        const testCases = [
+        const testCases: Array<[TokenAmount, UInt256]> = [
           [totalAmounts[0], expectedResult[0]],
           [totalAmounts[1], expectedResult[1]],
           [totalAmounts[2], expectedResult[2]],
@@ -227,25 +221,13 @@ describe('request-manager', () => {
     });
   });
 
-  describe('getMinRequestFee()', () => {
-    it('returns the minimum request fee', async () => {
-      mockGetContract({
-        minLpFeeWei: '100',
-      });
-
-      const transferLimit = await getMinRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS);
-
-      expect(transferLimit.asString).toBe('100');
-    });
-  });
-
   describe('getRequestFee()', () => {
     it('returns the calculated fee for the provided token amount', async () => {
-      const transferAmount = new UInt256('100');
+      const token = generateToken();
+      const transferAmount = TokenAmount.parse('100', token);
 
-      mockGetContract({
-        totalFee: '50',
-      });
+      const contract = mockGetContract();
+      contract.totalFee = vi.fn().mockReturnValue('50');
 
       const transferLimit = await getRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, transferAmount);
 

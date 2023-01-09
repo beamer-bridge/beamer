@@ -1,6 +1,33 @@
 import { getRandomNumber } from '~/utils/data_generators';
 import { MockedBigNumber, MockedTransaction } from '~/utils/mocks/ethers';
 
+export class MockedToken {
+  readonly transferLimit: MockedBigNumber;
+  readonly minLpFee: MockedBigNumber;
+  readonly lpFeePPM: MockedBigNumber;
+  readonly protocolFeePPM: MockedBigNumber;
+  readonly collectedProtocolFees: MockedBigNumber;
+
+  constructor(options?: {
+    transferLimit?: string;
+    minLpFee?: string;
+    lpFeePPM?: string;
+    protocolFeePPM?: string;
+    collectedProtocolFees?: string;
+  }) {
+    this.transferLimit = new MockedBigNumber(
+      options?.transferLimit ?? getRandomNumber().toString(),
+    );
+    this.minLpFee = new MockedBigNumber(options?.minLpFee ?? getRandomNumber().toString());
+    this.lpFeePPM = new MockedBigNumber(options?.lpFeePPM ?? getRandomNumber().toString());
+    this.protocolFeePPM = new MockedBigNumber(
+      options?.protocolFeePPM ?? getRandomNumber().toString(),
+    );
+    this.collectedProtocolFees = new MockedBigNumber(
+      options?.collectedProtocolFees ?? getRandomNumber().toString(),
+    );
+  }
+}
 export class MockedRequest {
   readonly validUntil: MockedBigNumber;
   readonly activeClaims: MockedBigNumber;
@@ -20,12 +47,9 @@ export class MockedRequest {
 }
 
 export class MockedRequestManagerContract {
-  transferLimit = vi.fn();
-  minLpFee = vi.fn();
-  lpFeePPM = vi.fn();
-  protocolFeePPM = vi.fn();
   totalFee = vi.fn();
   requests = vi.fn();
+  tokens = vi.fn().mockReturnValue(() => new MockedToken());
 
   createRequest = vi.fn().mockImplementation(() => new MockedTransaction());
   withdrawExpiredRequest = vi.fn().mockImplementation(() => new MockedTransaction());
