@@ -5,6 +5,7 @@ import { ref } from 'vue';
 import { useMaxTransferableTokenAmount } from '@/composables/useMaxTransferableTokenAmount';
 import * as requestManagerService from '@/services/transactions/request-manager';
 import { TokenAmount } from '@/types/token-amount';
+import { UInt256 } from '@/types/uint-256';
 import { generateChain, generateToken } from '~/utils/data_generators';
 
 const TOKEN = generateToken();
@@ -13,11 +14,6 @@ const CHAIN = generateChain();
 vi.mock('@/services/transactions/request-manager');
 
 describe('useMaxTransferableTokenAmount', () => {
-  beforeEach(() => {
-    Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
-      value: vi.fn().mockImplementation((amount) => amount),
-    });
-  });
   beforeEach(() => {
     global.console.error = vi.fn();
   });
@@ -52,10 +48,18 @@ describe('useMaxTransferableTokenAmount', () => {
 
       const chain = ref(CHAIN);
 
+      const mockedAmountBeforeFees = totalAmount.value.uint256.subtract(new UInt256('100'));
+      Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
+        value: vi.fn().mockReturnValue(mockedAmountBeforeFees),
+      });
+
       const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
       await flushPromises();
 
       expect(maxTransferableTokenAmount.value).not.toBeUndefined();
+      expect(maxTransferableTokenAmount.value?.uint256.asString).toBe(
+        mockedAmountBeforeFees.asString,
+      );
     });
 
     it('is undefined when calculation fails with an exception', async () => {
@@ -104,8 +108,16 @@ describe('useMaxTransferableTokenAmount', () => {
     expect(maxTransferableTokenAmount.value).toBeUndefined();
 
     totalAmount.value = new TokenAmount({ amount: '1000', token: TOKEN });
+    const mockedAmountBeforeFees = totalAmount.value.uint256.subtract(new UInt256('100'));
+    Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
+      value: vi.fn().mockReturnValue(mockedAmountBeforeFees),
+    });
+
     await flushPromises();
 
     expect(maxTransferableTokenAmount.value).not.toBeUndefined();
+    expect(maxTransferableTokenAmount.value?.uint256.asString).toBe(
+      mockedAmountBeforeFees.asString,
+    );
   });
 });
