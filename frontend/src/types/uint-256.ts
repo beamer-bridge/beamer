@@ -76,4 +76,4 @@ export class UInt256 implements Encodable<UInt256Data> {
   }
 }
 
-export type UInt256Data = string;
+export type UInt256Data = string | number;
