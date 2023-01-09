@@ -323,3 +323,31 @@ def test_unsafe_fill_time(
     assert request.is_ignored
 
     agent.stop()
+
+
+def test_request_for_wrong_target_chain(request_manager, deployer, token, agent):
+    (requester,) = alloc_accounts(1)
+
+    request_manager.setFinalityPeriod(999, 1_000_000, {"from": deployer.address})
+    test_request_id = make_request(
+        request_manager,
+        token,
+        requester,
+        requester,
+        1,
+        target_chain_id=999,
+    )
+
+    valid_request_id = make_request(
+        request_manager,
+        token,
+        requester,
+        requester,
+        1,
+    )
+
+    with Sleeper(1) as sleeper:
+        while agent.context.requests.get(valid_request_id) is None:
+            sleeper.sleep(0.1)
+
+    assert agent.context.requests.get(test_request_id) is None
