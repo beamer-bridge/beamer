@@ -18,6 +18,8 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   protected web3Provider: Web3Provider;
   protected externalProvider: Eip1193Provider;
 
+  private isSwitchingNetwork = false;
+
   constructor(_provider: Eip1193Provider) {
     super();
     this.web3Provider = new Web3Provider(_provider);
@@ -31,7 +33,9 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   }
 
   async switchChainSafely(newChain: Chain): Promise<boolean> {
+    let successful = true;
     if (newChain.identifier !== this.chainId.value) {
+      this.isSwitchingNetwork = true;
       try {
         const isSuccessfulSwitch = await this.switchChain(newChain.identifier);
         if (!isSuccessfulSwitch) {
@@ -41,14 +45,15 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         // (e.g. after an add the switch is not performed automatically),
         // this is the safest way to ensure we are on the correct chain.
         if (newChain.identifier !== this.chainId.value) {
-          return false;
+          successful = false;
         }
       } catch (error) {
         console.error(error);
-        return false;
+        successful = false;
       }
+      setTimeout(() => (this.isSwitchingNetwork = false), 1000);
     }
-    return true;
+    return successful;
   }
 
   // Returns false in case the provider does not have the chain.
@@ -131,6 +136,14 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   }
 
   disconnect(): void {
+    // This is a hotfix. MetaMask sometimes throws a disconnect event when
+    // switching the chain. In this case we need to ignore the event, because
+    // the account is actually still connected. If this is fixed on their side,
+    // this flag can be removed.
+    // See: https://github.com/MetaMask/metamask-extension/issues/13375
+    if (this.isSwitchingNetwork) {
+      return;
+    }
     this.signer.value = undefined;
     this.signerAddress.value = undefined;
     this.emit('disconnect');
