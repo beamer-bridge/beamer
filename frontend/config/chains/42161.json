@@ -1,0 +1,8 @@
+{
+  "identifier": 42161,
+  "explorerUrl": "https://arbiscan.io",
+  "rpcUrl": "https://arb1.arbitrum.io/rpc",
+  "name": "Arbitrum One",
+  "imageUrl": "/images/arbitrum.svg",
+  "tokenSymbols": ["USDC"]
+}
