@@ -4,5 +4,10 @@
   "rpcUrl": "https://goerli-rollup.arbitrum.io/rpc",
   "name": "Arbitrum Goerli",
   "imageUrl": "/images/arbitrum.svg",
-  "tokenSymbols": ["TST"]
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Arbitrum Görli",
+    "symbol": "AGOR",
+    "decimals": 18
+  }
 }

@@ -2,7 +2,12 @@
   "identifier": 420,
   "explorerUrl": "https://goerli-optimism.etherscan.io/",
   "rpcUrl": "https://goerli.optimism.io",
-  "name": "Optimism Goerli",
+  "name": "Optimism Goerli Testnet",
   "imageUrl": "/images/optimism.svg",
-  "tokenSymbols": ["TST"]
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Goerli Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  }
 }

@@ -70,7 +70,7 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         nativeCurrency: nativeCurrency
           ? toRaw(nativeCurrency)
           : {
-              name: 'Ethereum',
+              name: 'Ether',
               symbol: 'ETH',
               decimals: 18,
             },
