@@ -62,6 +62,26 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
                 additionalProperties: true,
               },
             },
+            nativeCurrency: {
+              type: 'object',
+              nullable: true,
+              required: ['name', 'symbol', 'decimals'],
+              properties: {
+                name: {
+                  type: 'string',
+                  minLength: 1,
+                },
+                symbol: {
+                  type: 'string',
+                  minLength: 1,
+                },
+                decimals: {
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 18,
+                },
+              },
+            },
             requestManagerAddress: {
               type: 'string',
               minLength: 42,

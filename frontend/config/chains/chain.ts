@@ -2,6 +2,7 @@ import type { ChainWithTokens } from '@/types/config';
 
 import type { TokenMetadata } from '../tokens/token';
 import { readFileJsonContent } from '../utils';
+import {NativeCurrency} from "@/types/data";
 
 export class ChainMetadata {
   readonly identifier: number;
@@ -10,6 +11,7 @@ export class ChainMetadata {
   readonly name: string;
   readonly imageUrl?: string;
   readonly tokenSymbols: Array<string>;
+  readonly nativeCurrency?: NativeCurrency;
 
   constructor(data: ChainMetadataData) {
     this.identifier = data.identifier;
@@ -18,6 +20,7 @@ export class ChainMetadata {
     this.name = data.name;
     this.imageUrl = data.imageUrl;
     this.tokenSymbols = data.tokenSymbols ?? [];
+    this.nativeCurrency = data.nativeCurrency;
   }
 
   public formatUsingTokenMetas(tokenMetas: TokenMetadata[]): Partial<ChainWithTokens> {
@@ -53,4 +56,5 @@ export type ChainMetadataData = {
   name: string;
   imageUrl?: string;
   tokenSymbols: Array<string>;
+  nativeCurrency?: NativeCurrency;
 };

@@ -31,6 +31,7 @@ export function getChainSelectorOption(
       fillManagerAddress: chains[chainId].fillManagerAddress,
       explorerUrl: chains[chainId].explorerUrl,
       imageUrl: chains[chainId].imageUrl,
+      nativeCurrency: chains[chainId].nativeCurrency,
     };
     return { value: chain, label: chain.name, imageUrl: chain.imageUrl };
   }
