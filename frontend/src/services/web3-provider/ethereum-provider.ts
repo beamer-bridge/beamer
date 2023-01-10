@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, toRaw } from 'vue';
 
 import type { Chain, Token } from '@/types/data';
 
@@ -57,7 +57,8 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
 
   protected async addChain(chain: Chain): Promise<boolean> {
     try {
-      const { identifier: chainId, name, rpcUrl, explorerUrl } = chain;
+      const { identifier: chainId, name, rpcUrl, explorerUrl, nativeCurrency } = chain;
+
       const chainIdHexValue = hexValue(chainId);
       const providerNetworkData = getNetwork(chainId);
       providerNetworkData?.name !== 'unknown' ? providerNetworkData?.name : name;
@@ -66,12 +67,16 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         chainName: name,
         rpcUrls: [rpcUrl],
         blockExplorerUrls: [explorerUrl],
-        nativeCurrency: {
-          name: 'Ethereum',
-          symbol: 'ETH',
-          decimals: 18,
-        },
+        nativeCurrency: nativeCurrency
+          ? toRaw(nativeCurrency)
+          : {
+              name: 'Ethereum',
+              symbol: 'ETH',
+              decimals: 18,
+            },
       };
+
+      console.log('networkData', networkData);
 
       await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
     } catch (error) {

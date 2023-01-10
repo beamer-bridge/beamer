@@ -4,6 +4,11 @@ export type EthereumAddress = string; // TODO: to improve
 
 export type TransactionHash = string; // TODO: to improve
 
+export type NativeCurrency = {
+  name: string;
+  symbol: string;
+  decimals: number;
+};
 export type Chain = {
   identifier: number;
   name: string;
@@ -12,6 +17,7 @@ export type Chain = {
   fillManagerAddress: EthereumAddress;
   explorerUrl: string; // TODO: restrict more
   imageUrl?: string; // TODO: restrict more
+  nativeCurrency?: NativeCurrency;
 };
 
 export type Token = {
