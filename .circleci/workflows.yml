@@ -277,6 +277,7 @@ jobs:
       - attach_workspace:
           at: /
       - restore-node-packages
+      - ensure-node-environment
       - run:
           name: Log in to github container registry
           command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
