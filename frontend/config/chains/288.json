@@ -1,8 +1,13 @@
 {
   "identifier": 288,
   "explorerUrl": "https://bobascan.com",
-  "rpcUrl": "https://replica.boba.network",
-  "name": "Boba Mainnet",
+  "rpcUrl": "https://mainnet.boba.network",
+  "name": "Boba Network",
   "imageUrl": "/images/boba.svg",
-  "tokenSymbols": ["USDC"]
+  "tokenSymbols": ["USDC"],
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  }
 }

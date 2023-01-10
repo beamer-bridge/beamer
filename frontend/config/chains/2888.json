@@ -2,7 +2,12 @@
   "identifier": 2888,
   "explorerUrl": "https://testnet.bobascan.com/",
   "rpcUrl": "https://goerli.boba.network/",
-  "name": "Boba Goerli",
+  "name": "Boba Network Goerli Testnet",
   "imageUrl": "/images/boba.svg",
-  "tokenSymbols": ["TST"]
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Goerli Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  }
 }

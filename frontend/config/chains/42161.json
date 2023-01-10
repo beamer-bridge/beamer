@@ -4,5 +4,10 @@
   "rpcUrl": "https://arb1.arbitrum.io/rpc",
   "name": "Arbitrum One",
   "imageUrl": "/images/arbitrum.svg",
-  "tokenSymbols": ["USDC"]
+  "tokenSymbols": ["USDC"],
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  }
 }

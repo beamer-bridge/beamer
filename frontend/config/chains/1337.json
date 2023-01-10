@@ -3,5 +3,10 @@
   "explorerUrl": "",
   "rpcUrl": "http://localhost:8545/",
   "name": "Ganache",
-  "tokenSymbols": ["TST"]
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Geth Testnet Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  }
 }
