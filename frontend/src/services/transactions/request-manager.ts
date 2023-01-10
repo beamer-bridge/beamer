@@ -347,16 +347,18 @@ export async function withdrawRequest(
   }
 }
 
+type TransactionError = { code?: number; data?: { data?: { reason: string } } };
+
 function getTransactionErrorMessage(error: unknown): string {
-  const maybeErrorCode = (error as { code?: number }).code;
+  const maybeError = error as TransactionError;
 
   // TODO move all custom errors to error handling library
   if (error instanceof Error) {
     return error.message;
-  } else if (maybeErrorCode && maybeErrorCode === 4001) {
+  } else if (maybeError.code && maybeError.code === 4001) {
     return 'Transaction got rejected!';
-  } else if (maybeErrorCode && maybeErrorCode === -32603) {
-    return 'Insufficient balance!';
+  } else if (maybeError.code && maybeError.code === -32603) {
+    return maybeError.data?.data?.reason || 'Internal JSON-RPC error';
   } else {
     return 'Unknown failure!';
   }
