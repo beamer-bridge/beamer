@@ -9,7 +9,7 @@ commands:
       # Restore cached Python installation at /opt/circleci/.pyenv
       - restore_cache:
           name: Restore cached Python installation
-          key: python-3.10.6-v1
+          key: python-3.10.6-v2
 
   restore-python-packages:
     steps:
@@ -18,16 +18,21 @@ commands:
       - restore_cache:
           name: Restore cached Python packages
           keys:
-            - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v4
+            - beamer-dependencies-v5-{{ checksum "poetry.lock" }}
+            - beamer-dependencies-v5
 
   restore-node-packages:
     steps:
       # Restore node runtime and packages at /opt/circleci/.nvm
       - restore_cache:
           name: Restore node runtime and packages
-          key: node18-packages-v17
-      - run: echo "nvm use default" >> "${BASH_ENV}"
+          key: node18-packages-v21
+
+  ensure-node-environment:
+    steps:
+      - run: if grep -q "nvm.sh" "${BASH_ENV}"; then circleci-agent step halt; fi
+      - run: echo "source /opt/circleci/.nvm/nvm.sh" >> "${BASH_ENV}"
+      - run: echo "nvm use --silent default" >> "${BASH_ENV}"
 
   initialize-environment:
     steps:
@@ -43,6 +48,8 @@ commands:
       - restore_cache:
           name: Restore cached solc and brownie packages
           key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
+
+      - ensure-node-environment
 
 parameters:
   docs-updated:
@@ -83,28 +90,29 @@ jobs:
           at: /
 
       - restore_cache:
-          key: python-3.10.6-v1
+          key: python-3.10.6-v2
 
       - run: pyenv install --skip-existing 3.10.6
       - run: pyenv global 3.10.6
-      - run: pip install -U pip poetry
+      - run: pip install -U pip
+      - run: pip install poetry==1.2.2
 
       - restore_cache:
           keys:
-            - beamer-dependencies-v4-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v4
-      - run: poetry install
-      - run: echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
+            - beamer-dependencies-v5-{{ checksum "poetry.lock" }}
+            - beamer-dependencies-v5
+      - run: poetry install -vvv
+      - run: grep -q /home/circleci/.+/bin/activate ~/.bashrc || echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
 
       - save_cache:
           key:
-            beamer-dependencies-v4-{{ checksum "poetry.lock" }}
+            beamer-dependencies-v5-{{ checksum "poetry.lock" }}
           paths:
             - ~/.cache/pypoetry/virtualenvs
             - ~/.bashrc
 
       - save_cache:
-          key: python-3.10.6-v1
+          key: python-3.10.6-v2
           paths:
             - /opt/circleci/.pyenv
 
@@ -114,7 +122,7 @@ jobs:
       - attach_workspace:
           at: /
       - restore_cache:
-          key: node18-packages-v17
+          key: node18-packages-v21
       - run:
           name: Install node v18
           command: |
@@ -122,10 +130,10 @@ jobs:
             # Remove other versions so they don't end up in the cache.
             for x in $(ls -1 ${NVM_DIR}/versions/node | grep -v $(nvm version default)); do nvm uninstall $x; done
       - run: npm install yarn --location=global
-      - run: npm install ganache --location=global
+      - run: npm install ganache@7.5.0 --location=global
       - run: yarn install --frozen-lockfile
       - save_cache:
-          key: node18-packages-v17
+          key: node18-packages-v21
           paths:
             - /opt/circleci/.nvm/versions
             - /opt/circleci/.nvm/alias/default
@@ -137,6 +145,7 @@ jobs:
       - attach_workspace:
           at: /
       - restore-node-packages
+      - ensure-node-environment
       - run: make ~/beamer relayers
       - persist_to_workspace:
           root: /
