@@ -272,7 +272,7 @@ jobs:
   build-and-publish-container-image:
     executor: vm
     environment:
-      IMAGE_NAME: ghcr.io/beamer-bridge/beamer-agent-test
+      IMAGE_NAME: ghcr.io/beamer-bridge/beamer-agent
     steps:
       - attach_workspace:
           at: /
