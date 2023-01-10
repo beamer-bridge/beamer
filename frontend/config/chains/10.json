@@ -3,6 +3,6 @@
   "explorerUrl": "https://optimistic.etherscan.io",
   "rpcUrl": "https://opt-mainnet.g.alchemy.com/v2/umLO_ve2OzJ_7rAVebkVbUsuM37cCFoN",
   "name": "Optimism Mainnet",
-  "imageUrl": "/images/optimism.png",
+  "imageUrl": "/images/optimism.svg",
   "tokenSymbols": ["USDC"]
 }
