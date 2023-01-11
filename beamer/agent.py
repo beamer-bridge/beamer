@@ -31,19 +31,22 @@ class Agent:
         self._config = config
         self._stopped = threading.Event()
         self._stopped.set()
+        self._init()
+
+    def _init(self) -> None:
         # Just add one worker, as this effectively serializes the work
         # This is necessary as we use the account for all resolutions and
         # would otherwise run into nonce problems
         self._task_pool = ThreadPoolExecutor(max_workers=1)
 
-        w3_l1 = make_web3(config.l1_rpc_url, config.account)
-        w3_l2a = make_web3(config.l2a_rpc_url, config.account)
-        w3_l2b = make_web3(config.l2b_rpc_url, config.account)
+        w3_l1 = make_web3(self._config.l1_rpc_url, self._config.account)
+        w3_l2a = make_web3(self._config.l2a_rpc_url, self._config.account)
+        w3_l2b = make_web3(self._config.l2b_rpc_url, self._config.account)
 
         w3_l1.middleware_onion.add(latest_block_based_cache_middleware)
 
-        l2a_contracts_info = _get_contracts_info(config, w3_l2a)
-        l2b_contracts_info = _get_contracts_info(config, w3_l2b)
+        l2a_contracts_info = _get_contracts_info(self._config, w3_l2a)
+        l2b_contracts_info = _get_contracts_info(self._config, w3_l2b)
 
         l2a_contracts = make_contracts(w3_l2a, l2a_contracts_info)
         l2b_contracts = make_contracts(w3_l2b, l2b_contracts_info)
@@ -53,11 +56,11 @@ class Agent:
 
         max_validity_period = request_manager.functions.MAX_VALIDITY_PERIOD().call()
 
-        if config.unsafe_fill_time >= max_validity_period:
+        if self._config.unsafe_fill_time >= max_validity_period:
             raise RuntimeError(f"Unsafe fill time must be less than {max_validity_period}")
-        if not fill_manager.functions.allowedLps(config.account.address).call():
+        if not fill_manager.functions.allowedLps(self._config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted on FillManager")
-        if not request_manager.functions.allowedLps(config.account.address).call():
+        if not request_manager.functions.allowedLps(self._config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted on RequestManager")
 
         claim_request_extension = request_manager.functions.claimRequestExtension().call()
@@ -69,10 +72,10 @@ class Agent:
             target_chain_id=ChainId(w3_l2b.eth.chain_id),
             request_manager=request_manager,
             fill_manager=fill_manager,
-            match_checker=config.token_match_checker,
-            address=config.account.address,
+            match_checker=self._config.token_match_checker,
+            address=self._config.account.address,
             latest_blocks={},
-            config=config,
+            config=self._config,
             web3_l1=w3_l1,
             task_pool=self._task_pool,
             claim_request_extension=claim_request_extension,
@@ -116,6 +119,7 @@ class Agent:
         self._event_monitor_l2a.stop()
         self._event_monitor_l2b.stop()
         self._task_pool.shutdown(wait=True, cancel_futures=False)
+        self._init()
         self._stopped.set()
 
     @property
