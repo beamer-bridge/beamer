@@ -351,3 +351,34 @@ def test_request_for_wrong_target_chain(request_manager, deployer, token, agent)
             sleeper.sleep(0.1)
 
     assert agent.context.requests.get(test_request_id) is None
+
+
+def test_agent_only_claim_once_after_restart(request_manager, token, agent):
+
+    (requester,) = alloc_accounts(1)
+
+    make_request(request_manager, token, requester, requester.address, 1)
+
+    with Sleeper(5) as sleeper:
+        while len(agent.context.claims) != 1:
+            sleeper.sleep(0.1)
+
+    # Restart the agent twice
+    for _ in range(2):
+
+        agent.stop()
+        agent.start()
+
+        # Wait to sync the claim
+        with Sleeper(5) as sleeper:
+            while len(agent.context.claims) != 1:
+                sleeper.sleep(0.1)
+
+        # Make sure there is no second claim happening
+        with Sleeper(5) as sleeper:
+            while True:
+                try:
+                    assert len(agent.context.claims) == 1
+                    sleeper.sleep(0.1)
+                except Timeout:
+                    break
