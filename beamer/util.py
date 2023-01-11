@@ -137,12 +137,8 @@ _Token = tuple[ChainId, ChecksumAddress]
 SUPPORTED_CONNECTED_L2S = {
     # Mainnet
     1: frozenset({10, 42161, 288, 1088}),  # Optimism, Arbitrum, Boba, Metis
-    # Rinkeby
-    4: frozenset({421611, 28, 588}),  # Arbitrum, Boba, Metis
     # Goerli
     5: frozenset({421613, 420, 2888}),  # Arbitrum, Optimism, Boba
-    # Kovan
-    42: frozenset({69}),  # Optimism
 }
 
 
