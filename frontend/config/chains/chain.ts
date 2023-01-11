@@ -1,8 +1,8 @@
 import type { ChainWithTokens } from '@/types/config';
+import type { NativeCurrency } from '@/types/data';
 
 import type { TokenMetadata } from '../tokens/token';
 import { readFileJsonContent } from '../utils';
-import {NativeCurrency} from "@/types/data";
 
 export class ChainMetadata {
   readonly identifier: number;

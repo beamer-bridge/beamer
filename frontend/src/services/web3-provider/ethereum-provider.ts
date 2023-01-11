@@ -1,5 +1,5 @@
 import type { Block, JsonRpcSigner } from '@ethersproject/providers';
-import { getNetwork, Web3Provider } from '@ethersproject/providers';
+import { Web3Provider } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import EventEmitter from 'events';
@@ -60,8 +60,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
       const { identifier: chainId, name, rpcUrl, explorerUrl, nativeCurrency } = chain;
 
       const chainIdHexValue = hexValue(chainId);
-      const providerNetworkData = getNetwork(chainId);
-      providerNetworkData?.name !== 'unknown' ? providerNetworkData?.name : name;
       const networkData = {
         chainId: chainIdHexValue,
         chainName: name,
@@ -75,8 +73,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
               decimals: 18,
             },
       };
-
-      console.log('networkData', networkData);
 
       await this.web3Provider.send('wallet_addEthereumChain', [networkData]);
     } catch (error) {
