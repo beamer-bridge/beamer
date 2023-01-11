@@ -26,7 +26,7 @@ export function useTransferRequest() {
 
     const validityPeriod = new UInt256(VALIDITY_PERIOD_SECONDS);
     const { rpcUrl, requestManagerAddress } = options.sourceChain;
-    const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, targetTokenAmount);
+    const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, sourceTokenAmount);
     const fees = TokenAmount.new(requestFee, sourceTokenAmount.token);
 
     const transfer = reactive(
