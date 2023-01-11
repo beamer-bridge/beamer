@@ -9,7 +9,7 @@ commands:
       # Restore cached Python installation at /opt/circleci/.pyenv
       - restore_cache:
           name: Restore cached Python installation
-          key: python-3.10.6-v2
+          key: python-3.10.6-{{ .Environment.CACHE_VERSION }}
 
   restore-python-packages:
     steps:
@@ -17,16 +17,14 @@ commands:
       # The latter is useful to enter the virtualenv when the shell starts.
       - restore_cache:
           name: Restore cached Python packages
-          keys:
-            - beamer-dependencies-v5-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v5
+          key: beamer-dependencies-{{ checksum "poetry.lock" }}-{{ .Environment.CACHE_VERSION }}
 
   restore-node-packages:
     steps:
       # Restore node runtime and packages at /opt/circleci/.nvm
       - restore_cache:
           name: Restore node runtime and packages
-          key: node18-packages-v21
+          key: node18-packages-{{ .Environment.CACHE_VERSION }}
 
   ensure-node-environment:
     steps:
@@ -47,7 +45,7 @@ commands:
       # Restore brownie packages at /home/circleci/.brownie.
       - restore_cache:
           name: Restore cached solc and brownie packages
-          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
+          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
 
       - ensure-node-environment
 
@@ -89,30 +87,24 @@ jobs:
       - attach_workspace:
           at: /
 
-      - restore_cache:
-          key: python-3.10.6-v2
+      - restore-python
+      - restore-python-packages
 
       - run: pyenv install --skip-existing 3.10.6
       - run: pyenv global 3.10.6
       - run: pip install -U pip
       - run: pip install poetry==1.2.2
-
-      - restore_cache:
-          keys:
-            - beamer-dependencies-v5-{{ checksum "poetry.lock" }}
-            - beamer-dependencies-v5
       - run: poetry install -vvv
       - run: grep -q /home/circleci/.+/bin/activate ~/.bashrc || echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
 
       - save_cache:
-          key:
-            beamer-dependencies-v5-{{ checksum "poetry.lock" }}
+          key: beamer-dependencies-{{ checksum "poetry.lock" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - ~/.cache/pypoetry/virtualenvs
             - ~/.bashrc
 
       - save_cache:
-          key: python-3.10.6-v2
+          key: python-3.10.6-{{ .Environment.CACHE_VERSION }}
           paths:
             - /opt/circleci/.pyenv
 
@@ -121,8 +113,7 @@ jobs:
     steps:
       - attach_workspace:
           at: /
-      - restore_cache:
-          key: node18-packages-v21
+      - restore-node-packages
       - run:
           name: Install node v18
           command: |
@@ -133,7 +124,7 @@ jobs:
       - run: npm install ganache@7.5.0 --location=global
       - run: yarn install --frozen-lockfile
       - save_cache:
-          key: node18-packages-v21
+          key: node18-packages-{{ .Environment.CACHE_VERSION }}
           paths:
             - /opt/circleci/.nvm/versions
             - /opt/circleci/.nvm/alias/default
@@ -174,7 +165,7 @@ jobs:
           paths:
             - home/circleci/beamer/contracts/build
       - save_cache:
-          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}
+          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - /home/circleci/.brownie
             - /home/circleci/.solcx
@@ -193,10 +184,10 @@ jobs:
       - initialize-environment
       - run: git submodule status $OPTIMISM/optimism | awk '{print $1;}' > "/tmp/optimism-commit-hash"
       - restore_cache:
-          key: optimism-submodule-v2-{{ checksum "/tmp/optimism-commit-hash" }}
+          key: optimism-submodule-{{ checksum "/tmp/optimism-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
       - run: git submodule update --init $OPTIMISM/optimism
       - save_cache:
-          key: optimism-submodule-v2-{{ checksum "/tmp/optimism-commit-hash" }}
+          key: optimism-submodule-{{ checksum "/tmp/optimism-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - docker/optimism/optimism
             - .git/modules/docker/optimism
