@@ -5,7 +5,7 @@
     >
       <WalletConnectionDetails></WalletConnectionDetails>
 
-      <div class="relative mb-16 mt-3 w-full">
+      <div class="relative mb-5 mt-3 w-full">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"
