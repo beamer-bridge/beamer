@@ -1,5 +1,5 @@
 <template>
-  <button class="inline underline w-fit" data-test="trigger" @click="disconnect">
+  <button class="inline underline w-fit text-xs" data-test="trigger" @click="disconnect">
     Disconnect Wallet
   </button>
 </template>

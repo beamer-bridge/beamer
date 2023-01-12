@@ -1,20 +1,20 @@
 <template>
   <Expandable
-    class="bg-sea-green rounded-[2rem] p-6 mb-5 gap-5 text-black"
+    class="bg-sea-green rounded-[2rem] p-3 mb-2 gap-3 text-black"
     :is-expanded="isExpanded"
   >
     <template #header>
-      <div class="relative text-center text-xl" data-test="header">
+      <div class="relative text-center" data-test="header">
         {{ formattedAmount }}&nbsp;to&nbsp;{{ transfer.targetChain.name }}
         <div
-          class="w-6 h-6 rounded-full absolute right-0 top-0"
+          class="w-4 h-4 rounded-full absolute right-1 top-1"
           :class="[statusBackgroundColorClass]"
         />
       </div>
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-5 items-center text-lg" data-test="body">
+      <div class="flex flex-col gap-5 items-center" data-test="body">
         <TransferSummary v-bind="summary">
           <TransferStatus v-bind="status" />
         </TransferSummary>

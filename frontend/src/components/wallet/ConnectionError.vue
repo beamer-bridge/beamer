@@ -1,5 +1,5 @@
 <template>
-  <div class="text-center text-red p-2 text-lg h-12">
+  <div v-if="message && message.length > 0" class="text-center text-red pb-3 text-sm">
     {{ message }}
   </div>
 </template>

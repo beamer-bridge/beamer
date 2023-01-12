@@ -4,7 +4,7 @@
       <div
         v-for="header of headers"
         :key="header.label"
-        class="flex grow items-center justify-center text-3xl"
+        class="flex grow items-center justify-center text-xl"
         :class="header.label === activeTab.label ? activeHeaderClasses : inactiveHeaderClasses"
         data-test="tab-header"
         @click="header.click"
@@ -20,7 +20,7 @@
           :is="activeTab.content"
           v-if="activeTab"
           :key="activeTab.label"
-          class="bg-teal p-16 h-full"
+          class="bg-teal px-4 md:px-8 h-full"
         />
       </KeepAlive>
     </div>
@@ -68,7 +68,7 @@ watch(activeTab, () => emits('tabChanged', activeTab.value.label));
 </script>
 
 <style lang="scss">
-$header-height: 6rem;
+$header-height: 3.5rem;
 
 .tab-header {
   min-height: $header-height;

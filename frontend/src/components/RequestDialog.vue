@@ -1,13 +1,13 @@
 <template>
-  <div class="relative bg-transparent flex flex-col justify-between h-full">
+  <div class="relative bg-transparent flex flex-col justify-between">
     <RequestSourceInputs
       ref="requestSourceInputsRef"
       v-model="requestSource"
-      class="rounded-br-lg bg-teal px-16 py-10"
+      class="rounded-br-lg bg-teal px-4 py-4 md:px-8 md:py-6"
     />
     <div class="relative">
-      <div class="absolute -top-18 flex flex-row w-full justify-center">
-        <img class="h-36 w-36" src="@/assets/images/Signet.svg" />
+      <div class="absolute -top-4 flex flex-row w-full justify-center">
+        <img class="h-20 w-20" src="@/assets/images/Signet.svg" />
       </div>
     </div>
     <RequestTargetInputs
@@ -16,14 +16,14 @@
       :amount="requestSource.amount"
       :source-chain="requestSource.sourceChain"
       :token="requestSource.token"
-      class="rounded-tl-lg rounded-b-lg bg-teal px-16 py-10"
+      class="rounded-tl-lg rounded-b-lg bg-teal px-6 py-4 mt-10 md:px-8 md:py-6"
     />
   </div>
 
   <Teleport v-if="signer" to="#action-button-portal">
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <div v-if="DISCLAIMER_REQUIRED" class="relative">
-        <div class="absolute -top-10 -left-44 w-96 m-auto flex flex-row gap-5">
+        <div class="absolute -top-10 -left-44 w-96 m-auto flex flex-row gap-2 pl-2">
           <!--  
             There seems to be a problem with tailwind and escaping the backslash in the TS variable. 
             For this reason the content rule is added separately here in the HTML.
@@ -34,7 +34,7 @@
             class="checked:after:content-['\2713']"
             :class="checkboxClasses"
           />
-          <span class="text-lg"
+          <span class="text-sm"
             >I agree to the
             <a
               href="https://beamerbridge.com/terms.html"
@@ -45,7 +45,7 @@
           >
         </div>
       </div>
-      <ActionButton class="w-full" :disabled="submitDisabled" @click="submitForm">
+      <ActionButton :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
         <spinner v-else size="8" border="4"></spinner>
       </ActionButton>
@@ -186,9 +186,9 @@ watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
   }
 });
 
-const checkboxClasses = `appearance-none h-7 w-7 bg-sea-green shadow-inner rounded-md 
+const checkboxClasses = `appearance-none h-5 w-5 bg-sea-green shadow-inner rounded-md
 hover:opacity-90 
-checked:after:text-teal checked:after:text-4xl checked:after:leading-7`;
+checked:after:text-teal checked:after:text-2xl checked:after:leading-6`;
 </script>
 
 <script lang="ts">

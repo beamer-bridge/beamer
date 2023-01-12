@@ -39,8 +39,8 @@ const handleInput = (event: Event) => {
   updateValue((event.target as HTMLInputElement).value);
 };
 
-const inputClasses = `h-18 w-full px-8 rounded-xl bg-sea-green shadow-inner
-  text-2xl outline-none placeholder:opacity-25 placeholder:text-black
+const inputClasses = `h-10 w-full px-4 rounded-xl bg-sea-green shadow-inner
+  text outline-none placeholder:opacity-25 placeholder:text-black
   disabled:text-sea-green disabled:bg-transparent disabled:border-2
   disabled:border-sea-green disabled:placeholder:text-sea-green`;
 // Overrides the color manipulation behavior of browsers when input is in autofill mode

@@ -1,9 +1,11 @@
 <template>
   <div class="home flex justify-center">
-    <div class="w-[40rem] flex flex-col xl:justify-center xl:items-center">
+    <div
+      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center"
+    >
       <WalletConnectionDetails></WalletConnectionDetails>
 
-      <div class="relative mb-11 mt-3 w-full h-[62rem]">
+      <div class="relative mb-16 mt-3 w-full">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"
@@ -17,7 +19,7 @@
         <div
           v-show="actionButtonPortalVisible"
           id="action-button-portal"
-          class="flex flex-col justify-center gap-5"
+          class="flex justify-center gap-5"
         >
           <ActionButton v-if="!signer" class="bg-orange" @click="openWalletMenu"
             >Connect to Wallet

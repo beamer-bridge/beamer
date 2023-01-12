@@ -2,12 +2,12 @@
   <div :class="selectorClasses" v-bind="$attrs" data-test="open-trigger" @click="openSelector">
     <span v-if="modelValue === null" :class="placeholderClasses">{{ placeholder }}</span>
     <template v-else>
-      <img v-if="modelValue.imageUrl" class="h-12" :src="modelValue.imageUrl" />
+      <img v-if="modelValue.imageUrl" class="h-7" :src="modelValue.imageUrl" />
       <div class="flex-1"></div>
       <span>{{ modelValue.label }}</span>
     </template>
 
-    <img src="@/assets/images/caret-down.svg" class="h-[1.5rem] w-[1.5rem] ml-5" />
+    <img src="@/assets/images/caret-down.svg" class="h-[1rem] w-[1rem] ml-2" />
   </div>
 
   <Transition>
@@ -17,17 +17,17 @@
       data-test="option-list"
       @keyup.esc="closeSelector"
     >
-      <span class="text-3xl">{{ label }}</span>
+      <span class="text-xl pl-2">{{ label }}</span>
       <BasicInput
         v-model="searchFilter"
         name="searchFilter"
         placeholder="Search"
         :focus-on-mount="true"
-        class="flex-[0_0_4.5rem]"
+        class="flex-[0_0_2.5rem]"
         data-test="search-field"
       />
       <div
-        class="flex flex-col gap-5 w-full h-full overflow-y-scroll overflow-x-hidden no-scrollbar"
+        class="flex flex-col gap-2 w-full h-full overflow-y-scroll overflow-x-hidden no-scrollbar"
       >
         <div
           v-for="option in filteredOptions"
@@ -39,13 +39,13 @@
           data-test="option"
           @click="selectOption(option)"
         >
-          <img v-if="option.imageUrl" class="h-12" :src="option.imageUrl" />
+          <img v-if="option.imageUrl" class="h-7" :src="option.imageUrl" />
           <span>{{ option.label }}</span>
         </div>
       </div>
       <div class="items-end">
         <div
-          class="text-5xl cursor-pointer text-sea-green"
+          class="text-3xl cursor-pointer text-sea-green"
           data-test="close-trigger"
           @click="closeSelector"
         >
@@ -110,16 +110,16 @@ const selectorConditionalClasses = computed(() =>
 );
 const selectorClasses = computed(
   () => `flex flex-row items-center justify-end 
-  h-18 w-full px-8 rounded-xl shadow-inner 
-  text-2xl text-right ${selectorConditionalClasses.value}`,
+  h-10 w-full px-4 rounded-xl shadow-inner
+  text text-right ${selectorConditionalClasses.value}`,
 );
 const placeholderClasses = computed(() => `opacity-25 ${props.disabled ? '' : ' text-black'}`);
 const selectionOverlayClasses = `absolute top-0 bottom-0 right-0 left-0
-  bg-teal z-20 rounded-b-lg px-16 py-10 
-  flex flex-col gap-5 
+  bg-teal z-20 rounded-b-lg px-4 py-4 md:px-8 md:py-6
+  flex flex-col gap-3
 `;
-const optionClasses = `flex flex-row items-center gap-8 cursor-pointer 
-  flex-[0_0_4.5rem] w-full px-8 rounded-xl border border-sea-green text-mint text-2xl
+const optionClasses = `flex flex-row items-center gap-4 cursor-pointer
+  flex-[0_0_2.5rem] w-full px-4 rounded-xl border border-sea-green text-mint text
   hover:border-teal-dark hover:bg-teal-dark
 `;
 const highlightedOptionClasses = `!text-sea-green font-semibold bg-teal-dark`;
