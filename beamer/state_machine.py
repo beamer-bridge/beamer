@@ -155,6 +155,10 @@ def _handle_latest_block_updated(
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
+
+    if event.target_chain_id != context.target_chain_id:
+        return True, None
+
     # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, ignore the token configuration
     if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
         # Check if the address points to some contract
