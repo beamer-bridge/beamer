@@ -127,3 +127,27 @@ game is finished and one participant withdraws the stake, the claim will move in
 state.
 
 If an agent is not participating in a claim, that claim will transition into the ``ignored`` state.
+
+.. _Unsafe Fill Time:
+
+Unsafe Fill Time
+----------------
+
+In order to lower the risk of filling a request that is too close to expiration, an agent has a notion of 
+_unsafe fill time_. This is the time window, expressed in seconds, before request expiration that the agent
+considers unsafe for doing a fill. Once an unfilled request enters the unsafe fill time, the agent will
+simply ignore the request.
+
+This time can be configured via the ``--unsafe-fill-time`` command-line option and the configuration file
+option ``unsafe-fill-time``.
+
+.. graphviz:: unsafe_fill_time.dot
+   :align: center
+   :caption: Unsafe fill time
+
+In the graph, T1 is representing the request creation time, T2 is calculated using ``unsafe-fill-time`` option, and T3 is the request expiration.
+
+If unsafe time increases, T2 moves to left, so the agent will fill fewer requests.
+
+If unsafe time decreases, T2 moves to right, so the agent will get an opportunity to fill more requests.
+

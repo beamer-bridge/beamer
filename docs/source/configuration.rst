@@ -12,6 +12,7 @@ An example configuration::
     log-level = "debug"
     deployment-dir = "deployments/rinkeby"
     fill-wait-time = 120
+    unsafe-fill-time = 600
     source-chain = "rinkeby-metis"
     target-chain = "rinkeby-boba"
 
@@ -146,6 +147,14 @@ Reference
 
      - Time in seconds to wait for a fill event before challenging a false claim.
        Default: ``120``.
+
+   * - ``--unsafe-fill-time TIME``
+     - ::
+
+        unsafe-fill-time = TIME
+
+     - Time in seconds before request expiry, during which the agent will consider it
+       unsafe to fill and ignore the request. Default: ``600``. For more info: :ref:`Unsafe Fill Time`
 
    * - ``--log-level LEVEL``
      - ::

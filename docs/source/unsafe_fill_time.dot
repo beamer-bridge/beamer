@@ -1,0 +1,13 @@
+digraph unsafe_fill_time {
+    pad=0.5
+    node[shape=point]
+    "start" [xlabel=T1];
+    "unsafe_start" [xlabel=T2]
+    "end" [xlabel=T3]
+    edge[arrowhead="none"];
+    {rank = same; start; unsafe_start}
+    {rank = same; unsafe_start; end}
+
+    start -> unsafe_start [label = "safe", minlen=6]
+    unsafe_start -> end [label = "unsafe", minlen=4]
+}
