@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-html {
-    @apply text-[50%] 2xl:text-[65%]
-}
-
 /* Global transitions */
 /* Default transitions */
 .v-enter-active,

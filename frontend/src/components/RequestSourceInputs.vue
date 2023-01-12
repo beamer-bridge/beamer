@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col gap-7">
-    <div class="flex flex-col gap-5">
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-3">
       <div class="flex flex-row justify-between">
-        <span class="text-3xl">From</span>
+        <span class="text-xl pl-2">From</span>
 
         <Tooltip
           v-if="faucetEnabled"
@@ -11,7 +11,7 @@
           show-outside-of-closest-reference-element
         >
           <button
-            class="text-orange text-base font-semibold mr-3 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+            class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
             :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
@@ -35,7 +35,7 @@
       </InputValidationMessage>
     </div>
     <div class="flex flex-col justify-between">
-      <div class="flex flex-row gap-5">
+      <div class="flex flex-row gap-3 h-20">
         <div class="flex-[9_9_0%] flex flex-col items-start">
           <NumericInput
             v-model="selectedAmount"
@@ -46,23 +46,25 @@
           <InputValidationMessage v-if="!isSelectedAmountValid && selectedAmount.length > 0">
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
-          <div v-else class="self-end">
-            <div v-if="balance" class="text-base">
+          <div v-else class="pt-1 self-end">
+            <div v-if="balance" class="text-xs">
               <spinner
                 v-if="maxTransferableTokenBalanceLoading"
-                size="6"
+                size="3"
                 border="2"
                 class="mr-5 mt-1"
               ></spinner>
               <template v-else>
-                <div v-if="balance.uint256.isZero()">{{ formattedTokenBalance }} available</div>
+                <div v-if="balance.uint256.isZero()" class="px-2">
+                  {{ formattedTokenBalance }} available
+                </div>
                 <Tooltip
                   v-else
                   :hint="`You have ${balance.formatFullValue()} in your wallet. Click to use all.`"
                   show-outside-of-closest-reference-element
                 >
                   <button
-                    class="text-orange text-base font-semibold my-1 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+                    class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
                     :disabled="maxTransferableTokenBalanceLoading"
                     @click="setMaxTokenAmount"
                   >
@@ -94,7 +96,7 @@
             show-outside-of-closest-reference-element
           >
             <button
-              class="text-orange text-base font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+              class="text-orange text-xs font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
               :disabled="!addTokenAvailable"
               @click="handleAddTokenClick"
             >
@@ -104,7 +106,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col text-2xl px-5">
+      <div class="flex flex-col text-base px-2">
         <div class="flex flex-row justify-between">
           <div class="flex flex-row gap-3">
             <span>Fees</span>

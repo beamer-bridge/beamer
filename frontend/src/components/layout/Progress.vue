@@ -38,15 +38,15 @@ touched, it is likely to break somewhere else. Using variables and calculation
 only barely helps with this problem. As this is a very specialized custom
 component, this inflexibility can be tolerated for now.
 */
-$ballHeight: 1.75rem;
-$ballWidth: 1.75rem;
-$ballBorderWidth: 2px;
-$liMarginY: 1.25rem;
+$ballHeight: 0.75rem;
+$ballWidth: 0.75rem;
+$ballBorderWidth: 1px;
+$liMarginY: 0.75rem;
 
 li {
   margin-top: $liMarginY;
   margin-bottom: $liMarginY;
-  @apply relative pl-10;
+  @apply relative pl-7;
 }
 
 li::before {
@@ -54,7 +54,7 @@ li::before {
   width: $ballWidth;
   height: $ballHeight;
   border: $ballBorderWidth solid;
-  @apply absolute left-0 rounded-full text-center border-teal;
+  @apply absolute left-0 rounded-full text-center border-teal top-1;
 }
 
 li.completed::before {
@@ -67,7 +67,7 @@ li.failed::before {
 
 li:not(:last-of-type)::after {
   content: '';
-  @apply absolute left-[0.75rem] border-teal border top-[1.7rem] h-[1.45rem];
+  @apply absolute left-[0.3rem] border-teal border top-[1rem] h-[1.45rem];
 }
 
 li.hasError::after {

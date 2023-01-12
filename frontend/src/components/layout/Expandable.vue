@@ -1,10 +1,6 @@
 <template>
   <div ref="element" class="relative flex flex-col">
-    <img
-      :src="CaretRight"
-      class="absolute top-6 left-6 h-[1.5rem] w-[1.5rem]"
-      :class="caretClasses"
-    />
+    <img :src="CaretRight" class="absolute top-4 left-4 h-[1rem] w-[1rem]" :class="caretClasses" />
 
     <div class="cursor-pointer" data-test="header" @click="toggleBodyVisibility">
       <slot name="header" />

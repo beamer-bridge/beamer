@@ -5,7 +5,7 @@
     <div
       v-if="tooltipVisible"
       ref="tooltipElement"
-      class="fixed text-sea-green text-xl bg-teal drop-shadow-xl rounded-md p-3 z-20"
+      class="fixed text-sea-green text-sm bg-teal drop-shadow-xl rounded-md p-3 z-20"
       :style="tooltipStyle"
       data-test="tooltip"
     >

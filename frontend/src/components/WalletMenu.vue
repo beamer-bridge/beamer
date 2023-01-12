@@ -3,23 +3,23 @@
     class="w-full h-full flex flex-col justify-center items-center bg-teal/30 p-16 rounded-lg"
     @click="close"
   >
-    <button class="absolute top-0 right-0 m-10" data-test="close-button" @click="close">
-      <img class="h-6 w-6" src="@/assets/images/close.svg" alt="close" />
+    <button class="absolute top-0 right-0 m-5" data-test="close-button" @click="close">
+      <img class="h-4 w-4" src="@/assets/images/close.svg" alt="close" />
     </button>
 
     <button
       v-for="walletOption of walletOptions"
       :key="walletOption.name"
-      class="w-[25rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
+      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col items-center my-5 py-5 bg-sea-green rounded-lg text-black gap-2"
       :data-test="`connect-${walletOption.name}`"
       @click.stop="walletOption.connect"
     >
-      <div v-if="walletOption.connecting" class="w-20 h-20 items-center justify-center flex">
+      <div v-if="walletOption.connecting" class="w-15 h-15 items-center justify-center flex">
         <spinner class="border-t-teal border-4 h-1/2 w-1/2"></spinner>
       </div>
-      <img v-else class="h-20 w-20" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />
-      <div class="text-2xl font-bold">{{ walletOption.name }}</div>
-      <div class="text-lg">{{ walletOption.description }}</div>
+      <img v-else class="h-15 w-15" :src="walletOption.icon" :alt="walletOption.name + ' icon'" />
+      <div class="text-xl font-bold">{{ walletOption.name }}</div>
+      <div>{{ walletOption.description }}</div>
     </button>
   </div>
 </template>
