@@ -29,17 +29,13 @@ export class MockedToken {
   }
 }
 export class MockedRequest {
-  readonly validUntil: MockedBigNumber;
-  readonly activeClaims: MockedBigNumber;
+  readonly validUntil: number;
+  readonly activeClaims: number;
   readonly withdrawClaimId: MockedBigNumber;
 
   constructor(options?: { validUntil?: number; activeClaims?: number; withdrawClaimId?: number }) {
-    this.validUntil = new MockedBigNumber(
-      options?.validUntil?.toString() ?? getRandomNumber().toString(),
-    );
-    this.activeClaims = new MockedBigNumber(
-      options?.activeClaims?.toString() ?? getRandomNumber().toString(),
-    );
+    this.validUntil = options?.validUntil ?? getRandomNumber();
+    this.activeClaims = options?.activeClaims ?? getRandomNumber();
     this.withdrawClaimId = new MockedBigNumber(
       options?.withdrawClaimId?.toString() ?? getRandomNumber().toString(),
     );
