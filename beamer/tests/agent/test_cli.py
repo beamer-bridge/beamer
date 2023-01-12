@@ -50,6 +50,7 @@ def setup_relayer_executable():
 _CONFIG_FILE = """
 source-chain = "foo"
 target-chain = "bar"
+unsafe-fill-time = {unsafe_fill_time}
 deployment-dir = "{deployment_dir}"
 
 [account]
@@ -69,7 +70,7 @@ rpc-url = "{bar_rpc_url}"
 """
 
 
-def _generate_options(keyfile, deployment_dir, config):
+def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
     return (
         "--account-path",
         str(keyfile),
@@ -87,16 +88,19 @@ def _generate_options(keyfile, deployment_dir, config):
         "l2a",
         "--target-chain",
         "l2b",
+        "--unsafe-fill-time",
+        unsafe_fill_time,
     )
 
 
-def _generate_options_config(keyfile, deployment_dir, config):
+def _generate_options_config(keyfile, deployment_dir, config, unsafe_fill_time):
     content = _CONFIG_FILE.format(
         path=str(keyfile),
         l1_rpc_url=config.l1_rpc_url,
         foo_rpc_url=config.l2a_rpc_url,
         bar_rpc_url=config.l2b_rpc_url,
         deployment_dir=deployment_dir,
+        unsafe_fill_time=unsafe_fill_time,
     )
     config_file = keyfile.parent / "agent.conf"
     config_file.write_text(content)
@@ -104,8 +108,9 @@ def _generate_options_config(keyfile, deployment_dir, config):
 
 
 @pytest.mark.parametrize("generate_options", (_generate_options, _generate_options_config))
+@pytest.mark.parametrize("unsafe_fill_time_option", [(1, True), (1000000, False)])
 @pytest.mark.usefixtures("setup_relayer_executable")
-def test_cli(config, tmp_path, contracts, generate_options):
+def test_cli(config, tmp_path, contracts, generate_options, unsafe_fill_time_option):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
     obj = eth_account.Account.encrypt(key, "test")
@@ -119,10 +124,15 @@ def test_cli(config, tmp_path, contracts, generate_options):
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
 
-    options = generate_options(keyfile, deployment_dir, config)
+    unsafe_time, error = unsafe_fill_time_option
+
+    options = generate_options(keyfile, deployment_dir, config, unsafe_time)
     runner = CliRunner()
     result = runner.invoke(main, options)
-    assert result.exit_code == 0
+    if not error:
+        assert result.exit_code == 1
+    else:
+        assert result.exit_code == 0
 
 
 @pytest.mark.parametrize(

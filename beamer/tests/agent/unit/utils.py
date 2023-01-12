@@ -143,6 +143,7 @@ def make_context() -> Tuple[Context, Config]:
         fill_wait_time=1,
         prometheus_metrics_port=None,
         log_level="debug",
+        unsafe_fill_time=1,
     )
 
     context = Context(
