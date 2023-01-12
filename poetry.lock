@@ -2259,15 +2259,18 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-statemachine"
-version = "0.9.0"
+version = "1.0.1"
 description = "Python Finite State Machines made easy."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "python-statemachine-0.9.0.tar.gz", hash = "sha256:ae96f57b9a4aba112bf3e010544d91ea40ce01ba1700848aefa6b3e703078e98"},
-    {file = "python_statemachine-0.9.0-py2.py3-none-any.whl", hash = "sha256:a04fda6d0f93d2f62f8bf0fd209a1cab963a6bbf76b9223ebcb593ef45266f6e"},
+    {file = "python-statemachine-1.0.1.tar.gz", hash = "sha256:ed64018a249a903dad742ae6f720a1b71e31cf51e1a1b9205d07d32c88abd161"},
+    {file = "python_statemachine-1.0.1-py2.py3-none-any.whl", hash = "sha256:e47584b2b5d11e74cf0b13565bd50f49fb7a234ea11bb5f4d9e6bf16def9aeca"},
 ]
+
+[package.extras]
+diagrams = ["pydot"]
 
 [[package]]
 name = "pythx"
@@ -3169,4 +3172,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "e57fe647bfce6eacb4816ffff579b901f700d52c01b90355355692edd133bfa5"
+content-hash = "2a66a33f358a17b2106764b2994682dbc456fdcf9a9f9debd611023a33c524b5"
