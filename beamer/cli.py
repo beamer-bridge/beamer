@@ -52,6 +52,12 @@ def _sigint_handler(agent: Agent) -> None:
     help="Time in seconds to wait for a fill event before challenging a false claim.",
 )
 @click.option(
+    "--unsafe-fill-time",
+    type=int,
+    help="""Time in seconds before request expiry, during which the agent will consider it
+    unsafe to fill and ignore the request.""",
+)
+@click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
     help="The log level. Default: info",
@@ -85,6 +91,7 @@ def main(
     source_chain: Optional[str],
     target_chain: Optional[str],
     metrics_prometheus_port: Optional[int],
+    unsafe_fill_time: Optional[int],
 ) -> None:
     options = {
         "fill-wait-time": fill_wait_time,
@@ -95,6 +102,7 @@ def main(
         "target-chain": target_chain,
         "account.path": account_path,
         "account.password": account_password,
+        "unsafe-fill-time": unsafe_fill_time,
     }
 
     for chainspec in chain:
@@ -111,7 +119,7 @@ def main(
         log.error("No relayer found")
         sys.exit(1)
 
-    signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(agent))
     agent = Agent(config)
+    signal.signal(signal.SIGINT, lambda *_unused: _sigint_handler(agent))
     agent.start()
     agent.wait()

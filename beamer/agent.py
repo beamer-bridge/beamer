@@ -51,6 +51,10 @@ class Agent:
         request_manager = l2a_contracts["RequestManager"]
         fill_manager = l2b_contracts["FillManager"]
 
+        max_validity_period = request_manager.functions.MAX_VALIDITY_PERIOD().call()
+
+        if config.unsafe_fill_time >= max_validity_period:
+            raise RuntimeError(f"Unsafe fill time must be less than {max_validity_period}")
         if not fill_manager.functions.allowedLps(config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted on FillManager")
         if not request_manager.functions.allowedLps(config.account.address).call():

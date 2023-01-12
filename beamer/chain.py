@@ -281,6 +281,12 @@ def process_claims(context: Context) -> None:
 
 def fill_request(request: Request, context: Context) -> None:
     block = context.latest_blocks[request.target_chain_id]
+    unsafe_time = request.valid_until - context.config.unsafe_fill_time
+    if time.time() >= unsafe_time:
+        log.info("Request fill is unsafe, ignoring", request=request)
+        request.ignore()
+        return
+
     if block["timestamp"] >= request.valid_until:
         log.info("Request expired, ignoring", request=request)
         request.ignore()

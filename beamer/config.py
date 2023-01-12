@@ -25,6 +25,7 @@ class Config:
     l2b_rpc_url: URL
     token_match_checker: TokenMatchChecker
     fill_wait_time: int
+    unsafe_fill_time: int
     prometheus_metrics_port: Optional[int]
     log_level: str
 
@@ -78,6 +79,7 @@ def _merge_dicts(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
 def _default_config() -> dict:
     return {
         "fill-wait-time": 120,
+        "unsafe-fill-time": 600,
         "log-level": "info",
         "account": {},
         "chains": {},
@@ -91,6 +93,7 @@ _REQUIRED_KEYS = (
     "target-chain",
     "deployment-dir",
     "fill-wait-time",
+    "unsafe-fill-time",
     "account.path",
     "account.password",
 )
@@ -134,6 +137,7 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         l2b_rpc_url=target_rpc_url,
         token_match_checker=token_match_checker,
         fill_wait_time=config["fill-wait-time"],
+        unsafe_fill_time=config["unsafe-fill-time"],
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
         log_level=_get_value(config, "log-level"),
     )
