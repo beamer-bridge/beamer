@@ -150,8 +150,8 @@ export async function getRequestIdentifier(
 }
 
 export type RequestData = {
-  validUntil: UInt256;
-  activeClaims: UInt256;
+  validUntil: number;
+  activeClaims: number;
   withdrawClaimId: UInt256;
 };
 
@@ -174,8 +174,8 @@ export async function getRequestData(
 
   if (request !== undefined) {
     return {
-      validUntil: new UInt256(request.validUntil.toString()),
-      activeClaims: new UInt256(request.activeClaims.toString()),
+      validUntil: request.validUntil,
+      activeClaims: request.activeClaims,
       withdrawClaimId: new UInt256(request.withdrawClaimId.toString()),
       withdrawn: !request.withdrawClaimId.isZero(),
     };
@@ -184,32 +184,24 @@ export async function getRequestData(
   }
 }
 
-export function getTimeToExpiredMilliseconds(validUntil: UInt256): number {
-  const timestampNowMilliseconds = new UInt256(Date.now().toString());
-  try {
-    return validUntil.multiply(new UInt256('1000')).subtract(timestampNowMilliseconds).asNumber;
-  } catch (e) {
-    return 0;
-  }
+export function getTimeToExpiredMilliseconds(validUntil: number): number {
+  const timestampNowMilliseconds = Date.now();
+  const validUntilMilliseconds = validUntil * 1000;
+  return Math.max(0, validUntilMilliseconds - timestampNowMilliseconds);
 }
 
-export function isRequestExpiredByLocalClock(validUntil: UInt256) {
-  return getTimeToExpiredMilliseconds(validUntil) === 0;
-}
+export const isRequestExpiredByLocalClock = (validUntil: number): boolean =>
+  getTimeToExpiredMilliseconds(validUntil) === 0;
 
 export async function isRequestExpiredByLatestBlock(
-  validUntil: UInt256,
+  validUntil: number,
   rpcUrl: string,
 ): Promise<boolean> {
   const block = await getLatestBlock(rpcUrl);
-  const validityExpired = validUntil.lt(new UInt256(block.timestamp.toString()));
-
-  return validityExpired;
+  return validUntil < block.timestamp;
 }
 
-export function isRequestClaimed(claimCount: UInt256): boolean {
-  return !claimCount.isZero();
-}
+export const isRequestClaimed = (claimCount: number): boolean => claimCount !== 0;
 
 export function waitUntilClaimsWithdrawn(
   rpcUrl: string,
@@ -287,7 +279,7 @@ export function failWhenRequestExpires(
             rpcUrl,
             requestManagerAddress,
             requestIdentifier,
-            requestData.activeClaims.asNumber,
+            requestData.activeClaims,
           );
 
           cancelWaitUntilClaimsWithdrawn = cancel;

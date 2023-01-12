@@ -326,20 +326,21 @@ describe('request-manager', () => {
 
   describe('getRequestData()', async () => {
     it('returns the transfer request that corresponds to the provided request id', async () => {
+      const validUntil = getRandomNumber();
+      const activeClaims = getRandomNumber();
+      const withdrawClaimId = getRandomNumber();
+
       const requestIdentifier = getRandomString();
-      const request = new MockedRequest();
+      const request = new MockedRequest({ activeClaims, validUntil, withdrawClaimId });
       const contract = mockGetContract();
       contract.requests = vi.fn().mockReturnValue(request);
 
       const response = await getRequestData(RPC_URL, REQUEST_MANAGER_ADDRESS, requestIdentifier);
 
       expect(response).not.toBeUndefined();
-      expect(Object.keys(response)).toEqual([
-        'validUntil',
-        'activeClaims',
-        'withdrawClaimId',
-        'withdrawn',
-      ]);
+      expect(response.validUntil).toBe(validUntil);
+      expect(response.activeClaims).toBe(activeClaims);
+      expect(response.withdrawClaimId.asNumber).toBe(withdrawClaimId);
     });
 
     it('throws an exception when a transfer request cannot be found for the provided request id', async () => {
@@ -354,7 +355,7 @@ describe('request-manager', () => {
   describe('getTimeToExpiredMilliseconds()', () => {
     it('returns the time until request expiry in milliseconds', () => {
       const timeNowSeconds = 90;
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
 
       global.Date.now = vi.fn().mockReturnValue(timeNowSeconds * 1000);
       const millis = getTimeToExpiredMilliseconds(validUntilSeconds);
@@ -363,7 +364,7 @@ describe('request-manager', () => {
     });
     it('returns 0 if the provided validity timestamp is in the past', () => {
       const timeNowSeconds = 110;
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
 
       global.Date.now = vi.fn().mockReturnValue(timeNowSeconds * 1000);
       const millis = getTimeToExpiredMilliseconds(validUntilSeconds);
@@ -375,14 +376,14 @@ describe('request-manager', () => {
   describe('isRequestExpiredByLocalClock()', () => {
     it('returns true if provided request timestamp (in seconds) is lower than local unix timestamp', () => {
       const timeNowSeconds = 90;
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
 
       global.Date.now = vi.fn().mockReturnValue(timeNowSeconds * 1000);
       expect(isRequestExpiredByLocalClock(validUntilSeconds)).toBe(false);
     });
     it('returns false if provided request timestamp is higher than local unix timestamp', () => {
       const timeNowSeconds = 110;
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
 
       global.Date.now = vi.fn().mockReturnValue(timeNowSeconds * 1000);
       expect(isRequestExpiredByLocalClock(validUntilSeconds)).toBe(true);
@@ -391,7 +392,7 @@ describe('request-manager', () => {
 
   describe('isRequestExpiredByLatestBlock()', () => {
     it('returns true when request is considered expired by latest block', async () => {
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
       const blockTimestampSeconds = 120;
 
       mockGetLatestBlock({
@@ -403,7 +404,7 @@ describe('request-manager', () => {
       expect(validityExpired).toBe(true);
     });
     it('returns false when request is considered active by comparing to latest block timestamp', async () => {
-      const validUntilSeconds = new UInt256('100');
+      const validUntilSeconds = 100;
       const blockTimestampSeconds = 80;
 
       mockGetLatestBlock({
@@ -418,10 +419,10 @@ describe('request-manager', () => {
 
   describe('isRequestClaimed()', () => {
     it('returns true if claim count is not 0', () => {
-      expect(isRequestClaimed(new UInt256('3'))).toBe(true);
+      expect(isRequestClaimed(3)).toBe(true);
     });
     it('returns false if claim count is 0', () => {
-      expect(isRequestClaimed(new UInt256('0'))).toBe(false);
+      expect(isRequestClaimed(0)).toBe(false);
     });
   });
 
