@@ -302,3 +302,24 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
     with Sleeper(1) as sleeper:
         while not request.is_filled:
             sleeper.sleep(0.1)
+
+
+def test_unsafe_fill_time(
+    request_manager, config, token, set_allow_unlisted_pairs
+):  # pylint:disable=unused-argument
+    requester, target = alloc_accounts(2)
+    max_validity_period = request_manager.MAX_VALIDITY_PERIOD()
+    request_id = make_request(request_manager, token, requester, target, 1, max_validity_period)
+    # 1 second to fill the request
+    config.unsafe_fill_time = max_validity_period - 1
+    agent = Agent(config)
+
+    agent.start()
+
+    with Sleeper(2) as sleeper:
+        while (request := agent.context.requests.get(request_id)) is None:
+            sleeper.sleep(0.1)
+
+    assert request.is_ignored
+
+    agent.stop()

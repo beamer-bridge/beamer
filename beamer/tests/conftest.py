@@ -163,6 +163,7 @@ def config(request_manager, fill_manager, token):
         token_match_checker=TokenMatchChecker([]),
         account=account,
         fill_wait_time=0,
+        unsafe_fill_time=600,
         prometheus_metrics_port=None,
         log_level="debug",
     )
