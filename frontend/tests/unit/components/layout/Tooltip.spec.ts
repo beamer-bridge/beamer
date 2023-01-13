@@ -115,7 +115,6 @@ describe('Tooltip.vue', () => {
 
       expect((tooltip.element as HTMLElement).style).toContain({ margin: '20px 0px' });
     });
-
   });
 
   describe('when fitting in viewport', () => {
