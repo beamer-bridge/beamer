@@ -15,7 +15,7 @@
           @tab-changed="onTabChanged"
         />
       </div>
-      <div class="h-28">
+      <div class="h-28 mt-5">
         <div
           v-show="actionButtonPortalVisible"
           id="action-button-portal"
