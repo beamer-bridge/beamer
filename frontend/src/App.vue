@@ -67,6 +67,8 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 
+import { useClaimCountListeners } from './composables/useClaimCountListeners';
+
 const enableFeedback = process.env.NODE_ENV === 'production' && true;
 
 const { setConfiguration } = useConfiguration();
@@ -77,6 +79,7 @@ const { isBlacklistedWallet } = storeToRefs(useEthereumProvider());
 
 const { transfers, loaded } = storeToRefs(useTransferHistory());
 useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
+useClaimCountListeners(transfers as Ref<Array<Transfer>>);
 
 onMounted(loadConfiguration);
 </script>

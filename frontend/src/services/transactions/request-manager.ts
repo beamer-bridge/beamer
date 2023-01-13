@@ -1,4 +1,4 @@
-import type { JsonRpcSigner, TransactionResponse } from '@ethersproject/providers';
+import type { JsonRpcSigner, Listener, TransactionResponse } from '@ethersproject/providers';
 
 import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
@@ -202,6 +202,33 @@ export async function isRequestExpiredByLatestBlock(
 }
 
 export const isRequestClaimed = (claimCount: number): boolean => claimCount !== 0;
+
+export function listenOnClaimCountChange(options: {
+  rpcUrl: string;
+  requestManagerAddress: EthereumAddress;
+  requestIdentifier: string;
+  onReduce: Listener;
+  onIncrease: Listener;
+}): { cancel: CallableFunction } {
+  const provider = getJsonRpcProvider(options.rpcUrl);
+  const contract = getReadOnlyContract<RequestManager>(
+    options.requestManagerAddress,
+    RequestManagerDeployment.abi,
+    provider,
+  );
+
+  const reduceFilter = contract.filters.ClaimStakeWithdrawn(undefined, options.requestIdentifier);
+  const increaseFilter = contract.filters.ClaimMade(options.requestIdentifier);
+
+  contract.on(reduceFilter, options.onReduce);
+  contract.on(increaseFilter, options.onIncrease);
+
+  const cancel = () => {
+    contract.removeAllListeners();
+  };
+
+  return { cancel };
+}
 
 export function waitUntilClaimsWithdrawn(
   rpcUrl: string,

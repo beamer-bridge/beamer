@@ -7,6 +7,7 @@ import {
   failWhenRequestExpires,
   getRequestData,
   getRequestIdentifier,
+  listenOnClaimCountChange,
   RequestExpiredError,
   sendRequestTransaction,
   withdrawRequest,
@@ -80,7 +81,9 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly date: Date;
   private _requestInformation?: RequestInformation;
   private _expired: boolean;
+  private _claimCount: number;
   private _withdrawn: boolean;
+  private listenerCleanupCallback: CallableFunction | undefined = undefined;
 
   constructor(data: TransferData) {
     super((data.steps ?? STEPS_DATA).map((data) => new Step(data)));
@@ -98,6 +101,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       : undefined;
     this._expired = data.expired ?? false;
     this._withdrawn = data.withdrawn ?? false;
+    this._claimCount = data.claimCount ?? 0;
   }
 
   /**
@@ -139,6 +143,18 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return this._withdrawn;
   }
 
+  get withdrawable(): boolean {
+    return this.expired && !this.hasActiveClaims;
+  }
+
+  get hasActiveClaims(): boolean {
+    return this._claimCount > 0;
+  }
+
+  get hasActiveListeners(): boolean {
+    return this.listenerCleanupCallback !== undefined;
+  }
+
   protected getStepMethods(
     signer?: JsonRpcSigner,
     signerAddress?: EthereumAddress,
@@ -170,11 +186,15 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     // As long as we have not explicitly set this to `true` we should
     // check it again to avoid unnecessary transactions.
     if (!this._withdrawn) {
-      await this.checkAndUpdateWithdrawState();
+      await this.checkAndUpdateState();
     }
 
     if (this._withdrawn) {
       throw new Error('Funds have been already withdrawn!');
+    }
+
+    if (this.hasActiveClaims) {
+      throw new Error('Cannot withdraw when there are active claims!');
     }
 
     if (!provider?.signer?.value) {
@@ -214,6 +234,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       requestInformation: this._requestInformation?.encode(),
       expired: this._expired,
       withdrawn: this._withdrawn,
+      claimCount: this._claimCount,
     };
   }
 
@@ -297,7 +318,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     } catch (exception: unknown) {
       if (exception instanceof RequestExpiredError) {
         this._expired = true;
-        await this.checkAndUpdateWithdrawState();
+        await this.checkAndUpdateState();
       }
 
       throw exception;
@@ -307,18 +328,46 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
   }
 
-  protected async checkAndUpdateWithdrawState(): Promise<void> {
+  public async checkAndUpdateState(): Promise<void> {
     if (!this._requestInformation?.identifier) {
-      throw new Error('Can not check withdraw state without request identfier!');
+      throw new Error('Can not check state without request identfier!');
     }
 
-    const { withdrawn } = await getRequestData(
+    const { withdrawn, activeClaims } = await getRequestData(
       this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );
 
     this._withdrawn = withdrawn;
+    this._claimCount = activeClaims;
+  }
+
+  public startClaimEventListeners(): void {
+    if (!this._requestInformation?.identifier) {
+      throw new Error('Can not listen to claim events without an identifier!');
+    }
+
+    if (this.listenerCleanupCallback) {
+      throw new Error('There are already active listeners.');
+    }
+
+    const { cancel } = listenOnClaimCountChange({
+      rpcUrl: this.sourceChain.rpcUrl,
+      requestManagerAddress: this.sourceChain.requestManagerAddress,
+      requestIdentifier: this._requestInformation?.identifier,
+      onReduce: () => this.checkAndUpdateState(),
+      onIncrease: () => this.checkAndUpdateState(),
+    });
+
+    this.listenerCleanupCallback = cancel;
+  }
+
+  public stopEventListeners(): void {
+    if (this.listenerCleanupCallback) {
+      this.listenerCleanupCallback();
+      this.listenerCleanupCallback = undefined;
+    }
   }
 }
 
@@ -335,4 +384,5 @@ export type TransferData = {
   requestInformation?: RequestInformationData;
   expired?: boolean;
   withdrawn?: boolean;
+  claimCount?: number;
 };
