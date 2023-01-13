@@ -15,7 +15,7 @@
             :disabled="!faucetAvailable"
             @click="runFaucetRequest"
           >
-            <spinner v-if="faucetRequestActive" size="6" border="2"></spinner>
+            <spinner v-if="faucetRequestActive" size-classes="w-3 h-3" border="2"></spinner>
             <template v-else>Get Test Tokens</template>
           </button>
         </Tooltip>
@@ -50,7 +50,7 @@
             <div v-if="balance" class="text-xs">
               <spinner
                 v-if="maxTransferableTokenBalanceLoading"
-                size="3"
+                size-classes="w-3 h-3"
                 border="2"
                 class="mr-5 mt-1"
               ></spinner>
@@ -113,7 +113,7 @@
             <RequestFeeTooltip :formatted-min-fee="formattedMinFee"></RequestFeeTooltip>
           </div>
           <div class="text-sea-green">
-            <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
+            <spinner v-if="requestFeeLoading" border="2" size-classes="w-4 h-4"></spinner>
             <span v-else-if="requestFeeAmount">{{ requestFeeAmount.format() }}</span>
             <span v-else>- {{ selectedToken?.value.symbol ?? '' }}</span>
           </div>
@@ -121,7 +121,7 @@
         <div class="flex flex-row justify-between font-semibold">
           <span>Total</span>
           <div class="text-sea-green">
-            <spinner v-if="requestFeeLoading" size="6" border="2"></spinner>
+            <spinner v-if="requestFeeLoading" size-classes="w-4 h-4" border="2"></spinner>
             <span v-else-if="totalRequestTokenAmount"
               >{{ totalRequestTokenAmount.format() }}
             </span>

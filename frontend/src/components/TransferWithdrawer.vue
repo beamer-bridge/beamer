@@ -10,7 +10,7 @@
         Recover Tokens
       </span>
 
-      <Spinner v-if="active" size="7" border="2" class="border-t-teal" />
+      <Spinner v-if="active" size-classes="w-7" border="2" class="border-t-teal" />
     </template>
 
     <div v-else class="text-green">Tokens Withdrawn</div>

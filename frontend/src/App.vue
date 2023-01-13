@@ -33,7 +33,7 @@
       </div>
       <div v-else class="flex flex-grow items-center justify-center">
         <div class="w-48 h-48">
-          <spinner size="48"></spinner>
+          <spinner size-classes="w-48 h-48"></spinner>
         </div>
       </div>
       <feedback v-if="enableFeedback"></feedback>
@@ -47,7 +47,7 @@
         &bull;
         <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
           >Terms of Service</a
-        >.
+        >
       </footer>
     </div>
   </div>
