@@ -24,7 +24,7 @@
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <ActionButton :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
-        <spinner v-else size="8" border="4"></spinner>
+        <spinner v-else size-classes="w-8 h-8" border="4"></spinner>
       </ActionButton>
     </div>
   </Teleport>

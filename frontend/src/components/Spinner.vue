@@ -6,14 +6,14 @@
 </template>
 <script lang="ts" setup>
 interface Props {
-  size?: string;
+  sizeClasses?: string;
   border?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'full',
+  sizeClasses: 'w-full h-full',
   border: '4',
 });
 
-const classes = `w-${props.size} h-${props.size} border-${props.border}`;
+const classes = `${props.sizeClasses} border-${props.border}`;
 </script>
