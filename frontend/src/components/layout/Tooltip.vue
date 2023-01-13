@@ -5,16 +5,17 @@
     <div
       v-if="tooltipVisible"
       ref="tooltipElement"
-      class="fixed text-sea-green text-sm bg-teal drop-shadow-xl rounded-md p-3 z-20"
+      class="fixed text-sea-green text-sm bg-teal drop-shadow-xl rounded-md p-3 z-20 border"
       :style="tooltipStyle"
       data-test="tooltip"
     >
       <span
-        class="-translate-x-1/2 rotate-45 absolute bg-teal"
+        :class="arrowClasses"
+        class="-translate-x-1/2 absolute"
         :style="arrowStyles"
         data-test="arrow"
       />
-      <span v-if="hint">{{ hint }}</span>
+      <div v-if="hint">{{ hint }}</div>
       <slot name="hint" />
     </div>
   </div>
@@ -37,10 +38,10 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   hint: undefined,
-  showOutsideOfClosestReferenceElement: false,
+  showOutsideOfClosestReferenceElement: true,
   referenceElementQuery: '.tooltip-reference-element',
-  tooltipWidth: '40rem',
-  gap: '2rem',
+  tooltipWidth: '20rem',
+  gap: '0.5rem',
   arrowSize: 10,
 });
 
@@ -116,17 +117,30 @@ const tooltipStyle = computed(() => {
   };
 });
 
+const arrowClasses = computed(() => {
+  const defaultBottom =
+    'border-solid border-b-teal-500 border-b-8 border-x-transparent border-x-8 border-t-0 -top-2.5';
+  switch (position.value) {
+    case 'right':
+      return `border-solid border-r-teal-500 border-r-8 border-y-transparent border-y-8 border-l-0 -right-5 -left-1.5`;
+
+    case 'bottom':
+    default:
+      return defaultBottom;
+  }
+});
+
 const arrowStyles = computed(() => {
   const { arrowSize: size } = props;
   const baseStyle = { width: `${size}px`, height: `${size}px` };
-  const alignOffset = `calc(50% - ${size / 2}px)`;
+  const alignOffset = `calc(50% - ${size / 0.7}px)`;
 
   switch (position.value) {
     case 'bottom':
-      return { ...baseStyle, top: `-${size / 2}px`, right: alignOffset };
+      return { ...baseStyle, right: alignOffset };
 
     case 'right':
-      return { ...baseStyle, top: alignOffset, left: 0 };
+      return { ...baseStyle, top: alignOffset };
 
     default:
       return baseStyle;
