@@ -2,11 +2,11 @@ import { mount } from '@vue/test-utils';
 
 import Spinner from '@/components/Spinner.vue';
 
-function createWrapper(options?: { size?: string; border?: string }) {
+function createWrapper(options?: { sizeClasses?: string; border?: string }) {
   return mount(Spinner, {
     shallow: true,
     props: {
-      size: options?.size ?? undefined,
+      sizeClasses: options?.sizeClasses ?? undefined,
       border: options?.border ?? undefined,
     },
   });
@@ -27,7 +27,7 @@ describe('Spinner.vue', () => {
   });
 
   it('properly defines spinner size based on passed props', () => {
-    const wrapper = createWrapper({ size: '100' });
+    const wrapper = createWrapper({ sizeClasses: 'w-100 h-100' });
 
     expect(wrapper.classes()).toContain('w-100');
     expect(wrapper.classes()).toContain('h-100');
