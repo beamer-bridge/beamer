@@ -95,7 +95,8 @@ const {
 
 const withdrawProperties = computed(() => ({
   withdrawn: props.transfer.withdrawn,
-  active: withdrawTransferActive.value,
+  withdrawable: props.transfer.withdrawable,
+  withdrawInProgress: withdrawTransferActive.value,
   errorMessage: withdrawTransferError.value?.message,
 }));
 
