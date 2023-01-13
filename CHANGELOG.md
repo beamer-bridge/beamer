@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.1 (2023-01-13)
+
+* docker: fix the issue where the relayer could not be run due to missing C++ runtime lib
+
 ## v1.0.0 (2023-01-13)
 
 * docker: reduced beamer-agent container image size from 2.41GB to 254MB
