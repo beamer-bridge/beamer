@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
 COPY . /src
 RUN mkdir -p /src/beamer/data/relayers
@@ -7,7 +7,7 @@ RUN pip install shiv
 WORKDIR /src
 RUN mkdir -p dist && shiv -c beamer-agent -o dist/beamer-agent .
 
-FROM python:3.10-alpine
+FROM python:3.10-slim
 COPY --from=0 /src/dist/beamer-agent /usr/bin/beamer-agent
 LABEL org.opencontainers.image.licenses "MIT"
 LABEL org.opencontainers.image.source "https://github.com/beamer-bridge/beamer"
