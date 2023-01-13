@@ -44,6 +44,10 @@
         <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
           >Imprint</a
         >
+        &bull;
+        <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
+          >Terms of Service</a
+        >.
       </footer>
     </div>
   </div>

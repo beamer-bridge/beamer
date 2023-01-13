@@ -22,29 +22,6 @@
 
   <Teleport v-if="signer" to="#action-button-portal">
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
-      <div v-if="DISCLAIMER_REQUIRED" class="relative">
-        <div class="flex flex-row gap-2 pl-2 items-center justify-center mt-5 mb-7">
-          <!--  
-            There seems to be a problem with tailwind and escaping the backslash in the TS variable. 
-            For this reason the content rule is added separately here in the HTML.
-          -->
-          <input
-            v-model="disclaimerChecked"
-            type="checkbox"
-            class="checked:after:content-['\2713']"
-            :class="checkboxClasses"
-          />
-          <span class="text-sm"
-            >I agree to the
-            <a
-              href="https://beamerbridge.com/terms.html"
-              target="_blank"
-              class="underline hover:opacity-90"
-              >Terms & Conditions</a
-            ></span
-          >
-        </div>
-      </div>
       <ActionButton :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
         <spinner v-else size="8" border="4"></spinner>
@@ -68,7 +45,6 @@ import { useTransferRequest } from '@/composables/useTransferRequest';
 import { switchToActivities } from '@/router/navigation';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
-import { useSettings } from '@/stores/settings';
 import { useTransferHistory } from '@/stores/transfer-history';
 import type {
   RequestSource,
@@ -86,7 +62,6 @@ const EMPTY_TARGET_DATA: RequestTarget = {
   targetChain: null,
   toAddress: '',
 };
-const DISCLAIMER_REQUIRED = process.env.NODE_ENV === 'production';
 
 const ethereumProvider = useEthereumProvider();
 const { signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
@@ -98,12 +73,9 @@ const {
   creating: creatingTransaction,
 } = useTransferRequest();
 const { getTokenForChain } = useConfiguration();
-const { disclaimerChecked } = storeToRefs(useSettings());
 
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
-
-const disclaimerValid = computed(() => disclaimerChecked.value || !DISCLAIMER_REQUIRED);
 
 const requestSourceInputsRef = ref<{ v$: Validation }>();
 const requestTargetInputsRef = ref<{ v$: Validation }>();
@@ -117,7 +89,7 @@ const formValid = computed(() => {
 });
 
 const submitDisabled = computed(() => {
-  return !formValid.value || creatingTransaction.value || !disclaimerValid.value;
+  return !formValid.value || creatingTransaction.value;
 });
 
 const submitForm = async () => {
@@ -185,10 +157,6 @@ watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
     requestTarget.value = { ...requestTarget.value, toAddress: currSignerAddress ?? '' };
   }
 });
-
-const checkboxClasses = `appearance-none h-5 w-5 bg-sea-green shadow-inner rounded-md
-hover:opacity-90 
-checked:after:text-teal checked:after:text-2xl checked:after:leading-6`;
 </script>
 
 <script lang="ts">
