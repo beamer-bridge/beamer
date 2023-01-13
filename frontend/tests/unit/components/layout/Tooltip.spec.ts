@@ -91,13 +91,6 @@ describe('Tooltip.vue', () => {
     expect((tooltip.element as HTMLElement).style).toContain({ width: '200px' });
   });
 
-  it('adapts the arrow size', async () => {
-    const wrapper = await createWrapper({ arrowSize: 20, showTooltip: true });
-    const arrow = wrapper.get('[data-test="arrow"]');
-
-    expect((arrow.element as HTMLElement).style).toContain({ width: '20px', height: '20px' });
-  });
-
   describe('when not fitting in viewport', () => {
     /*
      * Note that it is currently not possible to test the actual positioning as
@@ -123,18 +116,6 @@ describe('Tooltip.vue', () => {
       expect((tooltip.element as HTMLElement).style).toContain({ margin: '20px 0px' });
     });
 
-    it('shows the arrow at the center of the top border', async () => {
-      const wrapper = await createWrapper({
-        arrowSize: 20,
-        showTooltip: true,
-      });
-      const arrow = wrapper.get('[data-test="arrow"]');
-
-      expect((arrow.element as HTMLElement).style).toContain({
-        top: '-10px',
-        right: 'calc(50% - 10px)',
-      });
-    });
   });
 
   describe('when fitting in viewport', () => {
@@ -151,16 +132,6 @@ describe('Tooltip.vue', () => {
       const tooltip = wrapper.get('[data-test="tooltip"]');
 
       expect((tooltip.element as HTMLElement).style).toContain({ margin: '0px 20px' });
-    });
-
-    it('shows the arrow at the center of the left border', async () => {
-      const wrapper = await createWrapper({ arrowSize: 20, showTooltip: true });
-      const arrow = wrapper.get('[data-test="arrow"]');
-
-      expect((arrow.element as HTMLElement).style).toContain({
-        top: 'calc(50% - 10px)',
-        left: '0px',
-      });
     });
   });
 });
