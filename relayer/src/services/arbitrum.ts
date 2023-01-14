@@ -22,7 +22,7 @@ const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
 };
 
 export class ArbitrumRelayerService extends BaseRelayerService {
-  static readonly MAX_MESSAGE_LENGTH_BYTES = 1_000_000;
+  static readonly MAX_MESSAGE_LENGTH_BYTES = 5_000;
 
   async prepare(): Promise<boolean> {
     console.log("Preparing Arbitrum Messenger for forwarding the L1 message...");
