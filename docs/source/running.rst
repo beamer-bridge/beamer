@@ -35,7 +35,7 @@ During the Beamer contracts' deployment process, a directory with deployment inf
 The directory typically looks like this::
 
 	deployments/
-	└── rinkeby
+	└── goerli
 		├── deployment.json
 		├── FillManager.json
 		├── MintableToken.json
@@ -44,7 +44,7 @@ The directory typically looks like this::
 		├── RequestManager.json
 		└── Resolver.json
 
-The above shows contract `deployment on Rinkeby`_.
+The above shows contract `deployment on Goerli`_.
 
 The ``deployment.json`` file contains information on the chains that the
 contracts have been deployed on, the contracts' addresses, as well as the block
@@ -52,7 +52,7 @@ number at the time of deployment.
 
 The rest of the files contain contract ABI information which is needed by the agent.
 
-.. _deployment on Rinkeby: https://github.com/beamer-bridge/beamer/tree/main/deployments/rinkeby
+.. _deployment on Goerli:: https://github.com/beamer-bridge/beamer/tree/main/deployments/goerli
 
 .. _agent-container:
 
@@ -79,7 +79,7 @@ First clone the Beamer repository::
 
     git clone https://github.com/beamer-bridge/beamer.git
 
-Make sure you have Python 3.9.x and
+Make sure you have Python 3.10.x and
 `Poetry <https://python-poetry.org/>`_ installed.
 
 Enter the virtual environment::
