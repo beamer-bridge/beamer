@@ -342,7 +342,9 @@ workflows:
     when:
       and:
         - <<pipeline.parameters.backend-updated>>
-        - equal: [ main, <<pipeline.git.branch>> ]
+        - or:
+          - equal: [ main, <<pipeline.git.branch>> ]
+          - <<pipeline.git.tag>>
     jobs:
       - checkout
       - install-npm-packages:
