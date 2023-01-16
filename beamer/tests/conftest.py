@@ -14,6 +14,10 @@ from brownie import (
 )
 
 import beamer.metrics
+import beamer.chain
+
+beamer.chain.POLL_PERIOD = 1 # Change period for tests
+
 from beamer.agent import Agent
 from beamer.config import Config
 from beamer.contracts import ContractInfo
