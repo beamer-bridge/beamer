@@ -7,7 +7,7 @@ from web3 import Web3
 from web3.middleware import latest_block_based_cache_middleware
 
 import beamer.metrics
-from beamer.chain import POLL_PERIOD_MAINNET, POLL_PERIOD_TESTNET, EventMonitor, EventProcessor
+from beamer.chain import POLL_PERIOD, EventMonitor, EventProcessor
 from beamer.config import Config
 from beamer.contracts import ContractInfo, make_contracts
 from beamer.state_machine import Context
@@ -82,9 +82,6 @@ class Agent:
             l1_resolutions={},
         )
 
-        chain_id = w3_l1.eth.chain_id
-        poll_period = POLL_PERIOD_MAINNET if chain_id == 1 else POLL_PERIOD_TESTNET
-
         self._event_processor = EventProcessor(self.context)
 
         self._event_monitor_l2a = EventMonitor(
@@ -93,7 +90,7 @@ class Agent:
             deployment_block=l2a_contracts_info["RequestManager"].deployment_block,
             on_new_events=self._event_processor.add_events,
             on_sync_done=self._event_processor.mark_sync_done,
-            poll_period=poll_period,
+            poll_period=POLL_PERIOD,
         )
 
         self._event_monitor_l2b = EventMonitor(
@@ -102,7 +99,7 @@ class Agent:
             deployment_block=l2b_contracts_info["FillManager"].deployment_block,
             on_new_events=self._event_processor.add_events,
             on_sync_done=self._event_processor.mark_sync_done,
-            poll_period=poll_period,
+            poll_period=POLL_PERIOD,
         )
 
     def start(self) -> None:

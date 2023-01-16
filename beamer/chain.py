@@ -26,8 +26,7 @@ _ERC20_ABI = load_ERC20_abi()
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
 
-POLL_PERIOD_TESTNET = 1
-POLL_PERIOD_MAINNET = 5
+POLL_PERIOD = 5
 
 
 def _wrap_thread_func(func: Callable) -> Callable:
@@ -144,17 +143,14 @@ class EventProcessor:
     def _thread_func(self) -> None:
         self._log.info("EventProcessor started")
 
-        chain_id = self._context.web3_l1.eth.chain_id
-        poll_period = POLL_PERIOD_MAINNET if chain_id == 1 else POLL_PERIOD_TESTNET
-
         # Wait until all past events are fetched and in the queue
         # so the agent can sync to the current state
         while not self._synced and not self._stop:
-            self._have_new_events.wait(poll_period)
+            self._have_new_events.wait(POLL_PERIOD)
             self._have_new_events.clear()
 
         while not self._stop:
-            if self._have_new_events.wait(poll_period):
+            if self._have_new_events.wait(POLL_PERIOD):
                 self._have_new_events.clear()
             if self._events:
                 self._process_events()
