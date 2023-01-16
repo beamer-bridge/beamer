@@ -92,7 +92,7 @@ describe('utils', () => {
     });
 
     it('reads & parses files from deployment folders to deployment info instances', () => {
-      const dirFiles = ['mainnet', 'rinkeby'];
+      const dirFiles = ['mainnet', 'goerli'];
       const deploymentInfo = generateDeploymentInfo();
 
       DeploymentInfo.readFromFile = vi.fn().mockReturnValue(deploymentInfo);
@@ -102,7 +102,7 @@ describe('utils', () => {
       expect(result).toEqual([deploymentInfo, deploymentInfo]);
     });
     it('allows reading while ignoring certain deployment folders', () => {
-      const dirFiles = ['mainnet', 'rinkeby'];
+      const dirFiles = ['mainnet', 'goerli'];
       const ignoreDirectories = ['mainnet'];
       const deploymentInfo = generateDeploymentInfo();
 

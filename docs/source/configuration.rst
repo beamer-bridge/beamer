@@ -10,11 +10,11 @@ option.
 An example configuration::
 
     log-level = "debug"
-    deployment-dir = "deployments/rinkeby"
+    deployment-dir = "deployments/goerli"
     fill-wait-time = 120
     unsafe-fill-time = 600
-    source-chain = "rinkeby-metis"
-    target-chain = "rinkeby-boba"
+    source-chain = "goerli-arbitrum"
+    target-chain = "goerli-optimism"
 
     [account]
     path = "account.json"
@@ -24,26 +24,26 @@ An example configuration::
     prometheus-port = 9101
 
     [chains.l1]
-    rpc-url = "https://api-rinkeby.etherscan.io"
+    rpc-url = "GOERLI_TESTNET_RPC_URL"
 
-    [chains.rinkeby-metis]
-    rpc-url = "https://stardust.metis.io/?owner=588"
+    [chains.goerli-arbitrum]
+    rpc-url = "GOERLI_ARBITRUM_RPC_URL"
 
-    [chains.rinkeby-boba]
-    rpc-url = "https://rinkeby.boba.network/"
+    [chains.goerli-optimism]
+    rpc-url = "GOERLI_OPTIMISM_RPC_URL"
 
     [tokens]
     # Each token is represented by a pair [chain-id, token-address].
     # All tokens within the same list are considered equivalent and
     # transfers between them are allowed.
     TST = [
-        ["11", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6"],
-        ["22", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D"]
+        ["421613", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6"],
+        ["420", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D"]
     ]
 
     USDC = [
-        ["11", "0x1a65113Fb92916EF0D3043D651b469b653763F16"],
-        ["22", "0x6bCE0F297a204E1374860E0259EC31047a87B50F"]
+        ["421613", "0x1a65113Fb92916EF0D3043D651b469b653763F16"],
+        ["420", "0x6bCE0F297a204E1374860E0259EC31047a87B50F"]
     ]
 
 In addition to the configuration file, one can specify command-line options which then
@@ -51,9 +51,9 @@ override settings from the configuration file.
 
 Chains can be specified on the command-line as follows::
 
-    --chain l1=https://api-rinkeby.etherscan.io
-    --chain rinkeby-metis=https://stardust.metis.io/?owner=588
-    --chain rinkeby-boba=https://rinkeby.boba.network/
+    --chain l1="GOERLI_TESTNET_RPC_URL"
+    --chain goerli-arbitrum="GOERLI_ARBITRUM_RPC_URL"
+    --chain goerli-optimism="GOERLI_OPTIMISM_RPC_URL"
 
 These three options are equivalent to the ``[chains]`` sections in the
 configuration file example above. Details on available options can be found in
