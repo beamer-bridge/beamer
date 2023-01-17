@@ -12,6 +12,7 @@ import {
   isRequestClaimed,
   isRequestExpiredByLatestBlock,
   isRequestExpiredByLocalClock,
+  listenOnClaimCountChange,
   sendRequestTransaction,
   waitUntilClaimsWithdrawn,
   withdrawRequest,
@@ -423,6 +424,53 @@ describe('request-manager', () => {
     });
     it('returns false if claim count is 0', () => {
       expect(isRequestClaimed(0)).toBe(false);
+    });
+  });
+
+  describe('listenOnClaimCountChange()', () => {
+    it('attaches a callback handler for claim count increase', () => {
+      const onIncrease = vi.fn();
+      const requestIdentifier = getRandomString();
+      const options = {
+        rpcUrl: getRandomUrl('rpc'),
+        requestManagerAddress: getRandomString(),
+        requestIdentifier,
+        onReduce: vi.fn(),
+        onIncrease,
+      };
+
+      const contract = mockGetContract();
+      contract.filters.ClaimMade = vi.fn().mockReturnValue('test-filter');
+      contract.filters.ClaimStakeWithdrawn = vi.fn();
+
+      listenOnClaimCountChange(options);
+
+      expect(contract.filters.ClaimMade).toHaveBeenCalledWith(requestIdentifier);
+      expect(contract.on).toHaveBeenCalledWith('test-filter', onIncrease);
+    });
+
+    it('attaches a callback handler for claim count decrease', () => {
+      const onReduce = vi.fn();
+      const requestIdentifier = getRandomString();
+      const options = {
+        rpcUrl: getRandomUrl('rpc'),
+        requestManagerAddress: getRandomString(),
+        requestIdentifier,
+        onReduce,
+        onIncrease: vi.fn(),
+      };
+
+      const contract = mockGetContract();
+      contract.filters.ClaimMade = vi.fn();
+      contract.filters.ClaimStakeWithdrawn = vi.fn().mockReturnValue('test-filter');
+
+      listenOnClaimCountChange(options);
+      expect(contract.filters.ClaimStakeWithdrawn).toHaveBeenCalledWith(
+        undefined,
+        requestIdentifier,
+      );
+
+      expect(contract.on).toHaveBeenCalledWith('test-filter', onReduce);
     });
   });
 

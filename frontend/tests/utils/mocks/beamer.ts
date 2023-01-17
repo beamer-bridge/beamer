@@ -56,6 +56,7 @@ export class MockedRequestManagerContract {
 
   filters = {
     ClaimStakeWithdrawn: vi.fn(),
+    ClaimMade: vi.fn(),
   };
 
   interface = {
