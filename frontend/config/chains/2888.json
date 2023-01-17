@@ -9,5 +9,6 @@
     "name": "Goerli Ether",
     "symbol": "ETH",
     "decimals": 18
-  }
+  },
+  "internalRpcUrl": "https://goerli.boba.network/"
 }

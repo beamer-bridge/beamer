@@ -8,5 +8,6 @@
     "name": "Geth Testnet Ether",
     "symbol": "ETH",
     "decimals": 18
-  }
+  },
+  "internalRpcUrl": "http://localhost:8545/"
 }

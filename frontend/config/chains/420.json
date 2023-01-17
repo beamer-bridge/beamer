@@ -9,5 +9,6 @@
     "name": "Goerli Ether",
     "symbol": "ETH",
     "decimals": 18
-  }
+  },
+  "internalRpcUrl": "https://opt-goerli.g.alchemy.com/v2/z7PBIRx7D_pzi6ldu9XEbIgMGdTP5IKd"
 }
