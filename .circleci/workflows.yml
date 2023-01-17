@@ -228,7 +228,7 @@ jobs:
           fingerprints:
             - 5b:50:ed:f0:2b:67:fd:13:db:f5:64:a3:5c:3b:36:d7
       - run: |
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh-keyscan github.com > ~/.ssh/known_hosts
           git clone --depth=1 "${REPO_URL}" -b gh-pages "${TMP_DIR}"
           rm -rf "${TMP_DIR}"/*
           cp -r ~/beamer/docs/build/html/* "${TMP_DIR}"
