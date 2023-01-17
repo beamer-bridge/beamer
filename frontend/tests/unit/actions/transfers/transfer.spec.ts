@@ -260,7 +260,7 @@ describe('transfer', () => {
     it('uses the stored request transaction hash', async () => {
       const data = generateTransferData({
         sourceChain: generateChain({
-          rpcUrl: 'https://source.rpc',
+          internalRpcUrl: 'https://source.rpc',
           requestManagerAddress: '0xRequestManager',
         }),
         requestInformation: generateRequestInformationData({
@@ -304,7 +304,7 @@ describe('transfer', () => {
       const identifier = getRandomString();
       const data = generateTransferData({
         targetChain: generateChain({
-          rpcUrl: 'https://target.rpc',
+          internalRpcUrl: 'https://target.rpc',
           fillManagerAddress: '0xFillManager',
         }),
         requestInformation: generateRequestInformationData({
@@ -328,7 +328,7 @@ describe('transfer', () => {
       const identifier = getRandomString();
       const data = generateTransferData({
         sourceChain: generateChain({
-          rpcUrl: 'https://source.rpc',
+          internalRpcUrl: 'https://source.rpc',
           requestManagerAddress: '0xRequestManager',
         }),
         requestInformation: generateRequestInformationData({
@@ -526,7 +526,7 @@ describe('transfer', () => {
       const identifier = getRandomString();
       const data = generateTransferData({
         sourceChain: generateChain({
-          rpcUrl: 'https://source.rpc',
+          internalRpcUrl: 'https://source.rpc',
           requestManagerAddress: '0xRequestManager',
         }),
         requestInformation: generateRequestInformationData({
