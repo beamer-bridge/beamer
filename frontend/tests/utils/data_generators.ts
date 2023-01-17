@@ -78,6 +78,7 @@ export function generateChain(partialChain?: Partial<Chain>): Chain {
     identifier: getRandomNumber(), // TODO
     name: getRandomChainName(),
     rpcUrl: getRandomUrl('rpc'),
+    internalRpcUrl: getRandomUrl('internalRpc'),
     requestManagerAddress: getRandomEthereumAddress(),
     fillManagerAddress: getRandomEthereumAddress(),
     explorerUrl: getRandomUrl('explorer'),
@@ -180,6 +181,7 @@ export function generateChainMetadata(
     identifier: getRandomNumber(),
     name: getRandomChainName(),
     rpcUrl: getRandomUrl('rpc'),
+    internalRpcUrl: getRandomUrl('internalRpc'),
     explorerUrl: getRandomUrl('explorer'),
     tokenSymbols: [getRandomTokenSymbol()],
     ...partialChainMetadata,
