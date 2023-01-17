@@ -1,6 +1,6 @@
 <template>
-  <div class="w-full h-full flex flex-col overflow-hidden rounded-lg">
-    <div class="tab-header w-full flex bg-teal">
+  <div class="w-full h-full flex flex-col rounded-lg">
+    <div class="tab-header w-full flex bg-teal relative rounded-t-lg">
       <div
         v-for="header of headers"
         :key="header.label"
@@ -20,7 +20,7 @@
           :is="activeTab.content"
           v-if="activeTab"
           :key="activeTab.label"
-          class="bg-teal px-4 md:px-8 h-full"
+          class="bg-teal px-4 md:px-8 h-full min-h-[35.7rem]"
         />
       </KeepAlive>
     </div>
