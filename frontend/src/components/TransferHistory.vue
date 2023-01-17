@@ -6,37 +6,47 @@
         class="w-full h-full overflow-y-auto overflow-hidden pb-20 no-scrollbar"
       >
         <div
-          v-if="transfers.length === 0"
+          v-if="transfers.length === 0 && signer"
           class="text-xl w-full h-full flex justify-center items-center text-sea-green/40"
         >
           <span>Nothing here yet.</span>
         </div>
 
-        <template v-for="(group, groupIndex) of groupedAndSortedTransfers" :key="group.label">
-          <LazyWrapper
-            v-if="group.transfers.length > 0"
-            :root-element="listElement"
-            :threshold="0.0"
-          >
-            <div v-if="group.transfers.length > 0" class="text-xl text-center">
-              {{ group.label }}
-            </div>
-          </LazyWrapper>
-          <LazyWrapper
-            v-for="(transfer, groupTransferIndex) of group.transfers"
-            :key="transfer.requestInformation?.identifier ?? `${groupIndex}-${groupTransferIndex}`"
-            :threshold="0.0"
-            :root-element="listElement"
-          >
-            <TransferComponent
+        <div v-if="signer">
+          <template v-for="(group, groupIndex) of groupedAndSortedTransfers" :key="group.label">
+            <LazyWrapper
               v-if="group.transfers.length > 0"
-              :transfer="transfer"
-              class="my-3"
-              data-test="transfer"
-            />
-          </LazyWrapper>
-          <div v-if="group.transfers.length > 0" class="h-12"></div>
-        </template>
+              :root-element="listElement"
+              :threshold="0.0"
+            >
+              <div v-if="group.transfers.length > 0" class="text-xl text-center">
+                {{ group.label }}
+              </div>
+            </LazyWrapper>
+            <LazyWrapper
+              v-for="(transfer, groupTransferIndex) of group.transfers"
+              :key="
+                transfer.requestInformation?.identifier ?? `${groupIndex}-${groupTransferIndex}`
+              "
+              :threshold="0.0"
+              :root-element="listElement"
+            >
+              <TransferComponent
+                v-if="group.transfers.length > 0"
+                :transfer="transfer"
+                class="my-3"
+                data-test="transfer"
+              />
+            </LazyWrapper>
+            <div v-if="group.transfers.length > 0" class="h-12"></div>
+          </template>
+        </div>
+        <div
+          v-else
+          class="text-xl w-full h-full flex justify-center items-center text-sea-green/40"
+        >
+          Connect wallet to view activity.
+        </div>
       </div>
     </div>
   </div>
@@ -66,12 +76,16 @@ import TransferComponent from '@/components/Transfer.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTransferGrouping } from '@/composables/useTransferGrouping';
 import { switchToRequestDialog } from '@/router/navigation';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 
 const { activated: newTransferButtonVisible } = useToggleOnActivation();
 const listElement = ref();
 const transferHistory = useTransferHistory();
 const { transfers } = storeToRefs(transferHistory);
+const ethereumProvider = useEthereumProvider();
+const { signer } = storeToRefs(ethereumProvider);
+
 const timeWindows = ref([
   { label: 'today', priority: 3, maxDaysAgo: 1 },
   { label: '3 days ago', priority: 2, maxDaysAgo: 3 },

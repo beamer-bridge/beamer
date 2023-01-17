@@ -6,6 +6,7 @@ import Transfer from '@/components/Transfer.vue';
 import TransferHistory from '@/components/TransferHistory.vue';
 import * as groupingComposable from '@/composables/useTransferGrouping';
 import * as navigation from '@/router/navigation';
+import * as useEthereumProviderComposable from '@/stores/ethereum-provider';
 import { generateTransfer } from '~/utils/data_generators';
 
 vi.mock('@/composables/useTransferGrouping');
@@ -43,6 +44,11 @@ async function createWrapper(options?: { transfers?: Array<unknown> }) {
 
 describe('TransferHistory.vue', () => {
   beforeEach(() => {
+    Object.defineProperty(useEthereumProviderComposable, 'useEthereumProvider', {
+      value: vi.fn().mockReturnValue({
+        signer: ref('fake-signer'),
+      }),
+    });
     Object.defineProperty(groupingComposable, 'useTransferGrouping', {
       value: vi.fn().mockReturnValue({
         groupedAndSortedTransfers: ref([]),
