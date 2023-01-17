@@ -16,7 +16,7 @@
       :amount="requestSource.amount"
       :source-chain="requestSource.sourceChain"
       :token="requestSource.token"
-      class="rounded-tl-lg rounded-b-lg bg-teal px-6 py-4 mt-10 md:px-8 md:py-6"
+      class="rounded-tl-lg rounded-b-lg bg-teal px-6 py-4 mt-10 md:px-8 md:py-8"
     />
   </div>
 

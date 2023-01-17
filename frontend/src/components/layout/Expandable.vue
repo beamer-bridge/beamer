@@ -5,7 +5,7 @@
       data-test="header"
       @click="toggleBodyVisibility"
     >
-      <div class="w-10">
+      <div class="w-5 flex items-center">
         <img :src="CaretRight" class="top-4 left-4 h-[1rem] w-[1rem]" :class="caretClasses" />
       </div>
 

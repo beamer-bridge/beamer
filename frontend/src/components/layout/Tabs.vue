@@ -20,7 +20,7 @@
           :is="activeTab.content"
           v-if="activeTab"
           :key="activeTab.label"
-          class="bg-teal px-4 md:px-8 h-full min-h-[35.7rem]"
+          class="bg-teal px-4 md:px-8"
         />
       </KeepAlive>
     </div>
