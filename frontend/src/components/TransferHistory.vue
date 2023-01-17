@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-full pt-6" v-bind="$attrs">
+  <div class="relative w-full h-full pt-6 rounded-b-lg" v-bind="$attrs">
     <div class="gradient-wrapper relative w-full h-full">
       <div
         ref="listElement"
