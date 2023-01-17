@@ -16,7 +16,7 @@ export function useMaxTransferableTokenAmount(
     try {
       const transferableAmount = await getAmountBeforeFees(
         balance,
-        chain.rpcUrl,
+        chain.internalRpcUrl,
         chain.requestManagerAddress,
       );
       maxTransferableTokenAmount.value = TokenAmount.new(transferableAmount, balance.token);

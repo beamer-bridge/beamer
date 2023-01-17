@@ -240,7 +240,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Missing wallet connection!');
     }
 
-    const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.rpcUrl);
+    const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
     const transactionHash = await sendRequestTransaction(
       signer,
@@ -266,7 +266,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     const identifier = await getRequestIdentifier(
-      this.sourceChain.rpcUrl,
+      this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.transactionHash,
     );
@@ -280,14 +280,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     const { promise: fulfillmentPromise, cancel: cancelFulfillmentChecks } = waitForFulfillment(
-      this.targetChain.rpcUrl,
+      this.targetChain.internalRpcUrl,
       this.targetChain.fillManagerAddress,
       this._requestInformation.identifier,
       this._requestInformation.blockNumberOnTargetChain,
     );
 
     const { promise: expirationPromise, cancel: cancelExpirationCheck } = failWhenRequestExpires(
-      this.sourceChain.rpcUrl,
+      this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );
@@ -313,7 +313,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     const { withdrawn } = await getRequestData(
-      this.sourceChain.rpcUrl,
+      this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );

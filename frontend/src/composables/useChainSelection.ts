@@ -32,6 +32,7 @@ export function getChainSelectorOption(
       explorerUrl: chains[chainId].explorerUrl,
       imageUrl: chains[chainId].imageUrl,
       nativeCurrency: chains[chainId].nativeCurrency,
+      internalRpcUrl: chains[chainId].internalRpcUrl,
     };
     return { value: chain, label: chain.name, imageUrl: chain.imageUrl };
   }
