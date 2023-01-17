@@ -11,14 +11,14 @@ export async function fetchUntilFirstMatchingEvent(
   filter: EventFilter,
   fromBlockNumber: number,
   toBlockNumber: number,
-  blockChunkSize = 2,
+  blockChunkSize = 500,
 ): Promise<boolean> {
   while (fromBlockNumber <= toBlockNumber) {
     const targetBlockNumber = Math.min(fromBlockNumber + blockChunkSize, toBlockNumber);
 
     try {
       const events = await contract.queryFilter(filter, fromBlockNumber, targetBlockNumber);
-      await sleep(1000);
+      await sleep(5000);
 
       if (events.length > 0) {
         return true;
