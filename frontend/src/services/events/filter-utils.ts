@@ -1,5 +1,9 @@
 import type { EventFilter } from 'ethers';
 
+function sleep(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 export async function fetchUntilFirstMatchingEvent(
   contract: {
     queryFilter: (event: EventFilter, from: number, to: number) => Promise<Array<unknown>>;
@@ -14,6 +18,7 @@ export async function fetchUntilFirstMatchingEvent(
 
     try {
       const events = await contract.queryFilter(filter, fromBlockNumber, targetBlockNumber);
+      await sleep(1000);
 
       if (events.length > 0) {
         return true;
