@@ -4,7 +4,7 @@
     :is-expanded="isExpanded"
   >
     <template #header>
-      <div class="relative text-center w-full" data-test="header">
+      <div class="relative text-center w-full pr-6" data-test="header">
         {{ formattedAmount }}&nbsp;to&nbsp;{{ transfer.targetChain.name }}
         <div
           class="w-4 h-4 rounded-full absolute right-1 top-1"
