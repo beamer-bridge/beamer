@@ -24,6 +24,10 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
               type: 'string',
               format: 'uri',
             },
+            internalRpcUrl: {
+              type: 'string',
+              format: 'uri',
+            },
             name: {
               type: 'string',
               minLength: 1,

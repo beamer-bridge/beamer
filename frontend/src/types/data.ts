@@ -18,6 +18,7 @@ export type Chain = {
   explorerUrl: string; // TODO: restrict more
   imageUrl?: string; // TODO: restrict more
   nativeCurrency?: NativeCurrency;
+  internalRpcUrl: string;
 };
 
 export type Token = {

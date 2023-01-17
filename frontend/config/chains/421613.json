@@ -9,5 +9,6 @@
     "name": "Arbitrum Görli",
     "symbol": "AGOR",
     "decimals": 18
-  }
+  },
+  "internalRpcUrl": "https://arb-goerli.g.alchemy.com/v2/y9g9uiWMW2hVfXosOp4uG62-mfBcaz6A"
 }
