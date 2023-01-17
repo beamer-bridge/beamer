@@ -4,12 +4,7 @@
       <div class="flex flex-row justify-between">
         <span class="text-xl pl-2">From</span>
 
-        <Tooltip
-          v-if="faucetEnabled"
-          class="self-end -mr-3"
-          hint="This will provide you with a small amount of test tokens and test eth for the connected network. About 10 seconds after clicking the button you should see them in your connected wallet"
-          show-outside-of-closest-reference-element
-        >
+        <Tooltip v-if="faucetEnabled" class="self-end -mr-3">
           <button
             class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
             :disabled="!faucetAvailable"
@@ -18,6 +13,11 @@
             <spinner v-if="faucetRequestActive" size-classes="w-3 h-3" border="2"></spinner>
             <template v-else>Get Test Tokens</template>
           </button>
+          <template #hint>
+            This will provide you with a small amount of test tokens and test eth for the connected
+            network. About 10 seconds after clicking the button you should see them in your
+            connected wallet
+          </template>
         </Tooltip>
       </div>
       <Selector
@@ -47,7 +47,7 @@
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
           <div v-else class="pt-1 self-end">
-            <div v-if="balance" class="text-xs">
+            <div v-if="balance">
               <spinner
                 v-if="maxTransferableTokenBalanceLoading"
                 size-classes="w-3 h-3"
@@ -58,11 +58,7 @@
                 <div v-if="balance.uint256.isZero()" class="px-2">
                   {{ formattedTokenBalance }} available
                 </div>
-                <Tooltip
-                  v-else
-                  :hint="`You have ${balance.formatFullValue()} in your wallet. Click to use all.`"
-                  show-outside-of-closest-reference-element
-                >
+                <Tooltip v-else>
                   <button
                     class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
                     :disabled="maxTransferableTokenBalanceLoading"
@@ -73,6 +69,9 @@
                     </span>
                     available
                   </button>
+                  <template #hint>
+                    You have {{ balance.formatFullValue() }} in your wallet. Click to use all.
+                  </template>
                 </Tooltip>
               </template>
             </div>
@@ -90,11 +89,7 @@
             @opened="hideActionButton"
             @closed="showActionButton"
           />
-          <Tooltip
-            class="self-end -mr-3"
-            hint="Adds current token to the connected wallet"
-            show-outside-of-closest-reference-element
-          >
+          <Tooltip class="self-end -mr-3">
             <button
               class="text-orange text-xs font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
               :disabled="!addTokenAvailable"
@@ -102,6 +97,7 @@
             >
               Add to Wallet
             </button>
+            <template #hint> Adds current token to the connected wallet </template>
           </Tooltip>
         </div>
       </div>

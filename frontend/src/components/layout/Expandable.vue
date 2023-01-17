@@ -1,8 +1,14 @@
 <template>
-  <div ref="element" class="relative flex flex-col">
-    <img :src="CaretRight" class="absolute top-4 left-4 h-[1rem] w-[1rem]" :class="caretClasses" />
+  <div ref="element" class="flex flex-col">
+    <div
+      class="cursor-pointer flex justify-between"
+      data-test="header"
+      @click="toggleBodyVisibility"
+    >
+      <div class="w-10">
+        <img :src="CaretRight" class="top-4 left-4 h-[1rem] w-[1rem]" :class="caretClasses" />
+      </div>
 
-    <div class="cursor-pointer" data-test="header" @click="toggleBodyVisibility">
       <slot name="header" />
     </div>
 

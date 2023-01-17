@@ -9,8 +9,8 @@ function createWrapper(options?: { address?: string }) {
     global: {
       stubs: {
         Tooltip: {
-          template: '<slot /><div id="tooltip">{{ hint }}</div>',
-          props: ['hint', 'showOutsideOfClosestReferenceElement', 'class'],
+          template: '<div id="tooltip"><slot /><slot name="hint" /></div>',
+          props: [],
         },
       },
     },
@@ -70,11 +70,10 @@ describe('EthereumAddress.vue', () => {
     it('shortly changes tooltip to indicate copy was successful', async () => {
       const wrapper = createWrapper({ address: '0x6626079BCF8c3241b082C73B74DFea46CeFA4f02' });
       const address = wrapper.get('[data-test="address"]');
-      const tooltip = wrapper.get('#tooltip');
 
       await address.trigger('click');
 
-      expect(tooltip.text()).toContain('Copied!');
+      expect(wrapper.text()).toContain('Copied!');
 
       /*
        * I have absolutely no clue but for some reason it is not possible to use
@@ -82,7 +81,7 @@ describe('EthereumAddress.vue', () => {
        * actual "sleep" is necessary to still have a test for now.
        */
       await new Promise((resolve) => setTimeout(resolve, 1100));
-      expect(tooltip.text()).not.toBe('Copied!');
+      expect(wrapper.text()).not.toBe('Copied!');
     });
   });
 });
