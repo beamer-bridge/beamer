@@ -1,6 +1,12 @@
 <template>
-  <Tooltip class="inline" :hint="hint" show-outside-of-closest-reference-element>
+  <Tooltip :disable-click-away="true" :show="showCopytoolTipOn">
     <span data-test="address" class="cursor-copy" @click="copyAddress">{{ shortenAddress }}</span>
+    <template #hint>
+      <div class="w-[23rem]">
+        <span v-show="!showCopytoolTipOn" class="text-xs">{{ props.address }} (copy) </span>
+        <span v-if="showCopytoolTipOn" class="text-xs"> Copied! </span>
+      </div>
+    </template>
   </Tooltip>
 </template>
 
@@ -24,12 +30,8 @@ const timeout = ref<ReturnType<typeof setTimeout> | undefined>(undefined);
 const clipboardAvailable = navigator && navigator.clipboard;
 const showCopyTooltip = ref(false);
 
-const hint = computed(() => {
-  if (showCopyTooltip.value) {
-    return 'Copied!';
-  } else {
-    return props.address + (clipboardAvailable ? ' (copy)' : '');
-  }
+const showCopytoolTipOn = computed(() => {
+  return showCopyTooltip.value === false ? null : true;
 });
 
 async function copyAddress() {

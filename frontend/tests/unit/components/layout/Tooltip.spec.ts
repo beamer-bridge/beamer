@@ -2,33 +2,15 @@ import { enableAutoUnmount, mount } from '@vue/test-utils';
 
 import Tooltip from '@/components/layout/Tooltip.vue';
 
-async function createWrapper(options?: {
-  hint?: string;
-  tooltipWidth?: string;
-  gap?: string;
-  arrowSize?: number;
-  defaultSlot?: string;
-  hintSlot?: string;
-  showTooltip?: boolean;
-}) {
+async function createWrapper(options?: { defaultSlot?: string; hintSlot?: string }) {
   const wrapper = mount(Tooltip, {
-    shallow: true,
+    shallow: false,
     slots: {
       default: options?.defaultSlot ?? '',
       hint: options?.hintSlot ?? '',
     },
-    props: {
-      hint: options?.hint,
-      tooltipWidth: options?.tooltipWidth,
-      gap: options?.gap,
-      arrowSize: options?.arrowSize,
-    },
     attachTo: document.getElementById('container') ?? document.body,
   });
-
-  if (options?.showTooltip) {
-    await wrapper.trigger('mouseover');
-  }
 
   await wrapper.vm.$nextTick();
   return wrapper;
@@ -44,93 +26,25 @@ describe('Tooltip.vue', () => {
     document.body.appendChild(container);
   });
 
-  it('always renders the default slot ', async () => {
-    const wrapper = await createWrapper({ defaultSlot: '<div>some content</div>' });
+  it('renders the default slot if provided', async () => {
+    let wrapper = await createWrapper({ defaultSlot: 'default-slot' });
+    expect(wrapper.get('[data-test="tooltip-trigger"]').text()).toContain('default-slot');
 
-    expect(wrapper.html()).toContain('<div>some content</div>');
+    wrapper = await createWrapper();
+    expect(wrapper.get('[data-test="tooltip-trigger"]').text()).toContain('');
   });
 
-  it('hides tooltip per default', async () => {
-    const wrapper = await createWrapper();
-    const tooltip = wrapper.find('[data-test="tooltip"]');
-
-    expect(tooltip.exists()).toBeFalsy();
-  });
-
-  it('allows controlling tooltip visibility based on mouse events', async () => {
-    const wrapper = await createWrapper();
-
-    expect(wrapper.find('[data-test="tooltip"]').exists()).toBeFalsy();
-    await wrapper.trigger('mouseover');
-    expect(wrapper.find('[data-test="tooltip"]').exists()).toBeTruthy();
-    await wrapper.trigger('mouseout');
-    expect(wrapper.find('[data-test="tooltip"]').exists()).toBeFalsy();
-  });
-
-  it('renders hint property into tooltip', async () => {
-    const wrapper = await createWrapper({ hint: 'test hint', showTooltip: true });
-    const tooltip = wrapper.find('[data-test="tooltip"]');
-
-    expect(tooltip.text()).toContain('test hint');
-  });
-
-  it('renders hint slot into tooltip', async () => {
-    const wrapper = await createWrapper({
-      hintSlot: '<span>test hint</span>',
-      showTooltip: true,
-    });
-    const tooltip = wrapper.get('[data-test="tooltip"]');
-
-    expect(tooltip.html()).toContain('<span>test hint</span>');
-  });
-
-  it('sets width to tooltip', async () => {
-    const wrapper = await createWrapper({ tooltipWidth: '200px', showTooltip: true });
-    const tooltip = wrapper.get('[data-test="tooltip"]');
-
-    expect((tooltip.element as HTMLElement).style).toContain({ width: '200px' });
-  });
-
-  describe('when not fitting in viewport', () => {
-    /*
-     * Note that it is currently not possible to test the actual positioning as
-     * in the test environment, the `getBoundingClientRect()` of an HTML element
-     * always returns zero for all properties.
-     *
-     * The position should be bottom of the content element in this case.
-     */
-
-    let windowWidth: number;
-    beforeEach(() => {
-      windowWidth = global.window.innerWidth;
-      Object.defineProperty(global.window, 'innerWidth', { value: -1 });
-    });
-    afterEach(() => {
-      Object.defineProperty(global.window, 'innerWidth', { value: windowWidth });
+  it('render a hint slot if provided', async () => {
+    let wrapper = await createWrapper({
+      defaultSlot: 'initPopper',
+      hintSlot: 'hint-slot-content',
     });
 
-    it('sets gap as vertical margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', showTooltip: true });
-      const tooltip = wrapper.get('[data-test="tooltip"]');
+    let tooltipContent = wrapper.find('[data-test="tooltip-content"]');
+    expect(tooltipContent.text()).toContain('hint-slot-content');
 
-      expect((tooltip.element as HTMLElement).style).toContain({ margin: '20px 0px' });
-    });
-  });
-
-  describe('when fitting in viewport', () => {
-    /*
-     * Note that it is currently not possible to test the actual positioning as
-     * in the test environment, the `getBoundingClientRect()` of an HTML element
-     * always returns zero for all properties.
-     *
-     * The position should be right of the reference element in this case.
-     */
-
-    it('sets gap as horizontal margin to tooltip', async () => {
-      const wrapper = await createWrapper({ gap: '20px', showTooltip: true });
-      const tooltip = wrapper.get('[data-test="tooltip"]');
-
-      expect((tooltip.element as HTMLElement).style).toContain({ margin: '0px 20px' });
-    });
+    wrapper = await createWrapper({ defaultSlot: 'initPopper' });
+    tooltipContent = wrapper.find('[data-test="tooltip-content"]');
+    expect(tooltipContent.text()).toContain('');
   });
 });
