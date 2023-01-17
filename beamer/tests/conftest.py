@@ -1,3 +1,4 @@
+# flake8: noqa: E402
 import os
 from dataclasses import dataclass
 
@@ -13,10 +14,10 @@ from brownie import (
     accounts,
 )
 
-import beamer.metrics
 import beamer.chain
+import beamer.metrics
 
-beamer.chain.POLL_PERIOD = 1 # Change period for tests
+beamer.chain.POLL_PERIOD = 1  # Change period for tests
 
 from beamer.agent import Agent
 from beamer.config import Config
