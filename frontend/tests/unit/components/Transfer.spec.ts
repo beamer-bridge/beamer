@@ -174,7 +174,7 @@ describe('Transfer.vue', () => {
       expect(withdrawer.exists()).toBeTruthy();
       expect(withdrawer.isVisible()).toBeTruthy();
       expect(withdrawer.props()).toContain({ withdrawn: false });
-      expect(withdrawer.props()).toContain({ active: true });
+      expect(withdrawer.props()).toContain({ withdrawInProgress: true });
       expect(withdrawer.props()).toContain({ errorMessage: 'test error' });
     });
 

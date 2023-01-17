@@ -130,6 +130,7 @@ export function generateTransferData(partialTransferData?: Partial<TransferData>
     validityPeriod: generateUInt256Data(),
     fees: generateTokenAmountData(),
     date: Date.now(),
+    claimCount: getRandomNumber(),
     ...partialTransferData,
   };
 }

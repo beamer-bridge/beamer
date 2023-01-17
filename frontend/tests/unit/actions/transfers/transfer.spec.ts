@@ -20,6 +20,7 @@ import {
   generateTransferData,
   generateUInt256Data,
   getRandomEthereumAddress,
+  getRandomNumber,
   getRandomString,
 } from '~/utils/data_generators';
 import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
@@ -48,10 +49,6 @@ class TestTransfer extends Transfer {
 
   public waitForFulfillment() {
     return super.waitForFulfillment();
-  }
-
-  public checkAndUpdateWithdrawState() {
-    return super.checkAndUpdateWithdrawState();
   }
 }
 
@@ -97,6 +94,11 @@ describe('transfer', () => {
       failWhenRequestExpires: {
         value: vi.fn().mockReturnValue({
           promise: new Promise(() => undefined),
+          cancel: vi.fn(),
+        }),
+      },
+      listenOnClaimCountChange: {
+        value: vi.fn().mockReturnValue({
           cancel: vi.fn(),
         }),
       },
@@ -378,7 +380,7 @@ describe('transfer', () => {
       define(requestManager, 'failWhenRequestExpires', createTestCancelable({ error }));
       define(fillManager, 'waitForFulfillment', createTestCancelable());
       const transfer = new TestTransfer({ ...TRANSFER_DATA, expired: false });
-      transfer.checkAndUpdateWithdrawState = vi.fn();
+      transfer.checkAndUpdateState = vi.fn();
 
       try {
         await transfer.waitForFulfillment();
@@ -387,7 +389,7 @@ describe('transfer', () => {
       }
 
       expect(transfer.expired).toBeTruthy();
-      expect(transfer.checkAndUpdateWithdrawState).toHaveBeenCalledOnce();
+      expect(transfer.checkAndUpdateState).toHaveBeenCalledOnce();
     });
   });
 
@@ -395,6 +397,7 @@ describe('transfer', () => {
     const TRANSFER_DATA = generateTransferData({
       expired: true,
       withdrawn: false,
+      claimCount: 0,
       requestInformation: generateRequestInformationData({
         identifier: getRandomString(),
       }),
@@ -421,7 +424,7 @@ describe('transfer', () => {
 
     it('checks withdraw state again if it is false', async () => {
       const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
-      transfer.checkAndUpdateWithdrawState = vi.fn();
+      transfer.checkAndUpdateState = vi.fn();
 
       try {
         await transfer.withdraw(PROVIDER);
@@ -429,7 +432,7 @@ describe('transfer', () => {
         /* ignore */
       }
 
-      expect(transfer.checkAndUpdateWithdrawState).toHaveBeenCalledOnce();
+      expect(transfer.checkAndUpdateState).toHaveBeenCalledOnce();
     });
 
     it('fails when funds are already withdrawn', () => {
@@ -437,6 +440,15 @@ describe('transfer', () => {
 
       return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Funds have been already withdrawn!',
+      );
+    });
+
+    it('fails when there are active claims', () => {
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, claimCount: 2 });
+      transfer.checkAndUpdateState = vi.fn().mockReturnValue({ claimCount: 2 });
+
+      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+        'Cannot withdraw when there are active claims!',
       );
     });
 
@@ -502,7 +514,7 @@ describe('transfer', () => {
     });
   });
 
-  describe('checkAndUpdateWithdrawState()', () => {
+  describe('checkAndUpdateState()', () => {
     const TRANSFER_DATA = generateTransferData({
       requestInformation: generateRequestInformationData({
         identifier: getRandomString(),
@@ -517,8 +529,8 @@ describe('transfer', () => {
         }),
       });
 
-      return expect(transfer.checkAndUpdateWithdrawState()).rejects.toThrow(
-        'Can not check withdraw state without request identfier!',
+      return expect(transfer.checkAndUpdateState()).rejects.toThrow(
+        'Can not check state without request identfier!',
       );
     });
 
@@ -535,7 +547,7 @@ describe('transfer', () => {
       });
       const transfer = new TestTransfer(data);
 
-      await transfer.checkAndUpdateWithdrawState();
+      await transfer.checkAndUpdateState();
 
       expect(requestManager.getRequestData).toHaveBeenCalledOnce();
       expect(requestManager.getRequestData).toHaveBeenLastCalledWith(
@@ -544,16 +556,21 @@ describe('transfer', () => {
         identifier,
       );
     });
-    it('updates withdraw state based on contract state', async () => {
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawn: true }));
-      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false });
+    it('updates internal state based on contract state', async () => {
+      define(
+        requestManager,
+        'getRequestData',
+        vi.fn().mockResolvedValue({ withdrawn: true, activeClaims: 3 }),
+      );
+      const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: false, claimCount: 0 });
 
-      await transfer.checkAndUpdateWithdrawState();
-      expect(transfer.withdrawn).toBeTruthy();
+      expect(transfer.withdrawn).toBe(false);
+      expect(transfer.hasActiveClaims).toBe(false);
 
-      define(requestManager, 'getRequestData', vi.fn().mockResolvedValue({ withdrawn: false }));
-      await transfer.checkAndUpdateWithdrawState();
-      expect(transfer.withdrawn).toBeFalsy();
+      await transfer.checkAndUpdateState();
+
+      expect(transfer.withdrawn).toBe(true);
+      expect(transfer.hasActiveClaims).toBe(true);
     });
   });
 
@@ -570,6 +587,7 @@ describe('transfer', () => {
       const requestInformation = generateRequestInformationData();
       const expired = true;
       const withdrawn = true;
+      const claimCount = getRandomNumber();
       const steps = [generateStepData()];
       const data: TransferData = {
         sourceChain,
@@ -583,6 +601,7 @@ describe('transfer', () => {
         requestInformation,
         expired,
         withdrawn,
+        claimCount,
         steps,
       };
       const transfer = new TestTransfer(data);
@@ -601,6 +620,7 @@ describe('transfer', () => {
       expect(encodedData.expired).toBe(true);
       expect(encodedData.withdrawn).toBe(true);
       expect(encodedData.steps).toMatchObject(steps);
+      expect(encodedData.claimCount).toBe(claimCount);
     });
 
     it('can be used to re-instantiate transfer again', () => {
@@ -612,6 +632,64 @@ describe('transfer', () => {
       const newEncodedData = newTransfer.encode();
 
       expect(encodedData).toMatchObject(newEncodedData);
+    });
+  });
+
+  describe('startClaimEventListeners()', () => {
+    it('starts listening on claim events in order to sync the claimCount state', () => {
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({ identifier: '123' }),
+      });
+      const transfer = new TestTransfer(data);
+
+      transfer.startClaimEventListeners();
+
+      expect(requestManager.listenOnClaimCountChange).toHaveBeenCalledWith({
+        rpcUrl: transfer.sourceChain.rpcUrl,
+        requestManagerAddress: transfer.sourceChain.requestManagerAddress,
+        requestIdentifier: transfer.requestInformation?.identifier,
+        onReduce: expect.any(Function),
+        onIncrease: expect.any(Function),
+      });
+    });
+    it('cannot instantiate more then 1 active listener at a time', () => {
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({ identifier: '123' }),
+      });
+      const transfer = new TestTransfer(data);
+
+      transfer.startClaimEventListeners();
+
+      expect(() => transfer.startClaimEventListeners()).toThrow(
+        'There are already active listeners.',
+      );
+    });
+  });
+
+  describe('stopEventListeners()', () => {
+    it('stops all listeners', () => {
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({ identifier: '123' }),
+      });
+      const transfer = new TestTransfer(data);
+
+      const cancelCallback = vi.fn();
+      define(
+        requestManager,
+        'listenOnClaimCountChange',
+        vi.fn().mockReturnValue({ cancel: cancelCallback }),
+      );
+
+      expect(transfer.hasActiveListeners).toBe(false);
+
+      transfer.startClaimEventListeners();
+
+      expect(transfer.hasActiveListeners).toBe(true);
+
+      transfer.stopEventListeners();
+
+      expect(transfer.hasActiveListeners).toBe(false);
+      expect(cancelCallback).toHaveBeenCalled();
     });
   });
 });
