@@ -23,7 +23,7 @@ export function useTokenAttributes(chain: Ref<Chain | undefined>, token: Ref<Tok
   async function updateTokenAttributes(chain: Chain, token: Token) {
     try {
       tokenAttributes.value = await getTokenAttributes(
-        chain.rpcUrl,
+        chain.internalRpcUrl,
         chain.requestManagerAddress,
         token.address,
       );

@@ -228,7 +228,7 @@ const selectedTokenAmount = computed(() => {
 });
 
 const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
-  computed(() => selectedSourceChain.value?.value.rpcUrl),
+  computed(() => selectedSourceChain.value?.value.internalRpcUrl),
   computed(() => selectedSourceChain.value?.value.requestManagerAddress),
   selectedTokenAmount,
   true,
