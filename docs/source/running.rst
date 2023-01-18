@@ -101,3 +101,32 @@ While still inside the virtual environment, run::
                  --deployment-dir <contract-deployment-dir> \
                  --source-chain source \
                  --target-chain target
+
+Updating an agent
+-----------------
+
+To describe how to update an agent, it is worth to have a look on Beamer's versioning scheme. As described in
+:ref:`branching_strategy`, each major version describes a different mainnet deployment thus a different set of contracts.
+Please note, that if you update your agent to a new major version, it will run on different contracts. Updating to a
+new major version requires different steps for you to safely transition to a new major contract version.
+A minor (e.g. 1.X.0 -> 1.Y.0) or a patch (e.g. 1.2.X -> 1.2.Y) version upgrade typically brings with it a
+set of fixes and it is recommended to switch to a newer version sooner rather than later.
+The difference between the minor and patch version updates is that the former may bring a
+change in command line options, configuration file settings or similar things where some user
+attention may be required, while the patch version update should be completely painless.
+
+Update to a new agent release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Running your agent in a container, it is as easy as updating your image in the docker-compose.yml to the latest version.
+The repo https://github.com/beamer-bridge/run-your-own-agent is actively maintained and will provide you with the
+most up-to-date agent version. Alternatively you will find the latest version under
+https://github.com/beamer-bridge/beamer/releases.
+
+Update to a new major version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When updating to a new major version (i.e. X.0.0 -> Y.0.0) and thus to a new contract deployment, it is recommended to
+setup a fresh agent instance following the guidelines from https://github.com/beamer-bridge/run-your-own-agent. Please
+keep the old agent running and leave it temporarily untouched.
+As soon as the contracts are paused, the old agent should run for at least another 24 hours to ensure withdrawal of
+outstanding funds. The old agent can then be shutdown safely.

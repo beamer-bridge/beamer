@@ -36,6 +36,6 @@ around.
 This is due to the fact that a particular agent releases assumes a particular deployment.
 Also, agent releases are numbered in line with the deployment branch name.
 
-**Any contract changes commited to the main branch cause the current deployment branch
+**Any contract changes committed to the main branch cause the current deployment branch
 to diverge from main.**
 At this point, the deployment branch stops following ``main`` and PRs are required.
