@@ -1,3 +1,5 @@
+.. _branching_strategy:
+
 Making a new release
 --------------------
 
