@@ -313,6 +313,52 @@ describe('request-manager', () => {
       expect(identifier).toBe('1');
     });
 
+    it('throws an error if the transaction has reverted', async () => {
+      const transactionHash = getRandomString();
+
+      mockGetContract();
+
+      const provider = mockGetProvider();
+      provider.waitForTransaction = vi
+        .fn()
+        .mockReturnValue(new MockedTransactionReceipt({ status: 0 }));
+
+      expect(
+        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+      ).rejects.toThrow('Transaction reverted on chain.');
+    });
+
+    it('throws an error if the transaction receipt is undefined', async () => {
+      const transactionHash = getRandomString();
+
+      mockGetContract();
+
+      const provider = mockGetProvider();
+      provider.waitForTransaction = vi.fn().mockReturnValue(undefined);
+
+      expect(
+        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+      ).rejects.toThrow('Transaction not found.');
+    });
+
+    it('throws an error if there are no logs in the transaction receipt', async () => {
+      const transactionHash = getRandomString();
+
+      const contract = mockGetContract();
+      contract.interface.parseLog = vi.fn().mockImplementation(() => {
+        throw new Error("Cannot read properties of undefined (reading '0')");
+      });
+
+      const provider = mockGetProvider();
+      provider.waitForTransaction = vi
+        .fn()
+        .mockReturnValue(new MockedTransactionReceipt({ status: 1, logs: undefined }));
+
+      expect(
+        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+      ).rejects.toThrow("Request Failed. Couldn't retrieve Request ID.");
+    });
+
     it('throws an error when the given transaction hash cannot be resolved to a request identifier', async () => {
       const transactionHash = getRandomString();
 
@@ -321,7 +367,7 @@ describe('request-manager', () => {
 
       expect(
         getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
-      ).rejects.toThrow("Request Failed. Couldn't retrieve Request ID");
+      ).rejects.toThrow('Transaction not found.');
     });
   });
 

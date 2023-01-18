@@ -139,14 +139,24 @@ export async function getRequestIdentifier(
     provider,
   );
   const receipt = await provider.waitForTransaction(transactionHash, 1);
+
   if (receipt) {
-    const event = contract.interface.parseLog(receipt.logs[0]);
-    if (event) {
-      return event.args.requestId;
+    if (receipt.status === 1) {
+      try {
+        const event = contract.interface.parseLog(receipt.logs[0]);
+
+        if (event) {
+          return event.args.requestId;
+        }
+      } catch (e) {
+        throw new Error("Request Failed. Couldn't retrieve Request ID.");
+      }
+    } else {
+      throw new Error('Transaction reverted on chain.');
     }
   }
 
-  throw new Error("Request Failed. Couldn't retrieve Request ID");
+  throw new Error('Transaction not found.');
 }
 
 export type RequestData = {
