@@ -18,6 +18,8 @@ module.exports = {
       orange: '#F5AC37',
       grey: '#C4C4C4',
       'red-fire': '#EF4C13',
+      fire: '#F1612E',
+      rosa: '#FFEDEB',
       transparent: 'transparent',
     },
     boxShadow: {
