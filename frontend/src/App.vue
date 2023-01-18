@@ -1,5 +1,10 @@
 <template>
   <div class="app-content">
+    <div
+      class="flex h-16 w-full flex-col justify-center bg-fire text-center text-xl font-semibold text-rosa lg:text-2xl"
+    >
+      ✦ Beamer is now live on Arbitrum! ✦
+    </div>
     <div class="container mx-auto max-w-5xl">
       <a href="https://beamerbridge.com" target="_blank">
         <img class="w-[10rem] md:w-[15rem] mt-6 ml-6" src="@/assets/images/logo.svg" alt="logo"
