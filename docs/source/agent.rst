@@ -134,7 +134,7 @@ Unsafe Fill Time
 ----------------
 
 In order to lower the risk of filling a request that is too close to expiration, an agent has a notion of 
-_unsafe fill time_. This is the time window, expressed in seconds, before request expiration that the agent
+`unsafe fill time`. This is the time window, expressed in seconds, before request expiration that the agent
 considers unsafe for doing a fill. Once an unfilled request enters the unsafe fill time, the agent will
 simply ignore the request.
 
