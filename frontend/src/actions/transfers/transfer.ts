@@ -240,8 +240,6 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Missing wallet connection!');
     }
 
-    const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
-
     const transactionHash = await sendRequestTransaction(
       signer,
       this.sourceAmount.uint256,
@@ -252,6 +250,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.targetAccount,
       this.validityPeriod,
     );
+
+    const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
     this._requestInformation = new RequestInformation({
       transactionHash,
