@@ -7,12 +7,20 @@ export class MockedBigNumber {
   lt = vi.fn();
   isZero = vi.fn();
 }
+
 export class MockedTransaction {
   wait = vi.fn();
 }
+
 export class MockedTransactionReceipt {
   logs = [];
+  status = 1;
+
+  constructor(public props: Partial<MockedTransactionReceipt> = {}) {
+    Object.assign(this, props);
+  }
 }
+
 export class MockedERC20TokenContract {
   allowance = vi.fn();
   approve = vi.fn().mockImplementation(() => new MockedTransaction());
