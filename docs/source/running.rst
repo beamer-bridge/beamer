@@ -52,7 +52,7 @@ number at the time of deployment.
 
 The rest of the files contain contract ABI information which is needed by the agent.
 
-.. _deployment on Goerli:: https://github.com/beamer-bridge/beamer/tree/main/deployments/goerli
+.. _deployment on Goerli: https://github.com/beamer-bridge/beamer/tree/main/deployments/goerli
 
 .. _agent-container:
 
