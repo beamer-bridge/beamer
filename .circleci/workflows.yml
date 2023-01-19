@@ -199,21 +199,16 @@ jobs:
   build-docs:
     executor: vm
     steps:
-      - when:
-          condition: <<pipeline.parameters.docs-updated>>
-          steps:
-            - attach_workspace:
-                at: /
-            - restore-python
-            - restore-python-packages
-            - run: sudo apt-get install graphviz
-            - run: make docs
-            - persist_to_workspace:
-                root: /
-                paths:
-                  - home/circleci/beamer/docs/build/html
-      # The step below is here in order to pass CircleCI schema validation.
-      - run: echo -n > /dev/null
+      - attach_workspace:
+          at: /
+      - restore-python
+      - restore-python-packages
+      - run: sudo apt-get install graphviz
+      - run: make docs
+      - persist_to_workspace:
+          root: /
+          paths:
+            - home/circleci/beamer/docs/build/html
 
   publish-docs:
     docker:
@@ -295,9 +290,6 @@ workflows:
           requires:
             - install-python
             - install-npm-packages
-      - build-docs:
-          requires:
-            - install-python
       - create-relayers:
           requires:
             - checkout
@@ -316,11 +308,8 @@ workflows:
           requires:
             - compile-contracts
 
-  publish-docs:
-    when:
-      and:
-        - <<pipeline.parameters.docs-updated>>
-        - equal: [ main, <<pipeline.git.branch>> ]
+  docs:
+    when: <<pipeline.parameters.docs-updated>>
     jobs:
       - checkout
       - install-python:
@@ -333,6 +322,9 @@ workflows:
       - publish-docs:
           requires:
             - build-docs
+          filters:
+            branches:
+              only: main
 
   frontend:
     when: <<pipeline.parameters.frontend-updated>>
