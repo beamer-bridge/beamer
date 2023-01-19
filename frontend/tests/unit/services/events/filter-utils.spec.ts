@@ -12,6 +12,10 @@ describe('filter-utils', () => {
     vi.useFakeTimers();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('fetchUntilFirstMatchingEvent()', () => {
     it('does nothing if block range is negative and returns false', async () => {
       const contract = { queryFilter: vi.fn() };
