@@ -62,6 +62,9 @@ parameters:
   subgraph-updated:
     type: boolean
     default: false
+  relayer-updated:
+    type: boolean
+    default: false
 
 executors:
   vm:
@@ -256,6 +259,22 @@ jobs:
           name: Unit tests
           command: yarn test:unit
 
+  test-relayer:
+    executor: node/default
+    working_directory: ~/beamer/relayer
+    steps:
+      - checkout:
+          path: ~/beamer
+      - node/install-packages:
+          pkg-manager: yarn
+          app-dir: ~/beamer/relayer
+      - run:
+          name: Lint
+          command: yarn lint
+      - run:
+          name: Unit tests
+          command: yarn test:unit
+
   build-and-publish-container-image:
     executor: vm
     environment:
@@ -330,6 +349,11 @@ workflows:
     when: <<pipeline.parameters.frontend-updated>>
     jobs:
       - build-and-test-frontend
+
+  relayer:
+    when: <<pipeline.parameters.relayer-updated>>
+    jobs:
+      - test-relayer
 
   build-and-publish-container-image:
     when:
