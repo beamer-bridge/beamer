@@ -140,7 +140,7 @@ jobs:
           at: /
       - restore-node-packages
       - ensure-node-environment
-      - run: make ~/beamer relayers
+      - run: make relayers
       - persist_to_workspace:
           root: /
           paths:
