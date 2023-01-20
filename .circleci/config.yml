@@ -24,8 +24,8 @@ workflows:
             beamer/.* backend-updated true
             contracts/.* backend-updated true
             docker/.* backend-updated true
-            relayer/.* backend-updated true
             scripts/.* backend-updated true
+            relayer/.* relayer-updated true
             docs/.* docs-updated true
             frontend/.* frontend-updated true
             subgraph/.* subgraph-updated true
@@ -33,3 +33,4 @@ workflows:
             .circleci/.* backend-updated true              
             .circleci/.* docs-updated true                 
             .circleci/.* subgraph-updated true
+            .circleci/.* relayer-updated true
