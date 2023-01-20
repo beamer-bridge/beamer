@@ -353,6 +353,13 @@ workflows:
   relayer:
     when: <<pipeline.parameters.relayer-updated>>
     jobs:
+      - checkout
+      - install-npm-packages:
+          requires:
+              - checkout
+      - create-relayers:
+          requires:
+            - install-npm-packages
       - test-relayer
 
   build-and-publish-container-image:
