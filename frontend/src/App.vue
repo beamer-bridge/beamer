@@ -1,5 +1,5 @@
 <template>
-  <div class="app-content">
+  <div class="app-content relative">
     <div
       class="flex h-16 w-full flex-col justify-center bg-fire text-center text-xl font-semibold text-rosa lg:text-2xl"
     >
@@ -42,19 +42,19 @@
         </div>
       </div>
       <feedback v-if="enableFeedback"></feedback>
-      <footer class="my-8 text-lg text-center text-sea-green">
-        Powered by
-        <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>
-        &bull;
-        <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
-          >Imprint</a
-        >
-        &bull;
-        <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
-          >Terms of Service</a
-        >
-      </footer>
     </div>
+    <footer class="absolute bottom-0 my-4 text-lg text-center text-sea-green right-0 left-0">
+      Powered by
+      <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>
+      &bull;
+      <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
+        >Imprint</a
+      >
+      &bull;
+      <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
+        >Terms of Service</a
+      >
+    </footer>
   </div>
 </template>
 
