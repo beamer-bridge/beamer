@@ -27,6 +27,23 @@ export const useTransferHistory = defineStore(getStoreName(getAppMajorVersion(AP
       this.transfers.unshift(transfer);
     },
   },
+  getters: {
+    hasPendingTransactionsForChain:
+      (state) =>
+      (chainId: number): boolean => {
+        const pendingTransactions = state.transfers.filter((transfer) => {
+          const hasActiveSteps = transfer.steps.slice(0, 3).some((step) => step.active);
+          return (
+            transfer.sourceChain.identifier === chainId &&
+            !transfer.expired &&
+            !transfer.withdrawn &&
+            hasActiveSteps
+          );
+        }) as Transfer[];
+
+        return pendingTransactions.length > 0;
+      },
+  },
   persist: {
     serializer: transferHistorySerializer,
   },

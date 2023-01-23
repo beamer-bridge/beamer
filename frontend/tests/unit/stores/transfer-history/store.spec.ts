@@ -1,11 +1,17 @@
 import { createPinia, setActivePinia } from 'pinia';
 
+import { Transfer } from '@/actions/transfers';
 import {
   getAppMajorVersion,
   getStoreName,
   useTransferHistory,
 } from '@/stores/transfer-history/store';
-import { generateTransfer } from '~/utils/data_generators';
+import {
+  generateChain,
+  generateStepData,
+  generateTransfer,
+  generateTransferData,
+} from '~/utils/data_generators';
 
 describe('store utility functions', () => {
   describe('getAppMajorVersion()', () => {
@@ -43,6 +49,79 @@ describe('configuration store', () => {
 
       expect(history.transfers).toHaveLength(2);
       expect(history.transfers[0]).toEqual(newTransfer);
+    });
+  });
+
+  describe('hasPendingTransactionsForChain getter', () => {
+    const CHAIN_ID = 100;
+
+    it('returns true if there is at least one pending transfer (request creation transaction waiting to be mined)', () => {
+      const history = useTransferHistory();
+      const activeTransfer = generateTransfer({
+        active: true,
+        transferData: { sourceChain: generateChain({ identifier: CHAIN_ID }) },
+      });
+
+      history.addTransfer(activeTransfer);
+
+      const hasPendingTransactions = history.hasPendingTransactionsForChain(CHAIN_ID);
+
+      expect(hasPendingTransactions).toBe(true);
+    });
+    it('returns false if all the transfers are expired', () => {
+      const history = useTransferHistory();
+      const expiredTransfer = generateTransfer({
+        transferData: { sourceChain: generateChain({ identifier: CHAIN_ID }), expired: true },
+      });
+
+      history.addTransfer(expiredTransfer);
+
+      const hasPendingTransactions = history.hasPendingTransactionsForChain(CHAIN_ID);
+
+      expect(hasPendingTransactions).toBe(false);
+    });
+    it('returns false if all the transfers are withdrawn', () => {
+      const history = useTransferHistory();
+      const withdrawnTransfer = generateTransfer({
+        transferData: { sourceChain: generateChain({ identifier: CHAIN_ID }), withdrawn: true },
+      });
+
+      history.addTransfer(withdrawnTransfer);
+
+      const hasPendingTransactions = history.hasPendingTransactionsForChain(CHAIN_ID);
+
+      expect(hasPendingTransactions).toBe(false);
+    });
+    it('returns false if there are no transfers for the specified chain', () => {
+      const history = useTransferHistory();
+      const activeTransfer = generateTransfer({
+        transferData: { sourceChain: generateChain({ identifier: CHAIN_ID }) },
+        active: true,
+      });
+
+      history.addTransfer(activeTransfer);
+
+      const hasPendingTransactions = history.hasPendingTransactionsForChain(101);
+
+      expect(hasPendingTransactions).toBe(false);
+    });
+
+    it('considers the transfer as pending if one of the first 3 steps are active', () => {
+      const history = useTransferHistory();
+      const transferData = generateTransferData({
+        sourceChain: generateChain({ identifier: CHAIN_ID }),
+        steps: [
+          ...new Array(3).fill(generateStepData({ active: false })),
+          generateStepData({ active: true }),
+        ],
+      });
+
+      const activeTransfer = new Transfer(transferData);
+      history.addTransfer(activeTransfer);
+
+      const hasPendingTransactions = history.hasPendingTransactionsForChain(CHAIN_ID);
+
+      expect(hasPendingTransactions).toBe(false);
     });
   });
 });

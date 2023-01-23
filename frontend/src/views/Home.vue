@@ -1,7 +1,7 @@
 <template>
   <div class="home flex justify-center">
     <div
-      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center"
+      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center pb-44"
     >
       <WalletConnectionDetails></WalletConnectionDetails>
 

@@ -22,6 +22,13 @@
 
   <Teleport v-if="signer" to="#action-button-portal">
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
+      <div
+        v-if="hasPendingTransactions"
+        class="text-center rounded-tl-lg rounded-lg bg-teal px-6 py-4 mb-8 md:px-8 md:py-8 text-sm"
+      >
+        You have a pending transaction, that needs to complete before being able to make a new
+        transfer.
+      </div>
       <ActionButton :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
         <spinner v-else size-classes="w-8 h-8" border="4"></spinner>
@@ -88,8 +95,16 @@ const formValid = computed(() => {
   return !requestSourceInputsRef.value.v$.$invalid && !requestTargetInputsRef.value.v$.$invalid;
 });
 
+const hasPendingTransactions = computed(() => {
+  const selectedChainId = requestSource.value.sourceChain?.value.identifier;
+  if (!selectedChainId) {
+    return false;
+  }
+  return transferHistory.hasPendingTransactionsForChain(selectedChainId);
+});
+
 const submitDisabled = computed(() => {
-  return !formValid.value || creatingTransaction.value;
+  return !formValid.value || creatingTransaction.value || hasPendingTransactions.value;
 });
 
 const submitForm = async () => {
