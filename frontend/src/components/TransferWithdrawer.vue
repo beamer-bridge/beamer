@@ -25,7 +25,7 @@
           Recover Tokens
         </button>
       </template>
-      <Spinner v-else size="7" border="2" class="border-t-teal" />
+      <Spinner v-else size-classes="w-6 h-6" border="2" class="border-t-teal" />
     </template>
     <div v-else class="text-green">Tokens Withdrawn</div>
 
