@@ -5,14 +5,10 @@
         <span class="text-xl pl-2">From</span>
 
         <Tooltip v-if="faucetEnabled" class="self-end -mr-3">
-          <button
-            class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-5 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
-            :disabled="!faucetAvailable"
-            @click="runFaucetRequest"
-          >
+          <SimpleTextButton :disabled="!faucetAvailable" @click="runFaucetRequest">
             <spinner v-if="faucetRequestActive" size-classes="w-3 h-3" border="2"></spinner>
             <template v-else>Get Test Tokens</template>
-          </button>
+          </SimpleTextButton>
           <template #hint>
             This will provide you with a small amount of test tokens and test eth for the connected
             network. About 10 seconds after clicking the button you should see them in your
@@ -46,21 +42,21 @@
           <InputValidationMessage v-if="!isSelectedAmountValid && selectedAmount.length > 0">
             {{ v$.$validationGroups && v$.$validationGroups.amount.$errors[0].$message }}
           </InputValidationMessage>
-          <div v-else class="pt-1 self-end">
+          <div v-else class="self-end">
             <div v-if="balance">
               <spinner
                 v-if="maxTransferableTokenBalanceLoading"
                 size-classes="w-3 h-3"
                 border="2"
-                class="mr-5 mt-1"
+                class="mr-5 mt-2"
               ></spinner>
               <template v-else>
-                <div v-if="balance.uint256.isZero()" class="px-2">
-                  {{ formattedTokenBalance }} available
-                </div>
-                <Tooltip v-else>
-                  <button
-                    class="text-orange text-xs font-semibold rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
+                <Tooltip :disabled="balance.uint256.isZero()">
+                  <div v-if="balance.uint256.isZero()" class="text-xs">
+                    {{ formattedTokenBalance }} available
+                  </div>
+                  <SimpleTextButton
+                    v-else
                     :disabled="maxTransferableTokenBalanceLoading"
                     @click="setMaxTokenAmount"
                   >
@@ -68,7 +64,7 @@
                       {{ formattedTokenBalance }}
                     </span>
                     available
-                  </button>
+                  </SimpleTextButton>
                   <template #hint>
                     You have {{ balance.formatFullValue() }} in your wallet. Click to use all.
                   </template>
@@ -90,13 +86,9 @@
             @closed="showActionButton"
           />
           <Tooltip class="self-end -mr-3">
-            <button
-              class="text-orange text-xs font-semibold mr-3 my-1 rounded-md hover:bg-sea-green/30 px-2 disabled:hover:bg-transparent disabled:opacity-25 disabled:text-grey"
-              :disabled="!addTokenAvailable"
-              @click="handleAddTokenClick"
-            >
+            <SimpleTextButton :disabled="!addTokenAvailable" @click="handleAddTokenClick">
               Add to Wallet
-            </button>
+            </SimpleTextButton>
             <template #hint> Adds current token to the connected wallet </template>
           </Tooltip>
         </div>
@@ -155,6 +147,8 @@ import type { Chain, Token } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
 import { TokenAmount } from '@/types/token-amount';
 import { isUnsignedNumeric, makeMatchingDecimalsValidator } from '@/validation/validators';
+
+import SimpleTextButton from './layout/SimpleTextButton.vue';
 
 interface Props {
   modelValue: RequestSource;
