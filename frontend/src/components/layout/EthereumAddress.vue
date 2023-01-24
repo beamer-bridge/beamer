@@ -1,10 +1,13 @@
 <template>
   <Tooltip :disable-click-away="true" :show="showCopytoolTipOn">
-    <span data-test="address" class="cursor-copy" @click="copyAddress">{{ shortenAddress }}</span>
+    <span data-test="address" class="cursor-copy" @click="copyAddress"
+      >{{ shortenedAddress }}
+      <img src="@/assets/images/copy.svg" class="inline pl-1" />
+    </span>
     <template #hint>
-      <div class="w-[23rem]">
-        <span v-show="!showCopytoolTipOn" class="text-xs">{{ props.address }} (copy) </span>
-        <span v-if="showCopytoolTipOn" class="text-xs"> Copied! </span>
+      <div class="w-[5rem] relative">
+        <span v-show="!showCopytoolTipOn">Copy </span>
+        <span v-if="showCopytoolTipOn"> Copied! </span>
       </div>
     </template>
   </Tooltip>
@@ -22,10 +25,9 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const shortenAddress = computed(
-  () => `${props.address.slice(0, 4)}...${props.address.slice(38, 42)}`,
+const shortenedAddress = computed(
+  () => `${props.address.slice(0, 6)}...${props.address.slice(38, 42)}`,
 );
-
 const timeout = ref<ReturnType<typeof setTimeout> | undefined>(undefined);
 const clipboardAvailable = navigator && navigator.clipboard;
 const showCopyTooltip = ref(false);
