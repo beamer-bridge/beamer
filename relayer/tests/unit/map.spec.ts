@@ -13,12 +13,15 @@ describe("createRelayer", () => {
   it("maps arbitrum chain ids to an ArbitrumRelayerService", () => {
     const chainId = 42161;
     const goerliChainId = 421613;
+    const testnetChainId = 412346;
 
     const relayer = createRelayer(chainId, testArgs);
     const goerliRelayer = createRelayer(goerliChainId, testArgs);
+    const testnetRelayer = createRelayer(testnetChainId, testArgs);
 
     expect(relayer instanceof ArbitrumRelayerService).toBe(true);
     expect(goerliRelayer instanceof ArbitrumRelayerService).toBe(true);
+    expect(testnetRelayer instanceof ArbitrumRelayerService).toBe(true);
   });
 
   it("maps boba chain ids to an BobaRelayerService", () => {
