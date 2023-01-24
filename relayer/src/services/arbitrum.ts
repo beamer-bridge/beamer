@@ -1,4 +1,6 @@
+import type { L1Network, L2Network } from "@arbitrum/sdk";
 import {
+  addCustomNetwork,
   L1ToL2MessageGasEstimator,
   L1ToL2MessageStatus,
   L1TransactionReceipt,
@@ -7,6 +9,7 @@ import {
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber, Contract } from "ethers";
+import { readFileSync } from "fs";
 
 import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
 import type { TransactionHash } from "./types";
@@ -151,4 +154,27 @@ export class ArbitrumRelayerService extends BaseRelayerService {
 
     return;
   }
+
+  async addCustomNetwork(filePath: string) {
+    const configFileContent = await readFileSync(filePath, "utf-8");
+    const config: CustomNetworkConfigFile = JSON.parse(configFileContent);
+
+    try {
+      addCustomNetwork({
+        customL1Network: config.l1Network,
+        customL2Network: config.l2Network,
+      });
+    } catch (ex) {
+      const error = ex as Error;
+
+      if (!error.message.includes("Network 1337 already included")) {
+        throw error;
+      }
+    }
+  }
 }
+
+type CustomNetworkConfigFile = {
+  l1Network: L1Network;
+  l2Network: L2Network;
+};

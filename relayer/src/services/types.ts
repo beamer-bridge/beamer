@@ -38,6 +38,11 @@ export abstract class BaseRelayerService {
     return (await this.l2RpcProvider.getNetwork()).chainId;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  addCustomNetwork(_filePath: string): void {
+    return;
+  }
+
   abstract prepare(): Promise<boolean>;
   abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash>;
   abstract finalize(l1TransactionHash: TransactionHash): Promise<void>;
