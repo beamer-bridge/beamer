@@ -8,6 +8,8 @@ export type ProgramOptions = {
   l2RelayToRpcUrl: string;
   walletPrivateKey: string;
   l2TransactionHash: string;
+  networkFrom?: string;
+  networkTo?: string;
 };
 
 export function validateArgs(args: ProgramOptions): Array<string> {
