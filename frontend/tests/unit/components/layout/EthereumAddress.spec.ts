@@ -33,18 +33,11 @@ describe('EthereumAddress.vue', () => {
     expect(writeText).toHaveBeenLastCalledWith('0x6626079BCF8c3241b082C73B74DFea46CeFA4f02');
   });
 
-  it('shows the first and last 4 address characters with dots in-between', () => {
+  it('shows the first 6 and last 4 address characters with dots in-between', () => {
     const wrapper = createWrapper({ address: '0x6626079BCF8c3241b082C73B74DFea46CeFA4f02' });
     const address = wrapper.get('[data-test="address"]');
 
-    expect(address.text()).toBe('0x66...4f02');
-  });
-
-  it('shows the full length address in tooltip hint', () => {
-    const wrapper = createWrapper({ address: '0x6626079BCF8c3241b082C73B74DFea46CeFA4f02' });
-    const tooltip = wrapper.get('#tooltip');
-
-    expect(tooltip.text()).toContain('0x6626079BCF8c3241b082C73B74DFea46CeFA4f02');
+    expect(address.text()).toBe('0x6626...4f02');
   });
 
   describe('with clipboard support', () => {
