@@ -4,6 +4,7 @@ import type { BaseRelayerService, ExtendedRelayerService } from "./services/type
 export const SERVICES: Record<number, ExtendedRelayerService> = {
   42161: ArbitrumRelayerService,
   421613: ArbitrumRelayerService,
+  412346: ArbitrumRelayerService,
   2888: BobaRelayerService,
   288: BobaRelayerService,
   10: OptimismRelayerService,

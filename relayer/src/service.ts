@@ -13,7 +13,9 @@ program
   .requiredOption(
     "--l2-transaction-hash <hash>",
     "Layer 2 transaction hash that needs to be relayed",
-  );
+  )
+  .option("--network-from <file_path>", "Path to a file with custom network configuration")
+  .option("--network-to <file_path>", "Path to a file with custom network configuration");
 
 program.parse(process.argv);
 
@@ -31,6 +33,13 @@ async function main() {
   const relayProgram = await RelayerProgram.createFromArgs(args);
 
   try {
+    if (args.networkFrom) {
+      relayProgram.l2RelayerFrom.addCustomNetwork(args.networkFrom);
+    }
+    if (args.networkTo) {
+      relayProgram.l2RelayerTo.addCustomNetwork(args.networkTo);
+    }
+
     await Promise.race([relayProgram.run(), killOnParentProcessChange(startPpid)]);
     process.exit(0);
   } catch (err) {
