@@ -1,6 +1,5 @@
 from functools import update_wrapper
 from pathlib import Path
-from random import randint
 from typing import Any, Callable, Optional
 
 import click
@@ -120,8 +119,8 @@ def submit_request(
 
 @click.option(
     "--request-id",
-    type=int,
-    default=randint(0, 1000000),
+    type=str,
+    callback=validate_bytes,
     help="Request id to fill",
 )
 @click.option(
@@ -145,7 +144,7 @@ def submit_request(
 def fill_request(
     web3: Web3,
     contracts: dict[str, Contract],
-    request_id: int,
+    request_id: bytes,
     source_chain_id: ChainId,
     target_address: Address,
     amount: TokenAmount,
@@ -171,7 +170,8 @@ def fill_request(
 
 @click.option(
     "--request-id",
-    type=int,
+    type=str,
+    callback=validate_bytes,
     help="Request id to claim",
 )
 @click.option(
@@ -186,7 +186,7 @@ def fill_request(
 def claim_request(
     web3: Web3,
     contracts: dict[str, Contract],
-    request_id: int,
+    request_id: bytes,
     fill_id: bytes,
 ) -> None:
     """Claim a Beamer request"""
@@ -249,7 +249,8 @@ def challenge_claim(
 
 @click.option(
     "--request-id",
-    type=int,
+    type=str,
+    callback=validate_bytes,
     help="Request id of expired request",
 )
 @cli.command("withdraw-expired")
@@ -257,13 +258,13 @@ def challenge_claim(
 def withdraw_expired(
     web3: Web3,
     contracts: dict[str, Contract],
-    request_id: int,
+    request_id: bytes,
 ) -> None:
     """Withdraw an expired Beamer request"""
 
     request_manager = contracts["RequestManager"]
     request = request_manager.functions.requests(request_id).call()
-    deposit_receiver = request[6]
+    is_withdrawn = request_manager.functions.isWithdrawn(request_id).call()
     active_claims = request[7]
     valid_until = request[8]
     current_time = web3.eth.get_block("latest").get("timestamp")
@@ -271,7 +272,7 @@ def withdraw_expired(
     if current_time < valid_until:
         print("Request not expired yet. Cannot withdraw.")
         return
-    if deposit_receiver != ADDRESS_ZERO:
+    if is_withdrawn:
         print("Request already withdrawn. Cannot withdraw.")
         return
     if active_claims > 0:
@@ -380,8 +381,8 @@ def update_token(
 def invalidate_fill(
     web3: Web3,  # pylint:disable=unused-argument
     contracts: dict[str, Contract],
-    request_id: str,
-    fill_id: str,
+    request_id: bytes,
+    fill_id: bytes,
     source_chain_id: int,
 ) -> None:
     """Invalidate a fill ID."""
