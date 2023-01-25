@@ -67,7 +67,7 @@ li.failed::before {
 
 li:not(:last-of-type)::after {
   content: '';
-  @apply absolute left-[0.3rem] border-teal border top-[1rem] h-[1.45rem];
+  @apply absolute left-[5px] border-teal border top-[1rem] h-full;
 }
 
 li.hasError::after {
