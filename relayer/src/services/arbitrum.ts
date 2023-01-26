@@ -22,6 +22,9 @@ const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   421613: {
     ARBITRUM_L1_MESSENGER: "0xaD6DA69BB841028CEb4c9bC5efa8a07E41FD67E5",
   },
+  412346: {
+    ARBITRUM_L1_MESSENGER: process.env.ARBITRUM_L1_MESSENGER || "",
+  },
 };
 
 export class ArbitrumRelayerService extends BaseRelayerService {
