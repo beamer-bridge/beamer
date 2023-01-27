@@ -1,3 +1,5 @@
+set -eo pipefail
+
 nth_parent() {
     local n=$1
     local path=$2
