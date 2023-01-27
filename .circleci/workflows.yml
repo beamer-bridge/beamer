@@ -199,6 +199,29 @@ jobs:
       - run: bash $OPTIMISM/optimism.sh e2e-test
       - run: bash $OPTIMISM/optimism.sh down
 
+  e2e-test-arbitrum:
+    executor: vm
+    environment:
+      ARBITRUM: "docker/arbitrum"
+    steps:
+      - initialize-environment
+      - run: git submodule status $ARBITRUM/nitro | awk '{print $1;}' > "/tmp/arbitrum-commit-hash"
+      - restore_cache:
+          key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
+      - run: |
+          cd $ARBITRUM/nitro
+          git submodule update --init blockscout brotli fastcache go-ethereum \
+                                      arbitrator/wasm-libraries/soft-float/SoftFloat
+      - save_cache:
+          key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
+          paths:
+            - docker/arbitrum/nitro
+            - .git/modules/docker/arbitrum
+      - run: bash $ARBITRUM/arbitrum.sh up
+      - run: bash $ARBITRUM/arbitrum.sh deploy-beamer
+      - run: bash $ARBITRUM/arbitrum.sh e2e-test
+      - run: bash $ARBITRUM/arbitrum.sh down
+
   build-docs:
     executor: vm
     steps:
@@ -326,6 +349,10 @@ workflows:
       - e2e-test-optimism:
           requires:
             - compile-contracts
+      - e2e-test-arbitrum:
+          requires:
+            - compile-contracts
+            - create-relayers
 
   docs:
     when: <<pipeline.parameters.docs-updated>>
