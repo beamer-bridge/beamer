@@ -2,19 +2,19 @@
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
 ROOT="$(get_root_dir)"
-NITRO="$ROOT/docker/arbitrum/nitro"
+NITRO="${ROOT}/docker/arbitrum/nitro"
 
 # Deployer's address & private key.
 ADDRESS=0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
 
 CACHE_DIR=$(obtain_cache_dir $0)
-rm -rf ${CACHE_DIR}
-mkdir ${CACHE_DIR}
-
 DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
 DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/arbitrum-local.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
+
+ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
+echo Beamer deployer\'s keyfile: ${KEYFILE}
 
 TEST_NODE_SCRIPT="${CACHE_DIR}/test-node-patched.bash"
 
@@ -31,9 +31,6 @@ patch_test_node_script() {
 }
 
 patch_test_node_script
-
-ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
-echo Beamer deployer\'s keyfile: ${KEYFILE}
 
 down() {
     echo "Shutting down the end-to-end environment"
@@ -85,9 +82,35 @@ create_deployment_config_file() {
 }
 
 e2e_test() {
-    l2_rpc=http://localhost:8547
+    l2_rpc=http://0.0.0.0:8547
     password=""
-    poetry run python "${ROOT}/scripts/e2e-test.py" ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" ${l2_rpc}
+    relayer=${ROOT}/relayer/relayer-node18-linux-x64
+    l1_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.L1.ArbitrumL1Messenger.address')
+
+    network_config="${CACHE_DIR}/localnetwork.json"
+    echo Copying network config to $network_config
+    docker-compose -f ${NITRO}/docker-compose.yaml run --entrypoint sh testnode-tokenbridge \
+                   -c "cat localNetwork.json" > $network_config
+
+    echo Performing test fill on L2...
+    output=$(poetry run python "${ROOT}/scripts/e2e-test-fill.py" ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" ${l2_rpc})
+    request_id=$(echo "$output" | awk -F: '/Request ID/ { print $2 }')
+    l2_txhash=$(echo "$output" | awk -F: '/Fill tx hash/ { print $2 }')
+    echo Request ID: $request_id
+    echo Fill tx hash: $l2_txhash
+
+    export ARBITRUM_L1_MESSENGER=$l1_messenger
+    echo Starting relayer...
+    ${relayer} --l1-rpc-url http://0.0.0.0:8545 \
+               --l2-relay-to-rpc-url $l2_rpc \
+               --l2-relay-from-rpc-url $l2_rpc \
+               --network-to $network_config \
+               --network-from $network_config \
+               --wallet-private-key $PRIVKEY \
+               --l2-transaction-hash $l2_txhash
+
+    echo Verifying L1 resolution...
+    poetry run python "${ROOT}/scripts/e2e-test-verify.py" ${DEPLOYMENT_DIR} $l2_rpc ${ADDRESS} $request_id
 }
 
 
