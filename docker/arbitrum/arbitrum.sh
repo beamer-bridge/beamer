@@ -92,12 +92,7 @@ e2e_test() {
     docker-compose -f ${NITRO}/docker-compose.yaml run --entrypoint sh testnode-tokenbridge \
                    -c "cat localNetwork.json" > $network_config
 
-    echo Performing test fill on L2...
-    output=$(poetry run python "${ROOT}/scripts/e2e-test-fill.py" ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" ${l2_rpc})
-    request_id=$(echo "$output" | awk -F: '/Request ID/ { print $2 }')
-    l2_txhash=$(echo "$output" | awk -F: '/Fill tx hash/ { print $2 }')
-    echo Request ID: $request_id
-    echo Fill tx hash: $l2_txhash
+    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
 
     export ARBITRUM_L1_MESSENGER=$l1_messenger
     echo Starting relayer...
@@ -107,10 +102,9 @@ e2e_test() {
                --network-to $network_config \
                --network-from $network_config \
                --wallet-private-key $PRIVKEY \
-               --l2-transaction-hash $l2_txhash
+               --l2-transaction-hash $e2e_test_l2_txhash
 
-    echo Verifying L1 resolution...
-    poetry run python "${ROOT}/scripts/e2e-test-verify.py" ${DEPLOYMENT_DIR} $l2_rpc ${ADDRESS} $request_id
+    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 
