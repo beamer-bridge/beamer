@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import BasicInput from '@/components/inputs/BasicInput.vue';
 import Selector from '@/components/inputs/Selector.vue';
 import type { SelectorOption } from '@/types/form';
+import { generateTokenSelectorOption } from '~/utils/data_generators';
 
 const testOptions: SelectorOption<number>[] = [];
 for (let i = 0; i < 10; i++) {
@@ -13,6 +14,7 @@ function createWrapper(options?: {
   modelValue?: SelectorOption<unknown>;
   options?: SelectorOption<unknown>[];
   placeholder?: string;
+  displayOptionIcon?: boolean;
   disabled?: boolean;
   label?: string;
 }) {
@@ -22,6 +24,7 @@ function createWrapper(options?: {
       modelValue: options?.modelValue ?? null,
       options: options?.options ?? testOptions,
       placeholder: options?.placeholder ?? 'Placeholder',
+      displayOptionIcon: options?.displayOptionIcon,
       disabled: options?.disabled,
       label: options?.label,
     },
@@ -164,5 +167,31 @@ describe('Selector.vue', () => {
     const optionList = wrapper.find('[data-test="option-list"');
 
     expect(optionList.exists()).toBe(false);
+  });
+
+  it('shows a placeholder icon when provided option has no imageUrl defined', async () => {
+    const wrapper = createWrapper({
+      options: [generateTokenSelectorOption({ imageUrl: undefined })],
+    });
+
+    const openTrigger = wrapper.find('[data-test="open-trigger"]');
+    await openTrigger.trigger('click');
+
+    const option = wrapper.find('[data-test="option"]');
+    const img = option.find('img');
+
+    expect(img.attributes('src')).toBeDefined();
+  });
+
+  it('allows hiding option icons', async () => {
+    const wrapper = createWrapper({ displayOptionIcon: false });
+
+    const openTrigger = wrapper.find('[data-test="open-trigger"]');
+    await openTrigger.trigger('click');
+
+    const option = wrapper.find('[data-test="option"]');
+    const img = option.find('img');
+
+    expect(img.exists()).toBe(false);
   });
 });

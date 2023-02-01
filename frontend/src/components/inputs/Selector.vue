@@ -39,7 +39,7 @@
           data-test="option"
           @click="selectOption(option)"
         >
-          <img v-if="option.imageUrl" class="h-7" :src="option.imageUrl" />
+          <img v-if="displayOptionIcon" class="h-7" :src="option.imageUrl ?? PlaceholderImage" />
           <span>{{ option.label }}</span>
         </div>
       </div>
@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
+import PlaceholderImage from '@/assets/images/question-mark.svg';
 import BasicInput from '@/components/inputs/BasicInput.vue';
 import type { SelectorOption } from '@/types/form';
 
@@ -66,6 +67,7 @@ interface Props {
   modelValue: SelectorOption<unknown> | null;
   readonly options: SelectorOption<unknown>[];
   readonly placeholder: string;
+  readonly displayOptionIcon?: boolean;
   readonly disabled?: boolean;
   readonly label?: string;
 }
@@ -76,7 +78,10 @@ interface Emits {
   (e: 'closed'): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  displayOptionIcon: true,
+  label: undefined,
+});
 const emits = defineEmits<Emits>();
 
 const opened = ref(false);
