@@ -55,6 +55,7 @@
         >Terms of Service</a
       >
     </footer>
+    <MatomoConsentPopup />
   </div>
 </template>
 
@@ -72,6 +73,7 @@ import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
 
+import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
 import { useClaimCountListeners } from './composables/useClaimCountListeners';
 
 const enableFeedback = process.env.NODE_ENV === 'production' && true;
