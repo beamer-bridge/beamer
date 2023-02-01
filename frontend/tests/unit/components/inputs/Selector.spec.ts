@@ -1,3 +1,4 @@
+import type { VueWrapper } from '@vue/test-utils';
 import { mount } from '@vue/test-utils';
 
 import BasicInput from '@/components/inputs/BasicInput.vue';
@@ -31,33 +32,39 @@ function createWrapper(options?: {
   });
 }
 
+const openSelectorView = async (wrapper: VueWrapper) => {
+  const openTrigger = wrapper.find('[data-test="open-trigger"]');
+  await openTrigger.trigger('click');
+};
+
+const closeSelectorView = async (wrapper: VueWrapper) => {
+  const closeTrigger = wrapper.find('[data-test="close-trigger"');
+  await closeTrigger.trigger('click');
+};
+
 describe('Selector.vue', () => {
   it('emits `opened` event when selection view is opened', async () => {
     const wrapper = createWrapper();
-    const openTrigger = wrapper.find('[data-test="open-trigger"]');
 
-    await openTrigger.trigger('click');
-
-    const closeTrigger = wrapper.find('[data-test="close-trigger"');
-    await closeTrigger.trigger('click');
+    await openSelectorView(wrapper);
+    await closeSelectorView(wrapper);
 
     expect(Object.keys(wrapper.emitted())).toContain('opened');
   });
 
   it('emits `closed` event when selection view is closed', async () => {
     const wrapper = createWrapper();
-    const openTrigger = wrapper.find('[data-test="open-trigger"]');
 
-    await openTrigger.trigger('click');
+    await openSelectorView(wrapper);
 
     expect(Object.keys(wrapper.emitted())).toContain('opened');
   });
 
   it('displays the options when opened', async () => {
     const wrapper = createWrapper();
-    const trigger = wrapper.find('[data-test="open-trigger"]');
 
-    await trigger.trigger('click');
+    await openSelectorView(wrapper);
+
     const optionList = wrapper.get('[data-test="option-list"');
     const optionElements = wrapper.findAll('[data-test="option"]');
 
@@ -74,9 +81,8 @@ describe('Selector.vue', () => {
     };
 
     const wrapper = createWrapper({ options: [option] });
-    const trigger = wrapper.find('[data-test="open-trigger"]');
+    await openSelectorView(wrapper);
 
-    await trigger.trigger('click');
     const optionElement = wrapper.get('[data-test="option"]');
 
     await optionElement.trigger('click');
@@ -90,9 +96,8 @@ describe('Selector.vue', () => {
 
   it('can filter the displayed options', async () => {
     const wrapper = createWrapper();
-    const trigger = wrapper.find('[data-test="open-trigger"]');
+    await openSelectorView(wrapper);
 
-    await trigger.trigger('click');
     const optionList = wrapper.get('[data-test="option-list"');
     const searchField = optionList.findComponent(BasicInput);
     await searchField.vm.$emit('update:modelValue', testOptions[0].label);
@@ -122,9 +127,9 @@ describe('Selector.vue', () => {
 
   it('should not open when disabled', async () => {
     const wrapper = createWrapper({ disabled: true });
-    const trigger = wrapper.find('[data-test="open-trigger"]');
 
-    await trigger.trigger('click');
+    await openSelectorView(wrapper);
+
     const optionList = wrapper.find('[data-test="option-list"');
 
     expect(optionList.exists()).toBe(false);
@@ -133,9 +138,9 @@ describe('Selector.vue', () => {
   it('shows the label when opened', async () => {
     const label = 'Numbers';
     const wrapper = createWrapper({ label });
-    const trigger = wrapper.find('[data-test="open-trigger"]');
 
-    await trigger.trigger('click');
+    await openSelectorView(wrapper);
+
     const optionList = wrapper.get('[data-test="option-list"');
 
     expect(optionList.text()).toContain(label);
@@ -143,9 +148,8 @@ describe('Selector.vue', () => {
 
   it('should close the selector by escape key', async () => {
     const wrapper = createWrapper();
-    const trigger = wrapper.find('[data-test="open-trigger"]');
 
-    await trigger.trigger('click');
+    await openSelectorView(wrapper);
 
     let optionList = wrapper.find('[data-test="option-list"');
     await optionList.trigger('keyup.esc');
@@ -157,12 +161,9 @@ describe('Selector.vue', () => {
 
   it('should close the selector when close button is clicked', async () => {
     const wrapper = createWrapper();
-    const openTrigger = wrapper.find('[data-test="open-trigger"]');
 
-    await openTrigger.trigger('click');
-
-    const closeTrigger = wrapper.find('[data-test="close-trigger"');
-    await closeTrigger.trigger('click');
+    await openSelectorView(wrapper);
+    await closeSelectorView(wrapper);
 
     const optionList = wrapper.find('[data-test="option-list"');
 
@@ -174,8 +175,7 @@ describe('Selector.vue', () => {
       options: [generateTokenSelectorOption({ imageUrl: undefined })],
     });
 
-    const openTrigger = wrapper.find('[data-test="open-trigger"]');
-    await openTrigger.trigger('click');
+    await openSelectorView(wrapper);
 
     const option = wrapper.find('[data-test="option"]');
     const img = option.find('img');
@@ -186,8 +186,7 @@ describe('Selector.vue', () => {
   it('allows hiding option icons', async () => {
     const wrapper = createWrapper({ displayOptionIcon: false });
 
-    const openTrigger = wrapper.find('[data-test="open-trigger"]');
-    await openTrigger.trigger('click');
+    await openSelectorView(wrapper);
 
     const option = wrapper.find('[data-test="option"]');
     const img = option.find('img');
