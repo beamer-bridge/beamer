@@ -2,6 +2,7 @@
   "name": "beamer-request-interface",
   "version": "2.0.0",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
     "build": "yarn configure && vite build",
