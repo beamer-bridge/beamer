@@ -24,8 +24,7 @@ export default defineConfig({
     environment: 'jsdom',
     coverage: {
       all: true,
-      src: source_directory,
-      reportDir: path.resolve(test_output_directory, 'coverage'),
+      src: [source_directory],
       include: [
         'src/actions/**',
         'src/components/**',
