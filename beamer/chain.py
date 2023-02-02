@@ -48,7 +48,7 @@ class EventMonitor:
         web3: Web3,
         contracts: tuple[Contract, ...],
         deployment_block: BlockNumber,
-        on_new_events: Callable[[list[Event]], None],
+        on_new_events: list[Callable[[list[Event]], None]],
         on_sync_done: Callable[[], None],
         poll_period: int,
     ):
@@ -86,15 +86,19 @@ class EventMonitor:
         fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
         events = fetcher.fetch()
         if events:
-            self._on_new_events(events)
+            self._call_on_new_events(events)
         self._on_sync_done()
         self._log.info("Sync done")
         while not self._stop:
             events = fetcher.fetch()
             if events:
-                self._on_new_events(events)
+                self._call_on_new_events(events)
             time.sleep(self._poll_period)
         self._log.info("EventMonitor stopped")
+
+    def _call_on_new_events(self, events: list[Event]) -> None:
+        for on_new_events in self._on_new_events:
+            on_new_events(events)
 
 
 class EventProcessor:

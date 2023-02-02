@@ -88,7 +88,7 @@ class Agent:
             web3=w3_l2a,
             contracts=(request_manager,),
             deployment_block=l2a_contracts_info["RequestManager"].deployment_block,
-            on_new_events=self._event_processor.add_events,
+            on_new_events=[self._event_processor.add_events],
             on_sync_done=self._event_processor.mark_sync_done,
             poll_period=POLL_PERIOD,
         )
@@ -97,7 +97,7 @@ class Agent:
             web3=w3_l2b,
             contracts=(fill_manager,),
             deployment_block=l2b_contracts_info["FillManager"].deployment_block,
-            on_new_events=self._event_processor.add_events,
+            on_new_events=[self._event_processor.add_events],
             on_sync_done=self._event_processor.mark_sync_done,
             poll_period=POLL_PERIOD,
         )
