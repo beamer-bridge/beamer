@@ -1,7 +1,7 @@
 {
   "name": "beamer-relayer",
   "version": "0.0.1",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "author": "brainbot technologies AG",
   "repository": {
     "type": "git",
