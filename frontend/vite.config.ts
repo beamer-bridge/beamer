@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 import vue from '@vitejs/plugin-vue';
+import { execSync } from 'child_process';
 import path from 'path';
 import { defineConfig } from 'vite';
 
@@ -7,6 +8,12 @@ const source_directory = path.resolve(__dirname, 'src');
 const test_directory = path.resolve(__dirname, 'tests');
 const test_output_directory = path.resolve(test_directory, 'output');
 const config_directory = path.resolve(__dirname, 'config');
+
+// Release Info
+const VERSION = process.env.npm_package_version;
+const COMMIT_HASH = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+const REPOSITORY = execSync('git ls-remote --get-url', { encoding: 'utf-8' }).trim();
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -24,8 +31,7 @@ export default defineConfig({
     environment: 'jsdom',
     coverage: {
       all: true,
-      src: source_directory,
-      reportDir: path.resolve(test_output_directory, 'coverage'),
+      src: [source_directory],
       include: [
         'src/actions/**',
         'src/components/**',
@@ -44,6 +50,10 @@ export default defineConfig({
     },
   },
   define: {
-    APP_VERSION: JSON.stringify(process.env.npm_package_version),
+    APP_RELEASE: {
+      VERSION,
+      COMMIT_HASH,
+      REPOSITORY,
+    },
   },
 });
