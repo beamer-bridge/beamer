@@ -42,5 +42,6 @@ module.exports = {
     defineExpose: 'readonly',
     withDefaults: 'readonly',
     process: 'readonly',
+    APP_RELEASE: 'readonly',
   },
 };

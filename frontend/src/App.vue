@@ -54,6 +54,7 @@
       <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
         >Terms of Service</a
       >
+      <Version />
     </footer>
   </div>
 </template>
@@ -66,6 +67,7 @@ import { onMounted } from 'vue';
 import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
 import Spinner from '@/components/Spinner.vue';
+import Version from '@/components/Version.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
 import { useConfiguration } from '@/stores/configuration';

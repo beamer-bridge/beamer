@@ -7,5 +7,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+interface ReleaseVariables {
+  VERSION: string;
+  COMMIT_HASH: string;
+  REPOSITORY: string;
+}
 
-declare const APP_VERSION: string;
+declare const APP_RELEASE: ReleaseVariables;
