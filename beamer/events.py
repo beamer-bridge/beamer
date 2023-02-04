@@ -285,7 +285,8 @@ class EventFetcher:
 
     def fetch(self) -> list[Event]:
         try:
-            block_number = BlockNumber(self._web3.eth.block_number)
+            block_data = self._web3.eth.get_block("latest")
+            block_number = BlockNumber(block_data["number"])
         except requests.exceptions.RequestException:
             return []
 
