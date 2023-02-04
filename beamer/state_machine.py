@@ -29,6 +29,8 @@ from beamer.events import (
     RequestCreated,
     RequestFilled,
     RequestResolved,
+    SourceChainEvent,
+    TargetChainEvent,
 )
 from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
@@ -63,6 +65,11 @@ HandlerResult = tuple[bool, Optional[list[Event]]]
 
 
 def process_event(event: Event, context: Context) -> HandlerResult:
+    if isinstance(event, SourceChainEvent) and event.chain_id != context.source_chain_id:
+        return True, None
+    if isinstance(event, TargetChainEvent) and event.chain_id != context.target_chain_id:
+        return True, None
+
     if isinstance(event, LatestBlockUpdatedEvent):
         return _handle_latest_block_updated(event, context)
 

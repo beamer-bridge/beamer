@@ -29,6 +29,16 @@ class Event:
 
 
 @dataclass(frozen=True)
+class SourceChainEvent(Event):
+    pass
+
+
+@dataclass(frozen=True)
+class TargetChainEvent(Event):
+    pass
+
+
+@dataclass(frozen=True)
 class LatestBlockUpdatedEvent(Event):
     block_data: BlockData
 
@@ -57,7 +67,7 @@ class TxEvent(Event):
 
 
 @dataclass(frozen=True)
-class FinalityPeriodUpdated(TxEvent):
+class FinalityPeriodUpdated(TxEvent, SourceChainEvent):
     target_chain_id: ChainId
     finality_period: int
 
@@ -68,7 +78,7 @@ class RequestEvent(TxEvent):
 
 
 @dataclass(frozen=True)
-class RequestCreated(RequestEvent):
+class RequestCreated(RequestEvent, SourceChainEvent):
     target_chain_id: ChainId
     source_token_address: ChecksumAddress
     target_token_address: ChecksumAddress
@@ -80,7 +90,7 @@ class RequestCreated(RequestEvent):
 
 
 @dataclass(frozen=True)
-class RequestFilled(RequestEvent):
+class RequestFilled(RequestEvent, TargetChainEvent):
     fill_id: FillId
     source_chain_id: ChainId
     target_token_address: ChecksumAddress
@@ -89,7 +99,7 @@ class RequestFilled(RequestEvent):
 
 
 @dataclass(frozen=True)
-class DepositWithdrawn(RequestEvent):
+class DepositWithdrawn(RequestEvent, SourceChainEvent):
     receiver: ChecksumAddress
 
 
@@ -99,7 +109,7 @@ class ClaimEvent(TxEvent):
 
 
 @dataclass(frozen=True)
-class ClaimMade(ClaimEvent):
+class ClaimMade(ClaimEvent, SourceChainEvent):
     request_id: RequestId
     fill_id: FillId
     claimer: ChecksumAddress
@@ -110,26 +120,26 @@ class ClaimMade(ClaimEvent):
 
 
 @dataclass(frozen=True)
-class ClaimStakeWithdrawn(ClaimEvent):
+class ClaimStakeWithdrawn(ClaimEvent, SourceChainEvent):
     request_id: RequestId
     stake_recipient: ChecksumAddress
 
 
 @dataclass(frozen=True)
-class RequestResolved(TxEvent):
+class RequestResolved(TxEvent, SourceChainEvent):
     request_id: RequestId
     filler: ChecksumAddress
     fill_id: FillId
 
 
 @dataclass(frozen=True)
-class FillInvalidatedResolved(TxEvent):
+class FillInvalidatedResolved(TxEvent, SourceChainEvent):
     request_id: RequestId
     fill_id: FillId
 
 
 @dataclass(frozen=True)
-class FillInvalidated(TxEvent):
+class FillInvalidated(TxEvent, TargetChainEvent):
     request_id: RequestId
     fill_id: FillId
 
