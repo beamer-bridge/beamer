@@ -9,8 +9,8 @@ from typing import Any, List, Optional
 import brownie
 import requests
 import web3
+from eth_abi.packed import encode_packed
 
-from eth_abi.packed import encode_abi_packed
 from eth_utils import keccak, to_canonical_address
 
 from beamer.tests.constants import RM_T_FIELD_TRANSFER_LIMIT
@@ -234,7 +234,7 @@ def create_request_id(
     source_chain_id, target_chain_id, target_token_address, receiver_address, amount, nonce
 ):
     return keccak(
-        encode_abi_packed(
+        encode_packed(
             ["uint256", "uint256", "address", "address", "uint256", "uint96"],
             [
                 source_chain_id,
