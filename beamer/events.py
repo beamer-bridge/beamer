@@ -225,6 +225,10 @@ class EventFetcher:
                 self._chain_id == contract.web3.eth.chain_id
             ), f"Chain id mismatch for {contract}"
 
+    @property
+    def synced_block(self) -> BlockNumber:
+        return BlockNumber(self._next_block_number - 1)
+
     def _fetch_range(
         self, from_block: BlockNumber, to_block: BlockNumber
     ) -> Optional[list[Event]]:
@@ -281,7 +285,7 @@ class EventFetcher:
 
     def fetch(self) -> list[Event]:
         try:
-            block_number = self._web3.eth.block_number
+            block_number = BlockNumber(self._web3.eth.block_number)
         except requests.exceptions.RequestException:
             return []
 

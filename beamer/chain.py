@@ -84,7 +84,10 @@ class EventMonitor:
         )
 
         fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
-        events = fetcher.fetch()
+        current_block = self._web3.eth.block_number
+        events = []
+        while fetcher.synced_block < current_block:
+            events = fetcher.fetch()
         if events:
             self._call_on_new_events(events)
         self._on_sync_done()
