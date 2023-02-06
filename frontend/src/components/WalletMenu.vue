@@ -25,7 +25,8 @@
           </div>
           <img
             v-else
-            class="h-16 w-16"
+            class="w-16 h-16"
+            :class="walletOption.classes"
             :src="walletOption.icon"
             :alt="walletOption.name + ' icon'"
           />
@@ -62,8 +63,14 @@ import { isMobile } from '@/utils/userAgent';
 const { provider, signer } = storeToRefs(useEthereumProvider());
 const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
-const { connectMetaMask, connectWalletConnect, connectingMetaMask, connectingWalletConnect } =
-  useWallet(provider, connectedWallet, rpcUrls);
+const {
+  connectMetaMask,
+  connectWalletConnect,
+  connectingMetaMask,
+  connectingWalletConnect,
+  connectCoinbase,
+  connectingCoinbase,
+} = useWallet(provider, connectedWallet, rpcUrls);
 
 const walletOptions = ref([
   {
@@ -79,6 +86,14 @@ const walletOptions = ref([
     description: 'Connect using mobile wallet',
     connect: connectWalletConnect,
     connecting: connectingWalletConnect,
+  },
+  {
+    name: 'Coinbase',
+    icon: new URL('../assets/images/coinbase_wallet.png', import.meta.url).href,
+    classes: 'p-3',
+    description: 'Connect using coinbase wallet',
+    connect: connectCoinbase,
+    connecting: connectingCoinbase,
   },
 ]);
 

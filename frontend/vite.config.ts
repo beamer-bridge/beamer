@@ -55,5 +55,14 @@ export default defineConfig({
       COMMIT_HASH: commitHash,
       REPOSITORY,
     },
+    'process.env': process.env,
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
 });

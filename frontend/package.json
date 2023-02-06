@@ -19,6 +19,7 @@
     "postinstall": "yarn generate-types && yarn configure"
   },
   "dependencies": {
+    "@coinbase/wallet-sdk": "3.0.4",
     "@ethersproject/providers": "^5.5.2",
     "@fontsource/sora": "^4.5.5",
     "@metamask/detect-provider": "^1.2.0",
@@ -61,6 +62,7 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-vue": "^8.5.0",
     "jsdom": "^19.0.0",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "prettier": "^2.6.0",
     "sass": "^1.49.9",
     "ts-node": "^10.7.0",
