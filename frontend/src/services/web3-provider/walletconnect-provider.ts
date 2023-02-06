@@ -9,12 +9,14 @@ export async function createWalletConnectProvider(rpcList: {
 }): Promise<WalletConnectProvider | undefined> {
   const provider = new WalletConnect({
     rpc: rpcList,
-  }) as Eip1193Provider & typeof WalletConnect;
+  }) as typeof WalletConnect;
 
   await provider.enable();
 
   if (provider.connected) {
-    const walletConnectProvider = new WalletConnectProvider(provider);
+    const walletConnectProvider = new WalletConnectProvider(
+      provider as unknown as Eip1193Provider,
+    );
     await walletConnectProvider.init();
     return walletConnectProvider;
   }

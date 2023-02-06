@@ -7,6 +7,7 @@ import {
   createWalletConnectProvider,
   onboardMetaMask,
 } from '@/services/web3-provider';
+import { createCoinbaseProvider } from '@/services/web3-provider/coinbase-provider';
 import { WalletType } from '@/types/settings';
 
 export function useWallet(
@@ -37,6 +38,16 @@ export function useWallet(
     }
   }
 
+  async function connectCoinbase() {
+    const coinbaseProvider = await createCoinbaseProvider(rpcUrls.value);
+
+    if (coinbaseProvider) {
+      provider.value = coinbaseProvider;
+      connectedWallet.value = WalletType.Coinbase;
+      coinbaseProvider.on('disconnect', disconnectWallet);
+    }
+  }
+
   async function reconnectToWallet(): Promise<void> {
     switch (connectedWallet.value) {
       case WalletType.MetaMask:
@@ -44,6 +55,9 @@ export function useWallet(
 
       case WalletType.WalletConnect:
         return connectWalletConnect();
+
+      case WalletType.Coinbase:
+        return connectCoinbase();
     }
   }
 
@@ -54,12 +68,15 @@ export function useWallet(
 
   const metamaskTask = useAsynchronousTask(connectMetaMask);
   const walletConnectTask = useAsynchronousTask(connectWalletConnect);
+  const coinbaseTask = useAsynchronousTask(connectCoinbase);
 
   return {
     connectMetaMask: metamaskTask.run,
     connectingMetaMask: metamaskTask.active,
     connectWalletConnect: walletConnectTask.run,
     connectingWalletConnect: walletConnectTask.active,
+    connectCoinbase: coinbaseTask.run,
+    connectingCoinbase: coinbaseTask.active,
     reconnectToWallet,
     disconnectWallet,
   };
