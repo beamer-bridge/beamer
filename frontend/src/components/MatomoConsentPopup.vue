@@ -27,18 +27,22 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
-import SimpleTextButton from './layout/SimpleTextButton.vue';
+import SimpleTextButton from '@/components/layout/SimpleTextButton.vue';
+import { useSettings } from '@/stores/settings';
 
 const _paq = (window._paq = window._paq || []);
+
+const { matomoConsentDeclined } = storeToRefs(useSettings());
 
 const displayed = ref(false);
 
 _paq.push([
   function () {
     const rememberedConsent = this.getRememberedConsent();
-    displayed.value = !rememberedConsent;
+    displayed.value = !rememberedConsent && !matomoConsentDeclined.value;
   },
 ]);
 
@@ -48,6 +52,7 @@ const allowConsent = () => {
 };
 
 const disallowConsent = () => {
+  matomoConsentDeclined.value = true;
   displayed.value = false;
 };
 </script>
