@@ -36,6 +36,8 @@ function createUseWalletComposableReturnValue(
     connectWalletConnect: vi.fn(),
     connectingMetaMask: ref(false),
     connectingWalletConnect: ref(false),
+    connectCoinbase: vi.fn(),
+    connectingCoinbase: ref(false),
     ...partialReturnObject,
   };
 }
@@ -52,6 +54,7 @@ describe('WalletMenu.vue', () => {
     const text = wrapper.text();
     expect(text).toMatch('MetaMask');
     expect(text).toMatch('WalletConnect');
+    expect(text).toMatch('Coinbase');
   });
 
   it('connects MetaMask on click', () => {
@@ -78,6 +81,18 @@ describe('WalletMenu.vue', () => {
 
     button.trigger('click');
     expect(connectWalletConnect).toHaveBeenCalledOnce();
+  });
+
+  it('connects Coinbase on click', () => {
+    const connectCoinbase = vi.fn();
+    Object.defineProperty(useWalletComposable, 'useWallet', {
+      value: vi.fn().mockReturnValue(createUseWalletComposableReturnValue({ connectCoinbase })),
+    });
+    const wrapper = createWrapper();
+    const button = wrapper.get('[data-test="connect-Coinbase"]');
+
+    button.trigger('click');
+    expect(connectCoinbase).toHaveBeenCalledOnce();
   });
 
   it('closes on click on close button', () => {
