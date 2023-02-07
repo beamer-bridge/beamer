@@ -121,5 +121,20 @@ describe('metamask-provider', () => {
         expect(metamaskProvider.signerAddress.value).toBeUndefined();
       });
     });
+
+    describe('listenToEvents()', () => {
+      it('attaches necessary event listeners for the wallet provider', () => {
+        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
+        const metamaskProvider = new MetaMaskProvider(eipProvider);
+
+        metamaskProvider.listenToEvents();
+
+        expect(eipProvider.on).toHaveBeenCalledWith('accountsChanged', expect.anything());
+        expect(eipProvider.on).toHaveBeenCalledWith('chainChanged', expect.anything());
+        // There is a bug with the disconnect event in MetaMask
+        // See https://github.com/MetaMask/metamask-extension/issues/13375
+        expect(eipProvider.on).not.toHaveBeenCalledWith('disconnect', expect.anything());
+      });
+    });
   });
 });

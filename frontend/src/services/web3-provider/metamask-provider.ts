@@ -53,4 +53,8 @@ export class MetaMaskProvider extends EthereumProvider implements ISigner {
       throw error;
     }
   }
+
+  listenToEvents(): void {
+    this.listenToChangeEvents();
+  }
 }
