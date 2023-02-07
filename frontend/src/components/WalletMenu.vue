@@ -95,6 +95,7 @@ const walletOptions = ref([
   {
     name: 'WalletConnect',
     icon: new URL('../assets/images/walletconnect.svg', import.meta.url).href,
+    classes: 'w-16 h-16',
     description: 'Connect using mobile wallet',
     connect: connectWalletConnect,
     connecting: connectingWalletConnect,
