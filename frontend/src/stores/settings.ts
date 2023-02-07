@@ -5,6 +5,7 @@ import type { WalletType } from '@/types/settings';
 export const useSettings = defineStore('settings', {
   state: () => ({
     connectedWallet: undefined as WalletType | undefined,
+    matomoConsentDeclined: false,
   }),
   persist: true,
 });

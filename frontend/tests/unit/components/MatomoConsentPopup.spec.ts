@@ -1,6 +1,8 @@
+import { createTestingPinia } from '@pinia/testing';
 import { mount } from '@vue/test-utils';
 
 import MatomoConsentPopup from '@/components/MatomoConsentPopup.vue';
+import { useSettings } from '@/stores/settings';
 
 describe('MatomoConsentPopup.vue', () => {
   let _paq: unknown[];
@@ -13,6 +15,9 @@ describe('MatomoConsentPopup.vue', () => {
   async function createWrapper() {
     const wrapper = mount(MatomoConsentPopup, {
       shallow: true,
+      global: {
+        plugins: [createTestingPinia()],
+      },
     });
 
     const init = _paq.pop() as Array<() => void>;
@@ -36,11 +41,13 @@ describe('MatomoConsentPopup.vue', () => {
 
   it('allows to decline consent', async () => {
     const wrapper = await createWrapper();
+    const settings = useSettings();
 
     const trigger = wrapper.find('[data-test="decline-consent"]');
     await trigger.trigger('click');
 
     expect(_paq).toHaveLength(0);
     expect(wrapper.find('[data-test="consent-popup"]').exists()).toBeFalsy();
+    expect(settings.matomoConsentDeclined).toBe(true);
   });
 });

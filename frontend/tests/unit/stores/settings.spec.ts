@@ -15,6 +15,11 @@ describe('settings store', () => {
       const settings = useSettings();
       expect(settings.$state.connectedWallet).toBeUndefined();
     });
+
+    it('initialize settings store matomoConsentDeclined with false', () => {
+      const settings = useSettings();
+      expect(settings.$state.matomoConsentDeclined).toBe(false);
+    });
   });
 
   describe('connected wallet', () => {
@@ -22,6 +27,14 @@ describe('settings store', () => {
       const settings = useSettings();
       settings.connectedWallet = WalletType.MetaMask;
       expect(settings.$state.connectedWallet).toBe(WalletType.MetaMask);
+    });
+  });
+
+  describe('matomo consent declined', () => {
+    it('can decline the matomo consent', () => {
+      const settings = useSettings();
+      settings.matomoConsentDeclined = true;
+      expect(settings.$state.matomoConsentDeclined).toBe(true);
     });
   });
 });
