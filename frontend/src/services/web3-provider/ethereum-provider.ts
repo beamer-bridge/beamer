@@ -18,8 +18,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   protected web3Provider: Web3Provider;
   protected externalProvider: Eip1193Provider;
 
-  private isSwitchingNetwork = false;
-
   constructor(_provider: Eip1193Provider) {
     super();
     this.web3Provider = new Web3Provider(_provider);
@@ -35,7 +33,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   async switchChainSafely(newChain: Chain): Promise<boolean> {
     let successful = true;
     if (newChain.identifier !== this.chainId.value) {
-      this.isSwitchingNetwork = true;
       try {
         const isSuccessfulSwitch = await this.switchChain(newChain.identifier);
         if (!isSuccessfulSwitch) {
@@ -51,7 +48,6 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         console.error(error);
         successful = false;
       }
-      setTimeout(() => (this.isSwitchingNetwork = false), 1000);
     }
     return successful;
   }
@@ -136,24 +132,20 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   }
 
   disconnect(): void {
-    // This is a hotfix. MetaMask sometimes throws a disconnect event when
-    // switching the chain. In this case we need to ignore the event, because
-    // the account is actually still connected. If this is fixed on their side,
-    // this flag can be removed.
-    // See: https://github.com/MetaMask/metamask-extension/issues/13375
-    if (this.isSwitchingNetwork) {
-      return;
-    }
     this.signer.value = undefined;
     this.signerAddress.value = undefined;
     this.emit('disconnect');
   }
 
   listenToEvents(): void {
+    this.listenToChangeEvents();
+    this.externalProvider.on('disconnect', () => this.disconnect());
+  }
+
+  protected listenToChangeEvents(): void {
     this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
     this.externalProvider.on('chainChanged', (chainId: string) => {
       this.chainId.value = BigNumber.from(chainId).toNumber();
     });
-    this.externalProvider.on('disconnect', () => this.disconnect());
   }
 }

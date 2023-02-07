@@ -276,26 +276,6 @@ describe('EthereumProvider', () => {
       expect(ethereumProvider.signer.value).toBeUndefined();
       expect(ethereumProvider.signerAddress.value).toBeUndefined();
     });
-
-    it('should not disconnect after a chain switch', async () => {
-      const web3Provider = mockWeb3Provider();
-      web3Provider.getSigner = vi.fn().mockImplementation((signer) => signer);
-
-      const currentChainId = 1;
-      const newChainId = 2;
-      const chain = generateChain({ identifier: newChainId });
-
-      const ethereumProvider = new TestEthereumProvider();
-      ethereumProvider.setSigner(getRandomEthereumAddress());
-      ethereumProvider.chainId.value = currentChainId;
-      ethereumProvider.switchChain = vi.fn().mockResolvedValue(true);
-
-      await ethereumProvider.switchChainSafely(chain);
-      ethereumProvider.disconnect();
-
-      expect(ethereumProvider.signer.value).not.toBeUndefined();
-      expect(ethereumProvider.signerAddress.value).not.toBeUndefined();
-    });
   });
 
   describe('listenToEvents()', () => {
