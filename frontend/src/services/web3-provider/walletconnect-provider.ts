@@ -1,7 +1,7 @@
 import { hexValue } from 'ethers/lib/utils';
 
-import type { Eip1193Provider } from '@/services/web3-provider';
-import { EthereumProvider } from '@/services/web3-provider';
+import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
+import type { Eip1193Provider } from '@/services/web3-provider/types';
 import { WalletConnect } from '@/services/web3-provider/util-export';
 
 export async function createWalletConnectProvider(rpcList: {

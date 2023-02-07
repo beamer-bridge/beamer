@@ -8,8 +8,8 @@
 import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { hexValue } from 'ethers/lib/utils';
 
-import type { Eip1193Provider } from '@/services/web3-provider';
-import { EthereumProvider } from '@/services/web3-provider';
+import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
+import type { Eip1193Provider } from '@/services/web3-provider/types';
 
 const APP_NAME = 'Beamer Bridge';
 const LOGO_FILENAME = 'logo_padded.png';

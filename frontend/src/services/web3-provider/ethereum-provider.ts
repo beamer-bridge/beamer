@@ -6,9 +6,8 @@ import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef, toRaw } from 'vue';
 
+import type { Eip1193Provider, IEthereumProvider } from '@/services/web3-provider/types';
 import type { Chain, Token } from '@/types/data';
-
-import type { Eip1193Provider, IEthereumProvider } from './types';
 
 export abstract class EthereumProvider extends EventEmitter implements IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
