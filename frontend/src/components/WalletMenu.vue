@@ -79,6 +79,7 @@ const walletOptions = ref([
     description: 'Connect using browser wallet',
     connect: () => connectMetaMask(true),
     connecting: connectingMetaMask,
+    hasMobileFlow: false,
   },
   {
     name: 'WalletConnect',
@@ -86,6 +87,7 @@ const walletOptions = ref([
     description: 'Connect using mobile wallet',
     connect: connectWalletConnect,
     connecting: connectingWalletConnect,
+    hasMobileFlow: true,
   },
   {
     name: 'Coinbase',
@@ -94,20 +96,21 @@ const walletOptions = ref([
     description: 'Connect using coinbase wallet',
     connect: connectCoinbase,
     connecting: connectingCoinbase,
+    hasMobileFlow: true,
   },
 ]);
 
 onMounted(() => {
-  // Use stripped down option list for mobile devices
   if (isMobile(window.navigator.userAgent)) {
     const metaMaskAvailable = window.ethereum && window.ethereum.isMetaMask;
+    const coinbaseAvailable = window.ethereum && window.ethereum.isCoinbaseWallet;
 
     if (metaMaskAvailable) {
       walletOptions.value = walletOptions.value.filter((option) => option.name === 'MetaMask');
+    } else if (coinbaseAvailable) {
+      walletOptions.value = walletOptions.value.filter((option) => option.name === 'Coinbase');
     } else {
-      walletOptions.value = walletOptions.value.filter(
-        (option) => option.name === 'WalletConnect',
-      );
+      walletOptions.value = walletOptions.value.filter((option) => option.hasMobileFlow);
     }
   }
 });

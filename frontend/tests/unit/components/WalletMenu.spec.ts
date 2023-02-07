@@ -132,15 +132,28 @@ describe('WalletMenu.vue', () => {
       });
     });
 
-    describe('if MetaMask is not available', () => {
-      it('filters options to only include mobile browser wallet providers', async () => {
-        vi.stubGlobal('ethereum', { isMetaMask: false });
+    describe('if Coinbase is available', () => {
+      it('filters options to only include Coinbase provider', async () => {
+        vi.stubGlobal('ethereum', { isCoinbaseWallet: true });
         const wrapper = createWrapper();
         await wrapper.vm.$nextTick();
 
         const text = wrapper.text();
-        expect(text).not.toMatch('MetaMask');
+        expect(text).toMatch('Coinbase');
+        expect(text).not.toMatch('WalletConnect');
+      });
+    });
+
+    describe('if no injected provider is available', () => {
+      it('filters options to only include providers that have mobile flow support', async () => {
+        vi.stubGlobal('ethereum', undefined);
+        const wrapper = createWrapper();
+        await wrapper.vm.$nextTick();
+
+        const text = wrapper.text();
+        expect(text).toMatch('Coinbase');
         expect(text).toMatch('WalletConnect');
+        expect(text).not.toMatch('MetaMask');
       });
     });
   });
