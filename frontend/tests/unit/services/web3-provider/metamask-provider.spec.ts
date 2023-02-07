@@ -30,6 +30,44 @@ describe('metamask-provider', () => {
   });
 
   describe('createMetaMaskProvider()', () => {
+    describe('when multiple injected providers are available in the browser', () => {
+      it('returns undefined if no metamask provider was found', async () => {
+        Object.defineProperty(utils, 'detectEthereumProvider', {
+          value: vi.fn().mockResolvedValue({
+            providers: [
+              new MockedEip1193Provider({ isMetaMask: false }),
+              new MockedEip1193Provider({ isMetaMask: false }),
+            ],
+          }),
+        });
+
+        const metamaskProvider = await createMetaMaskProvider();
+
+        expect(metamaskProvider).toBeUndefined();
+      });
+      it('returns the provider instance if metamask provider was found', async () => {
+        Object.defineProperty(utils, 'detectEthereumProvider', {
+          value: vi.fn().mockResolvedValue({
+            providers: [
+              new MockedEip1193Provider({ isMetaMask: false }),
+              new MockedEip1193Provider({ isMetaMask: true }),
+            ],
+          }),
+        });
+
+        const chain = generateChain({ identifier: 2 });
+        const signerAddress = getRandomEthereumAddress();
+
+        const web3Provider = mockWeb3Provider();
+        web3Provider.getNetwork = vi.fn().mockReturnValue({ chainId: chain.identifier });
+        web3Provider.listAccounts = vi.fn().mockReturnValue([signerAddress]);
+
+        const metamaskProvider = await createMetaMaskProvider();
+
+        expect(metamaskProvider).not.toBeUndefined();
+      });
+    });
+
     describe('when MetaMask is available', () => {
       it('creates & initializes a MetaMask wallet provider', async () => {
         Object.defineProperty(utils, 'detectEthereumProvider', {
