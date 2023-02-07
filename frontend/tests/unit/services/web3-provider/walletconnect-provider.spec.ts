@@ -5,8 +5,8 @@ import * as utils from '@/services/web3-provider/util-export';
 import { generateChain, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedWalletConnectConnector, MockedWeb3Provider } from '~/utils/mocks/ethereum-provider';
 
-vi.mock('@ethersproject/providers');
 vi.mock('ethers/lib/utils');
+vi.mock('@ethersproject/providers');
 vi.mock('@/services/web3-provider/util-export');
 
 function mockWeb3Provider(): MockedWeb3Provider {
@@ -21,9 +21,10 @@ function mockWeb3Provider(): MockedWeb3Provider {
 
 function mockWalletConnectConnector(): MockedWalletConnectConnector {
   const walletConnect = new MockedWalletConnectConnector();
+  walletConnect.init = vi.fn().mockImplementation(() => walletConnect);
 
   Object.defineProperty(utils, 'WalletConnect', {
-    value: vi.fn().mockImplementation(() => walletConnect),
+    value: walletConnect,
   });
 
   return walletConnect;

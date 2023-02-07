@@ -38,8 +38,8 @@ export class MockedWalletConnectConnector extends MockedEip1193Provider {
   }
 
   enable = vi.fn();
+  init = vi.fn().mockImplementation(() => new MockedWalletConnectConnector());
 }
-
 export class MockedCoinbaseConnector extends MockedEip1193Provider {
   constructor(public connected: boolean = false) {
     super({ isCoinbase: true });
