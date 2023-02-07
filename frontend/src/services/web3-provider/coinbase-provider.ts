@@ -4,12 +4,11 @@
  Remove the above mentioned package from project once coinbase fixes this:
  https://github.com/coinbase/coinbase-wallet-sdk/issues/56
  */
-
-import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import { hexValue } from 'ethers/lib/utils';
 
 import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
 import type { Eip1193Provider } from '@/services/web3-provider/types';
+import { CoinbaseWalletSDK } from '@/services/web3-provider/util-export';
 
 const APP_NAME = 'Beamer Bridge';
 const LOGO_FILENAME = 'logo_padded.png';

@@ -18,8 +18,10 @@ export class MockedWeb3Provider {
 }
 export class MockedEip1193Provider implements Eip1193Provider {
   isMetaMask: boolean;
-  constructor(options?: { isMetaMask?: boolean }) {
+  isCoinbase: boolean;
+  constructor(options?: { isMetaMask?: boolean; isCoinbase?: boolean }) {
     this.isMetaMask = options?.isMetaMask ?? false;
+    this.isCoinbase = options?.isCoinbase ?? false;
   }
 
   sendAsync = vi.fn();
@@ -34,6 +36,21 @@ export class MockedWalletConnectConnector extends MockedEip1193Provider {
 
   enable = vi.fn();
 }
+
+export class MockedCoinbaseConnector extends MockedEip1193Provider {
+  constructor(public connected: boolean = false) {
+    super({ isCoinbase: true });
+  }
+  enable = vi.fn();
+}
+export class MockedCoinbaseWalletSDK {
+  constructor(public appName?: string, public appLogoUrl?: string) {}
+
+  disconnect = vi.fn();
+  makeWeb3Provider = vi.fn();
+  setAppInfo = vi.fn();
+}
+
 export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
@@ -67,6 +84,12 @@ export class MockedMetaMaskProvider extends MockedEthereumProvider implements IS
 }
 
 export class MockedWalletConnectProvider extends MockedEthereumProvider {
+  constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
+    super(options);
+  }
+}
+
+export class MockedCoinbaseProvider extends MockedEthereumProvider {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
