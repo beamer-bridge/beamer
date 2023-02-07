@@ -29,7 +29,7 @@
     "@safe-global/safe-apps-sdk": "7.10.0",
     "@vuelidate/core": "^2.0.0-alpha.43",
     "@vuelidate/validators": "^2.0.0-alpha.31",
-    "@walletconnect/web3-provider": "^1.7.8",
+    "@walletconnect/ethereum-provider": "^2.3.2",
     "autoprefixer": "^10",
     "ethers": "^5.5.1",
     "lodash.debounce": "^4.0.8",
