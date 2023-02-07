@@ -37,3 +37,8 @@ export type Eip1193Provider = ExternalProvider & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on(eventName: string, listener: (...args: any[]) => void): void;
 };
+
+export type DetectedEthereumProvider =
+  | ExternalProvider & {
+      providers?: Array<ExternalProvider>;
+    };
