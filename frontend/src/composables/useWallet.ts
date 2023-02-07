@@ -3,11 +3,11 @@ import type { Ref } from 'vue';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import {
+  createCoinbaseProvider,
   createMetaMaskProvider,
   createWalletConnectProvider,
   onboardMetaMask,
 } from '@/services/web3-provider';
-import { createCoinbaseProvider } from '@/services/web3-provider/coinbase-provider';
 import { WalletType } from '@/types/settings';
 
 export function useWallet(

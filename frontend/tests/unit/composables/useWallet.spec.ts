@@ -4,6 +4,7 @@ import { useWallet } from '@/composables/useWallet';
 import * as web3ProviderService from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
 import {
+  MockedCoinbaseProvider,
   MockedMetaMaskProvider,
   MockedWalletConnectProvider,
 } from '~/utils/mocks/ethereum-provider';
@@ -12,11 +13,16 @@ vi.mock('@/services/web3-provider');
 
 describe('useWallets', () => {
   beforeEach(() => {
-    Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
-      value: vi.fn().mockResolvedValue(new MockedMetaMaskProvider()),
-    });
-    Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
-      value: vi.fn().mockResolvedValue(new MockedWalletConnectProvider()),
+    Object.defineProperties(web3ProviderService, {
+      createMetaMaskProvider: {
+        value: vi.fn().mockResolvedValue(new MockedMetaMaskProvider()),
+      },
+      createWalletConnectProvider: {
+        value: vi.fn().mockResolvedValue(new MockedWalletConnectProvider()),
+      },
+      createCoinbaseProvider: {
+        value: vi.fn().mockResolvedValue(new MockedCoinbaseProvider()),
+      },
     });
   });
 
@@ -124,6 +130,40 @@ describe('useWallets', () => {
       await connectWalletConnect();
 
       expect(connectedWallet.value).toBe('wallet_connect');
+    });
+  });
+
+  describe('connectCoinbase()', () => {
+    it('creates Coinbase provider instance', async () => {
+      const rpcUrls = ref({ 5: 'fakeRpc.url' });
+      const { connectCoinbase } = useWallet(ref(undefined), ref(undefined), rpcUrls);
+
+      await connectCoinbase();
+
+      expect(web3ProviderService.createCoinbaseProvider).toHaveBeenCalledOnce();
+      expect(web3ProviderService.createCoinbaseProvider).toHaveBeenLastCalledWith(rpcUrls.value);
+    });
+
+    it('sets the provider instance', async () => {
+      const wallet = 'fake-provider'; // TODO: work-around for horrible mock typing issues.
+      Object.defineProperty(web3ProviderService, 'createCoinbaseProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const provider = ref(undefined);
+      const { connectCoinbase } = useWallet(provider, ref(undefined), ref({}));
+
+      await connectCoinbase();
+
+      expect(provider.value).toBe(wallet);
+    });
+
+    it('sets the connected wallet type', async () => {
+      const connectedWallet = ref(undefined);
+      const { connectCoinbase } = useWallet(ref(undefined), connectedWallet, ref({}));
+
+      await connectCoinbase();
+
+      expect(connectedWallet.value).toBe('coinbase');
     });
   });
 
