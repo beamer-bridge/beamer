@@ -43,19 +43,7 @@
       </div>
       <feedback v-if="enableFeedback"></feedback>
     </div>
-    <footer class="absolute bottom-0 my-4 text-lg text-center text-sea-green right-0 left-0">
-      Powered by
-      <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>
-      &bull;
-      <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
-        >Imprint</a
-      >
-      &bull;
-      <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
-        >Terms of Service</a
-      >
-      <Version />
-    </footer>
+    <Footer />
     <MatomoConsentPopup />
   </div>
 </template>
@@ -67,8 +55,8 @@ import { onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
+import Footer from '@/components/Footer.vue';
 import Spinner from '@/components/Spinner.vue';
-import Version from '@/components/Version.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
 import { useConfiguration } from '@/stores/configuration';
