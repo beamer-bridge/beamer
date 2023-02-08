@@ -38,6 +38,7 @@ export function useTransferRequest() {
         options.toAddress,
         validityPeriod,
         fees,
+        false,
       ),
     ) as Transfer;
 

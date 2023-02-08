@@ -79,6 +79,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly validityPeriod: UInt256;
   readonly fees: TokenAmount;
   readonly date: Date;
+  readonly approveInfiniteAmount: boolean;
   private _requestInformation?: RequestInformation;
   private _expired: boolean;
   private _claimCount: number;
@@ -96,6 +97,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this.validityPeriod = new UInt256(data.validityPeriod);
     this.fees = new TokenAmount(data.fees);
     this.date = new Date(data.date);
+    this.approveInfiniteAmount = data.approveInfiniteAmount ?? false;
     this._requestInformation = data.requestInformation
       ? new RequestInformation(data.requestInformation)
       : undefined;
@@ -118,6 +120,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     targetAccount: EthereumAddress,
     validityPeriod: UInt256,
     fees: TokenAmount,
+    approveInfiniteAmount: boolean,
   ): Transfer {
     return new this({
       sourceChain,
@@ -128,6 +131,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       validityPeriod: validityPeriod.encode(),
       fees: fees.encode(),
       date: Date.now(),
+      approveInfiniteAmount,
     });
   }
 
@@ -230,6 +234,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       validityPeriod: this.validityPeriod.encode(),
       fees: this.fees.encode(),
       date: this.date.getTime(),
+      approveInfiniteAmount: this.approveInfiniteAmount,
       steps: this.steps.map((step) => step.encode()),
       requestInformation: this._requestInformation?.encode(),
       expired: this._expired,
@@ -243,13 +248,18 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Missing wallet connection!');
     }
 
-    const totalAmount = this.sourceAmount.uint256.add(this.fees.uint256);
+    let amount: UInt256;
+    if (this.approveInfiniteAmount) {
+      amount = UInt256.max();
+    } else {
+      amount = this.sourceAmount.uint256.add(this.fees.uint256);
+    }
 
     await ensureTokenAllowance(
       signer,
       this.sourceAmount.token.address,
       this.sourceChain.requestManagerAddress,
-      totalAmount,
+      amount,
     );
   }
 
@@ -380,6 +390,7 @@ export type TransferData = {
   validityPeriod: UInt256Data;
   fees: TokenAmountData;
   date: number;
+  approveInfiniteAmount?: boolean;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
   expired?: boolean;

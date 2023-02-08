@@ -36,6 +36,15 @@ describe('UInt256', () => {
     });
   });
 
+  describe('max()', () => {
+    it('correctly returns the maximum UInt256', () => {
+      const max = UInt256.max();
+      expect(max.asString).toBe(
+        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      );
+    });
+  });
+
   describe('format()', () => {
     it('converts number to decimals representation bases on decimals', () => {
       const number = new UInt256('123');
