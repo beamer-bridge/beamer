@@ -12,6 +12,36 @@
         >Terms of Service</a
       >
     </div>
+    <div class="flex flex-row items-center justify-center gap-8 py-2">
+      <a
+        href="https://github.com/beamer-bridge"
+        target="_blank"
+        class="transition-transform hover:scale-110"
+      >
+        <img class="w-8" src="@/assets/images/social-media/github.png" />
+      </a>
+      <a
+        href="https://discord.gg/YWdStZkz9z"
+        target="_blank"
+        class="transition-transform hover:scale-110"
+      >
+        <img class="w-8" src="@/assets/images/social-media/discord.png" />
+      </a>
+      <a
+        href="https://twitter.com/BeamerBridge"
+        target="_blank"
+        class="transition-transform hover:scale-110"
+      >
+        <img class="w-8" src="@/assets/images/social-media/twitter.png" />
+      </a>
+      <a
+        href="https://medium.com/@BeamerBridge"
+        target="_blank"
+        class="transition-transform hover:scale-110"
+      >
+        <img class="w-8" src="@/assets/images/social-media/medium.png" />
+      </a>
+    </div>
     <Version />
   </footer>
 </template>
