@@ -176,6 +176,30 @@ describe('transfer', () => {
         new UInt256('3'),
       );
     });
+
+    it('sets the allowance to the infinite amount if the approveInfiniteAmount flag is set', async () => {
+      const data = generateTransferData({
+        fees: generateTokenAmountData({ amount: '2' }),
+        sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
+        sourceAmount: generateTokenAmountData({
+          token: generateToken({ address: '0xSourceToken' }),
+          amount: '1',
+        }),
+        approveInfiniteAmount: true,
+      });
+      const transfer = new TestTransfer(data);
+      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+
+      await transfer.ensureTokenAllowance(signer);
+
+      expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
+      expect(tokenUtils.ensureTokenAllowance).toHaveBeenLastCalledWith(
+        signer,
+        '0xSourceToken',
+        '0xRequestManager',
+        UInt256.max(),
+      );
+    });
   });
 
   describe('sendRequestTransaction()', () => {

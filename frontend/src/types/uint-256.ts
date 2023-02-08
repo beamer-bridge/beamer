@@ -23,6 +23,10 @@ export class UInt256 implements Encodable<UInt256Data> {
     return new this(utils.parseUnits(value, decimals ?? 0).toString());
   }
 
+  static max(): UInt256 {
+    return new this(BigNumber.from(2).pow(256).sub(1).toString());
+  }
+
   get asString(): string {
     return this.value.toString();
   }
