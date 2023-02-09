@@ -4,11 +4,19 @@
       Powered by
       <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>
       &bull;
-      <a href="https://beamerbridge.com/imprint.html" target="_blank" class="hover:underline"
+      <a
+        href="https://beamerbridge.com/imprint.html"
+        target="_blank"
+        class="hover:underline"
+        data-test="imprint-link"
         >Imprint</a
       >
       &bull;
-      <a href="https://beamerbridge.com/terms.html" target="_blank" class="hover:underline"
+      <a
+        href="https://beamerbridge.com/terms.html"
+        target="_blank"
+        class="hover:underline"
+        data-test="tos-link"
         >Terms of Service</a
       >
     </div>
@@ -17,6 +25,7 @@
         href="https://github.com/beamer-bridge"
         target="_blank"
         class="transition-transform hover:scale-110"
+        data-test="github-link"
       >
         <img class="w-8" src="@/assets/images/social-media/github.png" />
       </a>
@@ -24,6 +33,7 @@
         href="https://discord.gg/YWdStZkz9z"
         target="_blank"
         class="transition-transform hover:scale-110"
+        data-test="discord-link"
       >
         <img class="w-8" src="@/assets/images/social-media/discord.png" />
       </a>
@@ -31,6 +41,7 @@
         href="https://twitter.com/BeamerBridge"
         target="_blank"
         class="transition-transform hover:scale-110"
+        data-test="twitter-link"
       >
         <img class="w-8" src="@/assets/images/social-media/twitter.png" />
       </a>
@@ -38,6 +49,7 @@
         href="https://medium.com/@BeamerBridge"
         target="_blank"
         class="transition-transform hover:scale-110"
+        data-test="medium-link"
       >
         <img class="w-8" src="@/assets/images/social-media/medium.png" />
       </a>
