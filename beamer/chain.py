@@ -82,7 +82,6 @@ class EventMonitor:
             "EventMonitor started",
             addresses=[c.address for c in self._contracts],
         )
-
         fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
         events = fetcher.fetch()
         if events:
@@ -112,20 +111,21 @@ class EventProcessor:
         self._stop = False
         self._log = structlog.get_logger(type(self).__name__)
         # The number of times we synced with a chain:
-        # 0 = we're still waiting for sync to complete for both chains
-        # 1 = one of the chains was synced, waiting for the other one
-        # 2 = both chains synced
+        # 0 = we're still waiting for sync to complete for chains
+        # 1 = one of the chains was synced, if there is only one chain, sync done.
+        # 2 = If there are 2 different chains, the sync is done
         self._num_syncs_done = 0
         self._context = context
+        self._chain_ids = {self._context.source_chain_id, self._context.target_chain_id}
 
     @property
     def _synced(self) -> bool:
         with self._lock:
-            return self._num_syncs_done == 2
+            return self._num_syncs_done == len(self._chain_ids)
 
     def mark_sync_done(self) -> None:
         with self._lock:
-            assert self._num_syncs_done < 2
+            assert self._num_syncs_done < len(self._chain_ids)
             self._num_syncs_done += 1
 
     def start(self) -> None:
