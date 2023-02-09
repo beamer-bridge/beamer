@@ -18,6 +18,7 @@ from beamer.tests.agent.unit.utils import (
     CLAIM_ID,
     CLAIMER_STAKE,
     REQUEST_ID,
+    SOURCE_CHAIN_ID,
     TARGET_CHAIN_ID,
     TIMESTAMP,
     make_claim_challenged,
@@ -215,7 +216,7 @@ def test_handle_request_resolved():
     request.try_to_claim()
 
     event = RequestResolved(
-        chain_id=TARGET_CHAIN_ID,
+        chain_id=SOURCE_CHAIN_ID,
         tx_hash=HexBytes(""),
         request_id=request.id,
         filler=filler,
