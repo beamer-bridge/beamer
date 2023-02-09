@@ -47,7 +47,7 @@ def test_handle_fill_invalidated_resolved():
     context.claims.add(claim_2.id, claim_2)
 
     event = FillInvalidatedResolved(
-        chain_id=request.target_chain_id,
+        chain_id=request.source_chain_id,
         tx_hash=HexBytes(""),
         request_id=request.id,
         fill_id=request.fill_id,
