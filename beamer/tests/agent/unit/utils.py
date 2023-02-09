@@ -174,6 +174,7 @@ def make_context() -> Tuple[Context, Config]:
         task_pool=MagicMock(),
         claim_request_extension=100,
         l1_resolutions={},
+        l1_invalidations={},
     )
     context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore
     return context, config
