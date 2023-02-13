@@ -303,12 +303,16 @@ def fill_request(request: Request, context: Context) -> None:
         log.info("Unable to fill request", balance=balance, request_amount=request.amount)
         return
 
-    func = token.functions.approve(context.fill_manager.address, request.amount)
-    try:
-        transact(func)
-    except TransactionFailed as exc:
-        log.error("approve failed", request_id=request.id, exc=exc)
-        return
+    if (
+        token.functions.allowance(context.address, context.fill_manager.address).call()
+        < request.amount
+    ):
+        func = token.functions.approve(context.fill_manager.address, request.amount)
+        try:
+            transact(func)
+        except TransactionFailed as exc:
+            log.error("approve failed", request_id=request.id, exc=exc)
+            return
 
     func = context.fill_manager.functions.fillRequest(
         sourceChainId=request.source_chain_id,
