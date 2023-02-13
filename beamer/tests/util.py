@@ -66,10 +66,18 @@ class _HTTPRequestHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.get("Content-Length"))
         post_body = self.rfile.read(content_len)
         url = self.server.target_address
+
+        rate_limiter = self.server.rate_limiter
+        if callable(rate_limiter) and rate_limiter(url, post_body):
+            self.send_response_only(HTTPStatus.TOO_MANY_REQUESTS)
+            self.end_headers()
+            return
+
         try:
             response = requests.post(url, data=post_body)
         except requests.exceptions.ConnectionError:
             self.send_response_only(HTTPStatus.SERVICE_UNAVAILABLE)
+            self.end_headers()
             return
 
         data = json.loads(post_body)
@@ -94,6 +102,7 @@ class HTTPProxy(HTTPServer):
         super().__init__(("", 0), _HTTPRequestHandler)
         self.target_address = target_address
         self.call_delays = {}
+        self.rate_limiter = None
 
     def start(self) -> None:
         self._thread = threading.Thread(target=self.serve_forever)
@@ -105,6 +114,9 @@ class HTTPProxy(HTTPServer):
 
     def delay_rpc(self, call_delays):
         self.call_delays = call_delays
+
+    def set_rate_limiter(self, rate_limiter):
+        self.rate_limiter = rate_limiter
 
 
 class EventCollector:
