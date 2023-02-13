@@ -10,9 +10,9 @@ const test_output_directory = path.resolve(test_directory, 'output');
 const config_directory = path.resolve(__dirname, 'config');
 
 // Release Info
-const VERSION = process.env.npm_package_version;
-const COMMIT_HASH = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-const REPOSITORY = execSync('git ls-remote --get-url', { encoding: 'utf-8' }).trim();
+const version = execSync('git describe --tags', { encoding: 'utf-8' }).trim();
+const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+const REPOSITORY = 'https://github.com/beamer-bridge/beamer';
 
 export default defineConfig({
   plugins: [vue()],
@@ -51,8 +51,8 @@ export default defineConfig({
   },
   define: {
     APP_RELEASE: {
-      VERSION,
-      COMMIT_HASH,
+      VERSION: version,
+      COMMIT_HASH: commitHash,
       REPOSITORY,
     },
   },
