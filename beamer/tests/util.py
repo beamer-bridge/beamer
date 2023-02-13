@@ -118,6 +118,9 @@ class HTTPProxy(HTTPServer):
     def set_rate_limiter(self, rate_limiter):
         self.rate_limiter = rate_limiter
 
+    def url(self):
+        return "http://%s:%s" % self.server_address
+
 
 class EventCollector:
     def __init__(self, contract: web3.contract.Contract, event: str) -> None:
