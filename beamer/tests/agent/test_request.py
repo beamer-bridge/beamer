@@ -39,14 +39,8 @@ def test_read_timeout(config):
     proxy_l2b.delay_rpc({"eth_getLogs": _get_delay})
     proxy_l2b.start()
 
-    config.l2a_rpc_url = "http://%s:%s" % (
-        proxy_l2a.server_address[0],
-        proxy_l2a.server_address[1],
-    )
-    config.l2b_rpc_url = "http://%s:%s" % (
-        proxy_l2b.server_address[0],
-        proxy_l2b.server_address[1],
-    )
+    config.l2a_rpc_url = proxy_l2a.url()
+    config.l2b_rpc_url = proxy_l2b.url()
 
     agent = Agent(config)
     agent.start()
@@ -67,10 +61,7 @@ def test_read_timeout_send_transaction(request_manager, token, config):
     proxy_l2a.delay_rpc({"eth_sendRawTransaction": delay_period})
     proxy_l2a.start()
 
-    config.l2a_rpc_url = "http://%s:%s" % (
-        proxy_l2a.server_address[0],
-        proxy_l2a.server_address[1],
-    )
+    config.l2a_rpc_url = proxy_l2a.url()
 
     requester, target = alloc_accounts(2)
     make_request(request_manager, token, requester, target, 1, validity_period=1800)
