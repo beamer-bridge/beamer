@@ -13,7 +13,7 @@ ignore-patterns=
 
 [EXCEPTIONS]
 
-overgeneral-exceptions=Exception
+overgeneral-exceptions=builtins.Exception
 
 [BASIC]
 
