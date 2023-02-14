@@ -24,10 +24,31 @@
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <div
         v-if="hasPendingTransactions"
-        class="text-center rounded-tl-lg rounded-lg bg-teal px-6 py-4 mb-8 md:px-8 md:py-8 text-sm"
+        class="text-center rounded-lg bg-teal px-6 py-4 mb-7 md:px-8 md:py-8 text-sm"
       >
         You have a pending transaction, that needs to complete before being able to make a new
         transfer.
+      </div>
+      <div class="flex flex-row gap-2 pl-2 items-center justify-center mb-7">
+        <input
+          v-model="approveInfiniteAmount"
+          type="checkbox"
+          class="appearance-none h-5 w-5 bg-sea-green shadow-inner rounded-md hover:opacity-90 checked:after:text-teal checked:after:text-2xl checked:after:leading-6 checked:after:content-['\2713']"
+        />
+        <span class="text-sm">Approve maximum token allowance</span>
+        <Tooltip>
+          <div class="h-full flex flex-col justify-center">
+            <img class="h-5 w-5 cursor-help" src="@/assets/images/help.svg" />
+          </div>
+          <template #hint>
+            <div class="max-w-sm">
+              Save time and money on transaction fees by ticking this box to skip the recurring
+              access permission step for future transfers with Beamer. You only need to approve
+              once per token and rollup/chain. Please keep in mind the risks if you use this
+              option.
+            </div>
+          </template>
+        </Tooltip>
       </div>
       <ActionButton :disabled="submitDisabled" @click="submitForm">
         <span v-if="!creatingTransaction"> Transfer Funds </span>
@@ -44,6 +65,7 @@ import type { Ref } from 'vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
 import ActionButton from '@/components/layout/ActionButton.vue';
+import Tooltip from '@/components/layout/Tooltip.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
 import Spinner from '@/components/Spinner.vue';
@@ -83,6 +105,7 @@ const { getTokenForChain } = useConfiguration();
 
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
+const approveInfiniteAmount = ref(false);
 
 const requestSourceInputsRef = ref<{ v$: Validation }>();
 const requestTargetInputsRef = ref<{ v$: Validation }>();
@@ -130,6 +153,7 @@ const submitForm = async () => {
     toAddress: validRequestTarget.value.toAddress,
     sourceToken: validRequestSource.value.token.value,
     targetToken,
+    approveInfiniteAmount: approveInfiniteAmount.value,
   });
 
   transferHistory.addTransfer(transfer);

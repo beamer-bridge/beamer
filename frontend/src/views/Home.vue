@@ -1,11 +1,11 @@
 <template>
   <div class="home flex justify-center">
     <div
-      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center pb-44"
+      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center"
     >
       <WalletConnectionDetails></WalletConnectionDetails>
 
-      <div class="relative mb-5 mt-3 w-full h-[37.3rem] md:h-[40.2rem]">
+      <div class="relative mb-7 mt-3 w-full h-[37.3rem] md:h-[40.2rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"
@@ -15,16 +15,14 @@
           @tab-changed="onTabChanged"
         />
       </div>
-      <div class="h-28 mt-5">
-        <div
-          v-show="actionButtonPortalVisible"
-          id="action-button-portal"
-          class="flex justify-center gap-5"
-        >
-          <ActionButton v-if="!signer" class="bg-orange" @click="openWalletMenu"
-            >Connect to Wallet
-          </ActionButton>
-        </div>
+      <div
+        v-show="actionButtonPortalVisible"
+        id="action-button-portal"
+        class="flex justify-center gap-5"
+      >
+        <ActionButton v-if="!signer" class="bg-orange" @click="openWalletMenu"
+          >Connect to Wallet
+        </ActionButton>
       </div>
     </div>
   </div>

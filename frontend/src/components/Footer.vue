@@ -1,5 +1,5 @@
 <template>
-  <footer class="absolute bottom-0 my-4 text-lg text-center text-sea-green right-0 left-0">
+  <footer class="my-8 text-lg text-center text-sea-green">
     <div>
       Powered by
       <a href="https://beamerbridge.com" target="_blank" class="hover:underline">Beamer</a>

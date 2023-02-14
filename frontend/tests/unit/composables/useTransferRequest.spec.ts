@@ -48,6 +48,7 @@ describe('useTransferRequest', () => {
         toAddress,
         sourceToken,
         targetToken,
+        approveInfiniteAmount: true,
       });
 
       const sourceTokenAmount = TokenAmount.parse(sourceAmount, sourceToken);
@@ -67,6 +68,7 @@ describe('useTransferRequest', () => {
       expect(transfer.targetAmount).toEqual(targetTokenAmount);
       expect(transfer.targetAccount).toEqual(toAddress);
       expect(transfer.fees).toEqual(feeAmount);
+      expect(transfer.approveInfiniteAmount).toBe(true);
     });
   });
 
