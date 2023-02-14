@@ -60,13 +60,16 @@
                     :disabled="maxTransferableTokenBalanceLoading"
                     @click="setMaxTokenAmount"
                   >
+                    Balance:
                     <span :class="{ underline: formattedTokenBalance?.includes('<') }">
                       {{ formattedTokenBalance }}
                     </span>
-                    available
                   </SimpleTextButton>
                   <template #hint>
-                    You have {{ balance.formatFullValue() }} in your wallet. Click to use all.
+                    You have {{ balance.formatFullValue() }} in your wallet.
+                    <br />
+                    Our current transfer limit is
+                    {{ transferLimitTokenAmount?.formatFullValue() }}.
                   </template>
                 </Tooltip>
               </template>
