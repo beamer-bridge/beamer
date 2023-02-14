@@ -273,6 +273,8 @@ const totalRequestTokenAmount = computed(() => {
   return totalAmount;
 });
 
+watch(totalRequestTokenAmount, () => v$.value.selectedTokenAmount?.$touch());
+
 const inputValues: WritableComputedRef<RequestSource> = computed({
   get: () => ({
     amount: selectedAmount.value,
