@@ -306,7 +306,14 @@ const isSelectedAmountValid = computed(() => {
 
 const setMaxTokenAmount = async () => {
   if (maxTransferableTokenBalance.value) {
-    selectedAmount.value = maxTransferableTokenBalance.value.decimalAmount;
+    if (
+      transferLimitTokenAmount.value &&
+      transferLimitTokenAmount.value.uint256.lt(maxTransferableTokenBalance.value.uint256)
+    ) {
+      selectedAmount.value = transferLimitTokenAmount.value.decimalAmount;
+    } else {
+      selectedAmount.value = maxTransferableTokenBalance.value.decimalAmount;
+    }
   } else if (balance.value) {
     selectedAmount.value = balance.value.decimalAmount;
   }
