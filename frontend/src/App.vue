@@ -1,5 +1,7 @@
 <template>
-  <div class="app-content relative">
+  <div
+    class="app-content flex flex-col min-h-screen w-full font-sans antialiased text-white bg-gradient-to-b from-black to-teal"
+  >
     <div
       class="flex h-16 w-full flex-col justify-center bg-fire text-center text-xl font-semibold text-rosa lg:text-2xl"
     >
@@ -43,6 +45,7 @@
       </div>
       <feedback v-if="enableFeedback"></feedback>
     </div>
+    <div class="flex-auto"></div>
     <Footer />
     <MatomoConsentPopup />
   </div>
@@ -80,17 +83,3 @@ useClaimCountListeners(transfers as Ref<Array<Transfer>>);
 
 onMounted(loadConfiguration);
 </script>
-
-<style lang="css">
-.app-content {
-  font-family: 'Sora', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: theme('colors.white');
-  background: linear-gradient(180deg, theme('colors.black') 0%, theme('colors.teal') 100%);
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-</style>

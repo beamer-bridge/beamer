@@ -36,6 +36,9 @@ module.exports = {
         xl: '45px',
         50: '50%',
       },
+      fontFamily: {
+        sans: ['Sora', 'sans-serif'],
+      },
     },
   },
   variants: {

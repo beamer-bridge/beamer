@@ -20,6 +20,7 @@ export function useTransferRequest() {
     toAddress: string;
     sourceToken: Token;
     targetToken: Token;
+    approveInfiniteAmount: boolean;
   }): Promise<Transfer> => {
     const sourceTokenAmount = TokenAmount.parse(options.sourceAmount, options.sourceToken);
     const targetTokenAmount = TokenAmount.parse(options.sourceAmount, options.targetToken);
@@ -38,7 +39,7 @@ export function useTransferRequest() {
         options.toAddress,
         validityPeriod,
         fees,
-        false,
+        options.approveInfiniteAmount,
       ),
     ) as Transfer;
 
