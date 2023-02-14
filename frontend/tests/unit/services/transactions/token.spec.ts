@@ -2,6 +2,7 @@ import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 
 import {
   ensureTokenAllowance,
+  getTokenAllowance,
   getTokenBalance,
   listenOnTokenBalanceChange,
 } from '@/services/transactions/token';
@@ -86,6 +87,27 @@ describe('token', () => {
 
       expect(mockedTokenContract.balanceOf).toHaveBeenCalled();
       expect(result.uint256.asString).toBe('1000');
+    });
+  });
+
+  describe('getTokenAllowance()', () => {
+    it('returns the token allowance for the specified spender and owner', async () => {
+      const token = generateToken();
+      const ownerAddress = getRandomEthereumAddress();
+      const spenderAddress = getRandomEthereumAddress();
+
+      const mockedTokenContract = mockGetContract();
+      mockedTokenContract.allowance = vi.fn().mockReturnValue('99');
+
+      const result = await getTokenAllowance(
+        new MockedEthereumProvider(),
+        token,
+        ownerAddress,
+        spenderAddress,
+      );
+
+      expect(mockedTokenContract.allowance).toHaveBeenCalled();
+      expect(result.uint256.asString).toBe('99');
     });
   });
 

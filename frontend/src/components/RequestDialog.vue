@@ -29,7 +29,10 @@
         You have a pending transaction, that needs to complete before being able to make a new
         transfer.
       </div>
-      <div class="flex flex-row gap-2 pl-2 items-center justify-center mb-7">
+      <div
+        v-if="showInfiniteApprovalCheckbox"
+        class="flex flex-row gap-2 pl-2 items-center justify-center mb-7"
+      >
         <input
           v-model="approveInfiniteAmount"
           type="checkbox"
@@ -70,6 +73,7 @@ import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
+import { useTokenAllowance } from '@/composables/useTokenAllowance';
 import { useTransferRequest } from '@/composables/useTransferRequest';
 import { switchToActivities } from '@/router/navigation';
 import { useConfiguration } from '@/stores/configuration';
@@ -93,7 +97,7 @@ const EMPTY_TARGET_DATA: RequestTarget = {
 };
 
 const ethereumProvider = useEthereumProvider();
-const { signer, signerAddress, chainId } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 const {
@@ -105,7 +109,6 @@ const { getTokenForChain } = useConfiguration();
 
 const requestSource: Ref<RequestSource> = ref(EMPTY_SOURCE_DATA);
 const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
-const approveInfiniteAmount = ref(false);
 
 const requestSourceInputsRef = ref<{ v$: Validation }>();
 const requestTargetInputsRef = ref<{ v$: Validation }>();
@@ -125,6 +128,13 @@ const hasPendingTransactions = computed(() => {
   }
   return transferHistory.hasPendingTransactionsForChain(selectedChainId);
 });
+
+const approveInfiniteAmount = ref(false);
+const { allowanceBelowMax: showInfiniteApprovalCheckbox } = useTokenAllowance(
+  provider,
+  computed(() => requestSource.value.token?.value),
+  computed(() => requestSource.value.sourceChain?.value),
+);
 
 const submitDisabled = computed(() => {
   return !formValid.value || creatingTransaction.value || hasPendingTransactions.value;

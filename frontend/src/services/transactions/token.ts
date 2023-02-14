@@ -47,6 +47,23 @@ export async function getTokenBalance(
   return TokenAmount.new(balance, token);
 }
 
+export async function getTokenAllowance(
+  provider: IEthereumProvider,
+  token: Token,
+  ownerAddress: EthereumAddress,
+  spenderAddress: EthereumAddress,
+): Promise<TokenAmount> {
+  const tokenContract = getReadOnlyContract<StandardToken>(
+    token.address,
+    StandardTokenDeployment.abi,
+    provider.getProvider(),
+  );
+  const allowance = new UInt256(
+    (await tokenContract.allowance(ownerAddress, spenderAddress)).toString(),
+  );
+  return TokenAmount.new(allowance, token);
+}
+
 export function listenOnTokenBalanceChange(options: {
   provider: IEthereumProvider;
   token: Token;
