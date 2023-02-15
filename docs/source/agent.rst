@@ -23,35 +23,34 @@ Agent architecture
 
 In order to satisfy above requirements, we opted for a simple thread-based approach where we moved
 all software components that could potentially block into their own threads. In particular, these
-are ``ContractEventMonitor`` and ``EventProcessor``.
+are ``EventMonitor`` and ``EventProcessor``.
+
+For every transfer direction, we have an ``EventProcessor`` running on its own thread.
 
 
-ContractEventMonitor
---------------------
+EventMonitor
+------------
 
-``ContractEventMonitor`` listens for blockchain events emitted by a given contract, decodes the events
+``EventMonitor`` listens for blockchain events emitted by given contracts, decodes the events
 into an internal event representation (event types in ``beamer.events``) and forwards decoded events
 to the ``EventProcessor``. The event monitor does not query the JSON-RPC server for events directly.
 Rather, it does that via an instance of ``EventFetcher``. Event fetcher handles communication with the
-JSON-RPC server and can block. However, even if the event fetcher for, say, L2a chain, blocks, since
+JSON-RPC server and can block. However, even if the event fetcher for, say, source chain, blocks, since
 it is only being invoked by the contract event monitor, which runs inside a thread, it won't block
 the entire agent. Therefore, even if a JSON-RPC server is very slow or the connection is otherwise
 unreliable, the agent as a whole will remain responsive.
 
-With the current contract implementation, we have one contract, ``RequestManager``, deployed on the
-source chain (L2a), and one contract, ``FillManager``, deployed on the target chain (L2b). Therefore
-we have two event monitors, one for each contract, and each event monitor has its own event fetcher,
-as can be seen in the figure above.  Each pair ``(EventFetcher, ContractEventMonitor)`` works
-independently of the other, allowing for very different speeds between the L2 chains.
+With the current implementation, we have an event monitor for every L2 chain, and each event monitor 
+has its own event fetcher, as can be seen in the figure above. Each pair ``(EventFetcher, EventMonitor)`` 
+works independently of the other, allowing for very different speeds between the L2 chains.
 
 
 EventProcessor
 --------------
 
 ``EventProcessor`` implements the Beamer protocol logic. It receives events from event monitors and
-stores them into a list. It is important to note that events are not separated based on the chain
-they came from -- all events are stored in a single list, in the order they arrived, regardless of
-the originating chain.
+stores them into a list. Events are filtered by source and target chains and are stored in 
+a single list, in the order they arrived.
 
 .. note::
 
@@ -145,7 +144,8 @@ option ``unsafe-fill-time``.
    :align: center
    :caption: Unsafe fill time
 
-In the graph, T1 is representing the request creation time, T2 is calculated using ``unsafe-fill-time`` option, and T3 is the request expiration.
+In the graph, T1 is representing the request creation time, T2 is calculated using ``unsafe-fill-time`` 
+option, and T3 is the request expiration.
 
 If unsafe time increases, T2 moves to left, so the agent will fill fewer requests.
 
