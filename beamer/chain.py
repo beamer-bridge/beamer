@@ -26,7 +26,7 @@ _ERC20_ABI = load_ERC20_abi()
 # This is also the maximum time a call to stop() would block.
 _STOP_TIMEOUT = 2
 
-POLL_PERIOD = 5
+POLL_PERIOD: float = 5
 
 
 def _wrap_thread_func(func: Callable) -> Callable:
