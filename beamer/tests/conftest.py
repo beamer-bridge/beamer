@@ -23,7 +23,7 @@ from beamer.agent import Agent
 from beamer.config import Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
-from beamer.typing import BlockNumber
+from beamer.typing import URL, BlockNumber, TransferDirection
 from beamer.util import TokenMatchChecker
 
 
@@ -159,11 +159,10 @@ def config(request_manager, fill_manager, token):
     deployment_info = {brownie.chain.id: contracts_info}
     account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
     token.mint(account.address, 300)
-    url = brownie.web3.provider.endpoint_uri
+    url = URL(brownie.web3.provider.endpoint_uri)
+    rpc_urls = {"l1": url, "l2a": url, "l2b": url}
     config = Config(
-        l1_rpc_url=url,
-        l2a_rpc_url=url,
-        l2b_rpc_url=url,
+        rpc_urls=rpc_urls,
         deployment_info=deployment_info,
         token_match_checker=TokenMatchChecker([]),
         account=account,
@@ -172,7 +171,7 @@ def config(request_manager, fill_manager, token):
         prometheus_metrics_port=None,
         log_level="debug",
     )
-    beamer.metrics.init(config)
+    beamer.metrics.init(config=config, source_rpc_url=url, target_rpc_url=url)
     return config
 
 
@@ -221,3 +220,8 @@ def resolver(contracts):
 @pytest.fixture
 def fill_manager(contracts):
     return contracts.fill_manager
+
+
+@pytest.fixture
+def direction():
+    return TransferDirection(brownie.chain.id, brownie.chain.id)

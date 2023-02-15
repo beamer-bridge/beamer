@@ -77,11 +77,11 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
         "--account-password",
         "test",
         "--chain",
-        f"l1={config.l1_rpc_url}",
+        f"l1={config.rpc_urls['l1']}",
         "--chain",
-        f"l2a={config.l2a_rpc_url}",
+        f"l2a={config.rpc_urls['l2a']}",
         "--chain",
-        f"l2b={config.l2b_rpc_url}",
+        f"l2b={config.rpc_urls['l2b']}",
         "--deployment-dir",
         str(deployment_dir),
         "--source-chain",
@@ -96,9 +96,9 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
 def _generate_options_config(keyfile, deployment_dir, config, unsafe_fill_time):
     content = _CONFIG_FILE.format(
         path=str(keyfile),
-        l1_rpc_url=config.l1_rpc_url,
-        foo_rpc_url=config.l2a_rpc_url,
-        bar_rpc_url=config.l2b_rpc_url,
+        l1_rpc_url=config.rpc_urls["l1"],
+        foo_rpc_url=config.rpc_urls["l2a"],
+        bar_rpc_url=config.rpc_urls["l2b"],
         deployment_dir=deployment_dir,
         unsafe_fill_time=unsafe_fill_time,
     )

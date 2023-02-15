@@ -46,11 +46,11 @@ def _adjust_poll_period():
 def test_rate_limiting_rpc(config, _adjust_poll_period):
     brownie.chain.mine(200)
 
-    proxy_l2a = HTTPProxy(config.l2a_rpc_url)
+    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"])
     proxy_l2a.set_rate_limiter(_RateLimiter(2))
     proxy_l2a.start()
 
-    config.l2a_rpc_url = proxy_l2a.url()
+    config.rpc_urls["l2a"] = proxy_l2a.url()
 
     agent = Agent(config)
     with structlog.testing.capture_logs() as captured_logs:

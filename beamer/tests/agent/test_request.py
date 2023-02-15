@@ -31,16 +31,16 @@ def _get_delay(request_data):
 def test_read_timeout(config):
     brownie.chain.mine(200)
 
-    proxy_l2a = HTTPProxy(config.l2a_rpc_url)
+    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"])
     proxy_l2a.delay_rpc({"eth_getLogs": _get_delay})
     proxy_l2a.start()
 
-    proxy_l2b = HTTPProxy(config.l2b_rpc_url)
+    proxy_l2b = HTTPProxy(config.rpc_urls["l2b"])
     proxy_l2b.delay_rpc({"eth_getLogs": _get_delay})
     proxy_l2b.start()
 
-    config.l2a_rpc_url = proxy_l2a.url()
-    config.l2b_rpc_url = proxy_l2b.url()
+    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.rpc_urls["l2b"] = proxy_l2b.url()
 
     agent = Agent(config)
     agent.start()
@@ -57,11 +57,11 @@ def test_read_timeout(config):
 # running and make a clean exit after our call agent.stop().
 def test_read_timeout_send_transaction(request_manager, token, config):
     delay_period = 6
-    proxy_l2a = HTTPProxy(config.l2a_rpc_url)
+    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"])
     proxy_l2a.delay_rpc({"eth_sendRawTransaction": delay_period})
     proxy_l2a.start()
 
-    config.l2a_rpc_url = proxy_l2a.url()
+    config.rpc_urls["l2a"] = proxy_l2a.url()
 
     requester, target = alloc_accounts(2)
     make_request(request_manager, token, requester, target, 1, validity_period=1800)
@@ -73,7 +73,7 @@ def test_read_timeout_send_transaction(request_manager, token, config):
     proxy_l2a.stop()
 
 
-def test_challenge_own_claim(config, request_manager, token):
+def test_challenge_own_claim(config, request_manager, token, direction):
     agent = Agent(config)
     agent_address = to_checksum_address(agent.address)
     claim_stake = request_manager.claimStake()
@@ -106,20 +106,21 @@ def test_challenge_own_claim(config, request_manager, token):
         int(time.time()),
     )
     # Add context so that maybe_challenge verifies that the claim is not expired
-    agent.context.requests.add(request.id, request)
-    agent.context.latest_blocks[brownie.chain.id] = {"timestamp": Timestamp(0)}
+    context = agent.get_context(direction)
+    context.requests.add(request.id, request)
+    context.latest_blocks[brownie.chain.id] = {"timestamp": Timestamp(0)}
 
-    assert not maybe_challenge(claim, agent.context), "Tried to challenge own claim"
+    assert not maybe_challenge(claim, context), "Tried to challenge own claim"
 
 
 @pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
-def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
+def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs, direction):
     requester, target = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, target, 1)
 
     try:
         with Sleeper(5) as sleeper:
-            while (request := agent.context.requests.get(request_id)) is None:
+            while (request := agent.get_context(direction).requests.get(request_id)) is None:
                 sleeper.sleep(0.1)
     except Timeout:
         pass
@@ -137,7 +138,7 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
     found_claims: list[Claim] = []
     with Sleeper(5) as sleeper:
         while not found_claims:
-            for claim in agent.context.claims:
+            for claim in agent.get_context(direction).claims:
                 if claim.request_id == request_id:
                     found_claims.append(claim)
             sleeper.sleep(0.1)
@@ -147,12 +148,12 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs):
     assert claim.claimer == agent.address
 
 
-def test_withdraw(request_manager, token, agent):
+def test_withdraw(request_manager, token, agent, direction):
     requester, target = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, target, 1)
 
     with Sleeper(10) as sleeper:
-        while (request := agent.context.requests.get(request_id)) is None:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
         while not request.is_claimed:
@@ -166,7 +167,7 @@ def test_withdraw(request_manager, token, agent):
             sleeper.sleep(0.1)
 
 
-def test_expired_request_is_ignored(request_manager, token, agent):
+def test_expired_request_is_ignored(request_manager, token, agent, direction):
     requester, target = alloc_accounts(2)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
     # make the request amount high enough that the agent cannot fill it
@@ -182,7 +183,7 @@ def test_expired_request_is_ignored(request_manager, token, agent):
 
     brownie.chain.mine(timedelta=validity_period / 2)
     with Sleeper(1) as sleeper:
-        while (request := agent.context.requests.get(request_id)) is None:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     assert request.is_pending
@@ -196,7 +197,7 @@ def test_expired_request_is_ignored(request_manager, token, agent):
 # Disable filling of requests in the agent
 # TODO: Find a better way to do this
 @patch("beamer.chain.fill_request")
-def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
+def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, direction):
     requester, target, filler = alloc_accounts(3)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
     chain_id = ChainId(brownie.chain.id)
@@ -212,10 +213,10 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
     )
 
     with Sleeper(1) as sleeper:
-        while (request := agent.context.requests.get(request_id)) is None:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
-    event_processor = agent._event_processor
+    event_processor = agent.get_event_processor(direction)
 
     # Test wrong amount
     event_processor.add_events(
@@ -296,7 +297,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent):
 
 
 def test_unsafe_fill_time(
-    request_manager, config, token, set_allow_unlisted_pairs
+    request_manager, config, token, set_allow_unlisted_pairs, direction
 ):  # pylint:disable=unused-argument
     requester, target = alloc_accounts(2)
     max_validity_period = request_manager.MAX_VALIDITY_PERIOD()
@@ -308,7 +309,7 @@ def test_unsafe_fill_time(
     agent.start()
 
     with Sleeper(2) as sleeper:
-        while (request := agent.context.requests.get(request_id)) is None:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     assert request.is_ignored
@@ -316,7 +317,7 @@ def test_unsafe_fill_time(
     agent.stop()
 
 
-def test_request_for_wrong_target_chain(request_manager, deployer, token, agent):
+def test_request_for_wrong_target_chain(request_manager, deployer, token, agent, direction):
     (requester,) = alloc_accounts(1)
 
     request_manager.setFinalityPeriod(999, 1_000_000, {"from": deployer.address})
@@ -338,20 +339,20 @@ def test_request_for_wrong_target_chain(request_manager, deployer, token, agent)
     )
 
     with Sleeper(1) as sleeper:
-        while agent.context.requests.get(valid_request_id) is None:
+        while agent.get_context(direction).requests.get(valid_request_id) is None:
             sleeper.sleep(0.1)
 
-    assert agent.context.requests.get(test_request_id) is None
+    assert agent.get_context(direction).requests.get(test_request_id) is None
 
 
-def test_agent_only_claim_once_after_restart(request_manager, token, agent):
+def test_agent_only_claim_once_after_restart(request_manager, token, agent, direction):
 
     (requester,) = alloc_accounts(1)
 
     make_request(request_manager, token, requester, requester.address, 1)
 
     with Sleeper(5) as sleeper:
-        while len(agent.context.claims) != 1:
+        while len(agent.get_context(direction).claims) != 1:
             sleeper.sleep(0.1)
 
     # Restart the agent twice
@@ -362,14 +363,14 @@ def test_agent_only_claim_once_after_restart(request_manager, token, agent):
 
         # Wait to sync the claim
         with Sleeper(5) as sleeper:
-            while len(agent.context.claims) != 1:
+            while len(agent.get_context(direction).claims) != 1:
                 sleeper.sleep(0.1)
 
         # Make sure there is no second claim happening
         with Sleeper(5) as sleeper:
             while True:
                 try:
-                    assert len(agent.context.claims) == 1
+                    assert len(agent.get_context(direction).claims) == 1
                     sleeper.sleep(0.1)
                 except Timeout:
                     break
