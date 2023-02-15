@@ -20,9 +20,7 @@ class ConfigError(Exception):
 class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
-    l1_rpc_url: URL
-    l2a_rpc_url: URL
-    l2b_rpc_url: URL
+    rpc_urls: dict[str, URL]
     token_match_checker: TokenMatchChecker
     fill_wait_time: int
     unsafe_fill_time: int
@@ -82,15 +80,13 @@ def _default_config() -> dict:
         "unsafe-fill-time": 600,
         "log-level": "info",
         "account": {},
-        "chains": {},
+        "rpc_urls": {},
         "metrics": {},
         "tokens": {},
     }
 
 
 _REQUIRED_KEYS = (
-    "source-chain",
-    "target-chain",
     "deployment-dir",
     "fill-wait-time",
     "unsafe-fill-time",
@@ -113,15 +109,10 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     if missing:
         raise ConfigError(f"missing settings: {missing}")
 
-    # verify that l1, source and target chains are present
-    for chain_name in ("l1", config["source-chain"], config["target-chain"]):
-        key = f"chains.{chain_name}.rpc-url"
-        if _lookup_value(config, key) is None:
-            raise ConfigError(f"missing settings: {key}")
+    rpc_urls = {}
 
-    l1_rpc_url = URL(_get_value(config, "chains.l1.rpc-url"))
-    source_rpc_url = URL(_get_value(config, f"chains.{config['source-chain']}.rpc-url"))
-    target_rpc_url = URL(_get_value(config, f"chains.{config['target-chain']}.rpc-url"))
+    for chain_name, chain_info in config["chains"].items():
+        rpc_urls[chain_name] = URL(chain_info["rpc-url"])
 
     path = Path(_get_value(config, "account.path"))
     password = _get_value(config, "account.password")
@@ -132,9 +123,7 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     return Config(
         account=account,
         deployment_info=deployment_info,
-        l1_rpc_url=l1_rpc_url,
-        l2a_rpc_url=source_rpc_url,
-        l2b_rpc_url=target_rpc_url,
+        rpc_urls=rpc_urls,
         token_match_checker=token_match_checker,
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],

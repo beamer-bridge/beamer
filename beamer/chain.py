@@ -29,6 +29,10 @@ _STOP_TIMEOUT = 2
 POLL_PERIOD: float = 5
 
 
+_SyncDoneCallback = Callable[[], None]
+_NewEventsCallback = Callable[[list[Event]], None]
+
+
 def _wrap_thread_func(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):  # type: ignore
         try:
@@ -48,9 +52,9 @@ class EventMonitor:
         web3: Web3,
         contracts: tuple[Contract, ...],
         deployment_block: BlockNumber,
-        on_new_events: list[Callable[[list[Event]], None]],
-        on_sync_done: Callable[[], None],
-        poll_period: int,
+        on_new_events: list[_NewEventsCallback],
+        on_sync_done: list[_SyncDoneCallback],
+        poll_period: float,
     ):
         self._web3 = web3
         self._chain_id = ChainId(self._web3.eth.chain_id)
@@ -77,6 +81,10 @@ class EventMonitor:
         self._stop = True
         self._thread.join(_STOP_TIMEOUT)
 
+    def subscribe(self, event_processor: "EventProcessor") -> None:
+        self._on_new_events.append(event_processor.add_events)
+        self._on_sync_done.append(event_processor.mark_sync_done)
+
     def _thread_func(self) -> None:
         self._log.info(
             "EventMonitor started",
@@ -89,7 +97,7 @@ class EventMonitor:
             events.extend(fetcher.fetch())
         if events:
             self._call_on_new_events(events)
-        self._on_sync_done()
+        self._call_on_sync_done()
         self._log.info("Sync done")
         while not self._stop:
             events = fetcher.fetch()
@@ -101,6 +109,10 @@ class EventMonitor:
     def _call_on_new_events(self, events: list[Event]) -> None:
         for on_new_events in self._on_new_events:
             on_new_events(events)
+
+    def _call_on_sync_done(self) -> None:
+        for on_sync_done in self._on_sync_done:
+            on_sync_done()
 
 
 class EventProcessor:
@@ -120,6 +132,10 @@ class EventProcessor:
         self._num_syncs_done = 0
         self._context = context
         self._chain_ids = {self._context.source_chain_id, self._context.target_chain_id}
+
+    @property
+    def context(self) -> Context:
+        return self._context
 
     @property
     def _synced(self) -> bool:

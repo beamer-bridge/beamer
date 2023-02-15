@@ -9,7 +9,7 @@ from prometheus_client import Counter, Info, start_http_server
 log = structlog.get_logger(__name__)
 
 
-def init(config: Any) -> None:
+def init(config: Any, source_rpc_url: str, target_rpc_url: str) -> None:
     global _DATA
 
     if _DATA is not None:
@@ -19,8 +19,8 @@ def init(config: Any) -> None:
     info.info(
         dict(
             account=config.account.address,
-            l2a_rpc_url=config.l2a_rpc_url,
-            l2b_rpc_url=config.l2b_rpc_url,
+            source_rpc_url=source_rpc_url,
+            target_rpc_url=target_rpc_url,
         )
     )
     requests_filled = Counter(
