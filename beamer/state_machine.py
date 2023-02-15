@@ -2,13 +2,13 @@ import os
 import time
 from concurrent.futures import Executor, Future
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, cast
 
 import structlog
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
-from web3 import Web3
+from web3 import HTTPProvider, Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.types import BlockData, Timestamp
@@ -36,7 +36,7 @@ from beamer.l1_resolution import run_relayer_for_tx
 from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
-from beamer.typing import ChainId, ClaimId, FillId, RequestId
+from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
 from beamer.util import TokenMatchChecker
 
 log = structlog.get_logger(__name__)
@@ -60,6 +60,18 @@ class Context:
     l1_resolutions: dict[RequestId, Future]
     l1_invalidations: dict[ClaimId, Future]
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
+
+    @property
+    def source_rpc_url(self) -> URL:
+        provider = cast(HTTPProvider, self.request_manager.web3.provider)
+        assert provider.endpoint_uri is not None
+        return URL(provider.endpoint_uri)
+
+    @property
+    def target_rpc_url(self) -> URL:
+        provider = cast(HTTPProvider, self.fill_manager.web3.provider)
+        assert provider.endpoint_uri is not None
+        return URL(provider.endpoint_uri)
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -454,9 +466,9 @@ def _handle_initiate_l1_resolution(
     if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
-            context.config.l1_rpc_url,
-            context.config.l2b_rpc_url,
-            context.config.l2a_rpc_url,
+            context.config.rpc_urls["l1"],
+            context.target_rpc_url,
+            context.source_rpc_url,
             context.config.account.key,
             request.fill_tx,
         )
@@ -508,9 +520,9 @@ def _handle_initiate_l1_invalidation(
     if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
-            context.config.l1_rpc_url,
-            context.config.l2b_rpc_url,
-            context.config.l2a_rpc_url,
+            context.config.rpc_urls["l1"],
+            context.target_rpc_url,
+            context.source_rpc_url,
             context.config.account.key,
             claim.invalidation_tx,
         )

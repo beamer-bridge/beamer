@@ -1,4 +1,5 @@
-from typing import NewType
+from typing import NamedTuple, NewType
+
 from eth_typing import (  # NOQA pylint:disable=unused-import
     Address,
     BlockNumber,
@@ -6,7 +7,6 @@ from eth_typing import (  # NOQA pylint:disable=unused-import
     Hash32,
     HexAddress,
 )
-
 from hexbytes import HexBytes
 
 
@@ -29,3 +29,11 @@ TokenAmount = NewType("TokenAmount", int)
 Nonce = NewType("Nonce", int)
 URL = NewType("URL", str)
 Termination = NewType("Termination", int)
+
+
+class TransferDirection(NamedTuple):
+    source: ChainId
+    target: ChainId
+
+    def __repr__(self) -> str:
+        return f"{self.source} -> {self.target}"
