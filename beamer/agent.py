@@ -126,6 +126,10 @@ class Agent:
             source_chain.request_manager.functions.claimRequestExtension().call()
         )
 
+        logger = structlog.get_logger("Context").bind(
+            source_chain_id=source_chain.id, target_chain_id=target_chain.id
+        )
+
         context = Context(
             requests=Tracker(),
             claims=Tracker(),
@@ -142,6 +146,7 @@ class Agent:
             claim_request_extension=claim_request_extension,
             l1_resolutions={},
             l1_invalidations={},
+            logger=logger,
         )
         event_processor = EventProcessor(context)
         self._event_monitors[direction.source].subscribe(event_processor)

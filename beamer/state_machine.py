@@ -59,6 +59,7 @@ class Context:
     claim_request_extension: int
     l1_resolutions: dict[RequestId, Future]
     l1_invalidations: dict[ClaimId, Future]
+    logger: structlog.BoundLogger
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
 
     @property
@@ -198,7 +199,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
         )
 
         if not is_valid_request:
-            log.debug("Invalid token pair in request", _event=event)
+            context.logger.debug("Invalid token pair in request", _event=event)
             return True, None
 
     request = Request(
@@ -225,7 +226,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
     if event.source_chain_id != context.source_chain_id:
-        log.debug("Filled for different source chain", _event=event)
+        context.logger.debug("Filled for different source chain", _event=event)
         return True, None
 
     if request is None:
@@ -238,7 +239,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         and request.target_token_address == event.target_token_address
     )
     if not fill_matches_request:
-        log.warn("Fill not matching request. Ignoring.", request=request, fill=event)
+        context.logger.warn("Fill not matching request. Ignoring.", request=request, fill=event)
         return True, None
 
     if request.is_withdrawn:
@@ -347,7 +348,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
             )
         )
 
-    log.debug("Request claimed", request=request, claim_id=event.claim_id)
+    context.logger.debug("Request claimed", request=request, claim_id=event.claim_id)
     return True, events
 
 
@@ -363,7 +364,7 @@ def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) 
     # preceding event (i.e. if the agent filled the request, we need to first process the
     # corresponding RequestFilled event.
     if claim is None or claim.unprocessed_claim_made_events:
-        log.debug(
+        context.logger.debug(
             "Unprocessed ClaimMade events in event loop. Cannot withdraw",
             withdraw_event=event,
             claim_id=event.claim_id,
@@ -481,13 +482,13 @@ def _handle_initiate_l1_resolution(
 
                 del context.l1_resolutions[request.id]
             except Exception as ex:
-                log.error("L1 resolution failed", ex=ex)
+                context.logger.error("L1 resolution failed", ex=ex)
 
         future.add_done_callback(on_future_done)
         context.l1_resolutions[request.id] = future
         request.l1_resolve()
 
-        log.info("Initiated L1 resolution", request=request, claim=claim)
+        context.logger.info("Initiated L1 resolution", request=request, claim=claim)
 
         return True, None
     return False, None
@@ -535,13 +536,13 @@ def _handle_initiate_l1_invalidation(
 
                 del context.l1_invalidations[claim.id]
             except Exception as ex:
-                log.error("L1 invalidation failed", ex=ex)
+                context.logger.error("L1 invalidation failed", ex=ex)
 
         future.add_done_callback(on_future_done)
         context.l1_invalidations[claim.id] = future
         claim.l1_invalidate()
 
-        log.info("Initiated L1 invalidation", request=request, claim=claim)
+        context.logger.info("Initiated L1 invalidation", request=request, claim=claim)
 
     return True, None
 
