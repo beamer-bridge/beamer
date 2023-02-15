@@ -127,6 +127,9 @@ def make_web3(
     # Cache data of 1000 least recently used blocks, fetched via eth_getBlockByNumber.
     w3.middleware_onion.add(beamer.middleware.cache_get_block_by_number)
 
+    # Handle RPCs that rate limit us.
+    w3.middleware_onion.add(beamer.middleware.rate_limiter)
+
     w3.eth.default_account = account.address
     return w3
 
