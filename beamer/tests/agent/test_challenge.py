@@ -250,7 +250,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 def test_challenge_5(request_manager, fill_manager, token, config, honest_claim):
     requester, target = alloc_accounts(2)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager, fill_manager})
-    proxy_l2b = HTTPProxy(config.l2b_rpc_url)
+    proxy_l2b = HTTPProxy(config.rpc_urls["l2b"])
     proxy_l2b.delay_rpc({"eth_getLogs": 3})
     proxy_l2b.start()
 
@@ -259,7 +259,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
         proxy_l2b.server_address[1],
     )
 
-    config.l2b_rpc_url = l2b_rpc_url
+    config.rpc_urls["l2b"] = l2b_rpc_url
     config.fill_wait_time = 5
 
     agent = beamer.agent.Agent(config)
