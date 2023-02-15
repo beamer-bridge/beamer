@@ -228,7 +228,7 @@ class EventFetcher:
         self._next_block_number = start_block
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
         self._event_abis = _make_topics_abi_mapping_for_contracts(contracts)
-        self._log = structlog.get_logger(type(self).__name__)
+        self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
             assert (
@@ -246,7 +246,6 @@ class EventFetcher:
         or None if a timeout occurs."""
         self._log.debug(
             "Fetching events",
-            chain_id=self._chain_id,
             contracts=self._contract_addresses,
             from_block=from_block,
             to_block=to_block,
@@ -266,7 +265,6 @@ class EventFetcher:
             self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, old // 5)
             self._log.debug(
                 "Failed to get events in time, reducing number of blocks",
-                chain_id=self._chain_id,
                 old=old,
                 new=self._blocks_to_fetch,
             )

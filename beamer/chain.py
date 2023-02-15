@@ -17,8 +17,6 @@ from beamer.state_machine import Context, process_event
 from beamer.typing import BlockNumber, ChainId
 from beamer.util import TransactionFailed, load_ERC20_abi, transact
 
-log = structlog.get_logger(__name__)
-
 
 _ERC20_ABI = load_ERC20_abi()
 
@@ -124,7 +122,6 @@ class EventProcessor:
         self._have_new_events = threading.Event()
         self._events: list[Event] = []
         self._stop = False
-        self._log = structlog.get_logger(type(self).__name__)
         # The number of times we synced with a chain:
         # 0 = we're still waiting for sync to complete for chains
         # 1 = one of the chains was synced, if there is only one chain, sync done.
@@ -160,11 +157,11 @@ class EventProcessor:
     def add_events(self, events: list[Event]) -> None:
         with self._lock:
             self._events.extend(events)
-            self._log.debug("New events", events=events)
+            self._context.logger.debug("New events", events=events)
         self._have_new_events.set()
 
     def _thread_func(self) -> None:
-        self._log.info("EventProcessor started")
+        self._context.logger.info("EventProcessor started")
 
         # Wait until all past events are fetched and in the queue
         # so the agent can sync to the current state
@@ -181,7 +178,7 @@ class EventProcessor:
             process_requests(self._context)
             process_claims(self._context)
 
-        self._log.info("EventProcessor stopped")
+        self._context.logger.info("EventProcessor stopped")
 
     def _process_events(self) -> None:
         iteration = 0
@@ -212,7 +209,7 @@ class EventProcessor:
                 self._events.extend(unprocessed)
 
             t2 = time.time()
-            self._log.debug(
+            self._context.logger.debug(
                 "Finished iteration",
                 iteration=iteration,
                 any_state_changed=any_state_changed,
@@ -244,7 +241,7 @@ def process_requests(context: Context) -> None:
         elif request.is_withdrawn or request.is_ignored:
             active_claims = any(claim.request_id == request.id for claim in context.claims)
             if not active_claims:
-                log.debug("Removing request", request=request)
+                context.logger.debug("Removing request", request=request)
                 to_remove.append(request.id)
 
     for request_id in to_remove:
@@ -273,7 +270,7 @@ def process_claims(context: Context) -> None:
             continue
 
         if claim.is_withdrawn:
-            log.debug("Removing withdrawn claim", claim=claim)
+            context.logger.debug("Removing withdrawn claim", claim=claim)
             to_remove.append(claim.id)
             continue
 
@@ -302,12 +299,12 @@ def fill_request(request: Request, context: Context) -> None:
     block = context.latest_blocks[request.target_chain_id]
     unsafe_time = request.valid_until - context.config.unsafe_fill_time
     if time.time() >= unsafe_time:
-        log.info("Request fill is unsafe, ignoring", request=request)
+        context.logger.info("Request fill is unsafe, ignoring", request=request)
         request.ignore()
         return
 
     if block["timestamp"] >= request.valid_until:
-        log.info("Request expired, ignoring", request=request)
+        context.logger.info("Request expired, ignoring", request=request)
         request.ignore()
         return
 
@@ -316,7 +313,9 @@ def fill_request(request: Request, context: Context) -> None:
     address = w3.eth.default_account
     balance = token.functions.balanceOf(address).call()
     if balance < request.amount:
-        log.info("Unable to fill request", balance=balance, request_amount=request.amount)
+        context.logger.info(
+            "Unable to fill request", balance=balance, request_amount=request.amount
+        )
         return
 
     if (
@@ -327,7 +326,7 @@ def fill_request(request: Request, context: Context) -> None:
         try:
             transact(func)
         except TransactionFailed as exc:
-            log.error("approve failed", request_id=request.id, exc=exc)
+            context.logger.error("approve failed", request_id=request.id, exc=exc)
             return
 
     func = context.fill_manager.functions.fillRequest(
@@ -340,11 +339,11 @@ def fill_request(request: Request, context: Context) -> None:
     try:
         receipt = transact(func)
     except TransactionFailed as exc:
-        log.error("fillRequest failed", request_id=request.id, exc=exc)
+        context.logger.error("fillRequest failed", request_id=request.id, exc=exc)
         return
 
     request.try_to_fill()
-    log.info(
+    context.logger.info(
         "Filled request",
         request=request,
         txn_hash=receipt.transactionHash.hex(),
@@ -358,7 +357,7 @@ def claim_request(request: Request, context: Context) -> None:
 
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] >= request.valid_until + context.claim_request_extension:
-        log.info("Request expired, ignoring", request=request)
+        context.logger.info("Request expired, ignoring", request=request)
         request.ignore()
         return
 
@@ -368,7 +367,7 @@ def claim_request(request: Request, context: Context) -> None:
     try:
         receipt = transact(func, value=stake)
     except TransactionFailed as exc:
-        log.error(
+        context.logger.error(
             "claimRequest failed",
             request_id=request.id,
             fill_id=request.fill_id,
@@ -378,7 +377,7 @@ def claim_request(request: Request, context: Context) -> None:
         return
 
     request.try_to_claim()
-    log.info(
+    context.logger.info(
         "Claimed request",
         request=request,
         txn_hash=receipt.transactionHash.hex(),
@@ -430,12 +429,12 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     try:
         receipt = transact(func, value=stake)
     except TransactionFailed as exc:
-        log.error("challengeClaim failed", claim=claim, exc=exc, stake=stake)
+        context.logger.error("challengeClaim failed", claim=claim, exc=exc, stake=stake)
         return False
 
     claim.transaction_pending = True
 
-    log.info(
+    context.logger.info(
         "Challenged claim",
         claim=claim,
         txn_hash=receipt.transactionHash.hex(),
@@ -506,14 +505,14 @@ def _withdraw(claim: Claim, context: Context) -> None:
         # Ignore the exception when the claim has been withdrawn already
         if "Claim already withdrawn" in str(exc):
             claim.transaction_pending = True
-            log.warning("Claim already withdrawn", claim=claim)
+            context.logger.warning("Claim already withdrawn", claim=claim)
             return
 
-        log.error("Withdraw failed", claim=claim, exc=exc)
+        context.logger.error("Withdraw failed", claim=claim, exc=exc)
         return
 
     claim.transaction_pending = True
-    log.info("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
+    context.logger.info("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
@@ -523,10 +522,10 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     try:
         receipt = transact(func)
     except TransactionFailed as exc:
-        log.error("Calling invalidateFill failed", claim=claim, exc=exc)
+        context.logger.error("Calling invalidateFill failed", claim=claim, exc=exc)
         return
 
-    log.info(
+    context.logger.info(
         "Invalidated fill",
         request=request.id,
         fill_id=request.fill_id,
