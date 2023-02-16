@@ -10,6 +10,7 @@ const test_output_directory = path.resolve(test_directory, 'output');
 const config_directory = path.resolve(__dirname, 'config');
 
 // Release Info
+const semanticVersion = process.env.npm_package_version;
 const version = execSync('git describe --tags', { encoding: 'utf-8' }).trim();
 const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
 const REPOSITORY = 'https://github.com/beamer-bridge/beamer';
@@ -51,6 +52,7 @@ export default defineConfig({
   },
   define: {
     APP_RELEASE: {
+      SEMANTIC_VERSION: semanticVersion,
       VERSION: version,
       COMMIT_HASH: commitHash,
       REPOSITORY,

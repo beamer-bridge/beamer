@@ -38,6 +38,15 @@ describe('configuration store', () => {
     setActivePinia(pinia);
   });
 
+  describe('instance', () => {
+    it('should include semantic version of the app inside its name', () => {
+      const history = useTransferHistory();
+      const semver = process.env.npm_package_version;
+
+      expect(history.$id).toBe(`transferHistory_${semver?.split('.')[0]}`);
+    });
+  });
+
   describe('addTransfer()', () => {
     it('adds new transfer to the beginning of the list', () => {
       const history = useTransferHistory();

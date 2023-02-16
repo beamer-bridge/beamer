@@ -18,7 +18,7 @@ export function getStoreName(appVersion: string): string {
 }
 
 export const useTransferHistory = defineStore(
-  getStoreName(getAppMajorVersion(APP_RELEASE.VERSION)),
+  getStoreName(getAppMajorVersion(APP_RELEASE.SEMANTIC_VERSION)),
   {
     state: (): TransferHistoryState => ({
       transfers: [],

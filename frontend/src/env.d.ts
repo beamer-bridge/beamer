@@ -8,6 +8,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 interface ReleaseVariables {
+  SEMANTIC_VERSION: string;
   VERSION: string;
   COMMIT_HASH: string;
   REPOSITORY: string;
