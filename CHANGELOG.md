@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.0.2 (2023-02-17)
+
+* docs: added a section on updating to a new agent version
+* agent: create only one relayer process per L1 resolution/invalidation
+* agent: introduce a rate limiter to handle cases where the agent exceeds RPC's rate limits
+* agent: when filling a request, only call ERC20 token approve if allowance is
+         insufficient to fill the request
+* frontend: added real-time claim count watcher
+* frontend: automatic enable/disable of withdraw button based on claim counts
+* frontend: temporarily remove boba from chain options
+* frontend: handle reverted transactions
+* frontend: added Arbitrum notification banner
+* frontend: fixed token allowance race conditions when having multiple transfers active
+* frontend: transfer submission disabled (with notification) until tokens are spent
+* frontend: UI fixes/improvements
+* frontend: fix unit test code coverage
+* frontend: add matomo tracking consent popup
+* frontend: add build version inside footer
+* frontend: add social media links inside footer
+* frontend: fix MetaMask wallet disconnection on network change
+* frontend: integrate Coinbase wallet provider
+* frontend: plenty of bug fixes
+* relayer: reduced max message length used to calculate deposit amount for Arbitrum
+* relayer: add support for using custom networks inside Arbitrum relayer service
+
 ## v1.0.1 (2023-01-13)
 
 * docker: fix the issue where the relayer could not be run due to missing C++ runtime lib
