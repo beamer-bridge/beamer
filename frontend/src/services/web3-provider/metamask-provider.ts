@@ -21,6 +21,8 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
       );
     } else if (detectedProvider.isMetaMask) {
       injectedMetamaskProvider = detectedProvider;
+    } else {
+      throw new Error('Cannot connect to MetaMask while other wallet extensions are active.');
     }
   }
 
