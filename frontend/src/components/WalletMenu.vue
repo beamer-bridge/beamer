@@ -65,6 +65,8 @@ const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
 const {
   connectMetaMask,
+  connectInjected,
+  connectingInjected,
   connectWalletConnect,
   connectingMetaMask,
   connectingWalletConnect,
@@ -74,9 +76,18 @@ const {
 
 const walletOptions = ref([
   {
+    name: 'Browser Wallet',
+    icon: new URL('../assets/images/browser-wallet.svg', import.meta.url).href,
+    description: 'Connect using browser wallet',
+    classes: 'p-3',
+    connect: connectInjected,
+    connecting: connectingInjected,
+    hasMobileFlow: false,
+  },
+  {
     name: 'MetaMask',
     icon: new URL('../assets/images/metamask.svg', import.meta.url).href,
-    description: 'Connect using browser wallet',
+    description: 'Connect using MetaMask',
     connect: () => connectMetaMask(true),
     connecting: connectingMetaMask,
     hasMobileFlow: false,
@@ -101,10 +112,11 @@ const walletOptions = ref([
 ]);
 
 onMounted(() => {
-  if (isMobile(window.navigator.userAgent)) {
-    const metaMaskAvailable = window.ethereum && window.ethereum.isMetaMask;
-    const coinbaseAvailable = window.ethereum && window.ethereum.isCoinbaseWallet;
+  const injectionAvailable = window.ethereum;
+  const metaMaskAvailable = injectionAvailable && window.ethereum.isMetaMask;
+  const coinbaseAvailable = injectionAvailable && window.ethereum.isCoinbaseWallet;
 
+  if (isMobile(window.navigator.userAgent)) {
     if (metaMaskAvailable) {
       walletOptions.value = walletOptions.value.filter((option) => option.name === 'MetaMask');
     } else if (coinbaseAvailable) {
@@ -112,8 +124,17 @@ onMounted(() => {
     } else {
       walletOptions.value = walletOptions.value.filter((option) => option.hasMobileFlow);
     }
+  } else {
+    if (metaMaskAvailable || !injectionAvailable) {
+      walletOptions.value = walletOptions.value.filter(
+        (option) => option.name !== 'Browser Wallet',
+      );
+    } else {
+      walletOptions.value = walletOptions.value.filter((option) => option.name !== 'MetaMask');
+    }
   }
 });
+
 const emit = defineEmits<{
   (event: 'close'): void;
 }>();
