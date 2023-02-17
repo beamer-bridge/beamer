@@ -1,6 +1,6 @@
-import { getAddress, hexValue } from 'ethers/lib/utils';
+import { hexValue } from 'ethers/lib/utils';
 
-import { EthereumProvider } from '@/services/web3-provider';
+import { InjectedProvider } from '@/services/web3-provider/injected-provider';
 import type {
   DetectedEthereumProvider,
   Eip1193Provider,
@@ -41,23 +41,12 @@ export async function onboardMetaMask() {
   return onboarding;
 }
 
-export class MetaMaskProvider extends EthereumProvider implements ISigner {
+export class MetaMaskProvider extends InjectedProvider implements ISigner {
   constructor(_provider: Eip1193Provider) {
     if (!_provider.isMetaMask) {
       throw new Error('Given provider is not MetaMask!');
     }
     super(_provider);
-  }
-
-  async requestSigner(): Promise<void> {
-    try {
-      const accounts: string[] = await this.web3Provider.send('eth_requestAccounts', []);
-      this.signer.value = this.web3Provider.getSigner(accounts[0]);
-      this.signerAddress.value = getAddress(accounts[0]);
-    } catch (error) {
-      this.signer.value = undefined;
-      this.signerAddress.value = undefined;
-    }
   }
 
   protected async switchChain(newChainId: number): Promise<boolean> {
