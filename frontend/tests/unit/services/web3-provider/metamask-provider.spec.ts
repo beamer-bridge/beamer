@@ -93,12 +93,24 @@ describe('metamask-provider', () => {
     describe('when MetaMask is not available', () => {
       it('returns undefined', async () => {
         Object.defineProperty(utils, 'detectEthereumProvider', {
-          value: vi.fn().mockResolvedValue(new MockedEip1193Provider({ isMetaMask: false })),
+          value: vi.fn().mockResolvedValue(null),
         });
 
         const metamaskProvider = await createMetaMaskProvider();
 
         expect(metamaskProvider).toBeUndefined();
+      });
+    });
+
+    describe('when a provider is available but it is not MetaMask', () => {
+      it('throws an exception', async () => {
+        Object.defineProperty(utils, 'detectEthereumProvider', {
+          value: vi.fn().mockResolvedValue(new MockedEip1193Provider({ isMetaMask: false })),
+        });
+
+        await expect(createMetaMaskProvider).rejects.toThrow(
+          'Cannot connect to MetaMask while other wallet extensions are active.',
+        );
       });
     });
   });
