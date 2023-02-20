@@ -17,7 +17,7 @@ from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
 from beamer.tracker import Tracker
 from beamer.typing import URL, ChainId, ClaimId, FillId, Nonce, RequestId, Termination, TokenAmount
-from beamer.util import TokenMatchChecker
+from beamer.util import TokenChecker
 
 SOURCE_CHAIN_ID = ChainId(2)
 TARGET_CHAIN_ID = ChainId(3)
@@ -132,12 +132,12 @@ def make_claim_challenged(
 
 
 def make_context() -> Tuple[Context, Config]:
-    checker = TokenMatchChecker([])
+    checker = TokenChecker([])
     config = Config(
         account=ACCOUNT,
         deployment_info={},
         rpc_urls={"l1": URL(""), "l2a": URL(""), "l2b": URL("")},
-        token_match_checker=checker,
+        token_checker=checker,
         fill_wait_time=1,
         prometheus_metrics_port=None,
         log_level="debug",
@@ -151,7 +151,7 @@ def make_context() -> Tuple[Context, Config]:
         target_chain_id=TARGET_CHAIN_ID,
         request_manager=MagicMock(),
         fill_manager=MagicMock(),
-        match_checker=checker,
+        token_checker=checker,
         address=config.account.address,
         latest_blocks={
             SOURCE_CHAIN_ID: BlockData(

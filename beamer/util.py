@@ -153,7 +153,7 @@ SUPPORTED_CONNECTED_L2S = {
 }
 
 
-class TokenMatchChecker:
+class TokenChecker:
     def __init__(self, tokens: List[List[List[str]]]) -> None:
         # A mapping of tokens to equivalence classes. Each frozenset contains
         # tokens that are considered mutually equivalent.

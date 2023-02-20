@@ -9,7 +9,7 @@ from eth_account.signers.local import LocalAccount
 
 from beamer.contracts import DeploymentInfo, load_deployment_info
 from beamer.typing import URL
-from beamer.util import TokenMatchChecker, account_from_keyfile
+from beamer.util import TokenChecker, account_from_keyfile
 
 
 class ConfigError(Exception):
@@ -21,7 +21,7 @@ class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
     rpc_urls: dict[str, URL]
-    token_match_checker: TokenMatchChecker
+    token_checker: TokenChecker
     fill_wait_time: int
     unsafe_fill_time: int
     prometheus_metrics_port: Optional[int]
@@ -119,12 +119,13 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     account = account_from_keyfile(path, password)
 
     deployment_info = load_deployment_info(Path(config["deployment-dir"]))
-    token_match_checker = TokenMatchChecker(list(config["tokens"].values()))
+    token_checker = TokenChecker(list(config["tokens"].values()))
+
     return Config(
         account=account,
         deployment_info=deployment_info,
         rpc_urls=rpc_urls,
-        token_match_checker=token_match_checker,
+        token_checker=token_checker,
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),

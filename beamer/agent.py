@@ -137,7 +137,7 @@ class Agent:
             target_chain_id=target_chain.id,
             request_manager=source_chain.request_manager,
             fill_manager=target_chain.fill_manager,
-            match_checker=self._config.token_match_checker,
+            token_checker=self._config.token_checker,
             address=self._config.account.address,
             latest_blocks={},
             config=self._config,

@@ -37,7 +37,8 @@ from beamer.models.claim import Claim
 from beamer.models.request import Request
 from beamer.tracker import Tracker
 from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
-from beamer.util import TokenMatchChecker
+from beamer.util import TokenChecker
+
 
 log = structlog.get_logger(__name__)
 
@@ -50,7 +51,7 @@ class Context:
     target_chain_id: ChainId
     request_manager: Contract
     fill_manager: Contract
-    match_checker: TokenMatchChecker
+    token_checker: TokenChecker
     address: ChecksumAddress
     latest_blocks: dict[ChainId, BlockData]
     config: Config
@@ -191,7 +192,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
             )
             return True, None
     else:
-        is_valid_request = context.match_checker.is_valid_pair(
+        is_valid_request = context.token_checker.is_valid_pair(
             event.chain_id,
             event.source_token_address,
             event.target_chain_id,
