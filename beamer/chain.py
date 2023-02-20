@@ -318,11 +318,24 @@ def fill_request(request: Request, context: Context) -> None:
         )
         return
 
+    allowance = context.config.token_checker.allowance(request.target_chain_id, token.address)
+    if allowance is None:
+        allowance = request.amount
+
+    if allowance < request.amount:
+        context.logger.info(
+            "Allowance for token smaller than requested amount",
+            token=token.address,
+            allowance=allowance,
+            request_amount=request.amount,
+        )
+        return
+
     if (
         token.functions.allowance(context.address, context.fill_manager.address).call()
         < request.amount
     ):
-        func = token.functions.approve(context.fill_manager.address, request.amount)
+        func = token.functions.approve(context.fill_manager.address, allowance)
         try:
             transact(func)
         except TransactionFailed as exc:
