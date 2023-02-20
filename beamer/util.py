@@ -5,6 +5,7 @@ import pathlib
 import random
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional, Type, Union, cast
 
@@ -136,6 +137,13 @@ def make_web3(
 
 _Token = tuple[ChainId, ChecksumAddress]
 
+
+@dataclass(frozen=True)
+class _TokenData:
+    equivalence_class: frozenset[_Token]
+    allowance: None | int
+
+
 # dictionary from base chain ID to deployed roll up IDs
 SUPPORTED_CONNECTED_L2S = {
     # Mainnet
@@ -149,8 +157,7 @@ class TokenMatchChecker:
     def __init__(self, tokens: List[List[List[str]]]) -> None:
         # A mapping of tokens to equivalence classes. Each frozenset contains
         # tokens that are considered mutually equivalent.
-        self._tokens: dict[_Token, frozenset[_Token]] = {}
-
+        self._tokens: dict[_Token, _TokenData] = {}
         for token_mapping in tokens:
             equiv_class = frozenset(
                 (ChainId(int(token[0])), to_checksum_address(token[1])) for token in token_mapping
@@ -165,9 +172,21 @@ class TokenMatchChecker:
                      Please check {l2_chain_ids}"""
                     assert intersection == l2_chain_ids, msg
 
-            for token in equiv_class:
+            for token in token_mapping:
+                chain_id = ChainId(int(token[0]))
+                token_address = to_checksum_address(token[1])
+                match token:
+                    case [_, _]:
+                        allowance = None
+                    case [_, _, "-1"]:
+                        allowance = 2**256 - 1
+                    case [_, _, _allowance]:
+                        allowance = int(_allowance)
+                    case _:
+                        raise ValueError("unexpected token data: %r", token)
+
                 assert is_checksum_address(token[1])
-                self._tokens[token] = equiv_class
+                self._tokens[(chain_id, token_address)] = _TokenData(equiv_class, allowance)
 
     def is_valid_pair(
         self,
@@ -178,7 +197,14 @@ class TokenMatchChecker:
     ) -> bool:
         source_token = source_chain_id, source_token_address
         target_token = target_chain_id, target_token_address
-        return target_token in self._tokens.get(source_token, frozenset())
+        source_token_data = self._tokens.get(source_token)
+        return (
+            source_token_data is not None and target_token in source_token_data.equivalence_class
+        )
+
+    def allowance(self, chain_id: ChainId, token_address: ChecksumAddress) -> None | int:
+        token_data = self._tokens.get((chain_id, token_address))
+        return token_data.allowance if token_data is not None else None
 
 
 def load_ERC20_abi() -> list[Any]:
