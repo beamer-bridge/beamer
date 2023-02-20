@@ -10,7 +10,7 @@ from click.testing import CliRunner
 
 from beamer.cli import main
 from beamer.l1_resolution import get_relayer_executable
-from beamer.util import TokenMatchChecker
+from beamer.util import TokenChecker
 
 
 def _generate_deployment_dir(output_dir, root, contracts):
@@ -154,6 +154,6 @@ def test_token_lists_validity(token_chain_ids_validity):
 
     if not valid:
         with pytest.raises(AssertionError):
-            TokenMatchChecker(tokens)
+            TokenChecker(tokens)
     else:
-        TokenMatchChecker(tokens)
+        TokenChecker(tokens)

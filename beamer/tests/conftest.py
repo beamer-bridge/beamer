@@ -24,7 +24,7 @@ from beamer.config import Config
 from beamer.contracts import ContractInfo
 from beamer.tests.util import alloc_accounts
 from beamer.typing import URL, BlockNumber, TransferDirection
-from beamer.util import TokenMatchChecker
+from beamer.util import TokenChecker
 
 
 @dataclass(frozen=True)
@@ -164,7 +164,7 @@ def config(request_manager, fill_manager, token):
     config = Config(
         rpc_urls=rpc_urls,
         deployment_info=deployment_info,
-        token_match_checker=TokenMatchChecker([]),
+        token_checker=TokenChecker([]),
         account=account,
         fill_wait_time=0,
         unsafe_fill_time=600,
