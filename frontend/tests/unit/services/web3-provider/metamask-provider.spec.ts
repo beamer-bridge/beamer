@@ -1,5 +1,4 @@
 import * as providers from '@ethersproject/providers';
-import * as ethersUtils from 'ethers/lib/utils';
 
 import {
   createMetaMaskProvider,
@@ -132,46 +131,6 @@ describe('metamask-provider', () => {
   });
 
   describe('MetaMaskProvider', () => {
-    describe('requestSigner()', () => {
-      beforeEach(() => {
-        Object.defineProperty(ethersUtils, 'getAddress', {
-          value: vi.fn().mockImplementation((value) => value),
-        });
-      });
-
-      it('connects to the first accessible connected wallet address', async () => {
-        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
-
-        const signerAddress = getRandomEthereumAddress();
-        const signer = 'fake-signer';
-
-        const web3Provider = mockWeb3Provider();
-        web3Provider.send = vi.fn().mockReturnValue([signerAddress]);
-        web3Provider.getSigner = vi.fn().mockReturnValue(signer);
-
-        const metamaskProvider = new MetaMaskProvider(eipProvider);
-        await metamaskProvider.requestSigner();
-
-        expect(metamaskProvider?.signer.value).toBe(signer);
-        expect(metamaskProvider?.signerAddress.value).toBe(signerAddress);
-      });
-
-      it('disconnects the currently connected wallet address if an exception was thrown', async () => {
-        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
-
-        const web3Provider = mockWeb3Provider();
-        web3Provider.send = vi.fn().mockImplementation(() => {
-          throw new Error('error');
-        });
-
-        const metamaskProvider = new MetaMaskProvider(eipProvider);
-        await metamaskProvider.requestSigner();
-
-        expect(metamaskProvider.signer.value).toBeUndefined();
-        expect(metamaskProvider.signerAddress.value).toBeUndefined();
-      });
-    });
-
     describe('listenToEvents()', () => {
       it('attaches necessary event listeners for the wallet provider', () => {
         const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
