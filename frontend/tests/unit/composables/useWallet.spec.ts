@@ -1,10 +1,11 @@
-import { ref } from 'vue';
+import { ref, shallowRef } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
 import * as web3ProviderService from '@/services/web3-provider';
 import { WalletType } from '@/types/settings';
 import {
   MockedCoinbaseProvider,
+  MockedInjectedProvider,
   MockedMetaMaskProvider,
   MockedWalletConnectProvider,
 } from '~/utils/mocks/ethereum-provider';
@@ -23,16 +24,25 @@ describe('useWallets', () => {
       createCoinbaseProvider: {
         value: vi.fn().mockResolvedValue(new MockedCoinbaseProvider()),
       },
+      createInjectedProvider: {
+        value: vi.fn().mockResolvedValue(new MockedInjectedProvider()),
+      },
     });
   });
 
   describe('connectMetaMask()', () => {
     it('creates a MetaMask provider instance', async () => {
-      const { connectMetaMask } = useWallet(ref(undefined), ref(undefined), ref({}));
+      const wallet = new MockedMetaMaskProvider();
+      Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const provider = shallowRef(undefined);
+      const { connectMetaMask } = useWallet(provider, ref(undefined), ref({}));
 
       await connectMetaMask();
 
       expect(web3ProviderService.createMetaMaskProvider).toHaveBeenCalledOnce();
+      expect(provider.value).toBe(wallet);
     });
 
     it('requests the signer from the provider', async () => {
@@ -47,19 +57,6 @@ describe('useWallets', () => {
       expect(wallet.requestSigner).toHaveBeenCalledOnce();
     });
 
-    it('sets the provider instance', async () => {
-      const wallet = { requestSigner: vi.fn() }; // TODO: work-around for horrible mock typing issues.
-      Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
-        value: vi.fn().mockResolvedValue(wallet),
-      });
-      const provider = ref(undefined);
-      const { connectMetaMask } = useWallet(provider, ref(undefined), ref({}));
-
-      await connectMetaMask();
-
-      expect(provider.value).toEqual(wallet);
-    });
-
     it('sets the connected wallet type', async () => {
       const connectedWallet = ref(undefined);
       const { connectMetaMask } = useWallet(ref(undefined), connectedWallet, ref({}));
@@ -68,6 +65,7 @@ describe('useWallets', () => {
 
       expect(connectedWallet.value).toBe('metamask');
     });
+
     it('listens on wallet provider disconnect events', async () => {
       const wallet = new MockedMetaMaskProvider();
       Object.defineProperty(web3ProviderService, 'createMetaMaskProvider', {
@@ -99,27 +97,21 @@ describe('useWallets', () => {
 
   describe('connectWalletConnect()', () => {
     it('creates WalletConnect provider instance', async () => {
-      const rpcUrls = ref({ 5: 'fakeRpc.url' });
-      const { connectWalletConnect } = useWallet(ref(undefined), ref(undefined), rpcUrls);
-
-      await connectWalletConnect();
-
-      expect(web3ProviderService.createWalletConnectProvider).toHaveBeenCalledOnce();
-      expect(web3ProviderService.createWalletConnectProvider).toHaveBeenLastCalledWith(
-        rpcUrls.value,
-      );
-    });
-
-    it('sets the provider instance', async () => {
-      const wallet = 'fake-provider'; // TODO: work-around for horrible mock typing issues.
+      const wallet = new MockedWalletConnectProvider();
       Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
         value: vi.fn().mockResolvedValue(wallet),
       });
-      const provider = ref(undefined);
-      const { connectWalletConnect } = useWallet(provider, ref(undefined), ref({}));
+
+      const provider = shallowRef(undefined);
+      const rpcUrls = ref({ 5: 'fakeRpc.url' });
+      const { connectWalletConnect } = useWallet(provider, ref(undefined), rpcUrls);
 
       await connectWalletConnect();
 
+      expect(web3ProviderService.createWalletConnectProvider).toHaveBeenNthCalledWith(
+        1,
+        rpcUrls.value,
+      );
       expect(provider.value).toBe(wallet);
     });
 
@@ -135,25 +127,18 @@ describe('useWallets', () => {
 
   describe('connectCoinbase()', () => {
     it('creates Coinbase provider instance', async () => {
-      const rpcUrls = ref({ 5: 'fakeRpc.url' });
-      const { connectCoinbase } = useWallet(ref(undefined), ref(undefined), rpcUrls);
-
-      await connectCoinbase();
-
-      expect(web3ProviderService.createCoinbaseProvider).toHaveBeenCalledOnce();
-      expect(web3ProviderService.createCoinbaseProvider).toHaveBeenLastCalledWith(rpcUrls.value);
-    });
-
-    it('sets the provider instance', async () => {
-      const wallet = 'fake-provider'; // TODO: work-around for horrible mock typing issues.
+      const wallet = new MockedCoinbaseProvider();
       Object.defineProperty(web3ProviderService, 'createCoinbaseProvider', {
         value: vi.fn().mockResolvedValue(wallet),
       });
-      const provider = ref(undefined);
-      const { connectCoinbase } = useWallet(provider, ref(undefined), ref({}));
+
+      const provider = shallowRef(undefined);
+      const rpcUrls = ref({ 5: 'fakeRpc.url' });
+      const { connectCoinbase } = useWallet(provider, ref(undefined), rpcUrls);
 
       await connectCoinbase();
 
+      expect(web3ProviderService.createCoinbaseProvider).toHaveBeenNthCalledWith(1, rpcUrls.value);
       expect(provider.value).toBe(wallet);
     });
 
@@ -164,6 +149,59 @@ describe('useWallets', () => {
       await connectCoinbase();
 
       expect(connectedWallet.value).toBe('coinbase');
+    });
+  });
+
+  describe('connectInjected()', () => {
+    it('creates an injected provider instance', async () => {
+      const wallet = new MockedInjectedProvider();
+      Object.defineProperty(web3ProviderService, 'createInjectedProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const provider = shallowRef(undefined);
+
+      const { connectInjected } = useWallet(provider, ref(undefined), ref({}));
+
+      await connectInjected();
+
+      expect(web3ProviderService.createInjectedProvider).toHaveBeenCalledOnce();
+      expect(provider.value).toBe(wallet);
+    });
+
+    it('requests the signer from the provider', async () => {
+      const wallet = new MockedInjectedProvider();
+      Object.defineProperty(web3ProviderService, 'createInjectedProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const { connectInjected } = useWallet(ref(undefined), ref(undefined), ref({}));
+
+      await connectInjected();
+
+      expect(wallet.requestSigner).toHaveBeenCalledOnce();
+    });
+
+    it('sets the connected wallet type', async () => {
+      const connectedWallet = ref(undefined);
+      const { connectInjected } = useWallet(ref(undefined), connectedWallet, ref({}));
+
+      await connectInjected();
+
+      expect(connectedWallet.value).toBe('injected');
+    });
+    it('listens on wallet provider disconnect events', async () => {
+      const wallet = new MockedInjectedProvider();
+      Object.defineProperty(web3ProviderService, 'createInjectedProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const { connectInjected, disconnectWallet } = useWallet(
+        ref(undefined),
+        ref(undefined),
+        ref({}),
+      );
+
+      await connectInjected();
+
+      expect(wallet.on).toHaveBeenCalledWith('disconnect', disconnectWallet);
     });
   });
 
@@ -186,20 +224,22 @@ describe('useWallets', () => {
       expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
     });
 
-    it('listens on wallet provider disconnect events', async () => {
-      const wallet = new MockedMetaMaskProvider();
-      Object.defineProperty(web3ProviderService, 'createWalletConnectProvider', {
-        value: vi.fn().mockResolvedValue(wallet),
-      });
-      const { connectWalletConnect, disconnectWallet } = useWallet(
-        ref(undefined),
-        ref(undefined),
-        ref({}),
-      );
+    it('can reconnect to Coinbase', async () => {
+      const provider = ref(undefined);
+      const { reconnectToWallet } = useWallet(provider, ref(WalletType.Coinbase), ref({}));
 
-      await connectWalletConnect();
+      await reconnectToWallet();
 
-      expect(wallet.on).toHaveBeenCalledWith('disconnect', disconnectWallet);
+      expect(provider.value).toBeInstanceOf(MockedCoinbaseProvider);
+    });
+
+    it('can reconnect to an injected provider', async () => {
+      const provider = ref(undefined);
+      const { reconnectToWallet } = useWallet(provider, ref(WalletType.Injected), ref({}));
+
+      await reconnectToWallet();
+
+      expect(provider.value).toBeInstanceOf(MockedInjectedProvider);
     });
   });
 
@@ -209,27 +249,10 @@ describe('useWallets', () => {
       const connectedWallet = ref(undefined);
       const { connectMetaMask, disconnectWallet } = useWallet(provider, connectedWallet, ref({}));
 
-      // Since we dont have a proper mocking strategy implemented for EthereumProvider we have to circumvent the issue like this
       await connectMetaMask();
-      expect(provider.value).not.toBeUndefined();
-      expect(connectedWallet.value).not.toBeUndefined();
 
-      disconnectWallet();
-      expect(provider.value).toBeUndefined();
-      expect(connectedWallet.value).toBeUndefined();
-    });
-  });
-
-  describe('disconnectWallet()', () => {
-    it('disconnects from the currently connected wallet', async () => {
-      const provider = ref(undefined);
-      const connectedWallet = ref(undefined);
-      const { connectMetaMask, disconnectWallet } = useWallet(provider, connectedWallet, ref({}));
-
-      // Since we dont have a proper mocking strategy implemented for EthereumProvider we have to circumvent the issue like this
-      await connectMetaMask();
-      expect(provider.value).not.toBeUndefined();
-      expect(connectedWallet.value).not.toBeUndefined();
+      expect(provider.value).toBeInstanceOf(MockedMetaMaskProvider);
+      expect(connectedWallet.value).toBe('metamask');
 
       disconnectWallet();
       expect(provider.value).toBeUndefined();

@@ -94,3 +94,10 @@ export class MockedCoinbaseProvider extends MockedEthereumProvider {
     super(options);
   }
 }
+export class MockedInjectedProvider extends MockedEthereumProvider {
+  constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
+    super(options);
+  }
+
+  requestSigner = vi.fn();
+}
