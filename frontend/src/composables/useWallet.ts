@@ -4,11 +4,11 @@ import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import {
   createCoinbaseProvider,
+  createInjectedProvider,
   createMetaMaskProvider,
   createWalletConnectProvider,
   onboardMetaMask,
 } from '@/services/web3-provider';
-import { createInjectedProvider } from '@/services/web3-provider/injected-provider';
 import { WalletType } from '@/types/settings';
 
 export function useWallet(
