@@ -144,8 +144,20 @@ def contracts(
     )
 
 
+@pytest.fixture()
+def allowance():
+    return None
+
+
+@pytest.fixture()
+def token_list(token, allowance):
+    if allowance is None:
+        return [[[brownie.web3.chain_id, token.address]]]
+    return [[[brownie.web3.chain_id, token.address, allowance]]]
+
+
 @pytest.fixture
-def config(request_manager, fill_manager, token):
+def config(request_manager, fill_manager, token, token_list):
     contracts_info = dict(
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(1),
@@ -164,7 +176,7 @@ def config(request_manager, fill_manager, token):
     config = Config(
         rpc_urls=rpc_urls,
         deployment_info=deployment_info,
-        token_checker=TokenChecker([]),
+        token_checker=TokenChecker(token_list),
         account=account,
         fill_wait_time=0,
         unsafe_fill_time=600,
