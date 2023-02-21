@@ -38,6 +38,8 @@ function createUseWalletComposableReturnValue(
     connectingWalletConnect: ref(false),
     connectCoinbase: vi.fn(),
     connectingCoinbase: ref(false),
+    connectInjected: vi.fn(),
+    connectingInjected: ref(false),
     ...partialReturnObject,
   };
 }
@@ -47,14 +49,6 @@ describe('WalletMenu.vue', () => {
     Object.defineProperty(useWalletComposable, 'useWallet', {
       value: vi.fn().mockReturnValue(createUseWalletComposableReturnValue()),
     });
-  });
-
-  it('renders all available options', () => {
-    const wrapper = createWrapper();
-    const text = wrapper.text();
-    expect(text).toMatch('MetaMask');
-    expect(text).toMatch('WalletConnect');
-    expect(text).toMatch('Coinbase');
   });
 
   it('connects MetaMask on click', () => {
@@ -95,6 +89,18 @@ describe('WalletMenu.vue', () => {
     expect(connectCoinbase).toHaveBeenCalledOnce();
   });
 
+  it('connects to a browser injected wallet on click', () => {
+    const connectInjected = vi.fn();
+    Object.defineProperty(useWalletComposable, 'useWallet', {
+      value: vi.fn().mockReturnValue(createUseWalletComposableReturnValue({ connectInjected })),
+    });
+    const wrapper = createWrapper();
+    const button = wrapper.get('[data-test="connect-Browser Wallet"]');
+
+    button.trigger('click');
+    expect(connectInjected).toHaveBeenCalledOnce();
+  });
+
   it('closes on click on close button', () => {
     const wrapper = createWrapper();
     const closeButton = wrapper.get('[data-test="close-button"]');
@@ -126,9 +132,10 @@ describe('WalletMenu.vue', () => {
         const wrapper = createWrapper();
         await wrapper.vm.$nextTick();
 
-        const text = wrapper.text();
-        expect(text).toMatch('MetaMask');
-        expect(text).not.toMatch('WalletConnect');
+        const options = wrapper.findAll('[data-test|="connect"]');
+
+        expect(wrapper.text()).toMatch('MetaMask');
+        expect(options.length).toBe(1);
       });
     });
 
@@ -138,9 +145,10 @@ describe('WalletMenu.vue', () => {
         const wrapper = createWrapper();
         await wrapper.vm.$nextTick();
 
-        const text = wrapper.text();
-        expect(text).toMatch('Coinbase');
-        expect(text).not.toMatch('WalletConnect');
+        const options = wrapper.findAll('[data-test|="connect"]');
+
+        expect(wrapper.text()).toMatch('Coinbase');
+        expect(options.length).toBe(1);
       });
     });
 
@@ -154,6 +162,57 @@ describe('WalletMenu.vue', () => {
         expect(text).toMatch('Coinbase');
         expect(text).toMatch('WalletConnect');
         expect(text).not.toMatch('MetaMask');
+        expect(text).not.toMatch('Browser Wallet');
+      });
+    });
+  });
+
+  describe('on desktop', () => {
+    beforeEach(() => {
+      Object.defineProperty(userAgent, 'isMobile', {
+        value: vi.fn().mockReturnValue(false),
+      });
+    });
+
+    describe('if MetaMask is available', () => {
+      it('hides the option to connect with other browser wallet extensions', async () => {
+        vi.stubGlobal('ethereum', { isMetaMask: true });
+        const wrapper = createWrapper();
+        await wrapper.vm.$nextTick();
+
+        const text = wrapper.text();
+        expect(text).not.toMatch('Browser Wallet');
+      });
+    });
+    describe('if MetaMask is not available', () => {
+      describe('but another injected provider is available', () => {
+        it('hides MetaMask option', async () => {
+          vi.stubGlobal('ethereum', { isMetaMask: false });
+          const wrapper = createWrapper();
+          await wrapper.vm.$nextTick();
+
+          const text = wrapper.text();
+          expect(text).not.toMatch('MetaMask');
+        });
+        it('shows Browser Wallet option', async () => {
+          vi.stubGlobal('ethereum', { isMetaMask: false });
+          const wrapper = createWrapper();
+          await wrapper.vm.$nextTick();
+
+          const text = wrapper.text();
+          expect(text).toMatch('Browser Wallet');
+        });
+      });
+
+      describe('and no other injected provider is available', () => {
+        it('shows MetaMask option in order to provide onboarding', async () => {
+          vi.stubGlobal('ethereum', undefined);
+          const wrapper = createWrapper();
+          await wrapper.vm.$nextTick();
+
+          const text = wrapper.text();
+          expect(text).toMatch('MetaMask');
+        });
       });
     });
   });
