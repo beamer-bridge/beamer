@@ -25,12 +25,19 @@ rpc-url = "GOERLI_OPTIMISM_RPC_URL"
 # Each token is represented by a pair [chain-id, token-address].
 # All tokens within the same list are considered equivalent and
 # transfers between them are allowed.
+# A third, optional value per token representation defines
+# the allowance amount, the agent will approve to the fill manager contract.
+# [chain-id, token-address, allowance]
+# Allowed values are:
+# - Any value > 0, which defines the exact allowance given
+# - -1, the agent will approve type(uint256).max
+# If no value is given, the requested amount will be approved.
 TST = [
-    ["421613", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6", -1],
-    ["420", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D", -1]
+    ["421613", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6", "-1"],
+    ["420", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D", "-1"]
 ]
 
 USDC = [
-    ["421613", "0x1a65113Fb92916EF0D3043D651b469b653763F16", -1],
-    ["420", "0x6bCE0F297a204E1374860E0259EC31047a87B50F", -1]
+    ["421613", "0x1a65113Fb92916EF0D3043D651b469b653763F16", "-1"],
+    ["420", "0x6bCE0F297a204E1374860E0259EC31047a87B50F", "-1"]
 ]

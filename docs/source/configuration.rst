@@ -36,6 +36,13 @@ An example configuration::
     # Each token is represented by a pair [chain-id, token-address].
     # All tokens within the same list are considered equivalent and
     # transfers between them are allowed.
+    # A third value per token representation is optional, which defines
+    # the allowance amount, the agent will approve to the fill manager contract.
+    # [chain-id, token-address, allowance]
+    # Allowed values are:
+    # - Any value > 0, which defines the exact allowance given
+    # - -1, the agent will approve type(uint256).max
+    # If no value is given, the requested amount will be approved
     TST = [
         ["421613", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6"],
         ["420", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D"]
@@ -78,7 +85,7 @@ transferring tokens that are not in the set will be ignored.
 A token definition looks like the following::
 
     NAME = [
-        [CHAIN_ID_1, TOKEN_ADDRESS_1],
+        [CHAIN_ID_1, TOKEN_ADDRESS_1, ALLOWANCE],
         [CHAIN_ID_2, TOKEN_ADDRESS_2],
         ...
     ]
@@ -86,13 +93,20 @@ A token definition looks like the following::
 Each token is represented by a pair ``[CHAIN_ID, TOKEN_ADDRESS]``. All tokens
 within the same list are considered equivalent and are part of the same class
 named NAME. Only transfers between tokens of the same class are allowed.
+A third value per token representation is optional, which defines
+the allowance amount, the agent will approve to the fill manager contract.
+The representation would look like ``[CHAIN_ID, TOKEN_ADDRESS, ALLOWANCE]``.
+Allowed values are:
+- Any value > 0, which defines the exact allowance given
+- -1, the agent will approve with type(uint256).max (maximum allowance)
+If no value is given, the requested amount will be approved 
 
 Example::
 
     [tokens]
     TST = [
-        ["11", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6"],
-        ["22", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D"]
+        ["11", "0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6", "-1"],
+        ["22", "0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D", "100000000000"]
     ]
 
     USDC = [
