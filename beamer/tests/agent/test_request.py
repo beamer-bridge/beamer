@@ -148,6 +148,49 @@ def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs, dir
     assert claim.claimer == agent.address
 
 
+@pytest.mark.parametrize("allowance", [None, "-1", "1", "3"])
+def test_allowance(request_manager, fill_manager, token, agent, direction, allowance):
+    """
+    Allowance can have 4 different values
+
+    If None (backwards compatibility), the requested amount will be approved.
+    If -1, approved value will be type(uint256).max
+    If allowance < requested amount, agent will not fill
+    If allowance >= requested amount, configured value will be used
+    """
+    requester, target = alloc_accounts(2)
+    amount = 2
+    request_id = make_request(request_manager, token, requester, target, amount)
+
+    match allowance:
+        case None:
+            actual_allowance = amount
+        case "-1":
+            actual_allowance = 2**256 - 1
+        case _:
+            actual_allowance = int(allowance)
+
+    try:
+        with Sleeper(5) as sleeper:
+            while (
+                request := agent.get_context(direction).requests.get(request_id)
+            ) is None or request.filler != agent.address:
+                sleeper.sleep(0.1)
+    except Timeout:
+        # Agent did not fill
+        assert actual_allowance < amount
+    else:
+        allowance_after = token.allowance(agent.address, fill_manager)
+
+        # Some token contracts implement an unlimited allowance as type(uint256).max,
+        # others start decreasing the allowance from the highest amount.
+        # We use an ERC20 implementation which does the former.
+        if actual_allowance == 2**256 - 1:
+            assert allowance_after == actual_allowance
+        else:
+            assert allowance_after == actual_allowance - amount
+
+
 def test_withdraw(request_manager, token, agent, direction):
     requester, target = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, target, 1)
