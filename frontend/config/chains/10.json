@@ -4,7 +4,7 @@
   "rpcUrl": "https://mainnet.optimism.io/",
   "name": "Optimism",
   "imageUrl": "/images/optimism.svg",
-  "tokenSymbols": ["USDC"],
+  "tokenSymbols": ["USDC", "DAI"],
   "nativeCurrency": {
     "name": "Ether",
     "symbol": "ETH",
