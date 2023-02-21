@@ -6,6 +6,33 @@
     },
     "L2": [
         {
+            "name": "Arbitrum",
+            "rpc": "",
+            "chain_id": 42161,
+            "l1_messenger": [
+                "ArbitrumL1Messenger",
+                "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a",
+                "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f"
+            ],
+            "l2_messenger": "ArbitrumL2Messenger",
+            "finality_period": 691200,
+            "request_manager_arguments": {
+                "claim_stake": 0.0015,
+                "claim_request_extension": 86400,
+                "claim_period": 86400,
+                "challenge_period_extension": 86400
+            },
+            "token": [
+                {
+                    "token_address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+                    "transfer_limit": 100,
+                    "min_lp_fee": 1,
+                    "lp_fee_ppm": 3000,
+                    "protocol_fee_ppm": 0
+                }
+            ]
+        },
+        {
             "name": "Optimism",
             "rpc": "",
             "chain_id": 10,
@@ -14,6 +41,7 @@
             "finality_period": 604800,
             "request_manager_arguments": {
                 "claim_stake": 0.0015,
+                "claim_request_extension": 86400,
                 "claim_period": 86400,
                 "challenge_period_extension": 86400
             },
