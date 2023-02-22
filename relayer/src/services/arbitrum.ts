@@ -8,11 +8,12 @@ import {
   L2TransactionReceipt,
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
+import { Option, program } from "commander";
 import { BigNumber, Contract } from "ethers";
 import { readFileSync } from "fs";
 
 import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
-import type { TransactionHash } from "./types";
+import type { Options, TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
 const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
@@ -27,10 +28,35 @@ const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   },
 };
 
+function isValidArbitrumOptions(options: Options): options is ArbitrumOptions {
+  return (options as ArbitrumOptions).l2TransactionHash !== undefined;
+}
+
+type ArbitrumOptions = {
+  l2TransactionHash: TransactionHash;
+};
+
 export class ArbitrumRelayerService extends BaseRelayerService {
+  static readonly CLI_OPTIONS = [
+    new Option(
+      "--l2-transaction-hash <URL>",
+      "RPC Provider URL for layer 1",
+    ).makeOptionMandatory(),
+  ];
   static readonly MAX_MESSAGE_LENGTH_BYTES = 5_000;
 
-  async prepare(): Promise<boolean> {
+  options: ArbitrumOptions;
+
+  configure(options: Options): void {
+    if (!isValidArbitrumOptions(options)) {
+      console.error("Missing arguments for Arbitrum relayer service.");
+      process.exit(1);
+    }
+
+    this.options = options;
+  }
+
+  async prepareRelay(): Promise<boolean> {
     console.log("Preparing Arbitrum Messenger for forwarding the L1 message...");
 
     const arbitrumL1Messenger = new Contract(
@@ -76,15 +102,17 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return true;
   }
 
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string | undefined> {
+  async relayTxToL1(): Promise<TransactionHash | undefined> {
     console.log("Arbitrum outbox execution");
 
     /**
      * First, let's find the Arbitrum txn from the txn hash provided
      */
-    const receipt = await this.l2RpcProvider.getTransactionReceipt(l2TransactionHash);
+    const receipt = await this.l2RpcProvider.getTransactionReceipt(this.options.l2TransactionHash);
     if (!receipt) {
-      throw new Error(`Transaction "${l2TransactionHash}" cannot be found on Arbitrum...`);
+      throw new Error(
+        `Transaction "${this.options.l2TransactionHash}" cannot be found on Arbitrum...`,
+      );
     }
     const l2Receipt = new L2TransactionReceipt(receipt);
 
@@ -124,7 +152,7 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return l1Receipt.transactionHash;
   }
 
-  async finalize(l1TransactionHash: string): Promise<void> {
+  async finalizeRelay(l1TransactionHash: string): Promise<void> {
     console.log("Finalizing message travelling to Arbitrum.");
     const l1TransactionReceipt = await this.l1RpcProvider.getTransactionReceipt(l1TransactionHash);
 

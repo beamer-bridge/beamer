@@ -1,35 +1,14 @@
-import { program } from "commander";
 import { ppid } from "process";
 
+import { parseOptions } from "./cli";
 import { killOnParentProcessChange } from "./common/process";
 import type { ProgramOptions } from "./relayer-program";
-import { RelayerProgram, validateArgs } from "./relayer-program";
-
-program
-  .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
-  .requiredOption("--l2-relay-to-rpc-url <URL>", "RPC Provider URL for relay destination rollup")
-  .requiredOption("--l2-relay-from-rpc-url <URL>", "RPC Provider URL for relay source rollup")
-  .requiredOption("--wallet-private-key <hash>", "Private key for the layer 1 wallet")
-  .requiredOption(
-    "--l2-transaction-hash <hash>",
-    "Layer 2 transaction hash that needs to be relayed",
-  )
-  .option("--network-from <file_path>", "Path to a file with custom network configuration")
-  .option("--network-to <file_path>", "Path to a file with custom network configuration");
-
-program.parse(process.argv);
-
-const args: ProgramOptions = program.opts();
-const argValidationErrors = validateArgs(args);
-
-if (argValidationErrors.length) {
-  console.error(argValidationErrors.join("\n"));
-  process.exit(1);
-}
+import { RelayerProgram } from "./relayer-program";
 
 async function main() {
   const startPpid = ppid;
 
+  const args: ProgramOptions = await parseOptions();
   const relayProgram = await RelayerProgram.createFromArgs(args);
 
   try {

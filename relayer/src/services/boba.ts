@@ -1,6 +1,7 @@
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk-1.0.2";
+import { Option } from "commander";
 
-import type { TransactionHash } from "./types";
+import type { Options, TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
 const L1_CONTRACTS = {
@@ -22,12 +23,37 @@ const L1_CONTRACTS = {
   },
 };
 
+function isValidBobaOptions(options: Options): options is BobaOptions {
+  return (options as BobaOptions).l2TransactionHash !== undefined;
+}
+
+type BobaOptions = {
+  l2TransactionHash: TransactionHash;
+};
 export class BobaRelayerService extends BaseRelayerService {
-  async prepare(): Promise<boolean> {
+  static readonly CLI_OPTIONS = [
+    new Option(
+      "--l2-transaction-hash <URL>",
+      "RPC Provider URL for layer 1",
+    ).makeOptionMandatory(),
+  ];
+
+  options: BobaOptions;
+
+  configure(options: Options): void {
+    if (!isValidBobaOptions(options)) {
+      console.error("Missing arguments for Boba relayer service.");
+      process.exit(1);
+    }
+
+    this.options = options;
+  }
+
+  async prepareRelay(): Promise<boolean> {
     return true;
   }
 
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
+  async relayTxToL1(): Promise<TransactionHash | undefined> {
     console.log("Boba outbox execution.");
 
     const messenger = new CrossChainMessenger({
@@ -39,14 +65,16 @@ export class BobaRelayerService extends BaseRelayerService {
       l1ChainId: await this.getL1ChainId(),
     });
 
-    const messages = await messenger.getMessagesByTransaction(l2TransactionHash);
+    const messages = await messenger.getMessagesByTransaction(this.options.l2TransactionHash);
 
     // No messages in this transaction, so there's nothing to do
     if (messages.length === 0) {
-      throw new Error(`No message found in L2 transaction ${l2TransactionHash}.`);
+      throw new Error(`No message found in L2 transaction ${this.options.l2TransactionHash}.`);
     }
     if (messages.length > 1) {
-      throw new Error(`Multiple messages found in L2 transaction ${l2TransactionHash}.`);
+      throw new Error(
+        `Multiple messages found in L2 transaction ${this.options.l2TransactionHash}.`,
+      );
     }
 
     const message = messages[0];
@@ -87,7 +115,7 @@ export class BobaRelayerService extends BaseRelayerService {
     }
   }
 
-  async finalize(): Promise<void> {
+  async finalizeRelay(): Promise<void> {
     return;
   }
 }

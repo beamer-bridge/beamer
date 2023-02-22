@@ -1,5 +1,6 @@
 import type { Provider } from "@ethersproject/providers";
 import { JsonRpcProvider } from "@ethersproject/providers";
+import type { Option } from "commander";
 import { Wallet } from "ethers";
 
 import type { ArbitrumRelayerService } from "./arbitrum";
@@ -13,7 +14,11 @@ export type ExtendedRelayerService =
   | typeof BobaRelayerService
   | typeof OptimismRelayerService;
 
+export type Options = Record<string, unknown>;
+
 export abstract class BaseRelayerService {
+  static readonly CLI_OPTIONS: Array<Option> = [];
+
   readonly l1Wallet: Wallet;
   readonly l2Wallet: Wallet;
 
@@ -43,7 +48,8 @@ export abstract class BaseRelayerService {
     return;
   }
 
-  abstract prepare(): Promise<boolean>;
-  abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash>;
-  abstract finalize(l1TransactionHash: TransactionHash): Promise<void>;
+  abstract configure(options: Record<string, unknown>): void;
+  abstract prepareRelay(): Promise<boolean>;
+  abstract relayTxToL1(): Promise<TransactionHash | undefined>;
+  abstract finalizeRelay(l1TransactionHash: TransactionHash): Promise<void>;
 }

@@ -97,8 +97,8 @@ e2e_test() {
     export ARBITRUM_L1_MESSENGER=$l1_messenger
     echo Starting relayer...
     ${relayer} --l1-rpc-url http://0.0.0.0:8545 \
-               --l2-relay-to-rpc-url $l2_rpc \
-               --l2-relay-from-rpc-url $l2_rpc \
+               --relay-to-rpc-url $l2_rpc \
+               --relay-from-rpc-url $l2_rpc \
                --network-to $network_config \
                --network-from $network_config \
                --wallet-private-key $PRIVKEY \

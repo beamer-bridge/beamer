@@ -1,59 +1,47 @@
 import { getNetworkId } from "./common/network";
 import { createRelayer } from "./map";
-import type { BaseRelayerService } from "./services/types";
+import type { BaseRelayerService, Options } from "./services/types";
 
-export type ProgramOptions = {
+export type ProgramOptions = Options & {
   l1RpcUrl: string;
-  l2RelayFromRpcUrl: string;
-  l2RelayToRpcUrl: string;
+  relayFromRpcUrl: string;
+  relayToRpcUrl: string;
   walletPrivateKey: string;
-  l2TransactionHash: string;
   networkFrom?: string;
   networkTo?: string;
 };
-
-export function validateArgs(args: ProgramOptions): Array<string> {
-  const validationErrors = [];
-
-  if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66) {
-    validationErrors.push(
-      `Invalid argument value for "--l2-transaction-hash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
-    );
-  }
-
-  return validationErrors;
-}
 
 export class RelayerProgram {
   constructor(
     readonly l2RelayerFrom: BaseRelayerService,
     readonly l2RelayerTo: BaseRelayerService,
-    readonly l2TransactionHash: string,
   ) {}
 
-  static async createFromArgs(options: ProgramOptions): Promise<RelayerProgram> {
-    const fromL2ChainId = await getNetworkId(options.l2RelayFromRpcUrl);
-    const toL2ChainId = await getNetworkId(options.l2RelayToRpcUrl);
+  static async createFromArgs(args: ProgramOptions): Promise<RelayerProgram> {
+    const fromL2ChainId = await getNetworkId(args.relayFromRpcUrl);
+    const toL2ChainId = await getNetworkId(args.relayToRpcUrl);
 
     const relayerFrom = createRelayer(fromL2ChainId, [
-      options.l1RpcUrl,
-      options.l2RelayFromRpcUrl,
-      options.walletPrivateKey,
+      args.l1RpcUrl,
+      args.relayFromRpcUrl,
+      args.walletPrivateKey,
     ]);
     const relayerTo = createRelayer(toL2ChainId, [
-      options.l1RpcUrl,
-      options.l2RelayToRpcUrl,
-      options.walletPrivateKey,
+      args.l1RpcUrl,
+      args.relayToRpcUrl,
+      args.walletPrivateKey,
     ]);
 
-    return new this(relayerFrom, relayerTo, options.l2TransactionHash);
+    relayerFrom.configure(args);
+
+    return new this(relayerFrom, relayerTo);
   }
 
   async run(): Promise<void> {
-    await this.l2RelayerTo.prepare();
-    const l1TransactionHash = await this.l2RelayerFrom.relayTxToL1(this.l2TransactionHash);
+    await this.l2RelayerTo.prepareRelay();
+    const l1TransactionHash = await this.l2RelayerFrom.relayTxToL1();
     if (l1TransactionHash) {
-      await this.l2RelayerTo.finalize(l1TransactionHash);
+      await this.l2RelayerTo.finalizeRelay(l1TransactionHash);
     }
   }
 }

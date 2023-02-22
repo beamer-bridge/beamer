@@ -1,14 +1,41 @@
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
+import { Option } from "commander";
 
-import type { TransactionHash } from "./types";
+import type { Options, TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
+type OptimismOptions = {
+  l2TransactionHash: TransactionHash;
+};
+
+function isValidOptimismOptions(options: Options): options is OptimismOptions {
+  return (options as OptimismOptions).l2TransactionHash !== undefined;
+}
+
 export class OptimismRelayerService extends BaseRelayerService {
-  async prepare(): Promise<boolean> {
+  static readonly CLI_OPTIONS = [
+    new Option(
+      "--l2-transaction-hash <URL>",
+      "RPC Provider URL for layer 1",
+    ).makeOptionMandatory(),
+  ];
+
+  options: OptimismOptions;
+
+  configure(options: Options): void {
+    if (!isValidOptimismOptions(options)) {
+      console.error("Missing arguments for Optimism relayer service.");
+      process.exit(1);
+    }
+
+    this.options = options;
+  }
+
+  async prepareRelay(): Promise<boolean> {
     return true;
   }
 
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
+  async relayTxToL1(): Promise<TransactionHash | undefined> {
     console.log("Optimism outbox execution.");
 
     const messenger = new CrossChainMessenger({
@@ -18,14 +45,16 @@ export class OptimismRelayerService extends BaseRelayerService {
       l2ChainId: await this.getL2ChainId(),
     });
 
-    const messages = await messenger.getMessagesByTransaction(l2TransactionHash);
+    const messages = await messenger.getMessagesByTransaction(this.options.l2TransactionHash);
 
     // No messages in this transaction, so there's nothing to do
     if (messages.length === 0) {
-      throw new Error(`No message found in L2 transaction ${l2TransactionHash}.`);
+      throw new Error(`No message found in L2 transaction ${this.options.l2TransactionHash}.`);
     }
     if (messages.length > 1) {
-      throw new Error(`Multiple messages found in L2 transaction ${l2TransactionHash}.`);
+      throw new Error(
+        `Multiple messages found in L2 transaction ${this.options.l2TransactionHash}.`,
+      );
     }
 
     const message = messages[0];
@@ -65,7 +94,7 @@ export class OptimismRelayerService extends BaseRelayerService {
     }
   }
 
-  async finalize(): Promise<void> {
+  async finalizeRelay(): Promise<void> {
     return;
   }
 }
