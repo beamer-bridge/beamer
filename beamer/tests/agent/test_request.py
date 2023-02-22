@@ -113,23 +113,15 @@ def test_challenge_own_claim(config, request_manager, token, direction):
     assert not maybe_challenge(claim, context), "Tried to challenge own claim"
 
 
-@pytest.mark.parametrize("allow_unlisted_pairs", (True, False))
-def test_fill_and_claim(request_manager, token, agent, allow_unlisted_pairs, direction):
+def test_fill_and_claim(request_manager, token, agent, direction):
     requester, target = alloc_accounts(2)
     request_id = make_request(request_manager, token, requester, target, 1)
 
-    try:
-        with Sleeper(5) as sleeper:
-            while (request := agent.get_context(direction).requests.get(request_id)) is None:
-                sleeper.sleep(0.1)
-    except Timeout:
-        pass
+    with Sleeper(5) as sleeper:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
+            sleeper.sleep(0.1)
 
-    if not allow_unlisted_pairs:
-        assert request is None
-        return
-    else:
-        assert request.id == request_id
+    assert request.id == request_id
 
     with Sleeper(5) as sleeper:
         while not request.is_claimed:
