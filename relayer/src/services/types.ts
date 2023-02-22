@@ -3,16 +3,20 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import type { Option } from "commander";
 import { Wallet } from "ethers";
 
-import type { ArbitrumRelayerService } from "./arbitrum";
-import type { BobaRelayerService } from "./boba";
-import type { OptimismRelayerService } from "./optimism";
+import type {
+  ArbitrumRelayerService,
+  BobaRelayerService,
+  EthereumRelayerService,
+  OptimismRelayerService,
+} from "./";
 
 export type TransactionHash = string;
 
 export type ExtendedRelayerService =
   | typeof ArbitrumRelayerService
   | typeof BobaRelayerService
-  | typeof OptimismRelayerService;
+  | typeof OptimismRelayerService
+  | typeof EthereumRelayerService;
 
 export type Options = Record<string, unknown>;
 
