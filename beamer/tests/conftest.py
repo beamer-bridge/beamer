@@ -1,5 +1,4 @@
 # flake8: noqa: E402
-import os
 from dataclasses import dataclass
 
 import brownie
@@ -188,21 +187,7 @@ def config(request_manager, fill_manager, token, token_list):
 
 
 @pytest.fixture
-def allow_unlisted_pairs() -> bool:
-    return True
-
-
-@pytest.fixture
-def set_allow_unlisted_pairs(allow_unlisted_pairs: bool) -> None:
-    if allow_unlisted_pairs:
-        os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"] = "1"
-    else:
-        if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
-            del os.environ["BEAMER_ALLOW_UNLISTED_PAIRS"]
-
-
-@pytest.fixture
-def agent(config, set_allow_unlisted_pairs):  # pylint:disable=unused-argument
+def agent(config):  # pylint:disable=unused-argument
     agent = Agent(config)
     agent.start()
     yield agent
