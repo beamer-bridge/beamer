@@ -332,7 +332,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
 
 
 def test_unsafe_fill_time(
-    request_manager, config, token, set_allow_unlisted_pairs, direction
+    request_manager, config, token, direction
 ):  # pylint:disable=unused-argument
     requester, target = alloc_accounts(2)
     max_validity_period = request_manager.MAX_VALIDITY_PERIOD()
