@@ -64,7 +64,7 @@ class Notify:
         self.config = config
 
     def send(self, message: Message, callback: Optional[Callable] = None) -> None:
-        throttling = float(self.config[self.system]["request_throttling_in_sec"])
+        throttling = float(self.config[self.system]["request-throttling-in-sec"])
         if self._notifications_sent > 0 and self._notifications_sent % 5 == 0 and throttling > 0:
             time.sleep(throttling)
 
@@ -103,7 +103,7 @@ class Notify:
 
     def send_to_telegram(self, text: str) -> bool:
         token = self.config["telegram"]["token"]
-        chat_id = self.config["telegram"]["chat_id"]
+        chat_id = self.config["telegram"]["chat-id"]
 
         url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={text}"
         r = requests.get(url).json()
