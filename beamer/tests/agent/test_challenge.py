@@ -5,7 +5,7 @@ import brownie
 import pytest
 from eth_utils import to_checksum_address
 
-import beamer.agent
+import beamer.agent.agent
 from beamer.tests.constants import FILL_ID
 from beamer.tests.util import (
     EventCollector,
@@ -39,7 +39,7 @@ def _allow_unlisted_pairs():
 def test_challenge_1(request_manager, token, config):
     requester, charlie, target = alloc_accounts(3)
 
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
     agent.start()
 
     w3 = brownie.web3
@@ -80,7 +80,7 @@ def test_challenge_1(request_manager, token, config):
 def test_challenge_2(request_manager, token, config):
     requester, charlie, target = alloc_accounts(3)
 
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
     agent.start()
 
     w3 = brownie.web3
@@ -131,7 +131,7 @@ def test_challenge_2(request_manager, token, config):
 def test_challenge_3(request_manager, fill_manager, token, config):
     requester, target = alloc_accounts(2)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
 
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
@@ -185,7 +185,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
 def test_challenge_4(request_manager, fill_manager, token, config):
     requester, target = alloc_accounts(2)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
 
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
@@ -262,7 +262,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     config.rpc_urls["l2b"] = l2b_rpc_url
     config.fill_wait_time = 5
 
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
     agent.start()
 
     # Submit a request that Bob cannot fill.
@@ -331,7 +331,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
 def test_withdraw_not_participant(request_manager, token, config):
     requester, dave, target = alloc_accounts(3)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
 
     # Submit a request that Bob cannot fill.
     amount = token.balanceOf(agent.address) + 1
@@ -374,7 +374,7 @@ def test_withdraw_not_participant(request_manager, token, config):
 def test_challenge_7(request_manager, fill_manager, token, config):
     requester, dave, target = alloc_accounts(3)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
-    agent = beamer.agent.Agent(config)
+    agent = beamer.agent.agent.Agent(config)
 
     w3 = brownie.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, dave) as dave_earnings:

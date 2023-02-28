@@ -6,7 +6,7 @@ from hexbytes import HexBytes
 from statemachine import State, StateMachine
 from web3.types import Timestamp
 
-from beamer.typing import ChainId, FillId, Nonce, RequestId, TokenAmount
+from beamer.agent.typing import ChainId, FillId, Nonce, RequestId, TokenAmount
 
 
 class Request(StateMachine):

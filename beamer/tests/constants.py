@@ -1,5 +1,5 @@
 # TODO: Extend and make it smarter to get fields of structs in the contracts
-from beamer.typing import FillId
+from beamer.agent.typing import FillId
 
 FILL_ID = FillId("abc".zfill(64))
 FILL_ID_EMPTY = FillId(bytes(32))

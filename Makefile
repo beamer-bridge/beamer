@@ -2,7 +2,7 @@
 
 CODE_DIRS = beamer/ scripts/
 CONTRACTS = "contracts/**/*.sol"
-IMAGE_NAME := beamer-agent
+IMAGE_NAME := beamer
 
 all: lint
 
@@ -23,7 +23,7 @@ format: black
 	npx prettier --write $(CONTRACTS)
 
 dist-exe:
-	shiv -c beamer-agent -o dist/beamer-agent .
+	shiv -c beamer -o dist/beamer .
 
 container-image: relayers
 	DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.agent \

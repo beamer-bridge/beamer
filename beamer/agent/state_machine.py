@@ -13,9 +13,9 @@ from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.types import BlockData, Timestamp
 
-import beamer.metrics
-from beamer.config import Config
-from beamer.events import (
+import beamer.agent.metrics
+from beamer.agent.config import Config
+from beamer.agent.events import (
     ClaimMade,
     ClaimStakeWithdrawn,
     DepositWithdrawn,
@@ -32,12 +32,13 @@ from beamer.events import (
     SourceChainEvent,
     TargetChainEvent,
 )
-from beamer.l1_resolution import run_relayer_for_tx
-from beamer.models.claim import Claim
-from beamer.models.request import Request
-from beamer.tracker import Tracker
-from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
-from beamer.util import TokenChecker
+
+from beamer.agent.l1_resolution import run_relayer_for_tx
+from beamer.agent.models.claim import Claim
+from beamer.agent.models.request import Request
+from beamer.agent.tracker import Tracker
+from beamer.agent.typing import URL, ChainId, ClaimId, FillId, RequestId
+from beamer.agent.util import TokenChecker
 
 
 log = structlog.get_logger(__name__)
@@ -218,7 +219,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
     # We only count valid requests from the agent's perspective to reason about
     # the ratio of fills to valid requests
-    with beamer.metrics.update() as data:
+    with beamer.agent.metrics.update() as data:
         data.requests_created.inc()
 
     return True, None
@@ -257,7 +258,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
     except TransitionNotAllowed:
         return False, None
 
-    with beamer.metrics.update() as data:
+    with beamer.agent.metrics.update() as data:
         data.requests_filled.inc()
         if event.filler == context.address:
             data.requests_filled_by_agent.inc()

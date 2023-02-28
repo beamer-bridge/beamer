@@ -5,11 +5,11 @@ RUN mkdir -p /src/beamer/data/relayers
 COPY ./relayer/relayer-node18-linux-x64 /src/beamer/data/relayers/
 RUN pip install shiv
 WORKDIR /src
-RUN mkdir -p dist && shiv -c beamer-agent -o dist/beamer-agent .
+RUN mkdir -p dist && shiv -c beamer -o dist/beamer .
 
 FROM python:3.10-slim
-COPY --from=0 /src/dist/beamer-agent /usr/bin/beamer-agent
+COPY --from=0 /src/dist/beamer /usr/bin/beamer
 LABEL org.opencontainers.image.licenses "MIT"
 LABEL org.opencontainers.image.source "https://github.com/beamer-bridge/beamer"
 LABEL org.opencontainers.image.description "An agent that can be used to participate in the Beamer bridge protocol."
-ENTRYPOINT ["/usr/bin/beamer-agent"]
+ENTRYPOINT ["/usr/bin/beamer"]

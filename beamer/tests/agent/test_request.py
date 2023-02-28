@@ -8,14 +8,22 @@ from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3.types import Timestamp, Wei
 
-from beamer.agent import Agent
-from beamer.chain import maybe_challenge
-from beamer.events import ClaimMade, RequestFilled
-from beamer.models.claim import Claim
-from beamer.models.request import Request
+from beamer.agent.agent import Agent
+from beamer.agent.chain import maybe_challenge
+from beamer.agent.events import ClaimMade, RequestFilled
+from beamer.agent.models.claim import Claim
+from beamer.agent.models.request import Request
+from beamer.agent.typing import (
+    ChainId,
+    ClaimId,
+    FillId,
+    Nonce,
+    RequestId,
+    Termination,
+    TokenAmount,
+)
 from beamer.tests.agent.unit.utils import BLOCK_NUMBER
 from beamer.tests.util import HTTPProxy, Sleeper, Timeout, alloc_accounts, make_request
-from beamer.typing import ChainId, ClaimId, FillId, Nonce, RequestId, Termination, TokenAmount
 
 
 def _get_delay(request_data):
@@ -231,7 +239,7 @@ def test_expired_request_is_ignored(request_manager, token, agent, direction):
 
 # Disable filling of requests in the agent
 # TODO: Find a better way to do this
-@patch("beamer.chain.fill_request")
+@patch("beamer.agent.chain.fill_request")
 def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, direction):
     requester, target, filler = alloc_accounts(3)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()

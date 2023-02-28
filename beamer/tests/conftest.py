@@ -13,17 +13,17 @@ from brownie import (
     accounts,
 )
 
-import beamer.chain
-import beamer.metrics
+import beamer.agent.chain
+import beamer.agent.metrics
 
-beamer.chain.POLL_PERIOD = 1  # Change period for tests
+beamer.agent.chain.POLL_PERIOD = 1  # Change period for tests
 
-from beamer.agent import Agent
-from beamer.config import Config
-from beamer.contracts import ContractInfo
+from beamer.agent.agent import Agent
+from beamer.agent.config import Config
+from beamer.agent.contracts import ContractInfo
+from beamer.agent.typing import URL, BlockNumber, TransferDirection
+from beamer.agent.util import TokenChecker
 from beamer.tests.util import alloc_accounts
-from beamer.typing import URL, BlockNumber, TransferDirection
-from beamer.util import TokenChecker
 
 
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ def config(request_manager, fill_manager, token, token_list):
         prometheus_metrics_port=None,
         log_level="debug",
     )
-    beamer.metrics.init(config=config, source_rpc_url=url, target_rpc_url=url)
+    beamer.agent.metrics.init(config=config, source_rpc_url=url, target_rpc_url=url)
     return config
 
 

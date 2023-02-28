@@ -6,8 +6,8 @@ from eth_utils import decode_hex, is_checksum_address, is_hexstr, to_canonical_a
 from web3 import Web3
 from web3.contract import Contract
 
-import beamer.contracts
-from beamer.typing import Address, ChainId
+import beamer.agent.contracts
+from beamer.agent.typing import Address, ChainId
 
 
 def validate_address(
@@ -34,6 +34,6 @@ def validate_bytes(
 
 
 def contracts_for_web3(web3: Web3, deployment_dir: Path) -> dict[str, Contract]:
-    deployment_info = beamer.contracts.load_deployment_info(deployment_dir)
+    deployment_info = beamer.agent.contracts.load_deployment_info(deployment_dir)
     chain_id = ChainId(web3.eth.chain_id)
-    return beamer.contracts.make_contracts(web3, deployment_info[chain_id])
+    return beamer.agent.contracts.make_contracts(web3, deployment_info[chain_id])
