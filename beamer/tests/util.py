@@ -10,11 +10,10 @@ import brownie
 import requests
 import web3
 from eth_abi.packed import encode_packed
-
 from eth_utils import keccak, to_canonical_address
 
+from beamer.agent.typing import RequestId
 from beamer.tests.constants import RM_T_FIELD_TRANSFER_LIMIT
-from beamer.typing import RequestId
 
 
 def _alloc_account():

@@ -4,9 +4,14 @@ from unittest.mock import patch
 import pytest
 from hexbytes import HexBytes
 
-from beamer.chain import process_claims
-from beamer.events import FillInvalidated, FillInvalidatedResolved, InitiateL1InvalidationEvent
-from beamer.state_machine import process_event
+from beamer.agent.chain import process_claims
+from beamer.agent.events import (
+    FillInvalidated,
+    FillInvalidatedResolved,
+    InitiateL1InvalidationEvent,
+)
+from beamer.agent.state_machine import process_event
+from beamer.agent.typing import ClaimId, FillId, Termination
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
@@ -21,7 +26,6 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address, make_tx_hash
 from beamer.tests.constants import FILL_ID
-from beamer.typing import ClaimId, FillId, Termination
 
 
 def test_handle_fill_invalidated_resolved():
@@ -93,7 +97,7 @@ def test_handle_fill_invalidated():
     assert claim.invalidation_tx == tx_hash
 
 
-@patch("beamer.chain._invalidate")
+@patch("beamer.agent.chain._invalidate")
 @pytest.mark.parametrize("fill_id", [FILL_ID, FillId(b"c0ffee")])
 def test_maybe_invalidate_claim_wrong_fill_id(mocked_invalidate, fill_id):
     context, config = make_context()
@@ -119,7 +123,7 @@ def test_maybe_invalidate_claim_wrong_fill_id(mocked_invalidate, fill_id):
     assert mocked_invalidate.called == (fill_id != FILL_ID)
 
 
-@patch("beamer.chain._invalidate")
+@patch("beamer.agent.chain._invalidate")
 def test_maybe_invalidate_claim_wrong_fill_id_but_in_back_off(mocked_invalidate):
     context, config = make_context()
 
@@ -145,7 +149,7 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_in_back_off(mocked_invalidate)
     assert not mocked_invalidate.called
 
 
-@patch("beamer.chain._invalidate")
+@patch("beamer.agent.chain._invalidate")
 def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out(mocked_invalidate):
     context, config = make_context()
 
@@ -168,7 +172,7 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out(mocked_invalidate):
     assert mocked_invalidate.called
 
 
-@patch("beamer.chain._withdraw")
+@patch("beamer.agent.chain._withdraw")
 @pytest.mark.parametrize(
     "test_data",
     [

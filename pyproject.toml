@@ -43,7 +43,7 @@ sphinxcontrib-soliditydomain = {git = "https://github.com/beamer-bridge/sphinxco
 types-toml = "^0.10.8"
 
 [tool.poetry.scripts]
-beamer-agent = 'beamer.cli:main'
+beamer = 'beamer.cli:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -5,7 +5,7 @@ from pathlib import Path
 import structlog
 from hexbytes import HexBytes
 
-from beamer.typing import URL
+from beamer.agent.typing import URL
 
 
 log = structlog.get_logger(__name__)

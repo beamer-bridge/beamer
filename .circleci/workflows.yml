@@ -302,7 +302,7 @@ jobs:
   build-and-publish-container-image:
     executor: vm
     environment:
-      IMAGE_NAME: ghcr.io/beamer-bridge/beamer-agent
+      IMAGE_NAME: ghcr.io/beamer-bridge/beamer
     steps:
       - attach_workspace:
           at: /
@@ -312,7 +312,7 @@ jobs:
           name: Log in to github container registry
           command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
       - run:
-          name: Build a beamer-agent image
+          name: Build a beamer image
           command: cd ~/beamer && make container-image IMAGE_NAME=${IMAGE_NAME}
       - run:
           name: Push the image to github container registry

@@ -8,9 +8,9 @@ import eth_account
 import pytest
 from click.testing import CliRunner
 
-from beamer.cli import main
-from beamer.l1_resolution import get_relayer_executable
-from beamer.util import TokenChecker
+from beamer.agent.commands import agent
+from beamer.agent.l1_resolution import get_relayer_executable
+from beamer.agent.util import TokenChecker
 
 
 def _generate_deployment_dir(output_dir, root, contracts):
@@ -128,7 +128,7 @@ def test_cli(config, tmp_path, contracts, generate_options, unsafe_fill_time_opt
 
     options = generate_options(keyfile, deployment_dir, config, unsafe_time)
     runner = CliRunner()
-    result = runner.invoke(main, options)
+    result = runner.invoke(agent, options)
     if not error:
         assert result.exit_code == 1
     else:

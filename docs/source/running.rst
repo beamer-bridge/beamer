@@ -61,7 +61,7 @@ Running an agent container
 
 To run an agent container simply do::
 
-    docker run ghcr.io/beamer-bridge/beamer-agent --account-path <path> \
+    docker run ghcr.io/beamer-bridge/beamer agent --account-path <path> \
                                                   --account-password <password> \
                                                   --chain l1=<l1-rpc-url> \
                                                   --chain source=<source-l2-rpc-url> \
@@ -93,7 +93,7 @@ and install ``beamer-agent``::
 
 While still inside the virtual environment, run::
 
-    beamer-agent --account-path <path> \
+    beamer agent --account-path <path> \
                  --account-password <password> \
                  --chain l1=<l1-rpc-url> \
                  --chain source=<source-l2-rpc-url> \

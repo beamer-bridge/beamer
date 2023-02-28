@@ -8,9 +8,11 @@ from hexbytes import HexBytes
 from web3.datastructures import AttributeDict
 from web3.types import ChecksumAddress, TxReceipt, Wei
 
-from beamer.chain import claim_request, fill_request, process_claims, process_requests
-from beamer.events import InitiateL1ResolutionEvent, RequestResolved
-from beamer.state_machine import process_event
+from beamer.agent.chain import claim_request, fill_request, process_claims, process_requests
+from beamer.agent.events import InitiateL1ResolutionEvent, RequestResolved
+from beamer.agent.state_machine import process_event
+from beamer.agent.typing import FillId, Termination
+from beamer.agent.util import load_ERC20_abi
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
@@ -28,9 +30,6 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-from beamer.typing import FillId, Termination
-from beamer.util import load_ERC20_abi
-
 
 ERC2O_ABI = load_ERC20_abi()
 
@@ -325,7 +324,7 @@ def test_maybe_claim_no_l1():
     assert not claim.transaction_pending
 
 
-@patch("beamer.chain._withdraw")
+@patch("beamer.agent.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ACCOUNT.address, make_address()])
 @pytest.mark.parametrize("l1_fill_id", [FILL_ID, FillId(b"wrong fill id")])
@@ -357,7 +356,7 @@ def test_maybe_claim_l1_as_claimer(
         assert not mocked_withdraw.called
 
 
-@patch("beamer.chain._withdraw")
+@patch("beamer.agent.chain._withdraw")
 @pytest.mark.parametrize("termination", [TIMESTAMP - 1, TIMESTAMP])
 @pytest.mark.parametrize("l1_filler", [ADDRESS1, make_address()])
 @pytest.mark.parametrize("l1_fill_id", [FILL_ID, FillId(b"wrong fill id")])

@@ -6,9 +6,9 @@ from hexbytes import HexBytes
 from statemachine import State, StateMachine
 from web3.types import Timestamp, Wei
 
-from beamer.events import ClaimMade
-from beamer.models.request import Request
-from beamer.typing import ClaimId, FillId, RequestId, Termination
+from beamer.agent.events import ClaimMade
+from beamer.agent.models.request import Request
+from beamer.agent.typing import ClaimId, FillId, RequestId, Termination
 
 
 class Claim(StateMachine):

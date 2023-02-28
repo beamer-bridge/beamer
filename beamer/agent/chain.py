@@ -10,12 +10,12 @@ from web3 import Web3
 from web3.contract import Contract
 from web3.types import Wei
 
-from beamer.events import Event, EventFetcher
-from beamer.models.claim import Claim
-from beamer.models.request import Request
-from beamer.state_machine import Context, process_event
-from beamer.typing import BlockNumber, ChainId
-from beamer.util import TransactionFailed, load_ERC20_abi, transact
+from beamer.agent.events import Event, EventFetcher
+from beamer.agent.models.claim import Claim
+from beamer.agent.models.request import Request
+from beamer.agent.state_machine import Context, process_event
+from beamer.agent.typing import BlockNumber, ChainId
+from beamer.agent.util import TransactionFailed, load_ERC20_abi, transact
 
 
 _ERC20_ABI = load_ERC20_abi()

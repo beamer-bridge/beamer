@@ -6,7 +6,7 @@ import pytest
 import structlog.testing
 
 import beamer.agent
-from beamer.agent import Agent
+from beamer.agent.agent import Agent
 from beamer.tests.util import HTTPProxy
 
 
@@ -37,10 +37,10 @@ class _RateLimiter:
 # TODO: remove this once we add support for configurable poll periods.
 @pytest.fixture
 def _adjust_poll_period():
-    old_poll_period = beamer.agent.POLL_PERIOD
-    beamer.agent.POLL_PERIOD = 0.1
+    old_poll_period = beamer.agent.agent.POLL_PERIOD
+    beamer.agent.agent.POLL_PERIOD = 0.1
     yield
-    beamer.agent.POLL_PERIOD = old_poll_period
+    beamer.agent.agent.POLL_PERIOD = old_poll_period
 
 
 def test_rate_limiting_rpc(config, _adjust_poll_period):

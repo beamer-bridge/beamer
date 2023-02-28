@@ -89,7 +89,7 @@ Whitelist the agent's address::
 
 Start ``beamer-agent``::
 
-    beamer-agent --account-path 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+    beamer agent --account-path 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                  --account-password '' \
                  --config agent-ganache-local.conf \
                  --chain l1=http://localhost:8545 \

@@ -26,8 +26,8 @@ from web3.middleware import (
 )
 from web3.types import GasPriceStrategy, TxParams
 
-import beamer.middleware
-from beamer.typing import URL, ChainId, ChecksumAddress
+import beamer.agent.middleware
+from beamer.agent.typing import URL, ChainId, ChecksumAddress
 
 log = structlog.get_logger(__name__)
 
@@ -126,10 +126,10 @@ def make_web3(
     w3.middleware_onion.add(middleware)
 
     # Cache data of 1000 least recently used blocks, fetched via eth_getBlockByNumber.
-    w3.middleware_onion.add(beamer.middleware.cache_get_block_by_number)
+    w3.middleware_onion.add(beamer.agent.middleware.cache_get_block_by_number)
 
     # Handle RPCs that rate limit us.
-    w3.middleware_onion.add(beamer.middleware.rate_limiter)
+    w3.middleware_onion.add(beamer.agent.middleware.rate_limiter)
 
     w3.eth.default_account = account.address
     return w3

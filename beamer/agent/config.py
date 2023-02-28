@@ -7,9 +7,9 @@ from typing import Any, Optional
 import toml
 from eth_account.signers.local import LocalAccount
 
-from beamer.contracts import DeploymentInfo, load_deployment_info
-from beamer.typing import URL
-from beamer.util import TokenChecker, account_from_keyfile
+from beamer.agent.contracts import DeploymentInfo, load_deployment_info
+from beamer.agent.typing import URL
+from beamer.agent.util import TokenChecker, account_from_keyfile
 
 
 class ConfigError(Exception):

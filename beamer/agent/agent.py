@@ -9,14 +9,15 @@ from web3 import Web3
 from web3.contract import Contract
 from web3.middleware import latest_block_based_cache_middleware
 
-import beamer.metrics
-from beamer.chain import POLL_PERIOD, EventMonitor, EventProcessor
-from beamer.config import Config
-from beamer.contracts import ContractInfo, make_contracts
-from beamer.state_machine import Context
-from beamer.tracker import Tracker
-from beamer.typing import URL, ChainId, TransferDirection
-from beamer.util import make_web3
+
+import beamer.agent.metrics
+from beamer.agent.chain import POLL_PERIOD, EventMonitor, EventProcessor
+from beamer.agent.config import Config
+from beamer.agent.contracts import ContractInfo, make_contracts
+from beamer.agent.state_machine import Context
+from beamer.agent.tracker import Tracker
+from beamer.agent.typing import URL, ChainId, TransferDirection
+from beamer.agent.util import make_web3
 
 log = structlog.get_logger(__name__)
 
@@ -176,12 +177,13 @@ class Agent:
     def start(self) -> None:
         assert self._stopped.is_set()
         for event_processor in self._event_processors.values():
-            beamer.metrics.init(
+            beamer.agent.metrics.init(
                 config=self._config,
                 source_rpc_url=event_processor.context.source_rpc_url,
                 target_rpc_url=event_processor.context.target_rpc_url,
             )
             event_processor.start()
+
         for event_monitor in self._event_monitors.values():
             event_monitor.start()
         self._stopped.clear()

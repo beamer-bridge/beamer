@@ -3,8 +3,8 @@ import time
 import pytest
 from web3.types import Wei
 
-from beamer.events import InitiateL1InvalidationEvent, InitiateL1ResolutionEvent
-from beamer.state_machine import process_event
+from beamer.agent.events import InitiateL1InvalidationEvent, InitiateL1ResolutionEvent
+from beamer.agent.state_machine import process_event
 from beamer.tests.agent.unit.utils import (
     CLAIM_ID,
     REQUEST_ID,

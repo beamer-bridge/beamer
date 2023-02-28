@@ -4,6 +4,7 @@ from brownie import chain, web3
 from brownie.convert import to_bytes
 from eth_utils import to_hex
 
+from beamer.agent.typing import ClaimId, FillId, RequestId, Termination
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import (
     FILL_ID,
@@ -18,7 +19,6 @@ from beamer.tests.util import (
     make_request,
     update_token,
 )
-from beamer.typing import ClaimId, FillId, RequestId, Termination
 
 
 def test_request_invalid_target_chain(request_manager, token):

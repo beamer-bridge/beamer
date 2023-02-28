@@ -5,7 +5,7 @@ from pathlib import Path
 import web3
 from web3.contract import Contract
 
-from beamer.typing import Address, BlockNumber, ChainId
+from beamer.agent.typing import Address, BlockNumber, ChainId
 
 
 @dataclass
