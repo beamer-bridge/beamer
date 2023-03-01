@@ -1,4 +1,9 @@
-import { ArbitrumRelayerService, BobaRelayerService, OptimismRelayerService } from "./services";
+import {
+  ArbitrumRelayerService,
+  BobaRelayerService,
+  EthereumRelayerService,
+  OptimismRelayerService,
+} from "./services";
 import type { BaseRelayerService, ExtendedRelayerService } from "./services/types";
 
 export const SERVICES: Record<number, ExtendedRelayerService> = {
@@ -9,6 +14,9 @@ export const SERVICES: Record<number, ExtendedRelayerService> = {
   288: BobaRelayerService,
   10: OptimismRelayerService,
   420: OptimismRelayerService,
+  1: EthereumRelayerService,
+  5: EthereumRelayerService,
+  1337: EthereumRelayerService,
 };
 
 export function createRelayer(
