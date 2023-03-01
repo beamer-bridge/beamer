@@ -48,8 +48,6 @@ def setup_relayer_executable():
 
 
 _CONFIG_FILE = """
-source-chain = "foo"
-target-chain = "bar"
 unsafe-fill-time = {unsafe_fill_time}
 deployment-dir = "{deployment_dir}"
 
@@ -84,10 +82,6 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
         f"l2b={config.rpc_urls['l2b']}",
         "--deployment-dir",
         str(deployment_dir),
-        "--source-chain",
-        "l2a",
-        "--target-chain",
-        "l2b",
         "--unsafe-fill-time",
         unsafe_fill_time,
     )
