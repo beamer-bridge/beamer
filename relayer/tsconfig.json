@@ -21,6 +21,6 @@
       "~/*": ["tests/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.json", "tests/**/*.ts",],
+  "include": ["src/**/*.ts", "src/**/*.json", "tests/**/*.ts", "types-gen/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
