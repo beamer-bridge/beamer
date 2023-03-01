@@ -4,6 +4,7 @@ import { Wallet } from "ethers";
 
 import type { ArbitrumRelayerService } from "./arbitrum";
 import type { BobaRelayerService } from "./boba";
+import type { EthereumRelayerService } from "./ethereum";
 import type { OptimismRelayerService } from "./optimism";
 
 export type TransactionHash = string;
@@ -11,7 +12,8 @@ export type TransactionHash = string;
 export type ExtendedRelayerService =
   | typeof ArbitrumRelayerService
   | typeof BobaRelayerService
-  | typeof OptimismRelayerService;
+  | typeof OptimismRelayerService
+  | typeof EthereumRelayerService;
 
 export abstract class BaseRelayerService {
   readonly l1Wallet: Wallet;
@@ -44,6 +46,6 @@ export abstract class BaseRelayerService {
   }
 
   abstract prepare(): Promise<boolean>;
-  abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash>;
+  abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined>;
   abstract finalize(l1TransactionHash: TransactionHash): Promise<void>;
 }
