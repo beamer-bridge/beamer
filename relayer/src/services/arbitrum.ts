@@ -8,10 +8,10 @@ import {
   L2TransactionReceipt,
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 
-import ArbitrumL1MessengerABI from "../assets/abi/ArbitrumL1Messenger.json";
+import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
@@ -33,9 +33,10 @@ export class ArbitrumRelayerService extends BaseRelayerService {
   async prepare(): Promise<boolean> {
     console.log("Preparing Arbitrum Messenger for forwarding the L1 message...");
 
-    const arbitrumL1Messenger = new Contract(
-      L1_CONTRACTS[await this.getL2ChainId()].ARBITRUM_L1_MESSENGER,
-      ArbitrumL1MessengerABI,
+    const arbitrumMessengerAddress = L1_CONTRACTS[await this.getL2ChainId()].ARBITRUM_L1_MESSENGER;
+
+    const arbitrumL1Messenger = ArbitrumL1Messenger__factory.connect(
+      arbitrumMessengerAddress,
       this.l1Wallet,
     );
 
