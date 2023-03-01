@@ -13,8 +13,6 @@ An example configuration::
     deployment-dir = "deployments/goerli"
     fill-wait-time = 120
     unsafe-fill-time = 600
-    source-chain = "goerli-arbitrum"
-    target-chain = "goerli-optimism"
 
     [account]
     path = "account.json"
@@ -191,14 +189,17 @@ Reference
 
         source-chain = NAME
 
-     - Name of the source chain.
+     - Name of the source chain. Deprecated and will be removed.
+       No longer needed because the agent supports multiple chain pairs.
+
 
    * - ``--target-chain NAME``
      - ::
 
         target-chain = NAME
 
-     - Name of the target chain.
+     - Name of the target chain. Deprecated and will be removed.
+       No longer needed because the agent supports multiple chain pairs.
 
    * - ``--chain NAME=URL``
      - ::
