@@ -77,8 +77,12 @@ def _sigint_handler(agent: Agent) -> None:
     metavar="NAME=URL",
     help="Associate a JSON-RPC endpoint URL with chain NAME. Example: foo=http://foo.bar:8545.",
 )
-@click.option("--source-chain", type=str, metavar="NAME", help="Name of the source chain.")
-@click.option("--target-chain", type=str, metavar="NAME", help="Name of the target chain.")
+@click.option(
+    "--source-chain", type=str, metavar="NAME", help="Name of the source chain. (deprecated)"
+)
+@click.option(
+    "--target-chain", type=str, metavar="NAME", help="Name of the target chain. (deprecated)"
+)
 @click.version_option()
 def agent(
     config_path: Path,
@@ -94,6 +98,11 @@ def agent(
     unsafe_fill_time: Optional[int],
 ) -> None:
     """Start Beamer Bridge Agent"""
+
+    if source_chain is not None:
+        log.warning("Option --source-chain is deprecated and will be removed")
+    if target_chain is not None:
+        log.warning("Option --target_chain is deprecated and will be removed")
 
     options = {
         "fill-wait-time": fill_wait_time,
