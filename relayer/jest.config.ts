@@ -8,6 +8,7 @@ export default async (): Promise<Config> => {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^~/(.*)$": "<rootDir>/tests/$1",
     },
+    testPathIgnorePatterns: ["build"],
     resetMocks: true,
     collectCoverageFrom: ["src/**/*.ts*"],
   };
