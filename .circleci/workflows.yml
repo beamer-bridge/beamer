@@ -173,11 +173,11 @@ jobs:
             - /home/circleci/.brownie
             - /home/circleci/.solcx
 
-  test-agent:
+  test-beamer:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run brownie test beamer/tests/agent -v -G --cov beamer --cov-report=term
+      - run: poetry run brownie test beamer/tests/{agent,health} -v -G --cov beamer --cov-report=term
 
   e2e-test-optimism:
     executor: vm
@@ -344,7 +344,7 @@ workflows:
       - test-contracts:
           requires:
             - compile-contracts
-      - test-agent:
+      - test-beamer:
           requires:
             - compile-contracts
       - e2e-test-optimism:
