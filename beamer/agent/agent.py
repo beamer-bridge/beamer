@@ -188,6 +188,9 @@ class Agent:
             event_monitor.start()
         self._stopped.clear()
 
+    def get_directions(self) -> tuple[TransferDirection, ...]:
+        return tuple(self._event_processors)
+
     def get_context(self, direction: TransferDirection) -> Context:
         event_processor = self.get_event_processor(direction)
         return event_processor.context
