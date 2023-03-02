@@ -1,5 +1,7 @@
+import functools
 import threading
 import time
+from http import HTTPStatus
 
 import brownie
 import pytest
@@ -43,11 +45,21 @@ def _adjust_poll_period():
     beamer.agent.agent.POLL_PERIOD = old_poll_period
 
 
+def _post_with_rate_limit(rate_limiter, handler, url, post_body):
+    if rate_limiter(url, post_body):
+        handler.send_response_only(HTTPStatus.TOO_MANY_REQUESTS)
+        handler.end_headers()
+    else:
+        response = handler.forward_request(url, post_body)
+        if response is not None:
+            handler.complete(response)
+
+
 def test_rate_limiting_rpc(config, _adjust_poll_period):
     brownie.chain.mine(200)
 
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"])
-    proxy_l2a.set_rate_limiter(_RateLimiter(2))
+    post_rate_limited = functools.partial(_post_with_rate_limit, _RateLimiter(2))
+    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], post_rate_limited)
     proxy_l2a.start()
 
     config.rpc_urls["l2a"] = proxy_l2a.url()

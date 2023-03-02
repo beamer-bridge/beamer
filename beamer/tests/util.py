@@ -1,5 +1,4 @@
 import contextlib
-import json
 import threading
 import time
 from http import HTTPStatus
@@ -65,28 +64,17 @@ class _HTTPRequestHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.get("Content-Length"))
         post_body = self.rfile.read(content_len)
         url = self.server.target_address
+        self.server.do_post(self, url, post_body)
 
-        rate_limiter = self.server.rate_limiter
-        if callable(rate_limiter) and rate_limiter(url, post_body):
-            self.send_response_only(HTTPStatus.TOO_MANY_REQUESTS)
-            self.end_headers()
-            return
-
+    def forward_request(self, url, post_body):
         try:
-            response = requests.post(url, data=post_body)
+            return requests.post(url, data=post_body)
         except requests.exceptions.ConnectionError:
             self.send_response_only(HTTPStatus.SERVICE_UNAVAILABLE)
             self.end_headers()
-            return
+        return None
 
-        data = json.loads(post_body)
-        method = data["method"]
-        delay = self.server.call_delays.get(method)
-        if delay is not None:
-            if callable(delay):
-                delay = delay(data)
-            time.sleep(delay)
-
+    def complete(self, response):
         try:
             self.send_response(response.status_code)
             self.end_headers()
@@ -97,11 +85,11 @@ class _HTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 class HTTPProxy(HTTPServer):
-    def __init__(self, target_address):
+    def __init__(self, target_address, do_post):
         super().__init__(("", 0), _HTTPRequestHandler)
         self.target_address = target_address
-        self.call_delays = {}
-        self.rate_limiter = None
+        assert callable(do_post)
+        self.do_post = do_post
 
     def start(self) -> None:
         self._thread = threading.Thread(target=self.serve_forever)
@@ -110,12 +98,6 @@ class HTTPProxy(HTTPServer):
     def stop(self) -> None:
         self.shutdown()
         self._thread.join()
-
-    def delay_rpc(self, call_delays):
-        self.call_delays = call_delays
-
-    def set_rate_limiter(self, rate_limiter):
-        self.rate_limiter = rate_limiter
 
     def url(self):
         return "http://%s:%s" % self.server_address
