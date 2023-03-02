@@ -9,7 +9,6 @@ import beamer.agent.agent
 from beamer.tests.constants import FILL_ID
 from beamer.tests.util import (
     EventCollector,
-    HTTPProxy,
     alloc_accounts,
     alloc_whitelisted_accounts,
     earnings,
@@ -250,16 +249,6 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 def test_challenge_5(request_manager, fill_manager, token, config, honest_claim):
     requester, target = alloc_accounts(2)
     (charlie,) = alloc_whitelisted_accounts(1, {request_manager, fill_manager})
-    proxy_l2b = HTTPProxy(config.rpc_urls["l2b"])
-    proxy_l2b.delay_rpc({"eth_getLogs": 3})
-    proxy_l2b.start()
-
-    l2b_rpc_url = "http://%s:%s" % (
-        proxy_l2b.server_address[0],
-        proxy_l2b.server_address[1],
-    )
-
-    config.rpc_urls["l2b"] = l2b_rpc_url
     config.fill_wait_time = 5
 
     agent = beamer.agent.agent.Agent(config)
@@ -313,7 +302,6 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
         assert claim.lastChallenger == to_checksum_address(agent.address)
 
     agent.stop()
-    proxy_l2b.stop()
     agent.wait()
 
 
