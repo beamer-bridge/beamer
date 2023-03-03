@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 import web3
 from web3.contract import Contract
@@ -17,7 +18,8 @@ class ContractInfo:
 
 def make_contracts(w3: web3.Web3, contracts_info: dict[str, ContractInfo]) -> dict[str, Contract]:
     return {
-        name: w3.eth.contract(info.address, abi=info.abi) for name, info in contracts_info.items()
+        name: cast(Contract, w3.eth.contract(info.address, abi=info.abi))
+        for name, info in contracts_info.items()
     }
 
 

@@ -66,13 +66,13 @@ class Context:
 
     @property
     def source_rpc_url(self) -> URL:
-        provider = cast(HTTPProvider, self.request_manager.web3.provider)
+        provider = cast(HTTPProvider, self.request_manager.w3.provider)
         assert provider.endpoint_uri is not None
         return URL(provider.endpoint_uri)
 
     @property
     def target_rpc_url(self) -> URL:
-        provider = cast(HTTPProvider, self.fill_manager.web3.provider)
+        provider = cast(HTTPProvider, self.fill_manager.w3.provider)
         assert provider.endpoint_uri is not None
         return URL(provider.endpoint_uri)
 
@@ -185,7 +185,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
     # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, ignore the token configuration
     if os.environ.get("BEAMER_ALLOW_UNLISTED_PAIRS") is not None:
         # Check if the address points to some contract
-        if context.fill_manager.web3.eth.get_code(event.target_token_address) == HexBytes("0x"):
+        if context.fill_manager.w3.eth.get_code(event.target_token_address) == HexBytes("0x"):
             log.info(
                 "Request unfillable, invalid token contract",
                 request_event=event,
@@ -248,7 +248,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         return True, None
 
     try:
-        fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
+        fill_block = context.fill_manager.w3.eth.get_block(event.block_number)
         request.fill(
             filler=event.filler,
             fill_tx=event.tx_hash,
@@ -389,7 +389,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
 
 
 def _handle_fill_invalidated(event: FillInvalidated, context: Context) -> HandlerResult:
-    fill_block = context.fill_manager.web3.eth.get_block(event.block_number)
+    fill_block = context.fill_manager.w3.eth.get_block(event.block_number)
     timestamp = fill_block.timestamp  # type: ignore
     request = context.requests.get(event.request_id)
 

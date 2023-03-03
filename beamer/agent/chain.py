@@ -65,9 +65,7 @@ class EventMonitor:
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
-            assert (
-                self._chain_id == contract.web3.eth.chain_id
-            ), f"Chain id mismatch for {contract}"
+            assert self._chain_id == contract.w3.eth.chain_id, f"Chain id mismatch for {contract}"
 
     def start(self) -> None:
         self._thread = threading.Thread(
@@ -307,8 +305,7 @@ def fill_request(request: Request, context: Context) -> None:
         context.logger.info("Request expired, ignoring", request=request)
         request.ignore()
         return
-
-    w3 = context.fill_manager.web3
+    w3 = context.fill_manager.w3
     token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
     address = w3.eth.default_account
     balance = token.functions.balanceOf(address).call()

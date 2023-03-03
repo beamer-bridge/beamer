@@ -65,7 +65,7 @@ def transact(
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
-    receipt = func.web3.eth.wait_for_transaction_receipt(
+    receipt = func.w3.eth.wait_for_transaction_receipt(
         txn_hash, timeout=timeout, poll_latency=poll_latency
     )
     if receipt.status == 0:  # type: ignore
