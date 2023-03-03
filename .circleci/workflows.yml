@@ -42,10 +42,10 @@ commands:
       - restore-python-packages
       - restore-node-packages
 
-      # Restore brownie packages at /home/circleci/.brownie.
+      # Restore ape packages at /home/circleci/.ape.
       - restore_cache:
-          name: Restore cached solc and brownie packages
-          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
+          name: Restore cached solc and ape packages
+          key: solc-ape-packages-{{ checksum "ape-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
 
       - ensure-node-environment
 
@@ -156,28 +156,28 @@ jobs:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run brownie test -v -G beamer/tests/contracts
+      - run: poetry run ape test -s --gas beamer/tests/contracts
 
   compile-contracts:
     executor: vm
     steps:
       - initialize-environment
-      - run: brownie compile
+      - run: ape compile
       - persist_to_workspace:
           root: /
           paths:
-            - home/circleci/beamer/contracts/build
+            - home/circleci/beamer/contracts/.build
       - save_cache:
-          key: solc-brownie-packages-{{ checksum "brownie-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
+          key: solc-ape-packages-{{ checksum "ape-config.yaml" }}-{{ .Environment.CACHE_VERSION }}
           paths:
-            - /home/circleci/.brownie
+            - /home/circleci/.ape
             - /home/circleci/.solcx
 
   test-beamer:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run brownie test beamer/tests/{agent,health} -v -G --cov beamer --cov-report=term
+      - run: poetry run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term
 
   e2e-test-optimism:
     executor: vm
