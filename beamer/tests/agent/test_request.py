@@ -1,11 +1,11 @@
 import time
 from unittest.mock import patch
 
-import brownie
+import ape
 import pytest
-from brownie import ZERO_ADDRESS
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
+from web3.constants import ADDRESS_ZERO
 from web3.types import Timestamp, Wei
 
 from beamer.agent.agent import Agent
@@ -14,6 +14,7 @@ from beamer.agent.events import ClaimMade, RequestFilled
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.typing import (
+    BlockNumber,
     ChainId,
     ClaimId,
     FillId,
@@ -32,8 +33,8 @@ def test_challenge_own_claim(config, request_manager, token, direction):
     claim_stake = request_manager.claimStake()
     request = Request(
         RequestId(b"1"),
-        brownie.chain.id,
-        brownie.chain.id,
+        ChainId(ape.chain.chain_id),
+        ChainId(ape.chain.chain_id),
         token.address,
         token.address,
         agent_address,
@@ -44,14 +45,14 @@ def test_challenge_own_claim(config, request_manager, token, direction):
 
     claim = Claim(
         ClaimMade(
-            chain_id=brownie.chain.id,
+            chain_id=ChainId(ape.chain.chain_id),
             tx_hash=HexBytes(b""),
             claim_id=ClaimId(1),
             request_id=request.id,
             fill_id=FillId(b"1"),
             claimer=agent_address,
             claimer_stake=claim_stake,
-            last_challenger=ZERO_ADDRESS,
+            last_challenger=to_checksum_address(ADDRESS_ZERO),
             challenger_stake_total=Wei(0),
             termination=Termination(1700000000),
             block_number=BLOCK_NUMBER,
@@ -61,7 +62,7 @@ def test_challenge_own_claim(config, request_manager, token, direction):
     # Add context so that maybe_challenge verifies that the claim is not expired
     context = agent.get_context(direction)
     context.requests.add(request.id, request)
-    context.latest_blocks[brownie.chain.id] = {"timestamp": Timestamp(0)}
+    context.latest_blocks[ChainId(ape.chain.chain_id)] = {"timestamp": Timestamp(0)}
 
     assert not maybe_challenge(claim, context), "Tried to challenge own claim"
 
@@ -148,7 +149,7 @@ def test_withdraw(request_manager, token, agent, direction):
             sleeper.sleep(0.1)
 
     claim_period = request_manager.claimPeriod()
-    brownie.chain.mine(timedelta=claim_period)
+    ape.chain.mine(deltatime=claim_period)
 
     with Sleeper(5) as sleeper:
         while not request.is_withdrawn:
@@ -169,14 +170,14 @@ def test_expired_request_is_ignored(request_manager, token, agent, direction):
         validity_period=validity_period,
     )
 
-    brownie.chain.mine(timedelta=validity_period / 2)
+    ape.chain.mine(deltatime=validity_period // 2)
     with Sleeper(1) as sleeper:
         while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
     assert request.is_pending
 
-    brownie.chain.mine(timedelta=validity_period / 2 + 1)
+    ape.chain.mine(deltatime=validity_period // 2 + 1)
     with Sleeper(2) as sleeper:
         while not request.is_ignored:
             sleeper.sleep(0.1)
@@ -188,7 +189,7 @@ def test_expired_request_is_ignored(request_manager, token, agent, direction):
 def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, direction):
     requester, target, filler = alloc_accounts(3)
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
-    chain_id = ChainId(brownie.chain.id)
+    chain_id = ChainId(ape.chain.chain_id)
     amount = token.balanceOf(agent.address)
 
     request_id = make_request(
@@ -206,6 +207,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
 
     event_processor = agent.get_event_processor(direction)
 
+    assert ape.chain.blocks[-1].number is not None
     # Test wrong amount
     event_processor.add_events(
         [
@@ -218,7 +220,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
                 target_token_address=token,
                 filler=filler,
                 amount=amount - 1,
-                block_number=brownie.web3.eth.block_number,
+                block_number=BlockNumber(ape.chain.blocks[-1].number),
             ),
         ]
     )
@@ -237,7 +239,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
                 target_token_address=token,
                 filler=filler,
                 amount=amount,
-                block_number=brownie.web3.eth.block_number,
+                block_number=BlockNumber(ape.chain.blocks[-1].number),
             ),
         ]
     )
@@ -256,7 +258,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
                 target_token_address=filler,
                 filler=filler,
                 amount=amount,
-                block_number=brownie.web3.eth.block_number,
+                block_number=BlockNumber(ape.chain.blocks[-1].number),
             ),
         ]
     )
@@ -275,7 +277,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
                 target_token_address=token,
                 filler=filler,
                 amount=amount,
-                block_number=brownie.web3.eth.block_number,
+                block_number=BlockNumber(ape.chain.blocks[-1].number),
             ),
         ]
     )
@@ -305,10 +307,10 @@ def test_unsafe_fill_time(
     agent.stop()
 
 
-def test_request_for_wrong_target_chain(request_manager, deployer, token, agent, direction):
+def test_request_for_wrong_target_chain(request_manager, token, agent, direction):
     (requester,) = alloc_accounts(1)
 
-    request_manager.setFinalityPeriod(999, 1_000_000, {"from": deployer.address})
+    request_manager.setFinalityPeriod(999, 1_000_000)
     test_request_id = make_request(
         request_manager,
         token,

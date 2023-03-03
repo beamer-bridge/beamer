@@ -1,6 +1,7 @@
 import pytest
-from brownie import ZERO_ADDRESS
+from eth_utils import to_checksum_address
 from hexbytes import HexBytes
+from web3.constants import ADDRESS_ZERO
 from web3.types import Wei
 
 from beamer.agent.events import ClaimMade, RequestCreated, RequestFilled
@@ -112,7 +113,7 @@ def transfer_claim(agent_address):
         claimer=agent_address,
         claimer_stake=CLAIMER_STAKE,
         chain_id=TARGET_CHAIN_ID,
-        last_challenger=ZERO_ADDRESS,
+        last_challenger=to_checksum_address(ADDRESS_ZERO),
         challenger_stake_total=Wei(0),
         termination=Termination(100),
         block_number=BLOCK_NUMBER,

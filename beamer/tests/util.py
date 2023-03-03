@@ -3,24 +3,27 @@ import threading
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, List, Optional
+from typing import Any, List, Optional, cast
 
-import brownie
+import ape
 import requests
 import web3
+from ape.api.providers import Web3Provider
+from ape.contracts import ContractInstance
 from eth_abi.packed import encode_packed
 from eth_utils import keccak, to_canonical_address
+from web3.types import FilterParams
 
 from beamer.agent.typing import RequestId
 from beamer.tests.constants import RM_T_FIELD_TRANSFER_LIMIT
 
+FUNDER = ape.accounts.test_accounts[0]
+
 
 def _alloc_account():
-    address = brownie.web3.geth.personal.new_account("")
-    account = brownie.accounts.at(address)
-    assert brownie.web3.geth.personal.unlock_account(address, "", 0)
+    account = ape.accounts.test_accounts.generate_test_account()
     # transfer 1 ETH to the newly created account
-    brownie.accounts[0].transfer(account, brownie.web3.toWei(1, "ether"))
+    FUNDER.transfer(account, ape.convert("1 ether", int))
     return account
 
 
@@ -104,10 +107,13 @@ class HTTPProxy(HTTPServer):
 
 
 class EventCollector:
-    def __init__(self, contract: web3.contract.Contract, event: str) -> None:
+    def __init__(self, contract: ContractInstance, event: str) -> None:
         self._address = contract.address
-        contract = brownie.web3.eth.contract(address=contract.address, abi=contract.abi)
-        self._event = getattr(contract.events, event)()
+        self._provider = cast(Web3Provider, ape.chain.provider)
+        w3_contract = self._provider.web3.eth.contract(
+            address=contract.address, abi=[abi.dict() for abi in contract.contract_type.abi]
+        )
+        self._event = getattr(w3_contract.events, event)()
         self._events: List[Any] = []
         self._from_block = 0
 
@@ -124,11 +130,12 @@ class EventCollector:
         return self._events.pop(0).args
 
     def _fetch_events(self) -> None:
-        to_block = brownie.chain.height
+        to_block = ape.chain.blocks.height
         if to_block < self._from_block:
             return
         params = dict(fromBlock=self._from_block, toBlock=to_block, address=self._address)
-        logs = brownie.web3.eth.get_logs(params)
+        filter_params = cast(FilterParams, params)
+        logs = self._provider.web3.eth.get_logs(filter_params)
 
         for log in logs:
             try:
@@ -144,16 +151,16 @@ def earnings(w3, account):
     balance_before = w3.eth.get_balance(address)
 
     block_before = w3.eth.block_number
+    provider = cast(Web3Provider, ape.chain.provider)
 
     def calculate_gas_spending():
         total = 0
-        for block_number in range(block_before + 1, brownie.chain.height + 1):
-            block = brownie.web3.eth.get_block(block_number)
-            for tx_hash in block.transactions:
-                tx = brownie.web3.eth.get_transaction(tx_hash)
-                tx_receipt = brownie.web3.eth.get_transaction_receipt(tx_hash)
-                if tx["from"] == address:
-                    total += tx.gasPrice * tx_receipt.gasUsed
+        for block_number in range(block_before + 1, ape.chain.blocks.height + 1):
+            block = ape.chain.blocks[block_number]
+            for tx in block.transactions:
+                receipt = provider.get_receipt(tx.txn_hash.hex())
+                if tx.sender == address:
+                    total += receipt.total_fees_paid
 
         return total
 
@@ -205,24 +212,24 @@ def make_request(
         fees_context = temp_fee_data(request_manager, token, *fee_data)
 
     with fees_context:
-        total_token_amount = amount + request_manager.totalFee(token.address, amount)
-        if token.balanceOf(requester) < total_token_amount:
-            token.mint(requester, total_token_amount, {"from": requester})
+        with ape.accounts.test_accounts.use_sender(requester):
+            total_token_amount = amount + request_manager.totalFee(token.address, amount)
+            if token.balanceOf(requester) < total_token_amount:
+                token.mint(requester, total_token_amount)
 
-        token.approve(request_manager.address, total_token_amount, {"from": requester})
+            token.approve(request_manager.address, total_token_amount)
 
-        if target_chain_id is None:
-            target_chain_id = brownie.chain.id
+            if target_chain_id is None:
+                target_chain_id = ape.chain.chain_id
 
-        request_tx = request_manager.createRequest(
-            target_chain_id,
-            token.address,
-            token.address,
-            target_address,
-            amount,
-            validity_period,
-            {"from": requester},
-        )
+            request_tx = request_manager.createRequest(
+                target_chain_id,
+                token.address,
+                token.address,
+                target_address,
+                amount,
+                validity_period,
+            )
     return RequestId(request_tx.return_value)
 
 
