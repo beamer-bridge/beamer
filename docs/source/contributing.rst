@@ -41,7 +41,7 @@ Then enter the virtual environment::
 
 Compile the contracts::
 
-    brownie compile
+    ape compile
 
 Build the relayers::
 
@@ -160,9 +160,9 @@ Measuring gas costs
 
 To measure gas costs, simply invoke the following command::
 
-   brownie test -G beamer/tests/contracts
+   ape test --gas beamer/tests/contracts
 
-A difference between two brownie gas profiles can be shown by using the
+A difference between two ape gas profiles can be shown by using the
 following command::
 
    python scripts/diff_gas_profiles.py <path-to-profile1> <path-to-profile2>
