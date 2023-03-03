@@ -489,8 +489,8 @@ Request filled by: `{fill.filler}` | `{fill.tx_hash.hex()}`
 Claimer: `{last_claim.claimer}`
 Last_challenger: `{last_claim.last_challenger}`
 Fill_id: `{fill.fill_id.hex()}`
-Claimer_stake: `{last_claim.claimer_stake}` | `{Web3.fromWei(last_claim.claimer_stake, 'ether')}` ethers
-Challenger_stake_total: `{last_claim.challenger_stake_total}` | `{Web3.fromWei(last_claim.challenger_stake_total, 'ether')}` ETH
+Claimer_stake: `{last_claim.claimer_stake}` | `{Web3.from_wei(last_claim.claimer_stake, 'ether')}` ethers
+Challenger_stake_total: `{last_claim.challenger_stake_total}` | `{Web3.from_wei(last_claim.challenger_stake_total, 'ether')}` ETH
 Block: `{last_claim.block_number}`
 Terminates: `{last_claim.termination}` | `{datetime.fromtimestamp(last_claim.termination).strftime("%d.%m.%Y %H:%M:%S")}`
 TX_Hash `{last_claim.tx_hash.hex()}`
