@@ -3,7 +3,7 @@ import threading
 import time
 from http import HTTPStatus
 
-import brownie
+import ape
 import pytest
 import structlog.testing
 
@@ -56,7 +56,7 @@ def _post_with_rate_limit(rate_limiter, handler, url, post_body):
 
 
 def test_rate_limiting_rpc(config, _adjust_poll_period):
-    brownie.chain.mine(200)
+    ape.chain.mine(200)
 
     post_rate_limited = functools.partial(_post_with_rate_limit, _RateLimiter(2))
     proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], post_rate_limited)

@@ -86,9 +86,9 @@ def test_fill_request_transaction_status():
 
     context.requests.add(request.id, request)
     assert request.pending
-    w3 = context.fill_manager.web3
+    w3 = context.fill_manager.w3
     token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
-    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000  # type: ignore
+    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
     func = context.fill_manager.functions.fillRequest(
         sourceChainId=request.source_chain_id,
         targetTokenAddress=request.target_token_address,
@@ -96,11 +96,9 @@ def test_fill_request_transaction_status():
         amount=request.amount,
         nonce=request.nonce,
     )
-    func.transact.return_value = 1  # type: ignore
-    func_eth = func.web3.eth
-    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(  # type: ignore
-        1, HexBytes("0x1")
-    )
+    func.transact.return_value = 1
+    func_eth = func.w3.eth
+    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(1, HexBytes("0x1"))
     fill_request(request, context)
     assert request.filled
 
@@ -108,9 +106,9 @@ def test_fill_request_transaction_status():
     request = make_request(TIMESTAMP + 2)
 
     context.requests.add(request.id, request)
-    w3 = context.fill_manager.web3
+    w3 = context.fill_manager.w3
     token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
-    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000  # type: ignore
+    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
     func = context.fill_manager.functions.fillRequest(
         sourceChainId=request.source_chain_id,
         targetTokenAddress=request.target_token_address,
@@ -119,11 +117,9 @@ def test_fill_request_transaction_status():
         nonce=request.nonce,
     )
 
-    func.transact.return_value = 2  # type: ignore
-    func_eth = func.web3.eth
-    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(  # type: ignore
-        0, HexBytes("0x0")
-    )
+    func.transact.return_value = 2
+    func_eth = func.w3.eth
+    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(0, HexBytes("0x0"))
     fill_request(request, context)
     assert request.pending
 

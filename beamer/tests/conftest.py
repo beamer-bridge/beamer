@@ -1,44 +1,37 @@
 # flake8: noqa: E402
 from dataclasses import dataclass
 
-import brownie
+import ape
 import eth_account
 import pytest
-from brownie import (
-    FillManager,
-    RequestManager,
-    Resolver,
-    TestL1Messenger,
-    TestL2Messenger,
-    accounts,
-)
 
 import beamer.agent.chain
 import beamer.agent.metrics
 
 beamer.agent.chain.POLL_PERIOD = 1  # Change period for tests
+from typing import cast
 
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
-from beamer.agent.contracts import ContractInfo
-from beamer.agent.typing import URL, BlockNumber, TransferDirection
+from beamer.agent.contracts import ContractInfo, DeploymentInfo
+from beamer.agent.typing import URL, BlockNumber, ChainId, TransferDirection
 from beamer.agent.util import TokenChecker
 from beamer.tests.util import alloc_accounts
 
 
 @dataclass(frozen=True)
 class Contracts:
-    resolver: Resolver
-    fill_manager: FillManager
-    request_manager: RequestManager
-    l1_messenger: TestL1Messenger
-    l2_messenger: TestL2Messenger
+    resolver: ape.project.Resolver
+    fill_manager: ape.project.FillManager
+    request_manager: ape.project.RequestManager
+    l1_messenger: ape.project.TestL1Messenger
+    l2_messenger: ape.project.TestL2Messenger
 
 
-# brownie local account, to be used for fulfilling requests.
+# ape local account, to be used for fulfilling requests.
 # The private key here corresponds to the 10th account ganache creates on
 # startup.
-_LOCAL_ACCOUNT = accounts.add("0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa")
+_LOCAL_ACCOUNT = ape.accounts.test_accounts[-1]
 
 
 @pytest.fixture
@@ -46,12 +39,19 @@ def deployer():
     return alloc_accounts(1)[0]
 
 
-# Make sure that the chain is reset after each test since brownie
+@pytest.fixture(autouse=True)
+def _add_default_sender(deployer):
+    with ape.accounts.use_sender(deployer):
+        yield
+
+
+# Make sure that the chain is reset after each test since ape
 # launches ganache only once for the entire test suite run.
 @pytest.fixture(autouse=True)
 def _reset_chain():
+    snap_id = ape.chain.snapshot()
     yield
-    brownie.chain.reset()
+    ape.chain.restore(snap_id)
 
 
 @pytest.fixture
@@ -96,19 +96,19 @@ def contracts(
     challenge_period_extension,
 ):
     # L1 contracts
-    l1_messenger = deployer.deploy(TestL1Messenger)
+    l1_messenger = deployer.deploy(ape.project.TestL1Messenger)
     l1_messenger.setForwardState(forward_state)
-    resolver = deployer.deploy(Resolver)
+    resolver = deployer.deploy(ape.project.Resolver)
 
     # L2b contracts
-    l2_messenger = deployer.deploy(TestL2Messenger)
+    l2_messenger = deployer.deploy(ape.project.TestL2Messenger)
     l2_messenger.setForwardState(forward_state)
-    fill_manager = deployer.deploy(FillManager, l2_messenger.address)
+    fill_manager = deployer.deploy(ape.project.FillManager, l2_messenger.address)
     fill_manager.setResolver(resolver.address)
 
     # L2a contracts
     request_manager = deployer.deploy(
-        RequestManager,
+        ape.project.RequestManager,
         claim_stake,
         claim_request_extension,
         claim_period,
@@ -123,7 +123,7 @@ def contracts(
     #
     # fill_manager -> L2 messenger -> L1 resolver ->
     # L1 messenger -> request_manager
-    l1_chain_id = l2_chain_id = brownie.chain.id
+    l1_chain_id = l2_chain_id = ape.chain.chain_id
 
     l2_messenger.addCaller(fill_manager.address)
     resolver.addCaller(l2_chain_id, l2_messenger.address, l1_messenger.address)
@@ -132,7 +132,7 @@ def contracts(
     resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
 
     request_manager.setFinalityPeriod(l2_chain_id, finality_period)
-    request_manager.updateToken(token.address, 10_000e18, 5e18, 1_000, 0)
+    request_manager.updateToken(token.address, int(10_000e18), int(5e18), 1_000, 0)
 
     return Contracts(
         l1_messenger=l1_messenger,
@@ -151,8 +151,8 @@ def allowance():
 @pytest.fixture()
 def token_list(token, allowance):
     if allowance is None:
-        return [[[brownie.web3.chain_id, token.address]]]
-    return [[[brownie.web3.chain_id, token.address, allowance]]]
+        return [[[ape.chain.chain_id, token.address]]]
+    return [[[ape.chain.chain_id, token.address, allowance]]]
 
 
 @pytest.fixture
@@ -161,17 +161,19 @@ def config(request_manager, fill_manager, token, token_list):
         RequestManager=ContractInfo(
             deployment_block=BlockNumber(1),
             address=request_manager.address,
-            abi=request_manager.abi,
+            abi=[abi.dict() for abi in request_manager.contract_type.abi],
         ),
         FillManager=ContractInfo(
-            deployment_block=BlockNumber(1), address=fill_manager.address, abi=fill_manager.abi
+            deployment_block=BlockNumber(1),
+            address=fill_manager.address,
+            abi=[abi.dict() for abi in fill_manager.contract_type.abi],
         ),
     )
-    deployment_info = {brownie.chain.id: contracts_info}
+    deployment_info = cast(DeploymentInfo, {ape.chain.chain_id: contracts_info})
     account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
     token.mint(account.address, 300)
-    url = URL(brownie.web3.provider.endpoint_uri)
-    rpc_urls = {"l1": url, "l2a": url, "l2b": url}
+    url = URL(ape.config.provider.uri)
+    rpc_urls = {"l1": URL(url), "l2a": URL(url), "l2b": URL(url)}
     config = Config(
         rpc_urls=rpc_urls,
         deployment_info=deployment_info,
@@ -195,8 +197,8 @@ def agent(config):  # pylint:disable=unused-argument
 
 
 @pytest.fixture
-def token(deployer, MintableToken):
-    return deployer.deploy(MintableToken, int(1e18))
+def token(deployer):
+    return deployer.deploy(ape.project.MintableToken, int(1e18))
 
 
 @pytest.fixture
@@ -221,4 +223,4 @@ def fill_manager(contracts):
 
 @pytest.fixture
 def direction():
-    return TransferDirection(brownie.chain.id, brownie.chain.id)
+    return TransferDirection(ChainId(ape.chain.chain_id), ChainId(ape.chain.chain_id))

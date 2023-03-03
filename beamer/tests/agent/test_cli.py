@@ -3,7 +3,7 @@ import pathlib
 import shutil
 import signal
 
-import brownie
+import ape
 import eth_account
 import pytest
 from click.testing import CliRunner
@@ -17,7 +17,7 @@ def _generate_deployment_dir(output_dir, root, contracts):
     data = {
         "beamer_commit": "0" * 40,
         "L2": {
-            str(brownie.chain.id): {
+            str(ape.chain.chain_id): {
                 "RequestManager": {
                     "address": contracts.request_manager.address,
                     "deployment_block": 1,
@@ -29,7 +29,7 @@ def _generate_deployment_dir(output_dir, root, contracts):
     with output_dir.joinpath("deployment.json").open("wt") as f:
         json.dump(data, f)
 
-    src = root / "contracts/build/contracts"
+    src = root / "contracts/.build"
     shutil.copy(src / "RequestManager.json", output_dir)
     shutil.copy(src / "FillManager.json", output_dir)
 

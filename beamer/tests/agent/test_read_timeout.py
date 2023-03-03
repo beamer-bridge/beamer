@@ -2,7 +2,7 @@ import functools
 import json
 import time
 
-import brownie
+import ape
 
 from beamer.agent.agent import Agent
 from beamer.tests.util import HTTPProxy, alloc_accounts, make_request
@@ -31,7 +31,7 @@ def _post_with_delay(method, delay, handler, url, post_body):
 
 
 def test_read_timeout(config):
-    brownie.chain.mine(200)
+    ape.chain.mine(200)
 
     delay_eth_get_logs = functools.partial(_post_with_delay, "eth_getLogs", _get_delay)
 

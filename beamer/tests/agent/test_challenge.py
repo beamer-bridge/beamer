@@ -1,7 +1,7 @@
 import os
 import time
 
-import brownie
+import ape
 import pytest
 from eth_utils import to_checksum_address
 
@@ -41,9 +41,9 @@ def test_challenge_1(request_manager, token, config):
     agent = beamer.agent.agent.Agent(config)
     agent.start()
 
-    w3 = brownie.web3
+    w3 = ape.chain.provider.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
-        token.approve(request_manager, 1, {"from": agent.address})
+        token.approve(request_manager, 1, sender=agent.address)
         make_request(request_manager, token, requester, target, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
@@ -54,14 +54,12 @@ def test_challenge_1(request_manager, token, config):
         agent.stop()
         agent.wait()
 
-        request_manager.challengeClaim(
-            claim.claimId, {"from": charlie, "value": claim.claimerStake + 1}
-        )
+        request_manager.challengeClaim(claim.claimId, sender=charlie, value=claim.claimerStake + 1)
 
         claim = collector.next_event()
         assert claim is not None
-        brownie.chain.mine(timestamp=claim.termination)
-        request_manager.withdraw(claim.claimId, {"from": charlie})
+        ape.chain.mine(timestamp=claim.termination)
+        request_manager.withdraw(claim.claimId, sender=charlie)
 
     assert charlie_earnings() == claim.claimerStake
     assert agent_earnings() == -claim.claimerStake
@@ -82,9 +80,9 @@ def test_challenge_2(request_manager, token, config):
     agent = beamer.agent.agent.Agent(config)
     agent.start()
 
-    w3 = brownie.web3
+    w3 = ape.chain.provider.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
-        token.approve(request_manager, 1, {"from": agent.address})
+        token.approve(request_manager, 1, sender=agent.address)
         make_request(request_manager, token, requester, target, 1, fee_data="standard")
 
         collector = EventCollector(request_manager, "ClaimMade")
@@ -92,9 +90,7 @@ def test_challenge_2(request_manager, token, config):
         claim = collector.next_event()
         assert claim is not None
 
-        request_manager.challengeClaim(
-            claim.claimId, {"from": charlie, "value": claim.claimerStake + 1}
-        )
+        request_manager.challengeClaim(claim.claimId, sender=charlie, value=claim.claimerStake + 1)
 
         # Charlie's claim.
         claim = collector.next_event()
@@ -106,8 +102,8 @@ def test_challenge_2(request_manager, token, config):
         assert claim is not None
         assert claim.claimerStake > claim.challengerStakeTotal
 
-        brownie.chain.mine(timestamp=claim.termination)
-        request_manager.withdraw(claim.claimId, {"from": agent.address})
+        ape.chain.mine(timestamp=claim.termination)
+        request_manager.withdraw(claim.claimId, sender=agent.address)
 
         agent.stop()
         agent.wait()
@@ -129,10 +125,10 @@ def test_challenge_2(request_manager, token, config):
 # claim and challenging it.
 def test_challenge_3(request_manager, fill_manager, token, config):
     requester, target = alloc_accounts(2)
-    (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
+    (charlie,) = alloc_whitelisted_accounts(1, [request_manager])
     agent = beamer.agent.agent.Agent(config)
 
-    w3 = brownie.web3
+    w3 = ape.chain.provider.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
@@ -141,7 +137,7 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         )
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, sender=charlie, value=stake)
 
         collector = EventCollector(request_manager, "ClaimMade")
         collector.next_event()
@@ -159,8 +155,8 @@ def test_challenge_3(request_manager, fill_manager, token, config):
         # Ensure that Bob did not fill the request.
         assert EventCollector(fill_manager, "RequestFilled").next_event(wait_time=2) is None
 
-        brownie.chain.mine(timestamp=claim.termination)
-        request_manager.withdraw(claim.claimId, {"from": agent.address})
+        ape.chain.mine(timestamp=claim.termination)
+        request_manager.withdraw(claim.claimId, sender=agent.address)
 
         agent.stop()
         agent.wait()
@@ -183,10 +179,10 @@ def test_challenge_3(request_manager, fill_manager, token, config):
 # claim and challenging it.
 def test_challenge_4(request_manager, fill_manager, token, config):
     requester, target = alloc_accounts(2)
-    (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
+    (charlie,) = alloc_whitelisted_accounts(1, [request_manager])
     agent = beamer.agent.agent.Agent(config)
 
-    w3 = brownie.web3
+    w3 = ape.chain.provider.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, charlie) as charlie_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
@@ -195,7 +191,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         )
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, sender=charlie, value=stake)
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
@@ -217,15 +213,15 @@ def test_challenge_4(request_manager, fill_manager, token, config):
         agent.wait()
 
         request_manager.challengeClaim(
-            claim.claimId, {"from": charlie, "value": claim.challengerStakeTotal + 1}
+            claim.claimId, sender=charlie, value=claim.challengerStakeTotal + 1
         )
 
         claim = collector.next_event()
         assert claim is not None
         assert claim.claimerStake > claim.challengerStakeTotal and claim.claimer == charlie
 
-        brownie.chain.mine(timestamp=claim.termination)
-        request_manager.withdraw(claim.claimId, {"from": charlie})
+        ape.chain.mine(timestamp=claim.termination)
+        request_manager.withdraw(claim.claimId, sender=charlie)
 
     assert agent_earnings() == -claim.challengerStakeTotal
     assert charlie_earnings() == claim.challengerStakeTotal
@@ -248,7 +244,7 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 @pytest.mark.parametrize("honest_claim", [True, False])
 def test_challenge_5(request_manager, fill_manager, token, config, honest_claim):
     requester, target = alloc_accounts(2)
-    (charlie,) = alloc_whitelisted_accounts(1, {request_manager, fill_manager})
+    (charlie,) = alloc_whitelisted_accounts(1, [request_manager, fill_manager])
     config.fill_wait_time = 5
 
     agent = beamer.agent.agent.Agent(config)
@@ -263,23 +259,24 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     # ideally we should get it from the event which is dropped by make_request()
     nonce = 1
     fill_id = FILL_ID
-    if honest_claim:
-        # Fill by Charlie
-        token.mint(charlie, amount, {"from": charlie})
-        token.approve(fill_manager, amount, {"from": charlie})
-        fill_transaction = fill_manager.fillRequest(
-            brownie.chain.id,
-            token,
-            target,
-            amount,
-            nonce,
-            {"from": charlie},
-        )
-        fill_id = fill_transaction.return_value
+    with ape.accounts.test_accounts.use_sender(charlie):
 
-    # claim by Charlie
-    stake = request_manager.claimStake()
-    request_manager.claimRequest(request_id, fill_id, {"from": charlie, "value": stake})
+        if honest_claim:
+            # Fill by Charlie
+            token.mint(charlie, amount)
+            token.approve(fill_manager, amount)
+            fill_transaction = fill_manager.fillRequest(
+                ape.chain.chain_id,
+                token,
+                target,
+                amount,
+                nonce,
+            )
+            fill_id = fill_transaction.return_value
+
+        # claim by Charlie
+        stake = request_manager.claimStake()
+        request_manager.claimRequest(request_id, fill_id, value=stake)
 
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()
@@ -318,7 +315,7 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
 # will attempt to withdraw the stakes in place of Dave.
 def test_withdraw_not_participant(request_manager, token, config):
     requester, dave, target = alloc_accounts(3)
-    (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
+    (charlie,) = alloc_whitelisted_accounts(1, [request_manager])
     agent = beamer.agent.agent.Agent(config)
 
     # Submit a request that Bob cannot fill.
@@ -328,14 +325,14 @@ def test_withdraw_not_participant(request_manager, token, config):
     )
 
     stake = request_manager.claimStake()
-    request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
+    request_manager.claimRequest(request_id, FILL_ID, sender=charlie, value=stake)
 
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()
     assert claim is not None
 
-    request_manager.challengeClaim(claim.claimId, {"from": dave, "value": stake + 1})
-    brownie.chain.mine(timestamp=claim.termination)
+    request_manager.challengeClaim(claim.claimId, sender=dave, value=stake + 1)
+    ape.chain.mine(timestamp=claim.termination)
 
     agent.start()
 
@@ -361,26 +358,24 @@ def test_withdraw_not_participant(request_manager, token, config):
 # Note: testing that the agent can handle multiparty bidding
 def test_challenge_7(request_manager, fill_manager, token, config):
     requester, dave, target = alloc_accounts(3)
-    (charlie,) = alloc_whitelisted_accounts(1, {request_manager})
+    (charlie,) = alloc_whitelisted_accounts(1, [request_manager])
     agent = beamer.agent.agent.Agent(config)
 
-    w3 = brownie.web3
+    w3 = ape.chain.provider.web3
     with earnings(w3, agent) as agent_earnings, earnings(w3, dave) as dave_earnings:
         # Submit a request that Bob cannot fill.
         amount = token.balanceOf(agent.address) + 1
         request_id = make_request(request_manager, token, requester, target, amount)
 
         stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, FILL_ID, {"from": charlie, "value": stake})
+        request_manager.claimRequest(request_id, FILL_ID, sender=charlie, value=stake)
 
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
         assert claim is not None
 
         # Dave challenges
-        request_manager.challengeClaim(
-            claim.claimId, {"from": dave, "value": claim.claimerStake + 1}
-        )
+        request_manager.challengeClaim(claim.claimId, sender=dave, value=claim.claimerStake + 1)
 
         claim = collector.next_event()
         assert claim is not None
@@ -390,7 +385,7 @@ def test_challenge_7(request_manager, fill_manager, token, config):
         # Ensure that Bob did not fill the request.
         assert EventCollector(fill_manager, "RequestFilled").next_event(wait_time=2) is None
 
-        request_manager.challengeClaim(claim.claimId, {"from": charlie, "value": stake + 1})
+        request_manager.challengeClaim(claim.claimId, sender=charlie, value=stake + 1)
 
         claim = collector.next_event()
         assert claim is not None
@@ -404,10 +399,10 @@ def test_challenge_7(request_manager, fill_manager, token, config):
             and claim.lastChallenger == agent.address
         )
 
-        brownie.chain.mine(timestamp=claim.termination)
+        ape.chain.mine(timestamp=claim.termination)
 
-        request_manager.withdraw(claim.claimId, {"from": agent.address})
-        request_manager.withdraw(claim.claimId, {"from": dave})
+        request_manager.withdraw(claim.claimId, sender=agent.address)
+        request_manager.withdraw(claim.claimId, sender=dave)
 
         agent.stop()
         agent.wait()
