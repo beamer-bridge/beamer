@@ -16,3 +16,5 @@ relayer/relayer-*-x64
 addresses.json
 
 node_modules
+contracts/contracts/.cache
+contracts/.build/
