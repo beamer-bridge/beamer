@@ -26,9 +26,14 @@ class DeployedContract(Contract):
 def load_contracts_info(contracts_path: Path) -> dict[str, tuple]:
     contracts: dict[str, tuple] = {}
     for path in contracts_path.glob("*.json"):
+        if path.name == "__local__.json":
+            continue
         with path.open() as fp:
             info = json.load(fp)
-        contracts[info["contractName"]] = (info["abi"], info["bytecode"])
+        contracts[info["contractName"]] = (
+            info["abi"],
+            info["runtimeBytecode"].get("bytecode", ""),
+        )
     return contracts
 
 
@@ -37,7 +42,7 @@ def get_commit_id() -> str:
     return output.decode("utf-8").strip()
 
 
-CONTRACTS_PATH = Path("contracts/build/contracts")
+CONTRACTS_PATH = Path("contracts/.build")
 CONTRACTS: dict[str, tuple] = load_contracts_info(CONTRACTS_PATH)
 
 
@@ -66,7 +71,7 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
 
     data = CONTRACTS[name]
     print(f"Deploying {name}")
-    ContractFactory = web3.eth.contract(abi=data[0], bytecode=data[1])
+    ContractFactory = cast(Contract, web3.eth.contract(abi=data[0], bytecode=data[1]))
 
     receipt = transact(ContractFactory.constructor(*args), timeout=600)
 
@@ -98,7 +103,7 @@ def deploy_beamer(
         token = deploy_contract(web3, ("MintableToken", int(1e18)))
         deployed_contracts.append(token)
 
-    l1_messenger = deploy_contract(resolver.web3, l2_config["l1_messenger"])
+    l1_messenger = deploy_contract(resolver.w3, l2_config["l1_messenger"])
     l2_messenger = deploy_contract(web3, l2_config["l2_messenger"])
 
     request_manager_arguments = l2_config["request_manager_arguments"]
@@ -153,7 +158,7 @@ def deploy_beamer(
     transact(l1_messenger.functions.addCaller(resolver.address), timeout=600)
     transact(
         request_manager.functions.addCaller(
-            resolver.web3.eth.chain_id,
+            resolver.w3.eth.chain_id,
             l1_messenger.address,
             l2_messenger.address,
         )
