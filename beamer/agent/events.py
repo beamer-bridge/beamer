@@ -231,9 +231,7 @@ class EventFetcher:
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
-            assert (
-                self._chain_id == contract.web3.eth.chain_id
-            ), f"Chain id mismatch for {contract}"
+            assert self._chain_id == contract.w3.eth.chain_id, f"Chain id mismatch for {contract}"
 
     @property
     def synced_block(self) -> BlockNumber:
