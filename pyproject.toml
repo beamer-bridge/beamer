@@ -11,7 +11,7 @@ documentation = "https://docs.beamerbridge.com/"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-web3 = "^5.24.0"
+web3 = "^6.0.0b7"
 click = "^8.0.3"
 structlog = "^22.3.0"
 python-statemachine = "^0.9.0"
@@ -22,6 +22,9 @@ atomics = "^1.0.2"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
+eth-ape = "^0.6.4"
+ape-solidity = "^0.6.0"
+ape-ganache = "^0.6.1"
 pytest = "^6.2.5"
 black = "^22.1"
 isort = "^5.12.0"
@@ -29,8 +32,7 @@ flake8 = "^6.0.0"
 flake8-tuple = "^0.4.1"
 flake8-bugbear = "^23.2.13"
 mypy = "^0.991"
-eth-account = "^0.5.6"
-eth-brownie = "^1.19.0"
+eth-account = "^0.7.0"
 pylint = "^2.16.2"
 types-pkg-resources = "^0.1.3"
 types-requests = "^2.28.11"
@@ -69,7 +71,7 @@ multi_line_output = 3
 ignore_whitespace = true
 
 [[tool.mypy.overrides]]
-module = ["brownie.*", "twisted.*"]
+module = ["ape.*", "twisted.*"]
 ignore_missing_imports = true
 
 [tool.mypy]
@@ -85,6 +87,7 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = ["beamer.tests.*"]
 disallow_untyped_defs = false
+disable_error_code = "attr-defined,name-defined"
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore:Development network has a block height of"
