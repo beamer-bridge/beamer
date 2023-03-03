@@ -1,0 +1,40 @@
+plugins:
+  - name: solidity
+  - name: ganache
+
+contracts_folder: contracts/contracts
+
+dependencies:
+  - github: OpenZeppelin/openzeppelin-contracts
+    name: OpenZeppelin
+    version: 4.8.0
+  - name: Interfaces
+    local: ./contracts
+    contracts_folder: ./interfaces
+
+default_ecosystem: ethereum
+
+solidity:
+  evm_version: london
+  version: 0.8.13
+  import_remapping:
+    - 'OpenZeppelin/openzeppelin-contracts@4.8.0/contracts=OpenZeppelin/4.8.0'
+    - 'interfaces=Interfaces'
+
+ganache:
+  server:
+    port: 8545
+  miner:
+    gas_price: 0
+  chain:
+    hardfork: istanbul
+
+test:
+  mnemonic: brownie
+  number_of_accounts: 10
+  hd_path: m/44'/60'/0'/0/{}
+
+ethereum:
+  local:
+    default_provider: ganache
+    default_transaction_type: 0
