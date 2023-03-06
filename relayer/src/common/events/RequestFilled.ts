@@ -1,18 +1,21 @@
 import type { Log } from "@ethersproject/providers";
 import type { BigNumber } from "ethers";
-import type { Result } from "ethers/lib/utils";
 import { Interface } from "ethers/lib/utils";
 
 import FillManagerABI from "../../assets/abi/FillManager.json";
 
-interface RequestFilledEventData extends Array<unknown> {
+interface Result extends ReadonlyArray<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+export interface RequestFilledEventData extends Result {
   requestId: string;
   fillId: string;
   sourceChainId: BigNumber;
   targetTokenAddress: string;
   filler: string;
   amount: BigNumber;
-  [key: string]: unknown;
 }
 
 export const isValidRequestFilledEventData = (data: Result): data is RequestFilledEventData => {

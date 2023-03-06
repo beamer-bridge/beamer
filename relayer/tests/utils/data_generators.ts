@@ -24,3 +24,25 @@ export function getRandomPrivateKey(): TransactionHash {
 export function getRandomUrl(subDomain: string): string {
   return getRandomString(ALPHABET_CHARACTERS, 8, `https://${subDomain}.`);
 }
+
+export function getRandomNumber(minimum = 1, maximum = 100): number {
+  return Math.floor(Math.random() * maximum + minimum);
+}
+
+export function getRandomEthereumAddress(): string {
+  return getRandomString(HEXADECIMAL_CHARACTERS, 32, "0x");
+}
+
+export function generateLog() {
+  return {
+    blockNumber: getRandomNumber(),
+    blockHash: getRandomTransactionHash(),
+    transactionIndex: getRandomNumber(),
+    removed: false,
+    address: getRandomEthereumAddress(),
+    data: getRandomString(),
+    topics: [],
+    transactionHash: getRandomTransactionHash(),
+    logIndex: getRandomNumber(),
+  };
+}
