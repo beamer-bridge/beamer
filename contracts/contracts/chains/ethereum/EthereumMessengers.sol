@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/access/Ownable.sol";
-
 import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
 import "../../Resolver.sol";
@@ -28,7 +26,7 @@ contract EthereumL1Messenger is IMessenger, RestrictedCalls {
 // In order to keep naming consistent between our rollup specific contracts
 // we are using `EthereumL2Messenger` here as a name even if this contract
 // is supposed to be deployed on L1.
-contract EthereumL2Messenger is IMessenger, Ownable, RestrictedCalls {
+contract EthereumL2Messenger is IMessenger, RestrictedCalls {
     enum MessageStatus {
         UNDEFINED,
         DEFINED,

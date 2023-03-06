@@ -5,7 +5,6 @@ import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IArb
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IBridge.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IInbox.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IOutbox.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/access/Ownable.sol";
 
 import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
@@ -80,7 +79,7 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
     /* solhint-enable avoid-tx-origin */
 }
 
-contract ArbitrumL2Messenger is IMessenger, Ownable, RestrictedCalls {
+contract ArbitrumL2Messenger is IMessenger, RestrictedCalls {
     function callAllowed(address caller, address courier)
         external
         view
