@@ -1,5 +1,10 @@
 import { createRelayer } from "@/map";
-import { ArbitrumRelayerService, BobaRelayerService, OptimismRelayerService } from "@/services";
+import {
+  ArbitrumRelayerService,
+  BobaRelayerService,
+  EthereumRelayerService,
+  OptimismRelayerService,
+} from "@/services";
 import type { BaseRelayerService } from "@/services/types";
 import { getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
 
@@ -44,6 +49,20 @@ describe("createRelayer", () => {
 
     expect(relayer instanceof OptimismRelayerService).toBe(true);
     expect(goerliRelayer instanceof OptimismRelayerService).toBe(true);
+  });
+
+  it("maps ethereum chain ids to EthereumRelayerService", () => {
+    const chainId = 1;
+    const goerliChainId = 5;
+    const localChainId = 1337;
+
+    const relayer = createRelayer(chainId, testArgs);
+    const goerliRelayer = createRelayer(goerliChainId, testArgs);
+    const localChainRelayer = createRelayer(localChainId, testArgs);
+
+    expect(relayer instanceof EthereumRelayerService).toBe(true);
+    expect(goerliRelayer instanceof EthereumRelayerService).toBe(true);
+    expect(localChainRelayer instanceof EthereumRelayerService).toBe(true);
   });
 
   it("throws for unknown chain ids", () => {
