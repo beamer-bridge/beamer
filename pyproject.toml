@@ -22,7 +22,7 @@ atomics = "^1.0.2"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
-eth-ape = "^0.6.4"
+eth-ape = "^0.6.5"
 ape-solidity = "^0.6.0"
 ape-ganache = "^0.6.1"
 pytest = "^6.2.5"
