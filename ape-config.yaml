@@ -1,6 +1,11 @@
 plugins:
   - name: solidity
   - name: ganache
+  - name: alchemy
+  - name: infura
+  - name: optimism
+  - name: arbitrum
+  - name: etherscan
 
 contracts_folder: contracts/contracts
 
