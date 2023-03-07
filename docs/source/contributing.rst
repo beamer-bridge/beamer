@@ -177,3 +177,18 @@ and `Graphviz <http://graphviz.org>`_ installed. Documentation can be built by r
    make docs
 
 and the resulting HTML will be available at ``docs/build/index.html``.
+
+
+Using live networks
+-------------------
+
+Depending on the networks you intend to use, some or all of these environment variables should be set:
+
+`WEB3_INFURA_API_KEY`
+`WEB3_ARBITRUM_MAINNET_ALCHEMY_PROJECT_ID`
+`WEB3_ARBITRUM_GOERLI_ALCHEMY_PROJECT_ID`
+`WEB3_OPTIMISM_MAINNET_ALCHEMY_PROJECT_ID`
+`WEB3_OPTIMISM_GOERLI_ALCHEMY_PROJECT_ID`
+
+After setting the variables, it should be possible to connect to a specific network by running  
+`ape console --network <ecosystem>:<network>:<provider>` (e.g. `arbitrum:goerli:alchemy`).
