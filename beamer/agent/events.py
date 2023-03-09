@@ -67,9 +67,11 @@ class TxEvent(Event):
 
 
 @dataclass(frozen=True)
-class FinalityPeriodUpdated(TxEvent, SourceChainEvent):
-    target_chain_id: ChainId
+class ChainUpdated(TxEvent, SourceChainEvent):
+    chain_id: ChainId
     finality_period: int
+    target_weight_p_p_m: int
+    transfer_cost: int
 
 
 @dataclass(frozen=True)
@@ -159,7 +161,7 @@ _EVENT_TYPES = dict(
     RequestResolved=RequestResolved,
     FillInvalidatedResolved=FillInvalidatedResolved,
     FillInvalidated=FillInvalidated,
-    FinalityPeriodUpdated=FinalityPeriodUpdated,
+    ChainUpdated=ChainUpdated,
 )
 
 
