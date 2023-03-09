@@ -15,6 +15,17 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
   let injectedMetamaskProvider;
 
   if (detectedProvider) {
+    // Monkey patch for the BitKeep wallet which uses a buggy window.ethereum API
+    // See this for more info: https://github.com/beamer-bridge/beamer/issues/1513
+    // May be removed if BitKeep fixes it on their side.
+    if (detectedProvider.request) {
+      const request = detectedProvider.request;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (detectedProvider.request as (request: any) => Promise<any>) = async (args) => {
+        return await request({ ...args, jsonrpc: '2.0' });
+      };
+    }
+
     if (detectedProvider.providers) {
       injectedMetamaskProvider = detectedProvider.providers.find(
         (provider) => provider.isMetaMask,
