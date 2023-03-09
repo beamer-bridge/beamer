@@ -2,11 +2,11 @@ import time
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-import requests.exceptions
 import structlog
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
 from hexbytes import HexBytes
+from requests.exceptions import HTTPError, ReadTimeout, RequestException
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract, get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
@@ -261,18 +261,24 @@ class EventFetcher:
 
         # Boba limits the range to 5000 blocks
         # 'ValueError: {'code': -32000, 'message': 'exceed maximum block range: 5000'}'
-        except (requests.exceptions.ReadTimeout, ValueError):
+        # Some RPC providers return HTTP 413 (Request Entity Too Large) when
+        # the range is too big.
+        except (ReadTimeout, ValueError, HTTPError) as exc:
+            if isinstance(exc, HTTPError) and exc.response.status_code != 413:
+                raise exc
+
             old = self._blocks_to_fetch
             self._blocks_to_fetch = max(EventFetcher._MIN_BLOCKS, old // 5)
             self._log.debug(
-                "Failed to get events in time, reducing number of blocks",
+                "Failed to get events, reducing number of blocks",
                 chain_id=self._chain_id,
                 old=old,
                 new=self._blocks_to_fetch,
+                exc=exc,
             )
             return None
 
-        except requests.exceptions.ConnectionError as exc:
+        except ConnectionError as exc:
             assert isinstance(self._web3.provider, HTTPProvider)
             url = self._web3.provider.endpoint_uri
             self._log.error("Connection error", url=url, exc=exc)
@@ -297,7 +303,7 @@ class EventFetcher:
         try:
             block_data = self._web3.eth.get_block("latest")
             block_number = BlockNumber(block_data["number"])
-        except requests.exceptions.RequestException:
+        except RequestException:
             return []
 
         if block_number < self._next_block_number:
@@ -309,7 +315,7 @@ class EventFetcher:
             to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
             try:
                 events = self._fetch_range(from_block, to_block)
-            except requests.exceptions.ConnectionError:
+            except ConnectionError:
                 break
             if events is not None:
                 result.extend(events)
@@ -319,7 +325,7 @@ class EventFetcher:
         try:
             # Block number needs to be decremented here, because it is already incremented above
             block_data = self._web3.eth.get_block(from_block - 1)
-        except requests.exceptions.RequestException:
+        except RequestException:
             return result
         else:
             result.append(
