@@ -150,18 +150,18 @@ files = [
 
 [[package]]
 name = "ape-alchemy"
-version = "0.6.0"
+version = "0.6.1"
 description = "ape-alchemy: Alchemy provider plugins"
 category = "dev"
 optional = false
 python-versions = ">=3.8,<3.11"
 files = [
-    {file = "ape-alchemy-0.6.0.tar.gz", hash = "sha256:035da7f05606a7ef62a03c82f4dad22f7248f8fa1526aa3914ab8305be7c806b"},
-    {file = "ape_alchemy-0.6.0-py3-none-any.whl", hash = "sha256:6c1abcbc351cfd1ed45f1efb778c462ba4e37d468754bc31c28f9374bef4b88b"},
+    {file = "ape-alchemy-0.6.1.tar.gz", hash = "sha256:aa43b6f5b76659c6ecbf5e4bf8c1e17d71ef592c3a0512372b8e7b7e402e97c0"},
+    {file = "ape_alchemy-0.6.1-py3-none-any.whl", hash = "sha256:ac0d9ff09758c717466664e2be2a9c45c33f9fc3e597a654799606faed22c618"},
 ]
 
 [package.dependencies]
-eth-ape = ">=0.6.0,<0.7"
+eth-ape = ">=0.6.5,<0.7"
 requests = "*"
 web3 = "*"
 
@@ -4484,4 +4484,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "78862363b1da0027cada7c0204696828df17e0c9070120c3fb8dd124e61af637"
+content-hash = "c972bb7e0a0a5221d22d12b6c8938d5df7ce0a104a43e7df7fd773cd61f9016b"
