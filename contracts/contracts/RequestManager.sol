@@ -36,8 +36,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint256 targetChainId;
         uint256 amount;
         uint32 validUntil;
-        uint96 lpFee;
-        uint96 protocolFee;
+        uint256 lpFee;
+        uint256 protocolFee;
         uint32 activeClaims;
         uint96 withdrawClaimId;
         address filler;
@@ -59,10 +59,16 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
     struct Token {
         uint256 transferLimit;
-        uint96 minLpFee;
+        uint256 ethInToken;
         uint32 lpFeePPM;
         uint32 protocolFeePPM;
-        uint96 collectedProtocolFees;
+        uint256 collectedProtocolFees;
+    }
+
+    struct Chain {
+        uint256 finalityPeriod;
+        uint256 transferCost;
+        uint256 targetWeightPPM;
     }
 
     // Events
@@ -119,17 +125,25 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address stakeRecipient
     );
 
-    event FinalityPeriodUpdated(uint256 targetChainId, uint256 finalityPeriod);
-
     /// Emitted when token object of a token address is updated.
     ///
     /// .. seealso:: :sol:func:`updateToken`
     event TokenUpdated(
-        address tokenAddress,
+        address indexed tokenAddress,
         uint256 transferLimit,
-        uint96 minLpFee,
+        uint256 ethInToken,
         uint32 lpFeePPM,
         uint32 protocolFeePPM
+    );
+
+    /// Emitted when chain object of a chain id is updated.
+    ///
+    /// .. seealso:: :sol:func:`updateChain`
+    event ChainUpdated(
+        uint256 indexed chainId,
+        uint256 finalityPeriod,
+        uint256 transferCost,
+        uint256 targetWeightPPM
     );
 
     /// Emitted when a request has been resolved via L1 resolution.
@@ -169,6 +183,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// period of the target chain. This is done to allow for L1 resolution.
     uint256 public immutable challengePeriodExtension;
 
+    /// A constant to calculate profit for liquidity providers.
+    uint256 public immutable lpMarginPPM;
+
     /// The minimum validity period of a request.
     uint256 public constant MIN_VALIDITY_PERIOD = 30 minutes;
 
@@ -185,9 +202,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// be incremented to get the next nonce
     uint96 public currentNonce;
 
-    /// Maps target rollup chain IDs to finality periods.
-    /// Finality periods are in seconds.
-    mapping(uint256 chainId => uint256 finalityPeriod) public finalityPeriods;
+    /// Maps target rollup chain IDs to chain information.
+    mapping(uint256 chainId => Chain) public chains;
 
     /// Maps request IDs to requests.
     mapping(bytes32 requestId => Request) public requests;
@@ -198,13 +214,35 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// Maps ERC20 token address to tokens
     mapping(address tokenAddress => Token) public tokens;
 
+    /// Compute the minimum liquidity provider fee that needs to be paid for a token transfer.
+    function minLpFee(
+        uint256 targetChainId,
+        address tokenAddress
+    ) public view returns (uint256) {
+        Token storage token = tokens[tokenAddress];
+        Chain storage sourceChain = chains[block.chainid];
+        Chain storage targetChain = chains[targetChainId];
+
+        // The shift by 30 decimals comes from a multiplication of two PPM divisions (1e6 each)
+        // and the 18 decimals division for ether
+        return
+            (((1_000_000 - sourceChain.targetWeightPPM) *
+                sourceChain.transferCost +
+                targetChain.targetWeightPPM *
+                targetChain.transferCost) *
+                (lpMarginPPM + 1_000_000) *
+                token.ethInToken) / 10 ** 30;
+    }
+
     /// Compute the liquidity provider fee that needs to be paid for a given transfer amount.
     function lpFee(
+        uint256 targetChainId,
         address tokenAddress,
         uint256 amount
     ) public view returns (uint256) {
         Token storage token = tokens[tokenAddress];
-        return Math.max(token.minLpFee, (amount * token.lpFeePPM) / 1_000_000);
+        uint256 minFee = minLpFee(targetChainId, tokenAddress);
+        return Math.max(minFee, (amount * token.lpFeePPM) / 1_000_000);
     }
 
     /// Compute the protocol fee that needs to be paid for a given transfer amount.
@@ -218,10 +256,13 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// Compute the total fee that needs to be paid for a given transfer amount.
     /// The total fee is the sum of the liquidity provider fee and the protocol fee.
     function totalFee(
+        uint256 targetChainId,
         address tokenAddress,
         uint256 amount
     ) public view returns (uint256) {
-        return lpFee(tokenAddress, amount) + protocolFee(tokenAddress, amount);
+        return
+            lpFee(targetChainId, tokenAddress, amount) +
+            protocolFee(tokenAddress, amount);
     }
 
     // Modifiers
@@ -247,16 +288,19 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param _claimRequestExtension Extension to claim a request after validity period ends.
     /// @param _claimPeriod Claim period, in seconds.
     /// @param _challengePeriodExtension Challenge period extension, in seconds.
+    /// @param _lpMarginPPM Liquidity provider profit margin.
     constructor(
         uint96 _claimStake,
         uint256 _claimRequestExtension,
         uint256 _claimPeriod,
-        uint256 _challengePeriodExtension
+        uint256 _challengePeriodExtension,
+        uint256 _lpMarginPPM
     ) {
         claimStake = _claimStake;
         claimRequestExtension = _claimRequestExtension;
         claimPeriod = _claimPeriod;
         challengePeriodExtension = _challengePeriodExtension;
+        lpMarginPPM = _lpMarginPPM;
     }
 
     /// Create a new transfer request.
@@ -280,7 +324,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint256 validityPeriod
     ) external whenNotPaused returns (bytes32) {
         require(
-            finalityPeriods[targetChainId] != 0,
+            chains[targetChainId].finalityPeriod != 0,
             "Target rollup not supported"
         );
         require(
@@ -296,7 +340,11 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             "Amount exceeds transfer limit"
         );
 
-        uint256 lpFeeTokenAmount = lpFee(sourceTokenAddress, amount);
+        uint256 lpFeeTokenAmount = lpFee(
+            targetChainId,
+            sourceTokenAddress,
+            amount
+        );
         uint256 protocolFeeTokenAmount = protocolFee(
             sourceTokenAddress,
             amount
@@ -326,8 +374,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         newRequest.targetChainId = targetChainId;
         newRequest.amount = amount;
         newRequest.validUntil = uint32(block.timestamp + validityPeriod);
-        newRequest.lpFee = uint96(lpFeeTokenAmount);
-        newRequest.protocolFee = uint96(protocolFeeTokenAmount);
+        newRequest.lpFee = lpFeeTokenAmount;
+        newRequest.protocolFee = protocolFeeTokenAmount;
 
         emit RequestCreated(
             requestId,
@@ -509,9 +557,8 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         if (claimerStake > challengerStakeTotal) {
             if (challengerStakeTotal == 0) {
-                periodExtension += finalityPeriods[
-                    requests[requestId].targetChainId
-                ];
+                periodExtension += chains[requests[requestId].targetChainId]
+                    .finalityPeriod;
             }
             require(msg.sender != claimer, "Cannot challenge own claim");
             require(
@@ -764,7 +811,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     function updateToken(
         address tokenAddress,
         uint256 transferLimit,
-        uint96 minLpFee,
+        uint256 ethInToken,
         uint32 lpFeePPM,
         uint32 protocolFeePPM
     ) external onlyOwner {
@@ -773,33 +820,47 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
         Token storage token = tokens[tokenAddress];
         token.transferLimit = transferLimit;
-        token.minLpFee = minLpFee;
+        token.ethInToken = ethInToken;
         token.lpFeePPM = lpFeePPM;
         token.protocolFeePPM = protocolFeePPM;
 
         emit TokenUpdated(
             tokenAddress,
             transferLimit,
-            minLpFee,
+            ethInToken,
             lpFeePPM,
             protocolFeePPM
         );
     }
 
-    /// Set the finality period for the given target chain.
+    /// Update chain information for a given chain ID.
     ///
     /// .. note:: This function can only be called by the contract owner.
     ///
-    /// @param targetChainId The target chain ID.
-    /// @param finalityPeriod Finality period in seconds.
-    function setFinalityPeriod(
-        uint256 targetChainId,
-        uint256 finalityPeriod
+    /// @param chainId The chain ID of the chain.
+    /// @param finalityPeriod The finality period of the chain in seconds.
+    /// @param transferCost The transfer cost (fill, claim, withdraw) on the chain in WEI.
+    /// @param targetWeightPPM The share of the target chain costs (fill) in parts per million.
+    function updateChain(
+        uint256 chainId,
+        uint256 finalityPeriod,
+        uint256 transferCost,
+        uint256 targetWeightPPM
     ) external onlyOwner {
         require(finalityPeriod > 0, "Finality period must be greater than 0");
-        finalityPeriods[targetChainId] = finalityPeriod;
+        require(targetWeightPPM <= 999_999, "Maximum PPM of 999999 exceeded");
 
-        emit FinalityPeriodUpdated(targetChainId, finalityPeriod);
+        Chain storage chain = chains[chainId];
+        chain.finalityPeriod = finalityPeriod;
+        chain.transferCost = transferCost;
+        chain.targetWeightPPM = targetWeightPPM;
+
+        emit ChainUpdated(
+            chainId,
+            finalityPeriod,
+            transferCost,
+            targetWeightPPM
+        );
     }
 
     /// Returns whether a fill is invalidated or not
