@@ -392,11 +392,11 @@ workflows:
 
   build-and-publish-container-image:
     when:
-      and:
-        - <<pipeline.parameters.backend-updated>>
-        - or:
-          - equal: [ main, <<pipeline.git.branch>> ]
-          - <<pipeline.git.tag>>
+      or:
+        - <<pipeline.git.tag>>
+        - and:
+          - <<pipeline.parameters.backend-updated>>
+          - equal: [ 1.0.x, <<pipeline.git.branch>> ]
     jobs:
       - checkout
       - install-npm-packages:
