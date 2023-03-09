@@ -97,7 +97,7 @@ const EMPTY_TARGET_DATA: RequestTarget = {
 };
 
 const ethereumProvider = useEthereumProvider();
-const { signer, signerAddress, chainId, provider } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, provider } = storeToRefs(ethereumProvider);
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 const {
@@ -192,12 +192,6 @@ function resetFormValidation() {
     requestTargetInputsRef.value.v$.$reset();
   }
 }
-
-watch(chainId, (_, oldChainId) => {
-  if (oldChainId !== -1) {
-    location.reload();
-  }
-});
 
 watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
   const toAddress = requestTarget.value.toAddress;

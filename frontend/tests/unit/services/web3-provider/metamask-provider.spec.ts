@@ -168,7 +168,10 @@ describe('metamask-provider', () => {
         metamaskProvider.listenToEvents();
 
         expect(eipProvider.on).toHaveBeenCalledWith('accountsChanged', expect.anything());
-        expect(eipProvider.on).toHaveBeenCalledWith('chainChanged', expect.anything());
+        expect(metamaskProvider['web3Provider'].on).toHaveBeenCalledWith(
+          'network',
+          expect.anything(),
+        );
         // There is a bug with the disconnect event in MetaMask
         // See https://github.com/MetaMask/metamask-extension/issues/13375
         expect(eipProvider.on).not.toHaveBeenCalledWith('disconnect', expect.anything());

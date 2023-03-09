@@ -1,4 +1,5 @@
 import * as providers from '@ethersproject/providers';
+import type { SpyInstanceFn } from 'vitest';
 
 import type { Eip1193Provider } from '@/services/web3-provider';
 import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
@@ -104,6 +105,7 @@ describe('EthereumProvider', () => {
         ethereumProvider.chainId.value = newChainId;
         return true;
       });
+      ethereumProvider.getChainId = vi.fn().mockResolvedValue(newChainId);
 
       const result = await ethereumProvider.switchChainSafely(chain);
 
@@ -286,8 +288,41 @@ describe('EthereumProvider', () => {
       ethereumProvider.listenToEvents();
 
       expect(eipProvider.on).toHaveBeenCalledWith('accountsChanged', expect.anything());
-      expect(eipProvider.on).toHaveBeenCalledWith('chainChanged', expect.anything());
+      expect(ethereumProvider['web3Provider'].on).toHaveBeenCalledWith(
+        'network',
+        expect.anything(),
+      );
       expect(eipProvider.on).toHaveBeenCalledWith('disconnect', expect.anything());
+    });
+
+    it('attaches an event listener which triggers a location.reload on network change', () => {
+      const originalReload = window.location;
+      const mockReload = vi.fn();
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { reload: mockReload },
+      });
+      const eipProvider = new MockedEip1193Provider();
+      const ethereumProvider = new TestEthereumProvider(eipProvider);
+      ethereumProvider.listenToEvents();
+
+      let networkEventCallback;
+      const listenerCalls = (ethereumProvider['web3Provider'].on as SpyInstanceFn).mock.calls;
+      for (const call of listenerCalls) {
+        if (call[0] === 'network') {
+          networkEventCallback = call[1];
+        }
+      }
+      expect(networkEventCallback).not.toBeUndefined();
+
+      networkEventCallback({ chainId: 5 }, { chainId: 10 });
+
+      expect(mockReload).toHaveBeenCalledWith();
+
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { reload: originalReload },
+      });
     });
   });
 });
