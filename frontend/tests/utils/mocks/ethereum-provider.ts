@@ -15,6 +15,7 @@ export class MockedWeb3Provider {
   getNetwork = vi.fn();
   listAccounts = vi.fn();
   getSigner = vi.fn();
+  on = vi.fn();
 }
 export class MockedEip1193Provider implements Eip1193Provider {
   isMetaMask: boolean;

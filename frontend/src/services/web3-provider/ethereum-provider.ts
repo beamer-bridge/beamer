@@ -1,6 +1,5 @@
-import type { Block, JsonRpcSigner } from '@ethersproject/providers';
+import type { Block, JsonRpcSigner, Network } from '@ethersproject/providers';
 import { Web3Provider } from '@ethersproject/providers';
-import { BigNumber } from 'ethers';
 import { hexValue } from 'ethers/lib/utils';
 import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
@@ -19,7 +18,7 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
 
   constructor(_provider: Eip1193Provider) {
     super();
-    this.web3Provider = new Web3Provider(_provider);
+    this.web3Provider = new Web3Provider(_provider, 'any');
     this.externalProvider = _provider;
   }
 
@@ -40,7 +39,10 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
         // As different wallets handle the add and switch chain methods quite differently
         // (e.g. after an add the switch is not performed automatically),
         // this is the safest way to ensure we are on the correct chain.
-        if (newChain.identifier !== this.chainId.value) {
+        const chainIdAfterRequest = await this.getChainId();
+        if (newChain.identifier === chainIdAfterRequest) {
+          this.chainId.value = chainIdAfterRequest;
+        } else {
           successful = false;
         }
       } catch (error) {
@@ -143,8 +145,13 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
 
   protected listenToChangeEvents(): void {
     this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
-    this.externalProvider.on('chainChanged', (chainId: string) => {
-      this.chainId.value = BigNumber.from(chainId).toNumber();
+    this.web3Provider.on('network', (newNetwork: Network, oldNetwork: Network) => {
+      // Bitkeep wallet does not allow to reload the page by calling location.reload
+      // This ensures at least basic functionality after a chain switch
+      this.chainId.value = newNetwork.chainId;
+      if (oldNetwork) {
+        window.location.reload();
+      }
     });
   }
 }
