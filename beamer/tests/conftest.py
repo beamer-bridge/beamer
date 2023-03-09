@@ -75,13 +75,51 @@ def claim_period():
 
 
 @pytest.fixture
+def challenge_period_extension():
+    return 50
+
+
+@pytest.fixture
+def lp_margin_ppm():
+    return 300_000
+
+
+@pytest.fixture()
+def request_manager_params(
+    claim_stake, claim_request_extension, claim_period, challenge_period_extension, lp_margin_ppm
+):
+    return (
+        claim_stake,
+        claim_request_extension,
+        claim_period,
+        challenge_period_extension,
+        lp_margin_ppm,
+    )
+
+
+@pytest.fixture
 def finality_period():
     return 200
 
 
 @pytest.fixture
-def challenge_period_extension():
-    return 50
+def transfer_cost():
+    return int(400e12)
+
+
+@pytest.fixture
+def target_weight_ppm():
+    return 300_000
+
+
+@pytest.fixture
+def chain_params(finality_period, transfer_cost, target_weight_ppm):
+    return finality_period, transfer_cost, target_weight_ppm
+
+
+@pytest.fixture
+def token_params():
+    return int(10_000e18), int(1_500e18), 1_000, 0
 
 
 @pytest.fixture
@@ -90,16 +128,7 @@ def forward_state():
 
 
 @pytest.fixture
-def contracts(
-    deployer,
-    token,
-    forward_state,
-    claim_stake,
-    claim_request_extension,
-    claim_period,
-    finality_period,
-    challenge_period_extension,
-):
+def contracts(deployer, token, forward_state, request_manager_params, chain_params, token_params):
     # L1 contracts
     l1_messenger = deployer.deploy(ape.project.TestL1Messenger)
     l1_messenger.setForwardState(forward_state)
@@ -112,13 +141,7 @@ def contracts(
     fill_manager.setResolver(resolver.address)
 
     # L2a contracts
-    request_manager = deployer.deploy(
-        ape.project.RequestManager,
-        claim_stake,
-        claim_request_extension,
-        claim_period,
-        challenge_period_extension,
-    )
+    request_manager = deployer.deploy(ape.project.RequestManager, *request_manager_params)
 
     # Add allowed LPs
     fill_manager.addAllowedLp(_LOCAL_ACCOUNT)
@@ -135,9 +158,8 @@ def contracts(
     l1_messenger.addCaller(resolver.address)
     request_manager.addCaller(l1_chain_id, l1_messenger.address, l2_messenger.address)
     resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
-
-    request_manager.setFinalityPeriod(l2_chain_id, finality_period)
-    request_manager.updateToken(token.address, int(10_000e18), int(5e18), 1_000, 0)
+    request_manager.updateChain(l2_chain_id, *chain_params)
+    request_manager.updateToken(token.address, *token_params)
 
     return Contracts(
         l1_messenger=l1_messenger,

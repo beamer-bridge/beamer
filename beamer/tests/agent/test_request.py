@@ -307,10 +307,9 @@ def test_unsafe_fill_time(
     agent.stop()
 
 
-def test_request_for_wrong_target_chain(request_manager, token, agent, direction):
+def test_request_for_wrong_target_chain(request_manager, token, agent, direction, chain_params):
     (requester,) = alloc_accounts(1)
-
-    request_manager.setFinalityPeriod(999, 1_000_000)
+    request_manager.updateChain(999, *chain_params)
     test_request_id = make_request(
         request_manager,
         token,
