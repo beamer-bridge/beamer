@@ -17,13 +17,13 @@ from web3.types import BlockData, Timestamp
 import beamer.agent.metrics
 from beamer.agent.config import Config
 from beamer.agent.events import (
+    ChainUpdated,
     ClaimMade,
     ClaimStakeWithdrawn,
     DepositWithdrawn,
     Event,
     FillInvalidated,
     FillInvalidatedResolved,
-    FinalityPeriodUpdated,
     InitiateL1InvalidationEvent,
     InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
@@ -119,8 +119,8 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, InitiateL1InvalidationEvent):
         return _handle_initiate_l1_invalidation(event, context)
 
-    elif isinstance(event, FinalityPeriodUpdated):
-        return _handle_finality_period_updated(event, context)
+    elif isinstance(event, ChainUpdated):
+        return _handle_chain_updated(event, context)
 
     else:
         raise RuntimeError("Unrecognized event type")
@@ -163,9 +163,8 @@ def _timestamp_is_l1_finalized(
     # FIXME: Remove this for the above once the contracts with the event are deployed
     target_chain_finality = context.finality_periods.get(target_chain_id)
     if target_chain_finality is None:
-        target_chain_finality = context.request_manager.functions.finalityPeriods(
-            target_chain_id
-        ).call()
+        target_chain = context.request_manager.functions.chains(target_chain_id).call()
+        target_chain_finality = target_chain[0]
 
     return int(time.time()) > timestamp + target_chain_finality
 
@@ -549,8 +548,6 @@ def _handle_initiate_l1_invalidation(
     return True, None
 
 
-def _handle_finality_period_updated(
-    event: FinalityPeriodUpdated, context: Context
-) -> HandlerResult:
-    context.finality_periods[event.target_chain_id] = event.finality_period
+def _handle_chain_updated(event: ChainUpdated, context: Context) -> HandlerResult:
+    context.finality_periods[event.chain_id] = event.finality_period
     return True, None
