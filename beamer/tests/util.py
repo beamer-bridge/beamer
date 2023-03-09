@@ -174,7 +174,7 @@ def earnings(w3, account):
 # This function works similar to adding a parameters dict to a transaction in web3.py
 def update_token(request_manager, token, params, *args, **kwargs):
     token_data = list(request_manager.tokens(token.address))
-    fields = ["transfer_limit", "min_lp_fee", "lp_fee_ppm", "protocol_fee_ppm"]
+    fields = ["transfer_limit", "eth_in_token", "lp_fee_ppm", "protocol_fee_ppm"]
     new_token_data = tuple(params.get(key, token_data[i]) for i, key in enumerate(fields))
     request_manager.updateToken(token.address, *new_token_data, *args, **kwargs)
 
@@ -184,12 +184,12 @@ def get_token_data(request_manager, token_address):
 
 
 @contextlib.contextmanager
-def temp_fee_data(request_manager, token, min_lp_fee, lp_fee_ppm, protocol_fee_ppm):
+def temp_fee_data(request_manager, token, eth_in_token, lp_fee_ppm, protocol_fee_ppm):
     old_token_data = get_token_data(request_manager, token)
     request_manager.updateToken(
         token.address,
         old_token_data[RM_T_FIELD_TRANSFER_LIMIT],
-        min_lp_fee,
+        eth_in_token,
         lp_fee_ppm,
         protocol_fee_ppm,
     )
@@ -214,16 +214,18 @@ def make_request(
     else:
         fees_context = temp_fee_data(request_manager, token, *fee_data)
 
+    if target_chain_id is None:
+        target_chain_id = ape.chain.chain_id
+
     with fees_context:
         with ape.accounts.test_accounts.use_sender(requester):
-            total_token_amount = amount + request_manager.totalFee(token.address, amount)
+            total_token_amount = amount + request_manager.totalFee(
+                target_chain_id, token.address, amount
+            )
             if token.balanceOf(requester) < total_token_amount:
                 token.mint(requester, total_token_amount)
 
             token.approve(request_manager.address, total_token_amount)
-
-            if target_chain_id is None:
-                target_chain_id = ape.chain.chain_id
 
             request_tx = request_manager.createRequest(
                 target_chain_id,
