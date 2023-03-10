@@ -103,7 +103,10 @@ class HTTPProxy(HTTPServer):
         self._thread.join()
 
     def url(self):
-        return "http://%s:%s" % self.server_address
+        host, port = self.server_address
+        if not isinstance(host, str):
+            host = host.decode()
+        return "http://%s:%s" % (host, port)
 
 
 class EventCollector:
