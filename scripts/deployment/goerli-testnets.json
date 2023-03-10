@@ -16,17 +16,20 @@
       ],
       "l2_messenger": "ArbitrumL2Messenger",
       "finality_period": 18000,
+      "transfer_cost": 1000000000000000,
+      "target_weight_ppm": 500000,
       "request_manager_arguments": {
         "claim_stake": 0.00047,
         "claim_request_extension": 900,
         "claim_period": 900,
-        "challenge_period_extension": 900
+        "challenge_period_extension": 900,
+        "lp_margin_ppm": 300000
       },
       "tokens": [
         {
           "token_address": "mintable_token",
           "transfer_limit": 10000,
-          "min_lp_fee": 1,
+          "eth_in_token": 1000,
           "lp_fee_ppm": 3000,
           "protocol_fee_ppm": 0
         }
@@ -42,17 +45,20 @@
       ],
       "l2_messenger": "OptimismL2Messenger",
       "finality_period": 1800,
+      "transfer_cost": 1000000000000000,
+      "target_weight_ppm": 500000,
       "request_manager_arguments": {
         "claim_stake": 0.00047,
         "claim_request_extension": 900,
         "claim_period": 900,
-        "challenge_period_extension": 900
+        "challenge_period_extension": 900,
+        "lp_margin_ppm": 300000
       },
       "tokens": [
         {
           "token_address": "mintable_token",
           "transfer_limit": 10000,
-          "min_lp_fee": 1,
+          "eth_in_token": 1000,
           "lp_fee_ppm": 3000,
           "protocol_fee_ppm": 0
         }
@@ -68,17 +74,20 @@
       ],
       "l2_messenger": "OptimismL2Messenger",
       "finality_period": 1800,
+      "transfer_cost": 1000000000000000,
+      "target_weight_ppm": 500000,
       "request_manager_arguments": {
         "claim_stake": 0.00047,
         "claim_request_extension": 900,
         "claim_period": 900,
-        "challenge_period_extension": 900
+        "challenge_period_extension": 900,
+        "lp_margin_ppm": 300000
       },
       "tokens": [
         {
           "token_address": "mintable_token",
           "transfer_limit": 10000,
-          "min_lp_fee": 1,
+          "eth_in_token": 1000,
           "lp_fee_ppm": 3000,
           "protocol_fee_ppm": 0
         }

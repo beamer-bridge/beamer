@@ -28,13 +28,14 @@ class _RequestManagerArgs:
     claim_request_extension: int = field(metadata=schema(min=0))
     claim_period: int = field(metadata=schema(min=0))
     challenge_period_extension: int = field(metadata=schema(min=0))
+    lp_margin_ppm: int = field(metadata=schema(min=0))
 
 
 @dataclass
 class _Token:
     token_address: str | ChecksumAddress = field(metadata=validators(_validate_token_address))
     transfer_limit: int = field(metadata=schema(min=0))
-    min_lp_fee: int = field(metadata=schema(min=0))
+    eth_in_token: float = field(metadata=schema(min=0))
     lp_fee_ppm: int = field(metadata=schema(min=0))
     protocol_fee_ppm: int = field(metadata=schema(min=0))
 
@@ -47,6 +48,8 @@ class Chain:
     l1_messenger: str | tuple[str, ...]
     l2_messenger: str | tuple[str, ...]
     finality_period: int = field(metadata=schema(min=0))
+    transfer_cost: int = field(metadata=schema(min=0))
+    target_weight_ppm: int = field(metadata=schema(min=0))
     request_manager_arguments: _RequestManagerArgs
     tokens: tuple[_Token, ...] = field(metadata=schema(min_items=1))
 

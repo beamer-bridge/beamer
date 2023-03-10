@@ -124,6 +124,7 @@ def deploy_beamer(
             chain.request_manager_arguments.claim_request_extension,
             chain.request_manager_arguments.claim_period,
             chain.request_manager_arguments.challenge_period_extension,
+            chain.request_manager_arguments.lp_margin_ppm,
         ),
     )
 
@@ -135,8 +136,11 @@ def deploy_beamer(
             or other_chain.chain_id == GANACHE_CHAIN_ID
         ):
             transact(
-                request_manager.functions.setFinalityPeriod(
-                    other_chain.chain_id, other_chain.finality_period
+                request_manager.functions.updateChain(
+                    other_chain.chain_id,
+                    other_chain.finality_period,
+                    other_chain.transfer_cost,
+                    other_chain.target_weight_ppm,
                 )
             )
 
@@ -184,7 +188,7 @@ def deploy_beamer(
         token_arguments = (
             token_address,
             token.transfer_limit * 10**decimals,
-            token.min_lp_fee * 10**decimals,
+            int(token.eth_in_token * 10**decimals),
             token.lp_fee_ppm,
             token.protocol_fee_ppm,
         )

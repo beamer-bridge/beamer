@@ -16,24 +16,27 @@
             ],
             "l2_messenger": "ArbitrumL2Messenger",
             "finality_period": 691200,
+            "transfer_cost": "",
+            "target_weight_ppm": "",
             "request_manager_arguments": {
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400
+                "challenge_period_extension": 86400,
+                "lp_margin": 30
             },
             "tokens": [
                 {
                     "token_address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-                    "transfer_limit": 100,
-                    "min_lp_fee": 1,
+                    "transfer_limit": 10000,
+                    "eth_in_token": "",
                     "lp_fee_ppm": 3000,
                     "protocol_fee_ppm": 0
                 },
                 {
                     "token_address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-                    "transfer_limit": 100000000000000000000,
-                    "min_lp_fee": 1000000000000000000,
+                    "transfer_limit": 10000,
+                    "eth_in_token": "",
                     "lp_fee_ppm": 3000,
                     "protocol_fee_ppm": 0
                 }
@@ -46,25 +49,28 @@
             "l1_messenger": ["OptimismL1Messenger", "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1"],
             "l2_messenger": "OptimismL2Messenger",
             "finality_period": 604800,
+            "transfer_cost": "",
+            "target_weight_ppm": "",
             "request_manager_arguments": {
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400
+                "challenge_period_extension": 86400,
+                "lp_margin": 30
             },
             "tokens":
                 [
                     {
                         "token_address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-                        "transfer_limit": 100,
-                        "min_lp_fee": 1,
+                        "transfer_limit": 10000,
+                        "eth_in_token": "",
                         "lp_fee_ppm": 3000,
                         "protocol_fee_ppm": 0
                     },
                     {
                         "token_address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
                         "transfer_limit": 100000000000000000000,
-                        "min_lp_fee": 1000000000000000000,
+                        "rate": 1000000000000000000,
                         "lp_fee_ppm": 3000,
                         "protocol_fee_ppm": 0
                     }
@@ -77,25 +83,28 @@
             "l1_messenger": ["OptimismL1Messenger", "0x6D4528d192dB72E282265D6092F4B872f9Dff69e"],
             "l2_messenger": "OptimismL2Messenger",
             "finality_period": 604800,
+            "transfer_cost": "",
+            "target_weight_ppm": "",
             "request_manager_arguments": {
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400
+                "challenge_period_extension": 86400,
+                "lp_margin_ppm": 30
             },
             "tokens":
                 [
                     {
                         "token_address": "0x66a2A913e447d6b4BF33EFbec43aAeF87890FBbc",
-                        "transfer_limit": 100,
-                        "min_lp_fee": 1,
+                        "transfer_limit": 10000,
+                        "eth_in_token": "",
                         "lp_fee_ppm": 3000,
                         "protocol_fee_ppm": 0
                     },
                     {
                         "token_address": "0xf74195Bb8a5cf652411867c5C2C5b8C2a402be35",
-                        "transfer_limit": 100000000000000000000,
-                        "min_lp_fee": 1000000000000000000,
+                        "transfer_limit": 10000,
+                        "eth_in_token": "",
                         "lp_fee_ppm": 3000,
                         "protocol_fee_ppm": 0
                     }
