@@ -23,6 +23,7 @@ FUNDER = ape.accounts.test_accounts[0]
 def _alloc_account():
     account = ape.accounts.test_accounts.generate_test_account()
     # transfer 1 ETH to the newly created account
+    print("Account funding: ", account.address)
     FUNDER.transfer(account, ape.convert("1 ether", int))
     return account
 
@@ -35,6 +36,7 @@ def alloc_whitelisted_accounts(n, contracts):
     accounts = tuple(_alloc_account() for _ in range(n))
     for account in accounts:
         for contract in contracts:
+            print("add allowed lp")
             contract.addAllowedLp(account)
     return accounts
 
@@ -215,13 +217,15 @@ def make_request(
         with ape.accounts.test_accounts.use_sender(requester):
             total_token_amount = amount + request_manager.totalFee(token.address, amount)
             if token.balanceOf(requester) < total_token_amount:
+                print("token minting")
                 token.mint(requester, total_token_amount)
-
+            print("token approve")
             token.approve(request_manager.address, total_token_amount)
 
             if target_chain_id is None:
                 target_chain_id = ape.chain.chain_id
 
+            print("create request")
             request_tx = request_manager.createRequest(
                 target_chain_id,
                 token.address,
@@ -230,6 +234,7 @@ def make_request(
                 amount,
                 validity_period,
             )
+            print(request_tx.__dict__)
     return RequestId(request_tx.return_value)
 
 

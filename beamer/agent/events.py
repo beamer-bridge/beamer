@@ -299,10 +299,26 @@ class EventFetcher:
         try:
             block_data = self._web3.eth.get_block("latest")
             block_number = BlockNumber(block_data["number"])
-        except RequestException:
+            try:
+                print("Block: ", block_number)
+                tx_hash = block_data["transactions"][0]
+                receipt = self._web3.eth.get_transaction_receipt(tx_hash)
+                print(receipt.values())
+                logs = receipt["logs"]
+                print([log["topics"] for log in logs])
+            except (IndexError, KeyError):
+                pass
+        except RequestException as exc:
+            self._log.debug(
+                "Failed to get latest block",
+                exc=exc,
+            )
             return []
-
+        print(block_number, self._next_block_number)
         if block_number < self._next_block_number:
+            self._log.debug(
+                "No new block generated",
+            )
             return []
 
         result = []
@@ -315,13 +331,17 @@ class EventFetcher:
                 break
             if events is not None:
                 result.extend(events)
-                from_block = BlockNumber(to_block + 1)
+            from_block = BlockNumber(to_block + 1)
 
         self._next_block_number = from_block
         try:
             # Block number needs to be decremented here, because it is already incremented above
             block_data = self._web3.eth.get_block(from_block - 1)
-        except RequestException:
+        except RequestException as ex:
+            self._log.debug(
+                "Failed to get block",
+                exc=ex,
+            )
             return result
         else:
             result.append(

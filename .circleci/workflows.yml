@@ -177,7 +177,7 @@ jobs:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term
+      - run: poetry run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term --full-trace -l --verbose -x --disable-isolation
 
   e2e-test-optimism:
     executor: vm

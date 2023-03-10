@@ -245,6 +245,10 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 def test_challenge_5(request_manager, fill_manager, token, config, honest_claim):
     requester, target = alloc_accounts(2)
     (charlie,) = alloc_whitelisted_accounts(1, [request_manager, fill_manager])
+    print("requester: ", requester.address)
+    print("target: ", target.address)
+    print("charlie: ", charlie.address)
+
     config.fill_wait_time = 5
 
     agent = beamer.agent.agent.Agent(config)
@@ -275,8 +279,15 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
             fill_id = fill_transaction.return_value
 
         # claim by Charlie
-        stake = request_manager.claimStake()
-        request_manager.claimRequest(request_id, fill_id, value=stake)
+        try:
+            print("claim stake")
+            stake = request_manager.claimStake()
+            print("claim request")
+            charlie_claim = request_manager.claimRequest(request_id, fill_id, value=stake)
+            print(charlie_claim.__dict__)
+            print("Block: ", ape.chain.provider.get_block("latest").number)
+        except Exception as ex:
+            print(ex)
 
     collector = EventCollector(request_manager, "ClaimMade")
     claim = collector.next_event()

@@ -50,8 +50,10 @@ def _add_default_sender(deployer):
 @pytest.fixture(autouse=True)
 def _reset_chain():
     snap_id = ape.chain.snapshot()
+    old_hash = ape.chain.blocks[-1].hash
     yield
     ape.chain.restore(snap_id)
+    assert ape.chain.blocks[-1].hash == old_hash, "Restore  did not finish upon fixture yield"
 
 
 @pytest.fixture
