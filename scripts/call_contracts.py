@@ -100,7 +100,13 @@ def submit_request(
 
     request_manager = contracts["RequestManager"]
     token = contracts["MintableToken"]
-    total = amount + request_manager.functions.totalFee(token.address, amount).call()
+    source_chain_id = web3.eth.chain_id
+    total = (
+        amount
+        + request_manager.functions.totalFee(
+            source_chain_id, target_chain_id, token.address, amount
+        ).call()
+    )
     tx_hash = token.functions.approve(request_manager.address, total).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash, poll_latency=1.0)
 
@@ -349,7 +355,9 @@ def whitelist(
 @cli.command("update-token")
 @click.argument("token-address", type=str, metavar="ADDRESS", callback=validate_address)
 @click.option("--transfer-limit", type=int, help="New transfer limit of token")
-@click.option("--min-lp-fee", type=int, help="New minimum lp fee")
+@click.option(
+    "--eth-in-token", type=int, help="ETH/token conversion rate, number of token per 1 ETH"
+)
 @click.option("lp-fee-ppm", type=int, help="New lp fee in ppm")
 @click.argument("protocol-fee-ppm", type=int)
 @pass_args
@@ -358,14 +366,14 @@ def update_token(
     contracts: dict[str, Contract],
     token_address: Address,
     transfer_limit: int,
-    min_lp_fee: int,
+    eth_in_token: int,
     lp_fee_ppm: int,
     protocol_fee_ppm: int,
 ) -> None:
     """Update transfer limit and fees for a token in Request Manager. Must be done by owner."""
 
     request_manager = contracts["RequestManager"]
-    params = (transfer_limit, min_lp_fee, lp_fee_ppm, protocol_fee_ppm)
+    params = (transfer_limit, eth_in_token, lp_fee_ppm, protocol_fee_ppm)
     token_data = list(request_manager.functions.tokens(token_address).call())
     new_token_data = tuple(value or token_data[i] for i, value in enumerate(params))
     tx_receipt = transact(request_manager.functions.updateToken(token_address, new_token_data))
