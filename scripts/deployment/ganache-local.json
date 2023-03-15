@@ -1,10 +1,10 @@
 {
-    "L1": {
+    "base-chain": {
         "name": "ganache L1",
         "rpc": "http://localhost:8545",
         "chain_id": 1337
     },
-    "L2": [
+    "chains": [
         {
             "name": "ganache L2",
             "rpc": "http://localhost:8545",

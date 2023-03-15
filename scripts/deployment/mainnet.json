@@ -1,10 +1,10 @@
 {
-    "L1": {
+    "base-chain": {
         "name": "mainnet",
         "rpc": "",
         "chain_id": 1
     },
-    "L2": [
+    "chains": [
         {
             "name": "Arbitrum",
             "rpc": "",
@@ -22,7 +22,7 @@
                 "claim_period": 86400,
                 "challenge_period_extension": 86400
             },
-            "token": [
+            "tokens": [
                 {
                     "token_address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
                     "transfer_limit": 100,
@@ -52,7 +52,7 @@
                 "claim_period": 86400,
                 "challenge_period_extension": 86400
             },
-            "token":
+            "tokens":
                 [
                     {
                         "token_address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
