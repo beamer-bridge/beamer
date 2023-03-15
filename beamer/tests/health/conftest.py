@@ -1,3 +1,4 @@
+from typing import cast
 import pytest
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
@@ -6,8 +7,9 @@ from web3.types import Wei
 
 from beamer.agent.events import ClaimMade, RequestCreated, RequestFilled
 from beamer.agent.typing import ChainId, FillId, Nonce, Termination, TokenAmount
-from beamer.health.check import Context
+from beamer.health.check import Context, TokenMap
 from beamer.health.notify import NotificationState
+from beamer.health.util import TokenDetails
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     BLOCK_NUMBER,
@@ -44,6 +46,12 @@ config = {
             "chat_id": "",
         },
     },
+    "tokens": {
+        "TST": [
+            [str(SOURCE_CHAIN_ID), SOURCE_TOKEN_ADDRESS],
+            [str(TARGET_CHAIN_ID), TARGET_TOKEN_ADDRESS],
+        ]
+    },
 }
 
 
@@ -67,6 +75,9 @@ def get_config(monkeypatch):
 def ctx(tmp_path, agent_address):
     ctx = Context(agent_address=agent_address)
     ctx.notification_state = NotificationState(tmp_path)
+    ctx.token_deployments = cast(TokenMap, config["tokens"])
+    ctx.tokens = {"TST": TokenDetails(decimals=10, symbol="TST")}
+    ctx.initialize_volumes()
 
     return ctx
 
