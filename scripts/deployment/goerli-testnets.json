@@ -1,10 +1,10 @@
 {
-  "L1": {
+  "base-chain": {
     "name": "Goerli",
     "rpc": "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
     "chain_id": 5
   },
-  "L2": [
+  "chains": [
     {
       "name": "Arbitrum Goerli",
       "rpc": "https://goerli-rollup.arbitrum.io/rpc",

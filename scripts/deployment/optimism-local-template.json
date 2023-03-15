@@ -1,10 +1,10 @@
 {
-    "L1": {
+    "base-chain": {
         "name": "geth L1",
         "rpc": "http://localhost:9545",
         "chain_id": 31337
     },
-    "L2": [
+    "chains": [
         {
             "name": "Optimism",
             "rpc": "http://localhost:8545",
