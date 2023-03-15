@@ -11,15 +11,20 @@ from eth_utils import to_checksum_address
 from typing_extensions import NotRequired
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
-from web3.middleware import geth_poa_middleware
 
 import beamer.agent.contracts
 import beamer.agent.events
 from beamer.agent.config import _merge_dicts
 from beamer.agent.events import ClaimMade, DepositWithdrawn, RequestCreated, RequestFilled
 from beamer.agent.typing import ChainId
-from beamer.agent.util import load_ERC20_abi
 from beamer.health.notify import Message, NotificationConfig, NotificationState, Notify
+from beamer.health.util import (
+    TokenDetails,
+    get_token_amount_in_decimals,
+    get_token_balance,
+    get_token_details,
+    make_web3,
+)
 
 
 class NotificationTypes:
@@ -30,7 +35,8 @@ class NotificationTypes:
     CHALLENGE_GAME_CLAIMED_BY_SOMEONE_ELSE = "ChallengeGameClaimedBySomeoneElse"
 
 
-TokenMap = dict[str, list[tuple[str, str]]]
+TokenMap = dict[str, list[list[str]]]
+TokenDetailsMap = dict[str, TokenDetails]
 
 
 class HealthConfig(TypedDict):
@@ -55,6 +61,8 @@ TransferMap = DefaultDict[str, Transfer]
 
 ChainEventMap = dict[ChainId, list[beamer.agent.events.Event]]
 
+TokenVolume = dict[str, int]
+
 
 class NotificationMeta(TypedDict):
     request_id: str
@@ -77,13 +85,13 @@ class Stats:
 
 @dataclass
 class TransferStats:
-    volume: int = 0
+    volume: TokenVolume = field(default_factory=TokenVolume)
     fills: int = 0
     requests: int = 0
     withdrawals: int = 0
     claims: int = 0
     expired_requests: int = 0
-    expired_requests_volume: int = 0
+    expired_requests_volume: TokenVolume = field(default_factory=TokenVolume)
 
 
 @dataclass
@@ -91,11 +99,26 @@ class Context:
     stats: TransferStats = field(default_factory=TransferStats)
     notifications: list = field(default_factory=list)
     agent_address: str = ""
-
+    token_deployments: TokenMap = field(default_factory=TokenMap)
+    tokens: TokenDetailsMap = field(default_factory=dict)
     notification_state: NotificationState = NotificationState(Path("chain/"))
 
     def add_notification(self, message: Notification) -> None:
         self.notifications.append(message)
+
+    def parse_tokens(self, token_deployments: TokenMap, rpcs: dict[int, str]) -> None:
+        self.token_deployments = token_deployments
+        for token_symbol, deployments in token_deployments.items():
+            chain_id = int(deployments[0][0])
+            token_address = deployments[0][1]
+            rpc = rpcs[chain_id]
+            # we only need to store one TokenDetails
+            self.tokens[token_symbol] = get_token_details(token_address, rpc)
+
+    def initialize_volumes(self) -> None:
+        for token_symbol in self.tokens:
+            self.stats.volume[token_symbol] = 0
+            self.stats.expired_requests_volume[token_symbol] = 0
 
 
 claim_request_extension = 86400
@@ -142,7 +165,6 @@ def get_config() -> HealthConfig:
 def main(
     config_path: Path,
 ) -> None:
-
     _set_config(config_path)
 
     config = get_config()
@@ -151,6 +173,8 @@ def main(
     ctx.agent_address = config["agent_address"]
     ctx.notification_state = NotificationState(config["cache_file_path"])
     ctx.notification_state.persist()
+    ctx.parse_tokens(config["tokens"], config["rpcs"])
+    ctx.initialize_volumes()
 
     transfers = create_transfers_object(fetch_events())
 
@@ -192,27 +216,52 @@ def fetch_events() -> ChainEventMap:
     return cast(ChainEventMap, events)
 
 
-def make_web3(rpc: str) -> Web3:
-    web3 = Web3(Web3.HTTPProvider(rpc, request_kwargs=dict(timeout=5)))
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    return web3
+def get_transfer_token_symbol(transfer: Transfer, token_deployments: TokenMap) -> str | None:
+    for token_symbol, deployments in token_deployments.items():
+        source_token_address = transfer["created"].source_token_address.lower()
+        source_chain_id = transfer["created"].chain_id
+        if any(
+            source_token_address == address.lower() and source_chain_id == int(chain_id)
+            for chain_id, address in deployments
+        ):
+            return token_symbol
+
+    return None
+
+
+def get_transfer_value_formatted(
+    request: RequestCreated, token_deployments: TokenMap, token_details: TokenDetailsMap
+) -> str:
+    token_source_chain = request.chain_id
+    token_source_address = request.source_token_address
+    request_token = [str(token_source_chain), token_source_address]
+    token = None
+    transfer_value = "0"
+
+    for token_symbol, deployments in token_deployments.items():
+        if request_token in deployments:
+            token = token_details[token_symbol]
+            break
+
+    if token is not None:
+        decimal_value = get_token_amount_in_decimals(request.amount, token)
+        transfer_value = f"{request.amount} | {decimal_value} {token['symbol']}"
+
+    return transfer_value
 
 
 def get_agent_liquidity(
     agent_address: str, rpcs: dict, tokens: TokenMap
 ) -> dict[str, dict[ChainId, int]]:
-    contract_abi = load_ERC20_abi()
     liquidity: dict = defaultdict(dict)
     agent_address = to_checksum_address(agent_address)
 
     for name, chain_to_token_mapping in tokens.items():
         for chain_id, token_address in chain_to_token_mapping:
-            contract_address = to_checksum_address(token_address)
-            web3 = make_web3(rpcs[int(chain_id)])
-            contract = web3.eth.contract(address=contract_address, abi=contract_abi)
-            token_decimals = contract.functions.decimals().call()
-            balance = contract.functions.balanceOf(agent_address).call()
-            liquidity[name][chain_id] = balance * 10**-token_decimals
+            rpc = rpcs[int(chain_id)]
+            token_details = get_token_details(token_address, rpc)
+            balance = get_token_balance(token_address, agent_address, rpc)
+            liquidity[name][chain_id] = get_token_amount_in_decimals(balance, token_details)
 
     for chain_id, (rpc) in rpcs.items():
         web3 = make_web3(rpc)
@@ -271,7 +320,11 @@ def _check_if_request_has_fill(transfer: Transfer, ctx: Context) -> None:
 
     if "filled" in transfer:
         ctx.stats.fills += 1
-        ctx.stats.volume += transfer["created"].amount
+        token_symbol = get_transfer_token_symbol(transfer, ctx.token_deployments)
+
+        if token_symbol is not None:
+            ctx.stats.volume[token_symbol] += transfer["created"].amount
+
     else:
         if transfer["created"].valid_until < time.time():
             request = transfer["created"]
@@ -280,7 +333,7 @@ def _check_if_request_has_fill(transfer: Transfer, ctx: Context) -> None:
             if not ctx.notification_state.is_set(
                 request.request_id.hex(), NotificationTypes.REQUEST_EXPIRED
             ):
-                ctx.add_notification(create_expired_request_notification(request))
+                ctx.add_notification(create_expired_request_notification(request, ctx))
 
 
 def _check_if_claim_is_made_for_fill(transfer: Transfer, ctx: Context) -> None:
@@ -304,7 +357,7 @@ def _check_if_claim_is_made_for_fill(transfer: Transfer, ctx: Context) -> None:
                 if not ctx.notification_state.is_set(
                     request.request_id.hex(), NotificationTypes.UNCLAIMED_FILL
                 ):
-                    ctx.add_notification(create_unclaimed_fill_notification(request, fill))
+                    ctx.add_notification(create_unclaimed_fill_notification(request, fill, ctx))
 
 
 def _check_if_challenge_game(transfer: Transfer, ctx: Context) -> None:
@@ -372,7 +425,10 @@ def _check_if_request_has_been_withdrawn(transfer: Transfer, ctx: Context) -> No
 
         # if request was withdrawn by user, sum missed agent volume
         if withdrawal.receiver == request.source_address:
-            ctx.stats.expired_requests_volume += request.amount
+            token_symbol = get_transfer_token_symbol(transfer, ctx.token_deployments)
+
+            if token_symbol is not None:
+                ctx.stats.expired_requests_volume[token_symbol] += transfer["created"].amount
 
 
 def analyze_transfers(transfers: TransferMap, ctx: Context) -> None:
@@ -389,6 +445,20 @@ def analyze_transfers(transfers: TransferMap, ctx: Context) -> None:
         else "Everything is calm in Beamerland."
     )
 
+    def format_token_volume(token_amount: int, token_details: TokenDetails) -> str:
+        amount = get_token_amount_in_decimals(token_amount, token_details)
+        symbol = token_details["symbol"]
+        return f"{amount} {symbol}"
+
+    volume_per_token = ", ".join(
+        format_token_volume(token_amount, ctx.tokens[token_symbol])
+        for token_symbol, token_amount in ctx.stats.volume.items()
+    )
+    expired_request_volume_per_token = ", ".join(
+        format_token_volume(token_amount, ctx.tokens[token_symbol])
+        for token_symbol, token_amount in ctx.stats.expired_requests_volume.items()
+    )
+
     message: Message = {
         "text": f"""
 v1: Processing complete. {processing_status}
@@ -398,8 +468,8 @@ Total expired requests in network: {ctx.stats.expired_requests}
 Total fills in network: {ctx.stats.fills}
 Total claims in network: {ctx.stats.claims}
 Total withdrawals in network: {ctx.stats.withdrawals}
-Total total volume in network: {ctx.stats.volume * 1e-6} USDC
-Total expired requests volume in network: {ctx.stats.expired_requests_volume * 1e-6} USDC
+Total volume in network: {volume_per_token}
+Total expired requests volume in network: {expired_request_volume_per_token}
     """,  # noqa: E501
     }
 
@@ -419,7 +489,7 @@ def render_liquidity_info() -> str:
         liquidity_text += f"Liquidity info for agent {agent_address}: \n"
 
         for token, chain_amounts in liquidity.items():
-            for (chain, amount) in chain_amounts.items():
+            for chain, amount in chain_amounts.items():
                 liquidity_text += f"{token} | {chain}: {amount} \n"
 
         liquidity_text += "========================= \n"
@@ -428,8 +498,10 @@ def render_liquidity_info() -> str:
 
 
 def create_unclaimed_fill_notification(
-    request: RequestCreated, fill: RequestFilled
+    request: RequestCreated, fill: RequestFilled, ctx: Context
 ) -> Notification:
+    transfer_value = get_transfer_value_formatted(request, ctx.token_deployments, ctx.tokens)
+
     return {
         "meta": {
             "request_id": request.request_id.hex(),
@@ -439,7 +511,7 @@ def create_unclaimed_fill_notification(
         "body": f"""
 v1: Unclaimed fill!
 Request: `{request.request_id.hex()}`
-Value: `{request.amount}` | `{request.amount * 1e-6}` USDC
+Value: `{transfer_value}`
 Block: `{request.block_number}`
 Filler: `{fill.filler}`
 TX_Hash `{fill.tx_hash.hex()}`
@@ -449,7 +521,9 @@ Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_unti
     }
 
 
-def create_expired_request_notification(request: RequestCreated) -> Notification:
+def create_expired_request_notification(request: RequestCreated, ctx: Context) -> Notification:
+    transfer_value = get_transfer_value_formatted(request, ctx.token_deployments, ctx.tokens)
+
     return {
         "meta": {
             "request_id": request.request_id.hex(),
@@ -459,7 +533,7 @@ def create_expired_request_notification(request: RequestCreated) -> Notification
         "body": f"""
 Request expired with no fill {request.request_id.hex()}
 Request: `{request.request_id.hex()}`
-Value: `{request.amount}` | `{request.amount * 1e-6}` USDC
+Value: `{transfer_value}`
 Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_until)
         .strftime("%d.%m.%Y %H:%M:%S")}`
 TX_Hash `{request.tx_hash.hex()}`
