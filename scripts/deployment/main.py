@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Sequence, Union, cast
 
 import click
+from config import Chain, Config, ConfigValidationError
 from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex, to_wei
 from web3 import Web3
@@ -85,54 +86,57 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
     return deployed
 
 
+def _resolve_constructor_args(resolver: Contract, constructor_spec: str | Sequence) -> tuple:
+    if isinstance(constructor_spec, str):
+        # This is just the contract's name.
+        return (constructor_spec,)
+    return tuple(resolver.address if arg == "${resolver}" else arg for arg in constructor_spec)
+
+
 def deploy_beamer(
     account: LocalAccount,
-    config: dict,
-    l2_config: dict,
+    config: Config,
+    chain: Chain,
     resolver: Contract,
     allow_same_chain: bool,
     deploy_mintable_token: bool,
 ) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
 
-    web3 = make_web3(l2_config["rpc"], account)
-    assert web3.eth.chain_id == l2_config["chain_id"]
+    web3 = make_web3(chain.rpc, account)
+    assert web3.eth.chain_id == chain.chain_id
 
     deployed_contracts = []
-    token = None
+    mintable_token = None
     if deploy_mintable_token:
-        token = deploy_contract(web3, ("MintableToken", int(1e18)))
-        deployed_contracts.append(token)
+        mintable_token = deploy_contract(web3, ("MintableToken", int(1e18)))
+        deployed_contracts.append(mintable_token)
 
-    l1_messenger = deploy_contract(resolver.w3, l2_config["l1_messenger"])
-    l2_messenger = deploy_contract(web3, l2_config["l2_messenger"])
-
-    request_manager_arguments = l2_config["request_manager_arguments"]
-    claim_stake = to_wei(request_manager_arguments["claim_stake"], "ether")
-    claim_request_extension = request_manager_arguments["claim_request_extension"]
-    claim_period = request_manager_arguments["claim_period"]
-    challenge_period_extension = request_manager_arguments["challenge_period_extension"]
+    l1_messenger = deploy_contract(
+        resolver.w3, _resolve_constructor_args(resolver, chain.l1_messenger)
+    )
+    l2_messenger = deploy_contract(web3, _resolve_constructor_args(resolver, chain.l2_messenger))
 
     request_manager = deploy_contract(
         web3,
         (
             "RequestManager",
-            claim_stake,
-            claim_request_extension,
-            claim_period,
-            challenge_period_extension,
+            to_wei(chain.request_manager_arguments.claim_stake, "ether"),
+            chain.request_manager_arguments.claim_request_extension,
+            chain.request_manager_arguments.claim_period,
+            chain.request_manager_arguments.challenge_period_extension,
         ),
     )
 
     # Configure finality period for each supported target chain
-    for other_l2_config in config["L2"]:
+    for other_chain in config.chains:
         if (
             allow_same_chain
-            or other_l2_config is not l2_config
-            or other_l2_config["chain_id"] == GANACHE_CHAIN_ID
+            or other_chain is not chain
+            or other_chain.chain_id == GANACHE_CHAIN_ID
         ):
             transact(
                 request_manager.functions.setFinalityPeriod(
-                    other_l2_config["chain_id"], other_l2_config["finality_period"]
+                    other_chain.chain_id, other_chain.finality_period
                 )
             )
 
@@ -143,7 +147,7 @@ def deploy_beamer(
     transact(l2_messenger.functions.addCaller(fill_manager.address))
     transact(
         resolver.functions.addCaller(
-            l2_config["chain_id"],
+            chain.chain_id,
             l2_messenger.address,
             l1_messenger.address,
         ),
@@ -151,7 +155,7 @@ def deploy_beamer(
     )
     transact(
         resolver.functions.addRequestManager(
-            l2_config["chain_id"], request_manager.address, l1_messenger.address
+            chain.chain_id, request_manager.address, l1_messenger.address
         ),
         timeout=600,
     )
@@ -164,16 +168,14 @@ def deploy_beamer(
         )
     )
 
-    tokens = l2_config.get("tokens", [])
-
-    for token_arguments in tokens:
-        token_address = token_arguments["token_address"]
+    for token in chain.tokens:
+        token_address = token.token_address
         if token_address == "mintable_token":
-            if token is None:
+            if mintable_token is None:
                 raise ValueError(
                     "Expecting mintable token to be deployed. (option --deploy-mintable-token)"
                 )
-            token_address = token.address
+            token_address = mintable_token.address
         decimals = (
             web3.eth.contract(address=token_address, abi=CONTRACTS["MintableToken"][0])
             .functions.decimals()
@@ -181,10 +183,10 @@ def deploy_beamer(
         )
         token_arguments = (
             token_address,
-            int(float(token_arguments["transfer_limit"]) * pow(10, decimals)),
-            int(float(token_arguments["min_lp_fee"]) * pow(10, decimals)),
-            token_arguments["lp_fee_ppm"],
-            token_arguments["protocol_fee_ppm"],
+            token.transfer_limit * 10**decimals,
+            token.min_lp_fee * 10**decimals,
+            token.lp_fee_ppm,
+            token.protocol_fee_ppm,
         )
         transact(request_manager.functions.updateToken(*token_arguments))
 
@@ -245,9 +247,11 @@ def main(
     allow_same_chain: bool,
     deploy_mintable_token: bool,
 ) -> None:
-
-    with open(config_file) as f:
-        config = json.load(f)
+    try:
+        config = Config.from_file(config_file)
+    except ConfigValidationError as exc:
+        print(exc)
+        raise SystemExit(1)
 
     account = account_from_keyfile(keystore_file, password)
     print("Deployer:", account.address)
@@ -255,7 +259,7 @@ def main(
     def _margin_gas_price_strategy(web3: Web3, transaction_params: TxParams) -> Wei:
         return Wei(int(rpc_gas_price_strategy(web3, transaction_params) * 1.5))
 
-    web3_l1 = make_web3(config["L1"]["rpc"], account, _margin_gas_price_strategy)
+    web3_l1 = make_web3(config.base_chain.rpc, account, _margin_gas_price_strategy)
 
     resolver = deploy_contract(web3_l1, "Resolver")
 
@@ -264,16 +268,14 @@ def main(
     deployment_data["L2"] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    for l2_config in config["L2"]:
-        name = l2_config["name"]
-        chain_id = l2_config["chain_id"]
-        print(f"Deployment for {name}")
+    for chain in config.chains:
+        print(f"Deploying on {chain.name}...")
 
         l1_data, l2_data = deploy_beamer(
-            account, config, l2_config, resolver, allow_same_chain, deploy_mintable_token
+            account, config, chain, resolver, allow_same_chain, deploy_mintable_token
         )
         deployment_data["L1"].update(collect_contracts_info(l1_data))
-        deployment_data["L2"][chain_id] = collect_contracts_info(l2_data)
+        deployment_data["L2"][chain.chain_id] = collect_contracts_info(l2_data)
         for contract_name in l2_data:
             shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
 
