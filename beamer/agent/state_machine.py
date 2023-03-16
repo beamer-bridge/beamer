@@ -2,6 +2,7 @@ import os
 import time
 from concurrent.futures import Executor, Future
 from dataclasses import dataclass, field
+from threading import Lock
 from typing import Optional, cast
 
 import structlog
@@ -32,14 +33,12 @@ from beamer.agent.events import (
     SourceChainEvent,
     TargetChainEvent,
 )
-
 from beamer.agent.l1_resolution import run_relayer_for_tx
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.tracker import Tracker
 from beamer.agent.typing import URL, ChainId, ClaimId, FillId, RequestId
 from beamer.agent.util import TokenChecker
-
 
 log = structlog.get_logger(__name__)
 
@@ -61,6 +60,7 @@ class Context:
     claim_request_extension: int
     l1_resolutions: dict[RequestId, Future]
     l1_invalidations: dict[ClaimId, Future]
+    fill_mutexes: dict[tuple[ChainId, ChecksumAddress], Lock]
     logger: structlog.BoundLogger
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
 

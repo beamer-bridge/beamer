@@ -206,6 +206,9 @@ class TokenChecker:
         token_data = self._tokens.get((chain_id, token_address))
         return token_data.allowance if token_data is not None else None
 
+    def get_tokens_for_chain(self, chain_id: ChainId) -> list:
+        return [token for token in self._tokens if token[0] == chain_id]
+
 
 def load_ERC20_abi() -> list[Any]:
     path = pathlib.Path(__file__)
