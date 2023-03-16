@@ -196,14 +196,14 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-moc
 
 [[package]]
 name = "ape-etherscan"
-version = "0.6.0"
+version = "0.6.1"
 description = "ape-etherscan: Etherscan Explorer Plugin for Ethereum-based networks"
 category = "dev"
 optional = false
 python-versions = ">=3.8,<3.11"
 files = [
-    {file = "ape-etherscan-0.6.0.tar.gz", hash = "sha256:4c48bb02ab4b816d8375db46f846fb96db1a94ed05931e286a8c38cda7b0b322"},
-    {file = "ape_etherscan-0.6.0-py3-none-any.whl", hash = "sha256:b431d92787cfceeb4a758bfff7b71f613aabfda8715493068e623258449536cc"},
+    {file = "ape-etherscan-0.6.1.tar.gz", hash = "sha256:56bad9d6095495be05c7969d6f1ff4353850aee9ba8c0f9fb3992ee0aba8c4d4"},
+    {file = "ape_etherscan-0.6.1-py3-none-any.whl", hash = "sha256:2b0d64b22e666178c790d34f39e885e276054d8b16925622904f4232d0915632"},
 ]
 
 [package.dependencies]
@@ -4484,4 +4484,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "851288f7b04b57b722cd1334f243085a2807dc1623763e15643580971f77b1ec"
+content-hash = "6a972f1af31b02a419e7ff5195c1afe1b548a82b1699e98d1138ba902c5ccb1c"
