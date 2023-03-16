@@ -327,38 +327,41 @@ def fill_request(request: Request, context: Context) -> None:
             request_amount=request.amount,
         )
         return
+    chain_id = ChainId(w3.eth.chain_id)
+    token_address = token.address
+    mutex = context.fill_mutexes[(chain_id, token_address)]
+    with mutex:
+        if (
+            token.functions.allowance(context.address, context.fill_manager.address).call()
+            < request.amount
+        ):
+            func = token.functions.approve(context.fill_manager.address, allowance)
+            try:
+                transact(func)
+            except TransactionFailed as exc:
+                context.logger.error("approve failed", request_id=request.id, exc=exc)
+                return
 
-    if (
-        token.functions.allowance(context.address, context.fill_manager.address).call()
-        < request.amount
-    ):
-        func = token.functions.approve(context.fill_manager.address, allowance)
+        func = context.fill_manager.functions.fillRequest(
+            sourceChainId=request.source_chain_id,
+            targetTokenAddress=request.target_token_address,
+            targetReceiverAddress=request.target_address,
+            amount=request.amount,
+            nonce=request.nonce,
+        )
         try:
-            transact(func)
+            receipt = transact(func)
         except TransactionFailed as exc:
-            context.logger.error("approve failed", request_id=request.id, exc=exc)
+            context.logger.error("fillRequest failed", request_id=request.id, exc=exc)
             return
 
-    func = context.fill_manager.functions.fillRequest(
-        sourceChainId=request.source_chain_id,
-        targetTokenAddress=request.target_token_address,
-        targetReceiverAddress=request.target_address,
-        amount=request.amount,
-        nonce=request.nonce,
-    )
-    try:
-        receipt = transact(func)
-    except TransactionFailed as exc:
-        context.logger.error("fillRequest failed", request_id=request.id, exc=exc)
-        return
-
-    request.try_to_fill()
-    context.logger.info(
-        "Filled request",
-        request=request,
-        txn_hash=receipt.transactionHash.hex(),
-        token=token.functions.symbol().call(),
-    )
+        request.try_to_fill()
+        context.logger.info(
+            "Filled request",
+            request=request,
+            txn_hash=receipt.transactionHash.hex(),
+            token=token.functions.symbol().call(),
+        )
 
 
 def claim_request(request: Request, context: Context) -> None:

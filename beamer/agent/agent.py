@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from itertools import permutations
 
 import structlog
-from eth_typing import Address, BlockNumber
+from eth_typing import Address, BlockNumber, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 from web3.middleware import latest_block_based_cache_middleware
@@ -46,6 +46,7 @@ class _BaseChain:
 class _Chain(_BaseChain):
     contracts_info: dict[str, ContractInfo]
     contracts: dict[str, Contract]
+    tokens: list[tuple[ChainId, ChecksumAddress]]
 
     @property
     def request_manager(self) -> Contract:
@@ -96,6 +97,7 @@ class Agent:
                 rpc_url=rpc_url,
                 contracts_info=contracts_info,
                 contracts=contracts,
+                tokens=self._config.token_checker.get_tokens_for_chain(chain_id),
             )
         return chains
 
@@ -114,8 +116,21 @@ class Agent:
         if not target_chain.fill_manager.functions.allowedLps(self._config.account.address).call():
             raise RuntimeError("Agent address is not whitelisted on FillManager")
 
+    def _init_fill_mutexes(
+        self, chains: dict[ChainId, _Chain]
+    ) -> dict[tuple[ChainId, ChecksumAddress], threading.Lock]:
+        mutexes: dict[tuple[ChainId, ChecksumAddress], threading.Lock] = {}
+        for chain in chains.values():
+            for chain_id, address in chain.tokens:
+                mutexes[(chain_id, address)] = threading.Lock()
+        return mutexes
+
     def _setup_direction(
-        self, direction: TransferDirection, chains: dict[ChainId, _Chain], l1: _BaseChain
+        self,
+        direction: TransferDirection,
+        chains: dict[ChainId, _Chain],
+        l1: _BaseChain,
+        mutexes: dict[tuple[ChainId, ChecksumAddress], threading.Lock],
     ) -> None:
         source_chain = chains[direction.source]
         target_chain = chains[direction.target]
@@ -147,6 +162,7 @@ class Agent:
             claim_request_extension=claim_request_extension,
             l1_resolutions={},
             l1_invalidations={},
+            fill_mutexes=mutexes,
             logger=logger,
         )
         event_processor = EventProcessor(context)
@@ -164,6 +180,7 @@ class Agent:
         self._event_monitors: dict[ChainId, EventMonitor] = {}
         l1 = self._init_l1_chain()
         chains = self._init_chains()
+        mutexes = self._init_fill_mutexes(chains)
         chain_ids = list(chains.keys())
         if len(chain_ids) == 1:
             chain_ids.append(chain_ids[0])
@@ -172,7 +189,7 @@ class Agent:
 
         for direction in set(directions):
             direction = TransferDirection(direction[0], direction[1])
-            self._setup_direction(direction, chains, l1)
+            self._setup_direction(direction, chains, l1, mutexes)
 
     def start(self) -> None:
         assert self._stopped.is_set()
