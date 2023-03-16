@@ -182,6 +182,7 @@ def make_context() -> Tuple[Context, Config]:
         claim_request_extension=100,
         l1_resolutions={},
         l1_invalidations={},
+        fill_mutexes={},
         logger=MagicMock(),
     )
     context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore
