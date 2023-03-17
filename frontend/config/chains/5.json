@@ -1,0 +1,14 @@
+{
+  "identifier": 5,
+  "explorerUrl": "https://goerli.etherscan.io",
+  "rpcUrl": "https://rpc.ankr.com/eth_goerli",
+  "name": "Ethereum Testnet Goerli",
+  "imageUrl": "/images/ethereum.svg",
+  "tokenSymbols": ["USDC", "DAI"],
+  "nativeCurrency": {
+    "name": "Goerli Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "internalRpcUrl": "https://eth-goerli.g.alchemy.com/v2/KJo1cVLxWEivInhB8FlVLf7XyI2orRSM"
+}
