@@ -45,6 +45,14 @@ def _add_default_sender(deployer):
         yield
 
 
+# Point XDG_ directories to alternate locations to
+# avoid interference with real locations. We're using
+# only XDG_STATE_HOME for now.
+@pytest.fixture(autouse=True)
+def _set_xdg_dirs(tmpdir, monkeypatch):
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmpdir))
+
+
 # Make sure that the chain is reset after each test since ape
 # launches ganache only once for the entire test suite run.
 @pytest.fixture(autouse=True)
