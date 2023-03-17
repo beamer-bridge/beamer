@@ -3,6 +3,7 @@
   "decimals": 6,
   "imageUrl": "/images/tokens/usdc.svg",
   "addresses": {
+    "1": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     "10": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
     "288": "0x66a2A913e447d6b4BF33EFbec43aAeF87890FBbc",
     "42161": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
