@@ -42,7 +42,6 @@ TokenDetailsMap = dict[str, TokenDetails]
 class HealthConfig(TypedDict):
     agent_address: str
     deployment_dir: Path
-    cache_file_path: Path
     notification_system: str
     rpcs: dict[int, str]
     explorers: dict[int, str]
@@ -101,7 +100,7 @@ class Context:
     agent_address: str = ""
     token_deployments: TokenMap = field(default_factory=TokenMap)
     tokens: TokenDetailsMap = field(default_factory=dict)
-    notification_state: NotificationState = NotificationState(Path("chain/"))
+    notification_state: NotificationState = field(default_factory=NotificationState)
 
     def add_notification(self, message: Notification) -> None:
         self.notifications.append(message)
@@ -148,7 +147,6 @@ def _set_config(path: Path) -> None:
     GLOBAL_CONFIG = {
         "agent_address": config["agent-address"].lower(),
         "deployment_dir": Path(config["deployment-dir"]),
-        "cache_file_path": Path(config["cache-file-path"]),
         "notification_system": config["notification-system"],
         "rpcs": rpcs,
         "explorers": explorers,
@@ -171,7 +169,7 @@ def main(
 
     ctx = Context()
     ctx.agent_address = config["agent_address"]
-    ctx.notification_state = NotificationState(config["cache_file_path"])
+    ctx.notification_state = NotificationState()
     ctx.notification_state.persist()
     ctx.parse_tokens(config["tokens"], config["rpcs"])
     ctx.initialize_volumes()
