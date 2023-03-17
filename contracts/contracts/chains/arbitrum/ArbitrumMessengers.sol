@@ -38,14 +38,18 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
         deposits[msg.sender] += msg.value;
     }
 
-    function withdraw() external {
-        uint256 amount = deposits[msg.sender];
+    function _withdraw(address target) private {
+        uint256 amount = deposits[target];
         require(amount > 0, "nothing to withdraw");
 
-        deposits[msg.sender] = 0;
+        deposits[target] = 0;
 
-        (bool sent, ) = msg.sender.call{value: amount}("");
+        (bool sent, ) = target.call{value: amount}("");
         require(sent, "failed to send Ether");
+    }
+
+    function withdraw() public {
+        _withdraw(msg.sender);
     }
 
     /* solhint-disable avoid-tx-origin */
@@ -75,6 +79,8 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
             0,
             message
         );
+
+        if (deposits[tx.origin] > 0) _withdraw(tx.origin);
     }
     /* solhint-enable avoid-tx-origin */
 }
