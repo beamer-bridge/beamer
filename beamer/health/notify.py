@@ -1,11 +1,11 @@
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any, Callable, Optional, TypedDict
 
 import requests
 from typing_extensions import NotRequired
+from xdg_base_dirs import xdg_state_home
 
 NotificationConfig = dict[str, dict[str, str]]
 
@@ -16,20 +16,20 @@ class Message(TypedDict):
 
 
 class NotificationState:
-    _cache_path: Path
     _notified_state: dict[str, set[str]]
 
-    def __init__(self, cache_path: Path) -> None:
-        self._cache_path = cache_path
-
+    def __init__(self) -> None:
         def decode_set_in_state(pairs: list[tuple[Any, Any]]) -> dict[str, set[str]]:
             return {k: set(v) for k, v in pairs}
 
         try:
-            with open(os.path.join(self._cache_path, "breadcrumbs.json"), "r") as f:
+            with self._get_state_path().open("r") as f:
                 self._notified_state = json.load(f, object_pairs_hook=decode_set_in_state)
         except FileNotFoundError:
             self._notified_state = {}
+
+    def _get_state_path(self) -> Path:
+        return xdg_state_home() / "beamer-bridge" / "health.json"
 
     def is_set(self, request_id: str, notified_on: str) -> bool:
         breadcrumb = self._notified_state.get(str(request_id))
@@ -52,7 +52,9 @@ class NotificationState:
 
             return obj
 
-        with open(os.path.join(self._cache_path, "breadcrumbs.json"), "w") as f:
+        path = self._get_state_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w") as f:
             json.dump(self._notified_state, f, default=encode_set_in_state)
 
 

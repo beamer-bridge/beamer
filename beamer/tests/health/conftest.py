@@ -72,13 +72,12 @@ def get_config(monkeypatch):
 
 
 @pytest.fixture
-def ctx(tmp_path, agent_address):
+def ctx(agent_address):
     ctx = Context(agent_address=agent_address)
-    ctx.notification_state = NotificationState(tmp_path)
+    ctx.notification_state = NotificationState()
     ctx.token_deployments = cast(TokenMap, config["tokens"])
     ctx.tokens = {"TST": TokenDetails(decimals=10, symbol="TST")}
     ctx.initialize_volumes()
-
     return ctx
 
 
