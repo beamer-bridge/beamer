@@ -1165,14 +1165,14 @@ test = ["hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-xdist", "tox 
 
 [[package]]
 name = "eth-ape"
-version = "0.6.5"
+version = "0.6.6"
 description = "Ape Ethereum Framework"
 category = "dev"
 optional = false
 python-versions = ">=3.8,<3.11"
 files = [
-    {file = "eth-ape-0.6.5.tar.gz", hash = "sha256:b8b6417e6df0bf62c4f53de415c62251e300fb9fd9f8f314e8577d93649babc2"},
-    {file = "eth_ape-0.6.5-py3-none-any.whl", hash = "sha256:39c65a360aed64b11c8d436e799547c6ab7abf2d3b29c84360bbc727775ef53e"},
+    {file = "eth-ape-0.6.6.tar.gz", hash = "sha256:63ec44142899f14b06dc7ca17e754b46f3da2798cc6cb12e071aef242213c3c5"},
+    {file = "eth_ape-0.6.6-py3-none-any.whl", hash = "sha256:8bc6754d9fa5ebf9ff21d61fcfae4f89bdc285fb2d4be4711a8e11da3b1c59e1"},
 ]
 
 [package.dependencies]
@@ -3208,7 +3208,7 @@ files = [
 cffi = ">=1.4.1"
 
 [package.extras]
-docs = ["sphinx (>=1.6.5)", "sphinx_rtd_theme"]
+docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
 tests = ["hypothesis (>=3.27.0)", "pytest (>=3.2.1,!=3.3.0)"]
 
 [[package]]
@@ -4523,4 +4523,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "c6530c8f85ad5659a0862593f294307ea46515bc2b846e372d154dc624e8ddcf"
+content-hash = "163b14b6f8cec3e471dc32f1083ff07d82893d44ee4963c4bf75366857bbaecb"
