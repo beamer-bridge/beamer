@@ -51,9 +51,9 @@ export class ArbitrumRelayerService extends BaseRelayerService {
 
     const deltaSubmissionFee = submissionFee.mul(110).div(100); // We add 10% on top to ensure that the creation of a retryable ticket doesn't fail
 
-    // We want to make sure that the deposited amount is always in the range [deltaSubmissionFee(MAX_MESSAGE_LENGTH_BYTES), 2 * delateSubmissionFee(MAX_MESSAGE_LENGTH_BYTES)]
-    // in order to avoid depositing often
     if (currentDeposit.lte(deltaSubmissionFee)) {
+      // ArbitrumL1Messenger refunds the rest of the deposit automatically
+      // after relaying a message by calling `ArbitrumL1Messenger.sendMessage`.
       const estimatedGasLimit = await arbitrumL1Messenger.estimateGas.deposit({
         value: deltaSubmissionFee,
       });
@@ -67,9 +67,14 @@ export class ArbitrumRelayerService extends BaseRelayerService {
 
       const receipt = await arbitrumL1Messenger.provider.waitForTransaction(transaction.hash, 1);
 
-      console.log(
-        `Successfully deposited funds on ArbitrumL1Messenger: ${receipt.transactionHash}`,
-      );
+      if (receipt && receipt.status) {
+        console.log(
+          `Successfully deposited funds on ArbitrumL1Messenger: ${receipt.transactionHash}`,
+        );
+        return true;
+      } else {
+        throw new Error("Arbitrum L1 deposit transaction reverted on chain.");
+      }
     } else {
       console.log("ArbitrumL1Messenger has enough funds to proceed!");
     }
@@ -117,8 +122,8 @@ export class ArbitrumRelayerService extends BaseRelayerService {
      */
     console.log("Outbox entry found! Executing it...");
 
-    const l1Transaciton = await l2ToL1Msg.execute(this.l2RpcProvider);
-    const l1Receipt = await l1Transaciton.wait();
+    const l1Transaction = await l2ToL1Msg.execute(this.l2RpcProvider);
+    const l1Receipt = await l1Transaction.wait();
 
     console.log("Done! Your transaction is executed ", l1Receipt.transactionHash);
 
