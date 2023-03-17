@@ -364,3 +364,17 @@ def test_agent_only_claim_once_after_restart(request_manager, token, agent, dire
                     sleeper.sleep(0.1)
                 except Timeout:
                     break
+
+
+def test_event_fetcher_progress_without_events(agent, direction):
+    with Sleeper(5) as sleeper:
+        while ape.chain.chain_id not in agent.get_context(direction).latest_blocks:
+            sleeper.sleep(0.1)
+    for _ in range(5):
+        ape.chain.mine(1)
+        with Sleeper(5) as sleeper:
+            while (
+                agent.get_context(direction).latest_blocks[ape.chain.chain_id].number
+                != ape.chain.blocks[-1].number
+            ):
+                sleeper.sleep(0.1)
