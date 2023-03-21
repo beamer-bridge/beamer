@@ -23,7 +23,7 @@ an agent requires the following:
    Related options: ``--deployment-dir``
 
 
-For a detailed explanation of configuration options, see :ref:`config`.
+For a detailed explanation of configuration options, see :ref:`config-agent`.
 
 
 .. _deployment-info:
