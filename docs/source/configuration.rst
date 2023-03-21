@@ -1,4 +1,8 @@
-.. _config:
+Configuration
+=============
+
+
+.. _config-agent:
 
 Agent configuration
 -------------------
@@ -52,21 +56,12 @@ An example configuration::
     ]
 
 In addition to the configuration file, one can specify command-line options which then
-override settings from the configuration file.
-
-Chains can be specified on the command-line as follows::
-
-    --chain l1="GOERLI_TESTNET_RPC_URL"
-    --chain goerli-arbitrum="GOERLI_ARBITRUM_RPC_URL"
-    --chain goerli-optimism="GOERLI_OPTIMISM_RPC_URL"
-
-These three options are equivalent to the ``[chains]`` sections in the
-configuration file example above. Details on available options can be found in
-the :ref:`config-reference`.
+override settings from the configuration file. Details on available options can be found 
+in the :ref:`command-agent` command reference.
 
 
 Chains
-^^^^^^
+~~~~~~
 
 Chains can be defined via the command-line options or configuration file, or
 both. A special chain named ``l1`` must be defined -- that chain is assumed to
@@ -74,7 +69,7 @@ be the layer 1 chain used for L1 resolution.
 
 
 Tokens
-^^^^^^
+~~~~~~
 
 The configuration file section ``[tokens]`` determines the set of ERC-20 tokens
 that the agent will consider filling requests for. In other words, requests for
@@ -95,9 +90,11 @@ A third value per token representation is optional, which defines
 the allowance amount, the agent will approve to the fill manager contract.
 The representation would look like ``[CHAIN_ID, TOKEN_ADDRESS, ALLOWANCE]``.
 Allowed values are:
-- Any value > 0, which defines the exact allowance given
-- -1, the agent will approve with type(uint256).max (maximum allowance)
-If no value is given, the requested amount will be approved 
+
+* Any value > 0, which defines the exact allowance given
+* -1, the agent will approve with type(uint256).max (maximum allowance)
+
+If no value is given, the requested amount will be approved.
 
 Example::
 
@@ -117,75 +114,64 @@ address ``0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6``, while the TST token cont
 on chain with ID ``22`` has address ``0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D``.
 
 
-.. _config-reference:
-
-Reference
-^^^^^^^^^
+Options reference
+~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - Command-line option 
-     - Configuration section / key
+   * - Configuration section / key
      - Description
 
-   * - ``--account-path PATH``
-     - ::
+   * - ::
 
         [account]
         path = PATH
 
      - Path to the account keyfile.
 
-   * - ``--account-password PASSWORD``
-     - ::
+   * - ::
 
         [account]
         password = PASSWORD
 
      - The password needed to unlock the account.
 
-   * - ``--deployment-dir DIR``
-     - ::
+   * - ::
 
         deployment-dir = DIR
 
      - The directory containing contract deployment files.
 
-   * - ``--fill-wait-time TIME``
-     - ::
+   * - ::
 
         fill-wait-time = TIME
 
      - Time in seconds to wait for a fill event before challenging a false claim.
        Default: ``120``.
 
-   * - ``--unsafe-fill-time TIME``
-     - ::
+   * - ::
 
         unsafe-fill-time = TIME
 
      - Time in seconds before request expiry, during which the agent will consider it
        unsafe to fill and ignore the request. Default: ``600``. For more info: :ref:`Unsafe Fill Time`
 
-   * - ``--log-level LEVEL``
-     - ::
+   * - ::
 
         log-level = LEVEL
 
      - Logging level, one of ``debug``, ``info``, ``warning``, ``error``, ``critical``.
        Default: ``info``.
 
-   * - ``--metrics-prometheus-port PORT``
-     - ::
+   * - ::
 
         [metrics]
         prometheus-port = PORT
 
      - Provide Prometheus metrics on the specified port.
 
-   * - ``--source-chain NAME``
-     - ::
+   * - ::
 
         source-chain = NAME
 
@@ -193,26 +179,20 @@ Reference
        No longer needed because the agent supports multiple chain pairs.
 
 
-   * - ``--target-chain NAME``
-     - ::
+   * - ::
 
         target-chain = NAME
 
      - Name of the target chain. Deprecated and will be removed.
        No longer needed because the agent supports multiple chain pairs.
 
-   * - ``--chain NAME=URL``
-     - ::
+   * - ::
 
         [chains.NAME]
         rpc-url = URL
 
      - Associate a JSON-RPC endpoint URL with chain NAME. May be given multiple times.
-       Command-line option example::
-
-         --chain foo=http://foo.bar:8545
-
-       Configuration file example::
+       Example::
 
         [chains.foo]
         rpc-url = "http://foo.bar:8545"
