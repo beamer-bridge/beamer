@@ -197,3 +197,150 @@ Options reference
         [chains.foo]
         rpc-url = "http://foo.bar:8545"
 
+
+.. _config-health-check:
+
+Health Check configuration
+--------------------------
+
+The :ref:`command-health-check` command is configured by a TOML configuration file 
+which is specified by the ``-c``/``--config`` option. 
+
+An example configuration::
+
+    agent-address=""
+    deployment-dir="../deployments/mainnet"
+    notification-system="telegram"
+
+    [notification.rocketchat]
+    url=""
+    channel=""
+    request-throttling-in-sec=60
+
+    [notification.telegram]
+    token=""
+    chat-id=""
+    request-throttling-in-sec=0
+
+    [chains.arbitrum]
+    rpc-url=""
+    explorer="https://arbiscan.io/tx/"
+    chain-id=42161
+
+    [chains.optimism]
+    rpc-url=""
+    explorer="https://optimistic.etherscan.io/tx/"
+    chain-id=10
+
+    [tokens]
+    # Each token is represented by a pair [chain-id, token-address].
+    # All tokens within the same list are considered equivalent and
+    # transfers between them are allowed.
+    USDC = [
+        ["10", "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"],
+        ["42161", "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"]
+    ]
+
+
+Options reference
+~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Configuration section / key
+     - Description
+
+   * - ::
+
+        agent-address = ADDRESS
+
+     - Address of the agent account.
+
+   * - ::
+
+        deployment-dir = PATH
+
+     - Path to the deployment directory as it can be seen `here <https://github.com/beamer-bridge/beamer/tree/07d66e0bb8c76bb1ff219e24e34e1c24ee7890c6/deployments>`_.
+
+   * - ::
+
+        notification-system = SYSTEM
+
+     - The notification system to use, either ``telegram`` or ``rocketchat``.
+
+   * - ::
+
+        
+        [notification.rocketchat]
+        url = URL
+
+     - URL of the RocketChat server where the notifications should be sent to.
+
+   * - ::
+
+        
+        [notification.rocketchat]
+        channel = NAME
+
+     - Name of the RocketChat channel where the notifications should be sent to.
+
+   * - ::
+
+        
+        [notification.telegram]
+        token = TOKEN
+
+     - Specifies the Telegram authentication token.
+
+   * - ::
+
+        
+        [notification.telegram]
+        chat-id = ID
+
+     - The ID of the chat where the notification should be sent to.
+
+   * - ::
+
+        
+        [notification.SYSTEM]
+        request-throttling-in-sec = TIME
+
+     - Throttles the notifications to the specified number of seconds.
+
+   * - ::
+
+        [chains.NAME]
+        rpc-url = URL
+
+     - Associate a JSON-RPC endpoint URL with chain NAME. May be given multiple times.
+       Example::
+
+        [chains.foo]
+        rpc-url = "http://foo.bar:8545"
+
+   * - ::
+
+        [chains.NAME]
+        explorer = URL
+
+     - Specifies the transaction URL path of a block explorer for the chain NAME.
+   
+   * - ::
+
+        [chains.NAME]
+        chain-id = CHAIN_ID
+
+     - The chain id for chain NAME.
+
+   * - ::
+
+        [tokens]
+        NAME = [
+          [CHAIN_ID, TOKEN_ADDRESS],
+          [CHAIN_ID, TOKEN_ADDRESS]
+        ]
+
+     - Specifies the token NAME. For each chain a pair [CHAIN_ID, TOKEN_ADDRESS] is added to the list.
+
