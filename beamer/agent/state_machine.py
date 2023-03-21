@@ -157,15 +157,9 @@ def _proof_ready_for_l1_relay(request: Request) -> bool:
 def _timestamp_is_l1_finalized(
     timestamp: Timestamp, context: Context, target_chain_id: ChainId
 ) -> bool:
-    # The entry in `finality_periods` must exist, because it is checked during request creation
-    # target_chain_finality = context.finality_periods[target_chain_id]
-
-    # FIXME: Remove this for the above once the contracts with the event are deployed
-    target_chain_finality = context.finality_periods.get(target_chain_id)
-    if target_chain_finality is None:
-        target_chain = context.request_manager.functions.chains(target_chain_id).call()
-        target_chain_finality = target_chain[0]
-
+    # The internal memory should not be none because at this point
+    # the ChainUpdated event must have arrived, otherwise there would be no request
+    target_chain_finality = context.finality_periods[target_chain_id]
     return int(time.time()) > timestamp + target_chain_finality
 
 
