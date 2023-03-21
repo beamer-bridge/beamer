@@ -77,7 +77,8 @@ command will notify the user by sending everything either to Telegram or RocketC
      - Description
 
    * - ``--config PATH``
-     - Path to the config file with chains configuration.
+     - Path to the config file with chains configuration. 
+       See :ref:`config-health-check` for available options.
 
    * - ``--log-level LEVEL``
      - Logging level, one of ``debug``, ``info``, ``warning``, ``error``, ``critical``.
