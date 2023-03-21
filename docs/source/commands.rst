@@ -1,8 +1,10 @@
 Command reference
 -----------------
 
+The Beamer software currently supports two commands: 
 
-
+* :ref:`command-agent` allows to run a Beamer agent.
+* :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 
 .. _command-agent:
 
@@ -54,4 +56,30 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
        Example::
 
          --chain foo=http://foo.bar:8545
+
+
+.. _command-health-check:
+
+``beamer health-check``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``health-check`` command scans the contracts for the emitted events and 
+analyzes whether there is a missed fill, unclaimed transaction or a challenge 
+game going on. In addition to this, if an ``agent-address`` is provided in the config 
+file, the final notification will also include the liquidity on all chains for all the 
+tokens specified inside the configuration file for the provided agent address. The 
+command will notify the user by sending everything either to Telegram or RocketChat.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option 
+     - Description
+
+   * - ``--config PATH``
+     - Path to the config file with chains configuration.
+
+   * - ``--log-level LEVEL``
+     - Logging level, one of ``debug``, ``info``, ``warning``, ``error``, ``critical``.
+       Default: ``error``.
 
