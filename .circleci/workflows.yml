@@ -179,6 +179,15 @@ jobs:
       - initialize-environment
       - run: poetry run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term
 
+  e2e-test-ethereum:
+    executor: vm
+    steps:
+      - initialize-environment
+      - run: bash docker/ethereum/ethereum.sh up
+      - run: bash docker/ethereum/ethereum.sh deploy-beamer
+      - run: bash docker/ethereum/ethereum.sh e2e-test
+      - run: bash docker/ethereum/ethereum.sh down
+
   e2e-test-optimism:
     executor: vm
     environment:
@@ -347,6 +356,10 @@ workflows:
       - test-beamer:
           requires:
             - compile-contracts
+      - e2e-test-ethereum:
+          requires:
+            - compile-contracts
+            - create-relayers
       - e2e-test-optimism:
           requires:
             - compile-contracts
