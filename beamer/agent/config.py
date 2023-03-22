@@ -26,6 +26,8 @@ class Config:
     unsafe_fill_time: int
     prometheus_metrics_port: Optional[int]
     log_level: str
+    poll_period: float
+    poll_period_per_chain: dict[str, float]
 
 
 def _set_value(config: dict[str, Any], key: str, value: Any) -> None:
@@ -83,6 +85,7 @@ def _default_config() -> dict:
         "rpc_urls": {},
         "metrics": {},
         "tokens": {},
+        "poll-period": 5.0,
     }
 
 
@@ -110,9 +113,13 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         raise ConfigError(f"missing settings: {missing}")
 
     rpc_urls = {}
+    poll_period_per_chain = {}
 
     for chain_name, chain_info in config["chains"].items():
         rpc_urls[chain_name] = URL(chain_info["rpc-url"])
+        poll_period = chain_info.get("poll-period")
+        if poll_period is not None:
+            poll_period_per_chain[chain_name] = float(poll_period)
 
     path = Path(_get_value(config, "account.path"))
     password = _get_value(config, "account.password")
@@ -130,4 +137,6 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         unsafe_fill_time=config["unsafe-fill-time"],
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
         log_level=_get_value(config, "log-level"),
+        poll_period=config["poll-period"],
+        poll_period_per_chain=poll_period_per_chain,
     )
