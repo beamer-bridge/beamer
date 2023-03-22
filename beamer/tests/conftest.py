@@ -179,6 +179,7 @@ def config(request_manager, fill_manager, token, token_list):
     token.mint(account.address, 300)
     url = URL(ape.config.provider.uri)
     rpc_urls = {"l1": URL(url), "l2a": URL(url), "l2b": URL(url)}
+    poll_period_per_chain = {"l1": 2.0}
     config = Config(
         rpc_urls=rpc_urls,
         deployment_info=deployment_info,
@@ -189,7 +190,7 @@ def config(request_manager, fill_manager, token, token_list):
         prometheus_metrics_port=None,
         log_level="debug",
         poll_period=1.0,
-        poll_period_per_chain={},
+        poll_period_per_chain=poll_period_per_chain,
     )
     beamer.agent.metrics.init(config=config, source_rpc_url=url, target_rpc_url=url)
     return config
