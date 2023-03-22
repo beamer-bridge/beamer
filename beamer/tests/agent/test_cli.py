@@ -50,6 +50,7 @@ def setup_relayer_executable():
 _CONFIG_FILE = """
 unsafe-fill-time = {unsafe_fill_time}
 deployment-dir = "{deployment_dir}"
+poll-period = {poll_period}
 
 [account]
 path = "{path}"
@@ -57,6 +58,7 @@ password = "test"
 
 [chains.l1]
 rpc-url = "{l1_rpc_url}"
+poll-period = {l1_poll_period}
 
 [chains.foo]
 rpc-url = "{foo_rpc_url}"
@@ -84,6 +86,8 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
         str(deployment_dir),
         "--unsafe-fill-time",
         unsafe_fill_time,
+        "--poll-period",
+        config.poll_period,
     )
 
 
@@ -95,6 +99,8 @@ def _generate_options_config(keyfile, deployment_dir, config, unsafe_fill_time):
         bar_rpc_url=config.rpc_urls["l2b"],
         deployment_dir=deployment_dir,
         unsafe_fill_time=unsafe_fill_time,
+        poll_period=config.poll_period,
+        l1_poll_period=config.poll_period_per_chain["l1"],
     )
     config_file = keyfile.parent / "agent.conf"
     config_file.write_text(content)
