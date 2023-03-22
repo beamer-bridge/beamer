@@ -56,6 +56,11 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
        Example::
 
          --chain foo=http://foo.bar:8545
+    
+   * - ``--poll-period``
+     - Time in seconds which is waited before new events are fetched from the chains after 
+       the last fetch. If a value for a specific chain is provided in the config file, it 
+       takes precedence for this chain. Default: ``5.0``.
 
 
 .. _command-health-check:

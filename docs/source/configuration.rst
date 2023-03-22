@@ -17,6 +17,7 @@ An example configuration::
     deployment-dir = "deployments/goerli"
     fill-wait-time = 120
     unsafe-fill-time = 600
+    poll-period = 5.0
 
     [account]
     path = "account.json"
@@ -27,6 +28,7 @@ An example configuration::
 
     [chains.l1]
     rpc-url = "GOERLI_TESTNET_RPC_URL"
+    poll-period = 60.0
 
     [chains.goerli-arbitrum]
     rpc-url = "GOERLI_ARBITRUM_RPC_URL"
@@ -196,6 +198,22 @@ Options reference
 
         [chains.foo]
         rpc-url = "http://foo.bar:8545"
+
+   * - ::
+
+        poll-period = TIME
+
+     - Time in seconds to wait between two consecutive RPC requests for new events.
+       The value applies to all chains that don't have the chain-specific poll period defined.
+       Default: ``5.0``.
+
+   * - ::
+
+        [chains.NAME]
+        poll-period = TIME
+
+     - Time in seconds to wait between two consecutive RPC requests for new events.
+       The value applies only to chain NAME, taking precedence over the global poll period.
 
 
 .. _config-health-check:
