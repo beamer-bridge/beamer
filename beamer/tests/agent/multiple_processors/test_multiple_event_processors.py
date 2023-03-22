@@ -135,6 +135,8 @@ def _get_config(
         unsafe_fill_time=600,
         prometheus_metrics_port=None,
         log_level="debug",
+        poll_period=1.0,
+        poll_period_per_chain={},
     )
     return config
 

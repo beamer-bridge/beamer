@@ -151,6 +151,8 @@ def make_context() -> Tuple[Context, Config]:
         prometheus_metrics_port=None,
         log_level="debug",
         unsafe_fill_time=1,
+        poll_period=1.0,
+        poll_period_per_chain={},
     )
 
     context = Context(

@@ -4,10 +4,8 @@ import time
 from http import HTTPStatus
 
 import ape
-import pytest
 import structlog.testing
 
-import beamer.agent
 from beamer.agent.agent import Agent
 from beamer.tests.util import HTTPProxy
 
@@ -36,15 +34,6 @@ class _RateLimiter:
             return False
 
 
-# TODO: remove this once we add support for configurable poll periods.
-@pytest.fixture
-def _adjust_poll_period():
-    old_poll_period = beamer.agent.agent.POLL_PERIOD
-    beamer.agent.agent.POLL_PERIOD = 0.1
-    yield
-    beamer.agent.agent.POLL_PERIOD = old_poll_period
-
-
 def _post_with_rate_limit(rate_limiter, handler, url, post_body):
     if rate_limiter(url, post_body):
         handler.send_response_only(HTTPStatus.TOO_MANY_REQUESTS)
@@ -55,7 +44,7 @@ def _post_with_rate_limit(rate_limiter, handler, url, post_body):
             handler.complete(response)
 
 
-def test_rate_limiting_rpc(config, _adjust_poll_period):
+def test_rate_limiting_rpc(config):
     ape.chain.mine(200)
 
     post_rate_limited = functools.partial(_post_with_rate_limit, _RateLimiter(2))

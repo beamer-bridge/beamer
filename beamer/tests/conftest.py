@@ -1,5 +1,6 @@
 # flake8: noqa: E402
 from dataclasses import dataclass
+from typing import cast
 
 import ape
 import eth_account
@@ -7,10 +8,6 @@ import pytest
 
 import beamer.agent.chain
 import beamer.agent.metrics
-
-beamer.agent.chain.POLL_PERIOD = 1  # Change period for tests
-from typing import cast
-
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
 from beamer.agent.contracts import ContractInfo, DeploymentInfo
@@ -191,6 +188,8 @@ def config(request_manager, fill_manager, token, token_list):
         unsafe_fill_time=600,
         prometheus_metrics_port=None,
         log_level="debug",
+        poll_period=1.0,
+        poll_period_per_chain={},
     )
     beamer.agent.metrics.init(config=config, source_rpc_url=url, target_rpc_url=url)
     return config

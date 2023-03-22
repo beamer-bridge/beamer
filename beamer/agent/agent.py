@@ -11,7 +11,7 @@ from web3.middleware import latest_block_based_cache_middleware
 
 
 import beamer.agent.metrics
-from beamer.agent.chain import POLL_PERIOD, EventMonitor, EventProcessor
+from beamer.agent.chain import EventMonitor, EventProcessor
 from beamer.agent.config import Config
 from beamer.agent.contracts import ContractInfo, make_contracts
 from beamer.agent.state_machine import Context
@@ -83,11 +83,14 @@ class Agent:
             contracts = make_contracts(w3, contracts_info)
             request_manager = contracts["RequestManager"]
             fill_manager = contracts["FillManager"]
+            poll_period = self._config.poll_period_per_chain.get(
+                chain_name, self._config.poll_period
+            )
             self._event_monitors[chain_id] = EventMonitor(
                 web3=w3,
                 contracts=(request_manager, fill_manager),
                 deployment_block=_get_deployment_block(contracts_info),
-                poll_period=POLL_PERIOD,
+                poll_period=poll_period,
                 on_new_events=[],
                 on_sync_done=[],
             )
