@@ -9,7 +9,7 @@ PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
 
 CACHE_DIR=$(obtain_cache_dir "$0")
 DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${ROOT}/scripts/deployment/ganache-local-ethereum.json"
+DEPLOYMENT_CONFIG_FILE="${ROOT}/scripts/deployment/ethereum-local.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
