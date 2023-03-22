@@ -112,6 +112,9 @@ class EventMonitor:
 
 
 class EventProcessor:
+    # Internal wait time for checking if new events are being queued
+    _WAIT_TIME = 1
+
     def __init__(self, context: Context):
         # This lock protects the following objects:
         #   - self._events
@@ -164,11 +167,11 @@ class EventProcessor:
         # Wait until all past events are fetched and in the queue
         # so the agent can sync to the current state
         while not self._synced and not self._stop:
-            self._have_new_events.wait(POLL_PERIOD)
+            self._have_new_events.wait(EventProcessor._WAIT_TIME)
             self._have_new_events.clear()
 
         while not self._stop:
-            if self._have_new_events.wait(POLL_PERIOD):
+            if self._have_new_events.wait(EventProcessor._WAIT_TIME):
                 self._have_new_events.clear()
             if self._events:
                 self._process_events()
