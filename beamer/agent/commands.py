@@ -58,6 +58,12 @@ def _sigint_handler(agent: Agent) -> None:
     unsafe to fill and ignore the request.""",
 )
 @click.option(
+    "--poll-period",
+    type=float,
+    help="""Time in seconds which is waited before new events are fetched from the chains after
+    the last fetch. Default: 5.0""",
+)
+@click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
     help="The log level. Default: info",
@@ -96,6 +102,7 @@ def agent(
     target_chain: Optional[str],
     metrics_prometheus_port: Optional[int],
     unsafe_fill_time: Optional[int],
+    poll_period: Optional[float],
 ) -> None:
     """Start Beamer Bridge Agent"""
 
@@ -114,6 +121,7 @@ def agent(
         "account.path": account_path,
         "account.password": account_password,
         "unsafe-fill-time": unsafe_fill_time,
+        "poll-period": poll_period,
     }
 
     for chainspec in chain:
