@@ -241,6 +241,32 @@ An example configuration::
         ["42161", "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8"]
     ]
 
+Notification system
+~~~~~~~~~~~~~~~~~~~
+
+Depending on the notification system you want to use, you will have to set
+``notification-system`` to ``rocketchat`` or ``telegram``.
+
+If ``notification-system`` is set to ``rocketchat`` provide the following keys:
+
+* ``notification.rocketchat.url``: The RocketChat webhook url where the message should be posted
+* ``notification.rocketchat.channel``: The RocketChat channel where the message should be posted
+* ``notification.rocketchat.request-trottling-in-sec``: Some RocketChat servers have a limit on how many messages can be
+  posted in a given time. This parameter allows you to configure the time between messages.
+
+If ``notification-system`` is set to ``telegram`` provide the following keys:
+
+* ``notification.telegram.token``: The Telegram bot token
+* ``notification.telegram.chat-id``: The Telegram chat id
+
+To get a Telegram bot token, you need to contact the `@BotFather <https://t.me/BotFather>`_ on Telegram and first create a 
+bot that will receive the notifications. When in chat with the BotFather, type ``/newbot`` and follow the instructions. Once
+you've created the bot, the BotFather will give you a token. Copy that token and add it to the ``notification.telegram.token``.
+
+Now, start a chat with the bot you just created and send a message to it. After that forward that message to the @myidbot. 
+The myidbot will reply with your chat-id. Copy that id and add it to the ``notification.telegram.chat-id`` key.
+
+That's it! Now you should have all the keys necessary to send notifications to Telegram.
 
 Options reference
 ~~~~~~~~~~~~~~~~~
