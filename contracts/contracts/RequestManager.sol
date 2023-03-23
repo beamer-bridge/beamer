@@ -42,14 +42,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint96 withdrawClaimId;
         address filler;
         bytes32 fillId;
-        mapping(bytes32 => bool) invalidFillIds;
+        mapping(bytes32 fillId => bool invalid) invalidFillIds;
     }
 
     struct Claim {
         bytes32 requestId;
         address claimer;
         uint96 claimerStake;
-        mapping(address => uint96) challengersStakes;
+        mapping(address challenger => uint96 stake) challengersStakes;
         address lastChallenger;
         uint96 challengerStakeTotal;
         uint256 withdrawnAmount;
@@ -187,16 +187,16 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
 
     /// Maps target rollup chain IDs to finality periods.
     /// Finality periods are in seconds.
-    mapping(uint256 => uint256) public finalityPeriods;
+    mapping(uint256 chainId => uint256 finalityPeriod) public finalityPeriods;
 
     /// Maps request IDs to requests.
-    mapping(bytes32 => Request) public requests;
+    mapping(bytes32 requestId => Request) public requests;
 
     /// Maps claim IDs to claims.
-    mapping(uint96 => Claim) public claims;
+    mapping(uint96 claimId => Claim) public claims;
 
     /// Maps ERC20 token address to tokens
-    mapping(address => Token) public tokens;
+    mapping(address tokenAddress => Token) public tokens;
 
     /// Compute the liquidity provider fee that needs to be paid for a given transfer amount.
     function lpFee(address tokenAddress, uint256 amount)

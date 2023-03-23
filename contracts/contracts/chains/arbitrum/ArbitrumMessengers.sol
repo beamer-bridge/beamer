@@ -14,7 +14,7 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
     IInbox public immutable inbox;
 
     /// Maps addresses to ETH deposits to be used for paying the submission fee.
-    mapping(address => uint256) public deposits;
+    mapping(address depositor => uint256 deposit) public deposits;
 
     constructor(address bridge_, address inbox_) {
         bridge = IBridge(bridge_);

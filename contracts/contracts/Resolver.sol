@@ -29,7 +29,7 @@ contract Resolver is Ownable, RestrictedCalls {
     );
 
     /// Maps source chain IDs to source chain infos.
-    mapping(uint256 => SourceChainInfo) public sourceChainInfos;
+    mapping(uint256 sourceChainId => SourceChainInfo) public sourceChainInfos;
 
     /// Resolve the specified request.
     ///

@@ -36,7 +36,7 @@ contract EthereumL2Messenger is IMessenger, RestrictedCalls {
     Resolver public immutable resolver;
 
     /// Maps message hashes to their status.
-    mapping(bytes32 => MessageStatus) public messageHashes;
+    mapping(bytes32 messageHash => MessageStatus) public messageHashes;
 
     constructor(address resolver_) {
         resolver = Resolver(resolver_);

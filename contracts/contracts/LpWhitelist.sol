@@ -20,8 +20,8 @@ contract LpWhitelist is Ownable {
     /// .. seealso:: :sol:func:`removeAllowedLp`
     event LpRemoved(address lp);
 
-    /// The mapping indicating whether liquidity providers have allowance or not
-    mapping(address => bool) public allowedLps;
+    /// The mapping containing addresses allowed to provide liquidity.
+    mapping(address lp => bool allowed) public allowedLps;
 
     /// Modifier to check whether the passed address is an allowed LP
     modifier onlyAllowed(address addressToCheck) {
