@@ -21,7 +21,7 @@ default_ecosystem: ethereum
 
 solidity:
   evm_version: london
-  version: 0.8.13
+  version: 0.8.19
   import_remapping:
     - 'OpenZeppelin/openzeppelin-contracts@4.8.0/contracts=OpenZeppelin/4.8.0'
     - 'interfaces=Interfaces'
