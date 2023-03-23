@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.19;
 
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IArbSys.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/arbitrum/IBridge.sol";
