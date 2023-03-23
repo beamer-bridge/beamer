@@ -11,7 +11,7 @@ contract RestrictedCalls is Ownable {
     /// Maps caller chain IDs to tuples [caller, messenger].
     ///
     /// For same-chain calls, the messenger address is 0x0.
-    mapping(uint256 => address[2]) public callers;
+    mapping(uint256 callerChainId => address[2]) public callers;
 
     function _addCaller(
         uint256 callerChainId,

@@ -46,7 +46,7 @@ contract FillManager is Ownable, LpWhitelist {
     address public l1Resolver;
 
     /// Maps request IDs to fill IDs.
-    mapping(bytes32 => bytes32) public fills;
+    mapping(bytes32 requestID => bytes32 fillId) public fills;
 
     /// Constructor.
     ///
