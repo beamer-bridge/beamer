@@ -11,18 +11,17 @@ contract TestMessengerBase is IMessenger, RestrictedCalls {
     address public lastSender;
     bool public forwardMessages;
 
-    function callAllowed(address caller, address courier)
-        external
-        view
-        returns (bool)
-    {
+    function callAllowed(
+        address caller,
+        address courier
+    ) external view returns (bool) {
         return courier == address(this) && caller == lastSender;
     }
 
-    function sendMessage(address target, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address target,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         if (forwardMessages) {
             lastSender = msg.sender;
             (bool success, ) = target.call{gas: MESSAGE_GAS_LIMIT}(message);

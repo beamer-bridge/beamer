@@ -21,11 +21,10 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
         inbox = IInbox(inbox_);
     }
 
-    function callAllowed(address caller, address courier)
-        external
-        view
-        returns (bool)
-    {
+    function callAllowed(
+        address caller,
+        address courier
+    ) external view returns (bool) {
         // The call from L2 must be delivered by the Arbitrum bridge.
         if (courier != address(bridge)) return false;
 
@@ -53,10 +52,10 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
     }
 
     /* solhint-disable avoid-tx-origin */
-    function sendMessage(address target, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address target,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         uint256 submissionFee = inbox.calculateRetryableSubmissionFee(
             message.length,
             0
@@ -86,11 +85,10 @@ contract ArbitrumL1Messenger is IMessenger, RestrictedCalls {
 }
 
 contract ArbitrumL2Messenger is IMessenger, RestrictedCalls {
-    function callAllowed(address caller, address courier)
-        external
-        view
-        returns (bool)
-    {
+    function callAllowed(
+        address caller,
+        address courier
+    ) external view returns (bool) {
         // Arbitrum sets `msg.sender` on calls coming from L1 to be the aliased
         // form of the address that sent the message so we need to check
         // that aliased address here. In our case, that is the L2 alias of our
@@ -101,10 +99,10 @@ contract ArbitrumL2Messenger is IMessenger, RestrictedCalls {
             arbsys.mapL1SenderContractAddressToL2Alias(caller, address(0));
     }
 
-    function sendMessage(address target, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address target,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         IArbSys arbsys = IArbSys(address(100));
         arbsys.sendTxToL1(target, message);
     }

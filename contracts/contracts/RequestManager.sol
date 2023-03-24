@@ -199,31 +199,28 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     mapping(address tokenAddress => Token) public tokens;
 
     /// Compute the liquidity provider fee that needs to be paid for a given transfer amount.
-    function lpFee(address tokenAddress, uint256 amount)
-        public
-        view
-        returns (uint256)
-    {
+    function lpFee(
+        address tokenAddress,
+        uint256 amount
+    ) public view returns (uint256) {
         Token storage token = tokens[tokenAddress];
         return Math.max(token.minLpFee, (amount * token.lpFeePPM) / 1_000_000);
     }
 
     /// Compute the protocol fee that needs to be paid for a given transfer amount.
-    function protocolFee(address tokenAddress, uint256 amount)
-        public
-        view
-        returns (uint256)
-    {
+    function protocolFee(
+        address tokenAddress,
+        uint256 amount
+    ) public view returns (uint256) {
         return (amount * tokens[tokenAddress].protocolFeePPM) / 1_000_000;
     }
 
     /// Compute the total fee that needs to be paid for a given transfer amount.
     /// The total fee is the sum of the liquidity provider fee and the protocol fee.
-    function totalFee(address tokenAddress, uint256 amount)
-        public
-        view
-        returns (uint256)
-    {
+    function totalFee(
+        address tokenAddress,
+        uint256 amount
+    ) public view returns (uint256) {
         return lpFee(tokenAddress, amount) + protocolFee(tokenAddress, amount);
     }
 
@@ -358,10 +355,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// No claims must be active for the request.
     ///
     /// @param requestId ID of the expired request.
-    function withdrawExpiredRequest(bytes32 requestId)
-        external
-        validRequestId(requestId)
-    {
+    function withdrawExpiredRequest(
+        bytes32 requestId
+    ) external validRequestId(requestId) {
         Request storage request = requests[requestId];
 
         require(request.withdrawClaimId == 0, "Deposit already withdrawn");
@@ -391,7 +387,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param requestId ID of the request.
     /// @param fillId The fill ID.
     /// @return The claim ID.
-    function claimRequest(bytes32 requestId, bytes32 fillId)
+    function claimRequest(
+        bytes32 requestId,
+        bytes32 fillId
+    )
         external
         payable
         validRequestId(requestId)
@@ -487,11 +486,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// Alice and Bob, he would have to challenge with a stake of at least 16.
     ///
     /// @param claimId The claim ID.
-    function challengeClaim(uint96 claimId)
-        external
-        payable
-        validClaimId(claimId)
-    {
+    function challengeClaim(
+        uint96 claimId
+    ) external payable validClaimId(claimId) {
         Claim storage claim = claims[claimId];
         bytes32 requestId = claim.requestId;
         uint256 termination = claim.termination;
@@ -566,11 +563,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     ///
     /// @param claimId The claim ID.
     /// @return The claim stakes receiver.
-    function withdraw(uint96 claimId)
-        external
-        validClaimId(claimId)
-        returns (address)
-    {
+    function withdraw(
+        uint96 claimId
+    ) external validClaimId(claimId) returns (address) {
         return withdraw(msg.sender, claimId);
     }
 
@@ -588,11 +583,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param claimId The claim ID.
     /// @param participant The participant.
     /// @return The claim stakes receiver.
-    function withdraw(address participant, uint96 claimId)
-        public
-        validClaimId(claimId)
-        returns (address)
-    {
+    function withdraw(
+        address participant,
+        uint96 claimId
+    ) public validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         address claimer = claim.claimer;
         require(
@@ -638,11 +632,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         return stakeRecipient;
     }
 
-    function resolveClaim(address participant, uint96 claimId)
-        private
-        view
-        returns (address, uint256)
-    {
+    function resolveClaim(
+        address participant,
+        uint96 claimId
+    ) private view returns (address, uint256) {
         Claim storage claim = claims[claimId];
         Request storage request = requests[claim.requestId];
         uint96 withdrawClaimId = request.withdrawClaimId;
@@ -742,12 +735,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     ///
     /// @param requestId The request ID
     /// @return Whether the deposit corresponding to the given request ID was withdrawn
-    function isWithdrawn(bytes32 requestId)
-        public
-        view
-        validRequestId(requestId)
-        returns (bool)
-    {
+    function isWithdrawn(
+        bytes32 requestId
+    ) public view validRequestId(requestId) returns (bool) {
         return requests[requestId].withdrawClaimId != 0;
     }
 
@@ -759,10 +749,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     ///
     /// @param tokenAddress The address of the token contract.
     /// @param recipient The address the fees should be sent to.
-    function withdrawProtocolFees(address tokenAddress, address recipient)
-        external
-        onlyOwner
-    {
+    function withdrawProtocolFees(
+        address tokenAddress,
+        address recipient
+    ) external onlyOwner {
         uint256 amount = tokens[tokenAddress].collectedProtocolFees;
         require(amount > 0, "Protocol fee is zero");
         tokens[tokenAddress].collectedProtocolFees = 0;
@@ -802,10 +792,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     ///
     /// @param targetChainId The target chain ID.
     /// @param finalityPeriod Finality period in seconds.
-    function setFinalityPeriod(uint256 targetChainId, uint256 finalityPeriod)
-        external
-        onlyOwner
-    {
+    function setFinalityPeriod(
+        uint256 targetChainId,
+        uint256 finalityPeriod
+    ) external onlyOwner {
         require(finalityPeriod > 0, "Finality period must be greater than 0");
         finalityPeriods[targetChainId] = finalityPeriod;
 
@@ -825,11 +815,10 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param requestId The request ID
     /// @param fillId The fill ID
     /// @return Whether the fill ID is invalid for the given request ID
-    function isInvalidFill(bytes32 requestId, bytes32 fillId)
-        public
-        view
-        returns (bool)
-    {
+    function isInvalidFill(
+        bytes32 requestId,
+        bytes32 fillId
+    ) public view returns (bool) {
         return requests[requestId].invalidFillIds[fillId];
     }
 

@@ -14,10 +14,10 @@ contract EthereumL1Messenger is IMessenger, RestrictedCalls {
     }
 
     // Simply forward the message to the target on L1
-    function sendMessage(address target, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address target,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         (bool sent, ) = target.call(message);
         require(sent, "sending message failed");
     }
@@ -52,10 +52,10 @@ contract EthereumL2Messenger is IMessenger, RestrictedCalls {
     // Can be forwarded, if ever needed, by calling `relayMessage`.
     //
     // .. seealso:: :sol:func:`relayMessage`
-    function sendMessage(address, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         bytes32 messageHash = keccak256(message);
 
         require(

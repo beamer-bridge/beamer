@@ -21,8 +21,8 @@ interface IMessenger {
     ///
     /// @param caller The caller.
     /// @param courier The contract that is trying to deliver the message.
-    function callAllowed(address caller, address courier)
-        external
-        view
-        returns (bool);
+    function callAllowed(
+        address caller,
+        address courier
+    ) external view returns (bool);
 }
