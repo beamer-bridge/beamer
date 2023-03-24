@@ -1,4 +1,5 @@
 import ape
+import pytest
 
 from beamer.tests.constants import (
     FILL_ID,
@@ -267,3 +268,42 @@ def test_ppm_out_of_bound(request_manager, token):
 
     with ape.reverts("Maximum PPM of 999999 exceeded"):
         request_manager.updateToken(token.address, 0, 0, 0, ppm)
+
+
+def test_min_lp_fee(request_manager, token, chain_params, token_params, lp_margin_ppm):
+    target_chain_params = chain_params[0], int(3e12), 750_000
+    request_manager.updateChain(999, *target_chain_params)
+
+    source_chain_cost = (1_000_000 - chain_params[2]) * chain_params[1]
+    target_chain_cost = target_chain_params[2] * target_chain_params[1]
+    min_lp_fee = (
+        (source_chain_cost + target_chain_cost)
+        * token_params[1]
+        * (1_000_000 + lp_margin_ppm)
+        / 1e30
+    )
+
+    assert min_lp_fee == request_manager.minLpFee(999, token.address)
+
+
+@pytest.mark.parametrize("transfer_cost", [int(400e12)])
+def test_total_fee(request_manager, token, chain_params):
+    target_chain_params = chain_params[0], int(3e12), 750_000
+    request_manager.updateChain(999, *target_chain_params)
+
+    min_lp_fee = request_manager.minLpFee(999, token.address)
+    # find the value where lpFee == minLpFee to test with values lower and higher
+    conjunction_amount = min_lp_fee * 1_000_000 // request_manager.lpFeePPM()
+
+    assert min_lp_fee == request_manager.lpFee(999, token.address, conjunction_amount)
+
+    test_amounts = [conjunction_amount, conjunction_amount // 2, conjunction_amount * 2]
+
+    for amount in test_amounts:
+        assert request_manager.totalFee(
+            ape.chain.chain_id, 999, token.address, amount
+        ) == request_manager.lpFee(
+            ape.chain.chain_id, 999, token.address, amount
+        ) + request_manager.protocolFee(
+            amount
+        )
