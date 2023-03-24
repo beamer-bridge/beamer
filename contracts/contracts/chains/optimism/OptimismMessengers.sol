@@ -12,20 +12,19 @@ abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
 
     ICrossDomainMessenger public nativeMessenger;
 
-    function callAllowed(address caller, address courier)
-        external
-        view
-        returns (bool)
-    {
+    function callAllowed(
+        address caller,
+        address courier
+    ) external view returns (bool) {
         return
             courier == address(nativeMessenger) &&
             caller == nativeMessenger.xDomainMessageSender();
     }
 
-    function sendMessage(address target, bytes calldata message)
-        external
-        restricted(block.chainid)
-    {
+    function sendMessage(
+        address target,
+        bytes calldata message
+    ) external restricted(block.chainid) {
         nativeMessenger.sendMessage(target, message, MESSAGE_GAS_LIMIT);
     }
 }
