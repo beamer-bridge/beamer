@@ -2,6 +2,7 @@ import contextlib
 import json
 import os
 import signal
+import sys
 import time
 from pathlib import Path
 from subprocess import DEVNULL, PIPE
@@ -160,14 +161,21 @@ def _start_agent_test(config: Config):
 
 
 def _get_slave_contract_addresses(proc: psutil.Popen) -> dict[str, str]:
-    while True:
+    stdout = ""
+    while proc.status() == "running":
         line = proc.stdout.readline().decode()
-        if "Chain is ready" in line:
+        stdout += line
+        if "Chain is ready\n" == line:
             proc.stdin.write("get_contracts\n".encode())
             proc.stdin.flush()
             line = proc.stdout.readline().decode()
             contract_addresses = json.loads(line)
             return contract_addresses
+
+    sys.stderr.write("Slave process exited before detecting contract addresses!\n")
+    sys.stderr.write(stdout)
+    sys.stderr.flush()
+    sys.exit(1)
 
 
 def _stop_slave_tests(slave_procs: list[psutil.Popen]):
