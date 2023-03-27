@@ -5,6 +5,19 @@ import { Contract } from 'ethers';
 
 import type { EthereumAddress } from '@/types/data';
 
+type ConfirmationTimeMap = {
+  [chainId: string]: number;
+};
+
+const DEFAULT_CONFIRIMATION_TIME_BLOCKS = 1;
+const CONFIRMATION_TIME_BLOCKS: ConfirmationTimeMap = {
+  '1': 2,
+};
+
+export function getConfirmationTimeBlocksForChain(chainId: number) {
+  return CONFIRMATION_TIME_BLOCKS[chainId] ?? DEFAULT_CONFIRIMATION_TIME_BLOCKS;
+}
+
 export async function getLatestBlock(rpcUrl: string): Promise<Block> {
   const provider = getJsonRpcProvider(rpcUrl);
   return await provider.getBlock('latest');

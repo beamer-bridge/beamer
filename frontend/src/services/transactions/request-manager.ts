@@ -8,6 +8,7 @@ import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 import {
+  getConfirmationTimeBlocksForChain,
   getJsonRpcProvider,
   getLatestBlock,
   getReadOnlyContract,
@@ -109,6 +110,9 @@ export async function sendRequestTransaction(
     amount.asBigNumber,
     validityPeriod.asBigNumber,
   ] as const;
+
+  const chainId = await signer.getChainId();
+
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
       ...requestParameter,
@@ -118,6 +122,8 @@ export async function sendRequestTransaction(
       ...requestParameter,
       { gasLimit: estimatedGasLimit },
     );
+
+    await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
 
     return transaction.hash;
   } catch (error: unknown) {
@@ -138,7 +144,12 @@ export async function getRequestIdentifier(
     RequestManagerDeployment.abi,
     provider,
   );
-  const receipt = await provider.waitForTransaction(transactionHash, 1);
+  const { chainId } = await provider.getNetwork();
+
+  const receipt = await provider.waitForTransaction(
+    transactionHash,
+    getConfirmationTimeBlocksForChain(chainId),
+  );
 
   if (receipt) {
     if (receipt.status === 1) {
@@ -355,6 +366,7 @@ export async function withdrawRequest(
     RequestManagerDeployment.abi,
     signer,
   );
+  const chainId = await signer.getChainId();
 
   const requestParameter = [requestIdentifier] as const;
 
@@ -368,7 +380,7 @@ export async function withdrawRequest(
       { gasLimit: estimatedGasLimit },
     );
 
-    await transaction.wait();
+    await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
   } catch (error: unknown) {
     console.error(error);
     const parseErrorMessage = getTransactionErrorMessage(error);

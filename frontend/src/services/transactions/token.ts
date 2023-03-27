@@ -2,7 +2,11 @@ import type { JsonRpcSigner, Listener } from '@ethersproject/providers';
 import type { Contract } from 'ethers';
 
 import StandardTokenDeployment from '@/assets/StandardToken.json';
-import { getReadOnlyContract, getReadWriteContract } from '@/services/transactions/utils';
+import {
+  getConfirmationTimeBlocksForChain,
+  getReadOnlyContract,
+  getReadWriteContract,
+} from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress, Token } from '@/types/data';
 import type { StandardToken } from '@/types/ethers-contracts';
@@ -24,12 +28,14 @@ export async function ensureTokenAllowance(
   const allowance = new UInt256(
     (await tokenContract.allowance(signerAddress, allowedSpender)).toString(),
   );
+  const chainId = await signer.getChainId();
+
   if (allowance.lt(minimumRequiredAmount)) {
     const transaction = await tokenContract.approve(
       allowedSpender,
       minimumRequiredAmount.asBigNumber,
     );
-    await transaction.wait();
+    await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
   }
 }
 
