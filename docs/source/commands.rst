@@ -32,6 +32,10 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
      - Time in seconds to wait for a fill event before challenging a false claim.
        Default: ``120``.
 
+   * - ``--confirmation-blocks BLOCKS``
+     - Number of confirmation blocks to consider the block ready for processing.
+       Default: ``0``.
+
    * - ``--unsafe-fill-time TIME``
      - Time in seconds before request expiry, during which the agent will consider it
        unsafe to fill and ignore the request. Default: ``600``. For more info: :ref:`Unsafe Fill Time`
