@@ -51,6 +51,7 @@ _CONFIG_FILE = """
 unsafe-fill-time = {unsafe_fill_time}
 deployment-dir = "{deployment_dir}"
 poll-period = {poll_period}
+confirmation-blocks = {confirmation_blocks}
 
 [account]
 path = "{path}"
@@ -62,6 +63,7 @@ rpc-url = "{base_chain_rpc_url}"
 [chains.foo]
 rpc-url = "{foo_rpc_url}"
 poll-period = {foo_poll_period}
+confirmation-blocks = {foo_confirmation_blocks}
 
 [chains.bar]
 rpc-url = "{bar_rpc_url}"
@@ -70,7 +72,7 @@ rpc-url = "{bar_rpc_url}"
 """
 
 
-def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
+def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time, confirmation_blocks):
     return (
         "--account-path",
         str(keyfile),
@@ -88,19 +90,25 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
         unsafe_fill_time,
         "--poll-period",
         config.poll_period,
+        "--confirmation-blocks",
+        confirmation_blocks,
     )
 
 
-def _generate_options_config(keyfile, deployment_dir, config, unsafe_fill_time):
+def _generate_options_config(
+    keyfile, deployment_dir, config, unsafe_fill_time, confirmation_blocks
+):
     content = _CONFIG_FILE.format(
         path=str(keyfile),
         base_chain_rpc_url=config.base_chain_rpc_url,
         foo_rpc_url=config.rpc_urls["l2a"],
+        foo_confirmation_blocks=config.confirmation_blocks["l2a"],
         bar_rpc_url=config.rpc_urls["l2b"],
         deployment_dir=deployment_dir,
         unsafe_fill_time=unsafe_fill_time,
         poll_period=config.poll_period,
         foo_poll_period=0.2,
+        confirmation_blocks=confirmation_blocks,
     )
     config_file = keyfile.parent / "agent.conf"
     config_file.write_text(content)
@@ -126,7 +134,9 @@ def test_cli(config, tmp_path, contracts, generate_options, unsafe_fill_time_opt
 
     unsafe_time, error = unsafe_fill_time_option
 
-    options = generate_options(keyfile, deployment_dir, config, unsafe_time)
+    options = generate_options(
+        keyfile, deployment_dir, config, unsafe_time, config.confirmation_blocks["l2a"]
+    )
     runner = CliRunner()
     result = runner.invoke(agent, options)
     if not error:
