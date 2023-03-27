@@ -225,13 +225,20 @@ class EventFetcher:
     _ETH_GET_LOGS_THRESHOLD_FAST = 2
     _ETH_GET_LOGS_THRESHOLD_SLOW = 5
 
-    def __init__(self, web3: Web3, contracts: tuple[Contract, ...], start_block: BlockNumber):
+    def __init__(
+        self,
+        web3: Web3,
+        contracts: tuple[Contract, ...],
+        start_block: BlockNumber,
+        confirmation_blocks: int,
+    ):
         self._web3 = web3
         self._chain_id = ChainId(web3.eth.chain_id)
         self._contract_addresses = [c.address for c in contracts]
         self._next_block_number = start_block
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
         self._event_abis = _make_topics_abi_mapping_for_contracts(contracts)
+        self._confirmation_blocks = confirmation_blocks
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
@@ -302,15 +309,17 @@ class EventFetcher:
     def fetch(self) -> list[Event]:
         try:
             block_data = self._web3.eth.get_block("latest")
-            block_number = BlockNumber(block_data["number"])
         except RequestException:
             return []
+
+        block_number = BlockNumber(block_data["number"] - self._confirmation_blocks)
 
         if block_number < self._next_block_number:
             return []
 
         result = []
         from_block = self._next_block_number
+
         while from_block <= block_number:
             to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
             try:

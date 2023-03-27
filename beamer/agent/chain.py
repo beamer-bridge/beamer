@@ -51,6 +51,7 @@ class EventMonitor:
         on_new_events: list[_NewEventsCallback],
         on_sync_done: list[_SyncDoneCallback],
         poll_period: float,
+        confirmation_blocks: int,
     ):
         self._web3 = web3
         self._chain_id = ChainId(self._web3.eth.chain_id)
@@ -60,6 +61,7 @@ class EventMonitor:
         self._on_new_events = on_new_events
         self._on_sync_done = on_sync_done
         self._poll_period = poll_period
+        self._confirmation_blocks = confirmation_blocks
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
@@ -84,7 +86,9 @@ class EventMonitor:
             "EventMonitor started",
             addresses=[c.address for c in self._contracts],
         )
-        fetcher = EventFetcher(self._web3, self._contracts, self._deployment_block)
+        fetcher = EventFetcher(
+            self._web3, self._contracts, self._deployment_block, self._confirmation_blocks
+        )
         current_block = self._web3.eth.block_number
         events = []
         while fetcher.synced_block < current_block:

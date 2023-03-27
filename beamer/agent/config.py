@@ -25,6 +25,7 @@ class Config:
     token_checker: TokenChecker
     fill_wait_time: int
     unsafe_fill_time: int
+    confirmation_blocks: dict[str, int]
     prometheus_metrics_port: Optional[int]
     log_level: str
     poll_period: float
@@ -87,10 +88,12 @@ def _default_config() -> dict:
         "metrics": {},
         "tokens": {},
         "poll-period": 5.0,
+        "confirmation-blocks": 0,
     }
 
 
 _REQUIRED_KEYS = (
+    "confirmation-blocks",
     "deployment-dir",
     "fill-wait-time",
     "unsafe-fill-time",
@@ -115,12 +118,16 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
 
     rpc_urls = {}
     poll_period_per_chain = {}
+    confirmation_blocks = {}
 
     for chain_name, chain_info in config["chains"].items():
         rpc_urls[chain_name] = URL(chain_info["rpc-url"])
         poll_period = chain_info.get("poll-period")
         if poll_period is not None:
             poll_period_per_chain[chain_name] = float(poll_period)
+        confirmation_blocks[chain_name] = chain_info.get(
+            "confirmation-blocks", config["confirmation-blocks"]
+        )
 
     path = Path(_get_value(config, "account.path"))
     password = _get_value(config, "account.password")
@@ -135,6 +142,7 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         rpc_urls=rpc_urls,
         token_checker=token_checker,
         base_chain_rpc_url=config["base-chain"]["rpc-url"],
+        confirmation_blocks=confirmation_blocks,
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
