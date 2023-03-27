@@ -103,8 +103,8 @@ jobs:
       - run: pyenv global 3.10.10
       - run: pip install -U pip
       - run: pip install poetry==1.4.1
-      - run: poetry install -vvv
-      - run: grep -q /home/circleci/.+/bin/activate ~/.bashrc || echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
+      - run: poetry --no-ansi install -vvv
+      - run: grep -q /home/circleci/.+/bin/activate ~/.bashrc || echo "source $(poetry --no-ansi env info -p)/bin/activate" >> ~/.bashrc
 
       - save_cache:
           key: beamer-dependencies-{{ checksum "poetry.lock" }}-{{ .Environment.CACHE_VERSION }}
@@ -162,7 +162,7 @@ jobs:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run ape test -s --gas beamer/tests/contracts
+      - run: poetry --no-ansi run ape test -s --gas beamer/tests/contracts
 
   compile-contracts:
     executor: vm
@@ -183,7 +183,7 @@ jobs:
     executor: vm
     steps:
       - initialize-environment
-      - run: poetry run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term
+      - run: poetry --no-ansi run ape test beamer/tests/{agent,health} -s --gas --cov beamer --cov-report=term
 
   e2e-test-ethereum:
     executor: vm
