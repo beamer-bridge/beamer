@@ -12,6 +12,7 @@ from typing_extensions import NotRequired
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 
+import beamer.agent.chain
 import beamer.agent.contracts
 import beamer.agent.events
 from beamer.agent.config import _merge_dicts
@@ -207,6 +208,7 @@ def fetch_events() -> ChainEventMap:
             web3,
             (contracts["RequestManager"], contracts["FillManager"]),
             BlockNumber(info["RequestManager"].deployment_block),
+            0,
         )
 
         events[chain_id] = ef.fetch()

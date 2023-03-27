@@ -64,6 +64,11 @@ def _sigint_handler(agent: Agent) -> None:
     the last fetch. Default: 5.0""",
 )
 @click.option(
+    "--confirmation-blocks",
+    type=int,
+    help="""Number of blocks to wait before processing a block""",
+)
+@click.option(
     "--log-level",
     type=click.Choice(("debug", "info", "warning", "error", "critical")),
     help="The log level. Default: info",
@@ -109,6 +114,7 @@ def agent(
     metrics_prometheus_port: Optional[int],
     unsafe_fill_time: Optional[int],
     poll_period: Optional[float],
+    confirmation_blocks: Optional[int],
 ) -> None:
     """Start Beamer Bridge Agent"""
 
@@ -129,6 +135,7 @@ def agent(
         "unsafe-fill-time": unsafe_fill_time,
         "poll-period": poll_period,
         "base-chain.rpc-url": base_chain,
+        "confirmation-blocks": confirmation_blocks,
     }
 
     for chainspec in chain:

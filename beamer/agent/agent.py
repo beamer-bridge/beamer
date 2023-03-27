@@ -9,7 +9,6 @@ from web3 import Web3
 from web3.contract import Contract
 from web3.middleware import latest_block_based_cache_middleware
 
-
 import beamer.agent.metrics
 from beamer.agent.chain import EventMonitor, EventProcessor
 from beamer.agent.config import Config
@@ -89,6 +88,7 @@ class Agent:
                 contracts=(request_manager, fill_manager),
                 deployment_block=_get_deployment_block(contracts_info),
                 poll_period=poll_period,
+                confirmation_blocks=self._config.confirmation_blocks[chain_name],
                 on_new_events=[],
                 on_sync_done=[],
             )
