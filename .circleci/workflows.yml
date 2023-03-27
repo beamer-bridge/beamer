@@ -96,7 +96,7 @@ jobs:
       - run: pyenv install --skip-existing 3.10.10
       - run: pyenv global 3.10.10
       - run: pip install -U pip
-      - run: pip install poetry==1.2.2
+      - run: pip install poetry==1.4.1
       - run: poetry install -vvv
       - run: grep -q /home/circleci/.+/bin/activate ~/.bashrc || echo "source $(poetry env info -p)/bin/activate" >> ~/.bashrc
 
