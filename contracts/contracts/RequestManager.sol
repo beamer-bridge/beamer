@@ -268,6 +268,26 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         return lpFee(targetChainId, tokenAddress, amount) + protocolFee(amount);
     }
 
+    function transferableAmount(
+        uint256 targetChainId,
+        address tokenAddress,
+        uint256 amount
+    ) public view returns (uint256) {
+        uint256 minFee = minLpFee(targetChainId, tokenAddress);
+        require(amount > minFee, "Amount not high enough to cover the fees");
+        // FIXME: There is a possible rounding error which leads to off by one unit
+        // currently the error happens in "our" favor so that the dust stays in the wallet.
+        // Can probably be fixed by rounding on the token.decimals() + 1 th digit
+        uint256 transferableAmount = (amount * 1_000_000) /
+            (1_000_000 + lpFeePPM + protocolFeePPM);
+
+        if ((transferableAmount * lpFeePPM) / 1_000_000 >= minFee) {
+            return transferableAmount;
+        }
+
+        return ((amount - minFee) * 1_000_000) / (1_000_000 + protocolFeePPM);
+    }
+
     // Modifiers
 
     /// Check whether a given request ID is valid.
