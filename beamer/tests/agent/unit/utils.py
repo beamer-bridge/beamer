@@ -147,6 +147,7 @@ def make_context() -> Tuple[Context, Config]:
         token_checker=checker,
         fill_wait_time=1,
         prometheus_metrics_port=None,
+        confirmation_blocks={"l2a": 0, "l2b": 0},
         log_level="debug",
         unsafe_fill_time=1,
         poll_period=1.0,

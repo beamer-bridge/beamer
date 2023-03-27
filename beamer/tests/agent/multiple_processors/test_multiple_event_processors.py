@@ -122,15 +122,18 @@ def _get_config(
         )
         deployment_info[chain_id] = contracts_info
     rpc_urls = {}
+    confirmation_blocks = {}
     for chain_id, port in chain_map.items():
         rpc_url = f"http://127.0.0.1:{port}"
         rpc_urls[str(chain_id)] = URL(rpc_url)
+        confirmation_blocks[str(chain_id)] = 0
 
     token_list = _get_token_list(chain_map, slave_contract_addresses)
     config = Config(
         rpc_urls=rpc_urls,
         base_chain_rpc_url=url,
         deployment_info=deployment_info,
+        confirmation_blocks=confirmation_blocks,
         token_checker=TokenChecker(token_list),
         account=account,
         fill_wait_time=0,

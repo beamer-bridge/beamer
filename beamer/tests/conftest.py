@@ -221,6 +221,7 @@ def config(request_manager, fill_manager, token, token_list):
     config = Config(
         rpc_urls=rpc_urls,
         deployment_info=deployment_info,
+        confirmation_blocks={"l2a": 0, "l2b": 0},
         token_checker=TokenChecker(token_list),
         account=account,
         fill_wait_time=0,

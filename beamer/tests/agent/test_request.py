@@ -377,3 +377,39 @@ def test_event_fetcher_progress_without_events(agent, direction):
                 != ape.chain.blocks[-1].number
             ):
                 sleeper.sleep(0.1)
+
+
+def test_handling_reorgs(config, direction, token, request_manager):
+    requester, target = alloc_accounts(2)
+    confirmation_blocks = 2
+    config.confirmation_blocks["l2a"] = confirmation_blocks
+    agent = Agent(config)
+    agent.start()
+
+    snapshot = ape.chain.snapshot()
+    ape.chain.mine(confirmation_blocks + 1)
+    request_id_1 = make_request(request_manager, token, requester, target, 1)
+
+    assert ape.chain.blocks[-1].number is not None
+    expected_block_number = ape.chain.blocks[-1].number - confirmation_blocks
+    with Sleeper(1) as sleeper:
+        while (
+            agent.get_context(direction).latest_blocks[ChainId(ape.chain.chain_id)].number
+            != expected_block_number
+        ):
+            sleeper.sleep(0.1)
+    ape.chain.restore(snapshot)
+
+    ape.chain.mine(confirmation_blocks + 1)
+
+    assert agent.get_context(direction).requests.get(request_id_1) is None
+
+    request_id_2 = make_request(request_manager, token, requester, target, 1)
+
+    ape.chain.mine(confirmation_blocks)
+
+    with Sleeper(1) as sleeper:
+        while (agent.get_context(direction).requests.get(request_id_2)) is None:
+            sleeper.sleep(0.1)
+
+    agent.stop()
