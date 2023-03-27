@@ -9,7 +9,7 @@ commands:
       # Restore cached Python installation at /opt/circleci/.pyenv
       - restore_cache:
           name: Restore cached Python installation
-          key: python-3.10.6-{{ .Environment.CACHE_VERSION }}
+          key: python-3.10.10-{{ .Environment.CACHE_VERSION }}
 
   restore-python-packages:
     steps:
@@ -93,8 +93,8 @@ jobs:
       - restore-python
       - restore-python-packages
 
-      - run: pyenv install --skip-existing 3.10.6
-      - run: pyenv global 3.10.6
+      - run: pyenv install --skip-existing 3.10.10
+      - run: pyenv global 3.10.10
       - run: pip install -U pip
       - run: pip install poetry==1.2.2
       - run: poetry install -vvv
@@ -107,7 +107,7 @@ jobs:
             - ~/.bashrc
 
       - save_cache:
-          key: python-3.10.6-{{ .Environment.CACHE_VERSION }}
+          key: python-3.10.10-{{ .Environment.CACHE_VERSION }}
           paths:
             - /opt/circleci/.pyenv
 
