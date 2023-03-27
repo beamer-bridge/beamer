@@ -18,6 +18,7 @@ An example configuration::
     fill-wait-time = 120
     unsafe-fill-time = 600
     poll-period = 5.0
+    confirmation-blocks = 0
 
     [account]
     path = "account.json"
@@ -32,6 +33,7 @@ An example configuration::
 
     [chains.goerli-arbitrum]
     rpc-url = "GOERLI_ARBITRUM_RPC_URL"
+    confirmation-blocks = 1
 
     [chains.goerli-optimism]
     rpc-url = "GOERLI_OPTIMISM_RPC_URL"
@@ -157,6 +159,13 @@ Options reference
 
      - Time in seconds to wait for a fill event before challenging a false claim.
        Default: ``120``.
+
+   * - ::
+
+        confirmation-blocks = BLOCKS
+
+     - Number of confirmation blocks to consider the block ready for processing.
+       Default: ``0``.
 
    * - ::
 
