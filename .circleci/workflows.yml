@@ -69,7 +69,7 @@ parameters:
 executors:
   vm:
     machine:
-      image: ubuntu-2204:2022.10.2
+      image: ubuntu-2204:2023.02.1
       docker_layer_caching: true
     working_directory: ~/beamer
 
