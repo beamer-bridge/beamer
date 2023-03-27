@@ -93,6 +93,12 @@ jobs:
       - restore-python
       - restore-python-packages
 
+      # make sure pyenv is up to date and able to install our Python version
+      - run: |
+          cd $PYENV_ROOT
+          git fetch --tags
+          git checkout $(git tag --sort=-committerdate |head -n1)
+
       - run: pyenv install --skip-existing 3.10.10
       - run: pyenv global 3.10.10
       - run: pip install -U pip
