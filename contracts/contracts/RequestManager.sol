@@ -60,8 +60,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     struct Token {
         uint256 transferLimit;
         uint256 ethInToken;
-        uint32 lpFeePPM;
-        uint32 protocolFeePPM;
         uint256 collectedProtocolFees;
     }
 
@@ -125,15 +123,18 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address stakeRecipient
     );
 
+    /// Emitted when fees are updated.
+    ///
+    /// .. seealso:: :sol:func:`updateFees`
+    event FeesUpdated(uint32 minFeePPM, uint32 lpFeePPM, uint32 protocolFeePPM);
+
     /// Emitted when token object of a token address is updated.
     ///
     /// .. seealso:: :sol:func:`updateToken`
     event TokenUpdated(
         address indexed tokenAddress,
         uint256 transferLimit,
-        uint256 ethInToken,
-        uint32 lpFeePPM,
-        uint32 protocolFeePPM
+        uint256 ethInToken
     );
 
     /// Emitted when chain object of a chain id is updated.
@@ -183,8 +184,14 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// period of the target chain. This is done to allow for L1 resolution.
     uint256 public immutable challengePeriodExtension;
 
-    /// A constant to calculate profit for liquidity providers.
-    uint256 public immutable lpMarginPPM;
+    /// PPM to determine the minLpFee profit for liquidity providers.
+    uint32 public minFeePPM;
+
+    /// PPM from transfer amount to determine the LP's fee
+    uint32 public lpFeePPM;
+
+    /// PPM from transfer amount to determine the protocol's fee
+    uint32 public protocolFeePPM;
 
     /// The minimum validity period of a request.
     uint256 public constant MIN_VALIDITY_PERIOD = 30 minutes;
@@ -230,7 +237,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
                 sourceChain.transferCost +
                 targetChain.targetWeightPPM *
                 targetChain.transferCost) *
-                (lpMarginPPM + 1_000_000) *
+                (minFeePPM + 1_000_000) *
                 token.ethInToken) / 10 ** 30;
     }
 
@@ -240,17 +247,13 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address tokenAddress,
         uint256 amount
     ) public view returns (uint256) {
-        Token storage token = tokens[tokenAddress];
         uint256 minFee = minLpFee(targetChainId, tokenAddress);
-        return Math.max(minFee, (amount * token.lpFeePPM) / 1_000_000);
+        return Math.max(minFee, (amount * lpFeePPM) / 1_000_000);
     }
 
     /// Compute the protocol fee that needs to be paid for a given transfer amount.
-    function protocolFee(
-        address tokenAddress,
-        uint256 amount
-    ) public view returns (uint256) {
-        return (amount * tokens[tokenAddress].protocolFeePPM) / 1_000_000;
+    function protocolFee(uint256 amount) public view returns (uint256) {
+        return (amount * protocolFeePPM) / 1_000_000;
     }
 
     /// Compute the total fee that needs to be paid for a given transfer amount.
@@ -260,9 +263,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address tokenAddress,
         uint256 amount
     ) public view returns (uint256) {
-        return
-            lpFee(targetChainId, tokenAddress, amount) +
-            protocolFee(tokenAddress, amount);
+        return lpFee(targetChainId, tokenAddress, amount) + protocolFee(amount);
     }
 
     // Modifiers
@@ -288,19 +289,16 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     /// @param _claimRequestExtension Extension to claim a request after validity period ends.
     /// @param _claimPeriod Claim period, in seconds.
     /// @param _challengePeriodExtension Challenge period extension, in seconds.
-    /// @param _lpMarginPPM Liquidity provider profit margin.
     constructor(
         uint96 _claimStake,
         uint256 _claimRequestExtension,
         uint256 _claimPeriod,
-        uint256 _challengePeriodExtension,
-        uint256 _lpMarginPPM
+        uint256 _challengePeriodExtension
     ) {
         claimStake = _claimStake;
         claimRequestExtension = _claimRequestExtension;
         claimPeriod = _claimPeriod;
         challengePeriodExtension = _challengePeriodExtension;
-        lpMarginPPM = _lpMarginPPM;
     }
 
     /// Create a new transfer request.
@@ -345,10 +343,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             sourceTokenAddress,
             amount
         );
-        uint256 protocolFeeTokenAmount = protocolFee(
-            sourceTokenAddress,
-            amount
-        );
+        uint256 protocolFeeTokenAmount = protocolFee(amount);
 
         require(
             IERC20(sourceTokenAddress).allowance(msg.sender, address(this)) >=
@@ -808,29 +803,38 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         token.safeTransfer(recipient, amount);
     }
 
+    /// Update fees
+    ///
+    /// .. note:: This function can only be called by the contract owner.
+    ///
+    /// @param _minFeePPM Margin which is going to be applied to the minLpFee
+    /// @param _lpFeePPM LP percentage fee applied on transfer amount denominated in parts per million
+    /// @param _protocolFeePPM Protocol fee applied on transfer amount denominated in parts per million
+    function updateFees(
+        uint32 _minFeePPM,
+        uint32 _lpFeePPM,
+        uint32 _protocolFeePPM
+    ) external onlyOwner {
+        require(_lpFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
+        require(_protocolFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
+
+        minFeePPM = _minFeePPM;
+        lpFeePPM = _lpFeePPM;
+        protocolFeePPM = _protocolFeePPM;
+
+        emit FeesUpdated(_minFeePPM, _lpFeePPM, _protocolFeePPM);
+    }
+
     function updateToken(
         address tokenAddress,
         uint256 transferLimit,
-        uint256 ethInToken,
-        uint32 lpFeePPM,
-        uint32 protocolFeePPM
+        uint256 ethInToken
     ) external onlyOwner {
-        require(lpFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
-        require(protocolFeePPM <= 999_999, "Maximum PPM of 999999 exceeded");
-
         Token storage token = tokens[tokenAddress];
         token.transferLimit = transferLimit;
         token.ethInToken = ethInToken;
-        token.lpFeePPM = lpFeePPM;
-        token.protocolFeePPM = protocolFeePPM;
 
-        emit TokenUpdated(
-            tokenAddress,
-            transferLimit,
-            ethInToken,
-            lpFeePPM,
-            protocolFeePPM
-        );
+        emit TokenUpdated(tokenAddress, transferLimit, ethInToken);
     }
 
     /// Update chain information for a given chain ID.
