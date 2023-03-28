@@ -32,3 +32,12 @@ export class MockedERC20TokenContract {
 
   on = vi.fn();
 }
+
+export class MockedEvent {
+  removed = 0;
+  transactionHash?: string;
+
+  constructor(public props: Partial<MockedEvent> = {}) {
+    Object.assign(this, props);
+  }
+}

@@ -10,7 +10,7 @@ type ConfirmationTimeMap = {
 };
 
 const DEFAULT_CONFIRIMATION_TIME_BLOCKS = 1;
-const CONFIRMATION_TIME_BLOCKS: ConfirmationTimeMap = {
+export const CONFIRMATION_TIME_BLOCKS: ConfirmationTimeMap = {
   1: 2,
 };
 
@@ -22,9 +22,10 @@ export function getSafeEventHandler(
     const { chainId } = await provider.getNetwork();
     const confirmationTimeBlocks = getConfirmationTimeBlocksForChain(chainId);
 
-    const event = args[arguments.length] as unknown as Event;
+    const event = args[args.length - 1] as unknown as Event;
     if (event.removed) {
-      // Ignoring events coming from re-orged blocks
+      // Ignoring events coming from re-orged blocks as they are considered duplicates
+      // See why here: https://ethereum.stackexchange.com/a/10739
       return;
     }
 
