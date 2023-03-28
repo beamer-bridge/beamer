@@ -22,23 +22,23 @@
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400,
-                "lp_margin": 30
+                "challenge_period_extension": 86400
+            },
+            "fees": {
+                "min_fee_ppm": 300000,
+                "lp_fee_ppm":  3000,
+                "protocol_fee_ppm": 0
             },
             "tokens": [
                 {
                     "token_address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
                     "transfer_limit": 10000,
-                    "eth_in_token": "",
-                    "lp_fee_ppm": 3000,
-                    "protocol_fee_ppm": 0
+                    "eth_in_token": ""
                 },
                 {
                     "token_address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
                     "transfer_limit": 10000,
-                    "eth_in_token": "",
-                    "lp_fee_ppm": 3000,
-                    "protocol_fee_ppm": 0
+                    "eth_in_token": ""
                 }
             ]
         },
@@ -55,24 +55,24 @@
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400,
-                "lp_margin": 30
+                "challenge_period_extension": 86400
+            },
+            "fees": {
+                "min_fee_ppm": 300000,
+                "lp_fee_ppm":  3000,
+                "protocol_fee_ppm": 0
             },
             "tokens":
                 [
                     {
                         "token_address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
                         "transfer_limit": 10000,
-                        "eth_in_token": "",
-                        "lp_fee_ppm": 3000,
-                        "protocol_fee_ppm": 0
+                        "eth_in_token": ""
                     },
                     {
                         "token_address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-                        "transfer_limit": 100000000000000000000,
-                        "rate": 1000000000000000000,
-                        "lp_fee_ppm": 3000,
-                        "protocol_fee_ppm": 0
+                        "transfer_limit": 10000,
+                        "eth_in_token": ""
                     }
                 ]
         },
@@ -89,24 +89,24 @@
                 "claim_stake": 0.0015,
                 "claim_request_extension": 86400,
                 "claim_period": 86400,
-                "challenge_period_extension": 86400,
-                "lp_margin_ppm": 30
+                "challenge_period_extension": 86400
+            },
+            "fees": {
+                "min_fee_ppm": 300000,
+                "lp_fee_ppm":  3000,
+                "protocol_fee_ppm": 0
             },
             "tokens":
                 [
                     {
                         "token_address": "0x66a2A913e447d6b4BF33EFbec43aAeF87890FBbc",
                         "transfer_limit": 10000,
-                        "eth_in_token": "",
-                        "lp_fee_ppm": 3000,
-                        "protocol_fee_ppm": 0
+                        "eth_in_token": ""
                     },
                     {
                         "token_address": "0xf74195Bb8a5cf652411867c5C2C5b8C2a402be35",
                         "transfer_limit": 10000,
-                        "eth_in_token": "",
-                        "lp_fee_ppm": 3000,
-                        "protocol_fee_ppm": 0
+                        "eth_in_token": ""
                     }
                 ]
         }
