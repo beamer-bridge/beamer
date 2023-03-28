@@ -85,7 +85,7 @@ e2e_test() {
     l2_rpc=http://0.0.0.0:8547
     password=""
     relayer=${ROOT}/relayer/relayer-node18-linux-x64
-    l1_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.L1.ArbitrumL1Messenger.address')
+    l1_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.base_chain.ArbitrumL1Messenger.address')
 
     network_config="${CACHE_DIR}/localnetwork.json"
     echo Copying network config to $network_config

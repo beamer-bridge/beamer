@@ -34,7 +34,7 @@ e2e_test() {
     l2_rpc=http://0.0.0.0:8545
     password=""
     relayer=${ROOT}/relayer/relayer-node18-linux-x64
-    l2_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.L2."1337".EthereumL2Messenger.address')
+    l2_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.chains."1337".EthereumL2Messenger.address')
 
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
 
