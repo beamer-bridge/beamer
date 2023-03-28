@@ -295,12 +295,12 @@ describe('EthereumProvider', () => {
       expect(eipProvider.on).toHaveBeenCalledWith('disconnect', expect.anything());
     });
 
-    it('attaches an event listener which triggers a location.reload on network change', () => {
-      const originalReload = window.location;
-      const mockReload = vi.fn();
+    it('attaches an event listener which triggers a location.replace on network change', () => {
+      const originalReplace = window.location.replace;
+      const mockReplace = vi.fn();
       Object.defineProperty(window, 'location', {
         configurable: true,
-        value: { reload: mockReload },
+        value: { replace: mockReplace },
       });
       const eipProvider = new MockedEip1193Provider();
       const ethereumProvider = new TestEthereumProvider(eipProvider);
@@ -317,11 +317,11 @@ describe('EthereumProvider', () => {
 
       networkEventCallback({ chainId: 5 }, { chainId: 10 });
 
-      expect(mockReload).toHaveBeenCalledWith();
+      expect(mockReplace).toHaveBeenCalledWith(window.location.pathname);
 
       Object.defineProperty(window, 'location', {
         configurable: true,
-        value: { reload: originalReload },
+        value: { reload: originalReplace },
       });
     });
   });
