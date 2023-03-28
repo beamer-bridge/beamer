@@ -26,7 +26,7 @@ An example configuration::
     [metrics]
     prometheus-port = 9101
 
-    [chains.l1]
+    [base-chain]
     rpc-url = "GOERLI_TESTNET_RPC_URL"
     poll-period = 60.0
 
@@ -62,12 +62,18 @@ override settings from the configuration file. Details on available options can 
 in the :ref:`command-agent` command reference.
 
 
+Base Chain
+~~~~~~~~~~
+
+Base chain can be defined via the command-line options or configuration file, or
+both. This chain is assumed to be the layer 1 chain used for L1 resolution.
+
+
 Chains
 ~~~~~~
 
 Chains can be defined via the command-line options or configuration file, or
-both. A special chain named ``l1`` must be defined -- that chain is assumed to
-be the layer 1 chain used for L1 resolution.
+both. 
 
 
 Tokens
@@ -187,6 +193,13 @@ Options reference
 
      - Name of the target chain. Deprecated and will be removed.
        No longer needed because the agent supports multiple chain pairs.
+
+   * - ::
+
+        [base-chain]
+        rpc-url = URL
+
+     - Associate a JSON-RPC endpoint URL with base chain.
 
    * - ::
 

@@ -92,9 +92,10 @@ Start ``beamer-agent``::
     beamer agent --account-path 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                  --account-password '' \
                  --config agent-ganache-local.conf \
-                 --chain l1=http://localhost:8545 \
-                 --source-chain=l1 \
-                 --target-chain=l1 \
+                 --base-chain http://localhost:8545
+                 --chain l2=http://localhost:8545 \
+                 --source-chain=l2 \
+                 --target-chain=l2 \
                  --deployment-dir deployments/ganache-local \
                  --log-level debug
 
