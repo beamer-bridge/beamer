@@ -146,11 +146,9 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
   protected listenToChangeEvents(): void {
     this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
     this.web3Provider.on('network', (newNetwork: Network, oldNetwork: Network) => {
-      // Bitkeep wallet does not allow to reload the page by calling location.reload
-      // This ensures at least basic functionality after a chain switch
       this.chainId.value = newNetwork.chainId;
       if (oldNetwork) {
-        window.location.reload();
+        window.location.replace(window.location.pathname);
       }
     });
   }
