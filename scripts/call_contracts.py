@@ -352,14 +352,46 @@ def whitelist(
         print(f"Whitelisted in fill manager, tx_hash: {tx_hash.hex()}")
 
 
+@cli.command("update-fees")
+@click.option(
+    "--min-fee-ppm",
+    type=int,
+    required=True,
+    help="Margin in parts per million to add on top of the transfer costs",
+)
+@click.option(
+    "--lp-fee-ppm", type=int, required=True, help="LP fee in ppm to add on top of transfer amount"
+)
+@click.option(
+    "--protocol-fee-ppm",
+    type=int,
+    required=True,
+    help="Protocol fee in ppm to add on top of transfer amount",
+)
+@pass_args
+def update_fees(
+    web3: Web3,  # pylint:disable=unused-argument
+    contracts: dict[str, Contract],
+    min_fee_ppm: int,
+    lp_fee_ppm: int,
+    protocol_fee_ppm: int,
+) -> None:
+    """Update fees in Request Manager. Must be done by owner."""
+
+    request_manager = contracts["RequestManager"]
+    tx_receipt = transact(
+        request_manager.functions.updatefees(min_fee_ppm, lp_fee_ppm, protocol_fee_ppm)
+    )
+
+    print(f"Transaction sent, tx_hash: {tx_receipt['transactionHash'].hex()}")
+
+
 @cli.command("update-token")
 @click.argument("token-address", type=str, metavar="ADDRESS", callback=validate_address)
 @click.option("--transfer-limit", type=int, help="New transfer limit of token")
 @click.option(
     "--eth-in-token", type=int, help="ETH/token conversion rate, number of token per 1 ETH"
 )
-@click.option("lp-fee-ppm", type=int, help="New lp fee in ppm")
-@click.argument("protocol-fee-ppm", type=int)
 @pass_args
 def update_token(
     web3: Web3,  # pylint:disable=unused-argument
@@ -367,13 +399,14 @@ def update_token(
     token_address: Address,
     transfer_limit: int,
     eth_in_token: int,
-    lp_fee_ppm: int,
-    protocol_fee_ppm: int,
 ) -> None:
-    """Update transfer limit and fees for a token in Request Manager. Must be done by owner."""
+    """
+    Update transfer limit and Eth/token conversion rate in Request Manager.
+    Must be done by owner.
+    """
 
     request_manager = contracts["RequestManager"]
-    params = (transfer_limit, eth_in_token, lp_fee_ppm, protocol_fee_ppm)
+    params = (transfer_limit, eth_in_token)
     token_data = list(request_manager.functions.tokens(token_address).call())
     new_token_data = tuple(value or token_data[i] for i, value in enumerate(params))
     tx_receipt = transact(request_manager.functions.updateToken(token_address, new_token_data))

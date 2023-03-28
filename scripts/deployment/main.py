@@ -124,8 +124,12 @@ def deploy_beamer(
             chain.request_manager_arguments.claim_request_extension,
             chain.request_manager_arguments.claim_period,
             chain.request_manager_arguments.challenge_period_extension,
-            chain.request_manager_arguments.lp_margin_ppm,
         ),
+    )
+    transact(
+        request_manager.functions.updateFees(
+            chain.fees.min_fee_ppm, chain.fees.lp_fee_ppm, chain.fees.protocol_fee_ppm
+        )
     )
 
     # Configure finality period for each supported target chain
@@ -189,8 +193,6 @@ def deploy_beamer(
             token_address,
             token.transfer_limit * 10**decimals,
             int(token.eth_in_token * 10**decimals),
-            token.lp_fee_ppm,
-            token.protocol_fee_ppm,
         )
         transact(request_manager.functions.updateToken(*token_arguments))
 
