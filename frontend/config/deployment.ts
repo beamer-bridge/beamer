@@ -6,33 +6,33 @@ export class DeploymentInfo {
   readonly folderName: string;
   readonly beamer_commit: string;
   readonly deployer: string;
-  readonly L1: ChainDeploymentInfo;
-  readonly L2: ChainDeploymentMapping;
+  readonly base_chain: ChainDeploymentInfo;
+  readonly chains: ChainDeploymentMapping;
 
   constructor(data: DeploymentInfoData) {
     this.beamer_commit = data.beamer_commit;
     this.deployer = data.deployer;
-    this.L1 = data.L1;
-    this.L2 = data.L2;
+    this.base_chain = data.base_chain;
+    this.chains = data.chains;
     this.folderName = data.folderName;
   }
 
   public getMintableTokenAddresses(): Record<string, string> {
-    return Object.keys(this.L2)
+    return Object.keys(this.chains)
       .map((chainId) => {
         return {
-          [chainId]: this.L2[chainId]['MintableToken']?.address,
+          [chainId]: this.chains[chainId]['MintableToken']?.address,
         };
       })
       .reduce((previousValue, currentValue) => Object.assign(previousValue, currentValue), {});
   }
 
   get supportedChains(): string[] {
-    return Object.keys(this.L2);
+    return Object.keys(this.chains);
   }
 
   public formatChainDeploymentInfo(chainId: string): NormalizedChainDeploymentInfo {
-    const chainDeploymentInfo = this.L2[chainId];
+    const chainDeploymentInfo = this.chains[chainId];
     return {
       identifier: Number(chainId),
       requestManagerAddress: chainDeploymentInfo['RequestManager'].address,
@@ -74,8 +74,8 @@ export type DeploymentInfoData = DeploymentInfoFile & {
 export type DeploymentInfoFile = {
   beamer_commit: string;
   deployer: string;
-  L1: ChainDeploymentInfo;
-  L2: ChainDeploymentMapping;
+  base_chain: ChainDeploymentInfo;
+  chains: ChainDeploymentMapping;
 };
 export type NormalizedChainDeploymentInfo = {
   identifier: number;
