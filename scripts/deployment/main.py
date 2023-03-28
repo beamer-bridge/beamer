@@ -270,8 +270,8 @@ def main(
     resolver = deploy_contract(web3_l1, "Resolver")
 
     deployment_data: dict = {"beamer_commit": get_commit_id(), "deployer": account.address}
-    deployment_data["L1"] = collect_contracts_info({"Resolver": resolver})
-    deployment_data["L2"] = {}
+    deployment_data["base_chain"] = collect_contracts_info({"Resolver": resolver})
+    deployment_data["chains"] = {}
 
     output_dir.mkdir(parents=True, exist_ok=True)
     for chain in config.chains:
@@ -280,12 +280,12 @@ def main(
         l1_data, l2_data = deploy_beamer(
             account, config, chain, resolver, allow_same_chain, deploy_mintable_token
         )
-        deployment_data["L1"].update(collect_contracts_info(l1_data))
-        deployment_data["L2"][chain.chain_id] = collect_contracts_info(l2_data)
+        deployment_data["base_chain"].update(collect_contracts_info(l1_data))
+        deployment_data["chains"][chain.chain_id] = collect_contracts_info(l2_data)
         for contract_name in l2_data:
             shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
 
-    for contract_name in deployment_data["L1"]:
+    for contract_name in deployment_data["base_chain"]:
         shutil.copy(CONTRACTS_PATH / f"{contract_name}.json", output_dir)
 
     with output_dir.joinpath("deployment.json").open("w") as f:
