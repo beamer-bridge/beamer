@@ -140,7 +140,7 @@ def _find_claims(context: Context, request_id: RequestId, fill_id: FillId) -> li
 
 def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
     return (
-        not claim.is_invalidated_l1_resolved
+        not claim.invalidated_l1_resolved.is_active
         and claim.invalidation_tx is not None
         and claim.invalidation_timestamp is not None
     )
@@ -148,7 +148,7 @@ def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
 
 def _proof_ready_for_l1_relay(request: Request) -> bool:
     return (
-        not request.is_l1_resolved
+        not request.l1_resolved.is_active
         and request.fill_tx is not None
         and request.fill_timestamp is not None
     )
@@ -237,7 +237,7 @@ def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerRes
         context.logger.warn("Fill not matching request. Ignoring.", request=request, fill=event)
         return True, None
 
-    if request.is_withdrawn:
+    if request.withdrawn.is_active:
         return True, None
 
     try:
@@ -282,10 +282,10 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return True, None
 
     # If we haven't seen the fill event for own claim, don't process
-    if request.is_pending and event.claimer == context.address:
+    if request.pending.is_active and event.claimer == context.address:
         return False, None
 
-    if request.is_filled and event.claimer == context.address:
+    if request.filled.is_active and event.claimer == context.address:
         request.try_to_claim()
 
     claim = context.claims.get(event.claim_id)
@@ -311,7 +311,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         return True, None
 
     # Don't process challenge events before there was a chance to invalidate the claim
-    if claim.is_started:
+    if claim.started.is_active:
         claim.unprocessed_claim_made_events.add(event)
         return False, None
 

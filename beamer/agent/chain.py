@@ -231,13 +231,13 @@ class EventProcessor:
 def process_requests(context: Context) -> None:
     to_remove = []
     for request in context.requests:
-        if request.is_pending:
+        if request.pending.is_active:
             fill_request(request, context)
 
-        elif request.is_filled:
+        elif request.filled.is_active:
             claim_request(request, context)
 
-        elif request.is_withdrawn or request.is_ignored:
+        elif request.withdrawn.is_active or request.ignored.is_active:
             active_claims = any(claim.request_id == request.id for claim in context.claims)
             if not active_claims:
                 context.logger.debug("Removing request", request=request)
@@ -256,10 +256,10 @@ def process_claims(context: Context) -> None:
         # a request which has active claims
         assert request is not None, "Active claim for non-existent request"
 
-        if claim.is_ignored:
+        if claim.ignored.is_active:
             continue
 
-        if claim.is_started:
+        if claim.started.is_active:
             # If the claim is not valid, we might need to send a non-fill-proof
             if not claim.valid_claim_for_request(request):
                 maybe_invalidate(claim, context)
@@ -268,12 +268,12 @@ def process_claims(context: Context) -> None:
 
             continue
 
-        if claim.is_withdrawn:
+        if claim.withdrawn.is_active:
             context.logger.debug("Removing withdrawn claim", claim=claim)
             to_remove.append(claim.id)
             continue
 
-        if claim.is_invalidated_l1_resolved:
+        if claim.invalidated_l1_resolved.is_active:
             maybe_withdraw(claim, context)
             continue
 
@@ -286,7 +286,7 @@ def process_claims(context: Context) -> None:
         if claim.transaction_pending:
             continue
 
-        if claim.is_claimer_winning or claim.is_challenger_winning:
+        if claim.claimer_winning.is_active or claim.challenger_winning.is_active:
             maybe_withdraw(claim, context)
             maybe_challenge(claim, context)
 
@@ -424,7 +424,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     agent_participating = claim.claimer == context.address or own_challenge_stake > 0
 
     if not agent_participating:
-        if claim.is_challenger_winning:
+        if claim.challenger_winning.is_active:
             return False
         # Already challenged and has a filler, the agent won't challenge
         if request.filler is not None and claim.latest_claim_made.challenger_stake_total > 0:
@@ -484,7 +484,7 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
     agent_is_challenger = claim.get_challenger_stake(context.address) > 0
 
     # When request is L1 resolved, the termination isn't important
-    if request.is_l1_resolved:
+    if request.l1_resolved.is_active:
         # We claimed the request
         if (
             agent_is_claimer
@@ -501,7 +501,7 @@ def maybe_withdraw(claim: Claim, context: Context) -> None:
             _withdraw(claim, context)
 
     # Claim has a non-fill proof and the agent is challenging
-    elif claim.is_invalidated_l1_resolved and agent_is_challenger:
+    elif claim.invalidated_l1_resolved.is_active and agent_is_challenger:
         _withdraw(claim, context)
 
     # Otherwise check that the challenge period is over
