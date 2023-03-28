@@ -145,7 +145,8 @@ def make_context() -> Tuple[Context, Config]:
     config = Config(
         account=ACCOUNT,
         deployment_info={},
-        rpc_urls={"l1": URL(""), "l2a": URL(""), "l2b": URL("")},
+        rpc_urls={"l2a": URL(""), "l2b": URL("")},
+        base_chain_rpc_url=URL(""),
         token_checker=checker,
         fill_wait_time=1,
         prometheus_metrics_port=None,
