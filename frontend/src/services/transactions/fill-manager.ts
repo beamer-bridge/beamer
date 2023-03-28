@@ -4,6 +4,7 @@ import {
   getCurrentBlockNumber,
   getJsonRpcProvider,
   getReadOnlyContract,
+  getSafeEventHandler,
 } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
 import type { FillManager } from '@/types/ethers-contracts';
@@ -42,7 +43,7 @@ export function waitForFulfillment(
       resolve();
     };
 
-    contract.on(eventFilter, cleanUpAndResolve);
+    contract.on(eventFilter, getSafeEventHandler(cleanUpAndResolve, contract.provider));
 
     checkForPastFulfillmentEvent(
       rpcUrl,

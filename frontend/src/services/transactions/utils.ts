@@ -1,6 +1,6 @@
-import type { Block, JsonRpcSigner } from '@ethersproject/providers';
+import type { Block, JsonRpcSigner, Provider } from '@ethersproject/providers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import type { ContractInterface } from 'ethers';
+import type { ContractInterface, Event } from 'ethers';
 import { Contract } from 'ethers';
 
 import type { EthereumAddress } from '@/types/data';
@@ -11,9 +11,35 @@ type ConfirmationTimeMap = {
 
 const DEFAULT_CONFIRIMATION_TIME_BLOCKS = 1;
 const CONFIRMATION_TIME_BLOCKS: ConfirmationTimeMap = {
-  '1': 2,
+  1: 2,
 };
 
+export function getSafeEventHandler(
+  handler: CallableFunction,
+  provider: Provider,
+): (...args: Array<unknown>) => Promise<void> {
+  return async (...args: Array<unknown>) => {
+    const { chainId } = await provider.getNetwork();
+    const confirmationTimeBlocks = getConfirmationTimeBlocksForChain(chainId);
+
+    const event = args[arguments.length] as unknown as Event;
+    if (event.removed) {
+      // Ignoring events coming from re-orged blocks
+      return;
+    }
+
+    const receipt = await provider.waitForTransaction(
+      event.transactionHash,
+      confirmationTimeBlocks,
+    );
+
+    if (receipt.status) {
+      handler(...args);
+    } else {
+      throw new Error('Transaction reverted on chain.');
+    }
+  };
+}
 export function getConfirmationTimeBlocksForChain(chainId: number) {
   return CONFIRMATION_TIME_BLOCKS[chainId] ?? DEFAULT_CONFIRIMATION_TIME_BLOCKS;
 }
