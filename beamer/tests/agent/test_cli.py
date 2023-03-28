@@ -16,7 +16,7 @@ from beamer.agent.util import TokenChecker
 def _generate_deployment_dir(output_dir, root, contracts):
     data = {
         "beamer_commit": "0" * 40,
-        "L2": {
+        "chains": {
             str(ape.chain.chain_id): {
                 "RequestManager": {
                     "address": contracts.request_manager.address,
@@ -56,12 +56,12 @@ poll-period = {poll_period}
 path = "{path}"
 password = "test"
 
-[chains.l1]
-rpc-url = "{l1_rpc_url}"
-poll-period = {l1_poll_period}
+[base-chain]
+rpc-url = "{base_chain_rpc_url}"
 
 [chains.foo]
 rpc-url = "{foo_rpc_url}"
+poll-period = {foo_poll_period}
 
 [chains.bar]
 rpc-url = "{bar_rpc_url}"
@@ -76,8 +76,8 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
         str(keyfile),
         "--account-password",
         "test",
-        "--chain",
-        f"l1={config.rpc_urls['l1']}",
+        "--base-chain",
+        str(config.base_chain_rpc_url),
         "--chain",
         f"l2a={config.rpc_urls['l2a']}",
         "--chain",
@@ -94,13 +94,13 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time):
 def _generate_options_config(keyfile, deployment_dir, config, unsafe_fill_time):
     content = _CONFIG_FILE.format(
         path=str(keyfile),
-        l1_rpc_url=config.rpc_urls["l1"],
+        base_chain_rpc_url=config.base_chain_rpc_url,
         foo_rpc_url=config.rpc_urls["l2a"],
         bar_rpc_url=config.rpc_urls["l2b"],
         deployment_dir=deployment_dir,
         unsafe_fill_time=unsafe_fill_time,
         poll_period=config.poll_period,
-        l1_poll_period=config.poll_period_per_chain["l1"],
+        foo_poll_period=0.2,
     )
     config_file = keyfile.parent / "agent.conf"
     config_file.write_text(content)

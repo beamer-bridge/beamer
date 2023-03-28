@@ -17,7 +17,7 @@ from yaml.loader import SafeLoader
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
 from beamer.agent.contracts import ContractInfo
-from beamer.agent.typing import BlockNumber, ChainId
+from beamer.agent.typing import URL, BlockNumber, ChainId
 from beamer.agent.util import TokenChecker, make_web3, transact
 from beamer.tests.conftest import Contracts
 from beamer.tests.util import Sleeper
@@ -121,14 +121,15 @@ def _get_config(
             ),
         )
         deployment_info[chain_id] = contracts_info
-    rpc_urls = {"l1": url}
+    rpc_urls = {}
     for chain_id, port in chain_map.items():
         rpc_url = f"http://127.0.0.1:{port}"
-        rpc_urls[str(chain_id)] = rpc_url
+        rpc_urls[str(chain_id)] = URL(rpc_url)
 
     token_list = _get_token_list(chain_map, slave_contract_addresses)
     config = Config(
         rpc_urls=rpc_urls,
+        base_chain_rpc_url=url,
         deployment_info=deployment_info,
         token_checker=TokenChecker(token_list),
         account=account,
@@ -201,8 +202,6 @@ def _mint_agent_tokens(
     slave_contract_addresses: dict[ChainId, dict[str, str]],
 ):
     for chain_name, chain_rpc in config.rpc_urls.items():
-        if chain_name == "l1":
-            continue
         w3 = make_web3(chain_rpc, config.account)
         while not w3.is_connected():
             time.sleep(1)
