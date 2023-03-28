@@ -22,7 +22,6 @@ class Request(StateMachine):
         nonce: Nonce,
         valid_until: int,
     ) -> None:
-        super().__init__()
         self._log = structlog.get_logger(type(self).__name__)
         self.id = request_id
         self.source_chain_id = source_chain_id
@@ -41,6 +40,7 @@ class Request(StateMachine):
         self.l1_resolution_filler: Optional[ChecksumAddress] = None
         self.l1_resolution_fill_id: Optional[FillId] = None
         self.l1_resolution_invalid_fill_ids: set[FillId] = set()
+        super().__init__()
 
     pending = State("Pending", initial=True)
     filled = State("Filled")
@@ -67,7 +67,7 @@ class Request(StateMachine):
     )
     ignore = pending.to(ignored) | filled.to(ignored)
 
-    def on_enter_state(self, _state: State) -> None:
+    def on_enter_state(self) -> None:
         self._log.debug("Request changed state", request=self)
 
     def on_fill(
@@ -89,5 +89,5 @@ class Request(StateMachine):
         self.l1_resolution_fill_id = l1_fill_id
 
     def __repr__(self) -> str:
-        state = self.current_state.identifier
+        state = self.current_state.id
         return f"<Request id={self.id!r} state={state} filler={self.filler}>"

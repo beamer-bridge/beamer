@@ -17,7 +17,6 @@ class Claim(StateMachine):
         claim_made: ClaimMade,
         challenge_back_off_timestamp: int,
     ) -> None:
-        super().__init__()
         self._log = structlog.get_logger(type(self).__name__)
         self._latest_claim_made = claim_made
         self._challenger_stakes: dict[Address, int] = {}
@@ -30,6 +29,7 @@ class Claim(StateMachine):
         self.invalidation_tx: Optional[HexBytes] = None
         self.invalidation_timestamp: Optional[Timestamp] = None
         self.unprocessed_claim_made_events: set[ClaimMade] = set()
+        super().__init__()
 
     started = State("Started", initial=True)
     # Claimer is winning
@@ -72,7 +72,7 @@ class Claim(StateMachine):
         | withdrawn.to(withdrawn)
     )
 
-    def on_enter_state(self, _state: State) -> None:
+    def on_enter_state(self) -> None:
         self._log.debug("Claim changed state", claim=self)
 
     @property
@@ -163,5 +163,5 @@ class Claim(StateMachine):
         self.transaction_pending = False
 
     def __repr__(self) -> str:
-        state = self.current_state.identifier
+        state = self.current_state.id
         return f"<Claim id={self.id} state={state} request_id={self.request_id!r}>"
