@@ -69,12 +69,12 @@ def test_claim_after_expiry(claim_request_extension, claimable):
     request.filler = config.account.address
     request.try_to_fill()
 
-    assert request.is_filled  # pylint:disable=no-member
+    assert request.filled.is_active
     claim_request(request, context)
     if claimable:
-        assert request.is_claimed  # pylint:disable=no-member
+        assert request.claimed.is_active
     else:
-        assert request.is_ignored  # pylint:disable=no-member
+        assert request.ignored.is_active
 
 
 # First request will be completed without any issue as expected
@@ -130,9 +130,9 @@ def test_skip_not_self_filled():
 
     context.requests.add(request.id, request)
 
-    assert request.is_pending  # pylint:disable=no-member
+    assert request.pending.is_active
     claim_request(request, context)
-    assert request.is_pending  # pylint:disable=no-member
+    assert request.pending.is_active
 
 
 def test_ignore_expired(claim_request_extension):
@@ -143,9 +143,9 @@ def test_ignore_expired(claim_request_extension):
     request.filler = config.account.address
     context.requests.add(request.id, request)
 
-    assert request.is_pending  # pylint:disable=no-member
+    assert request.pending.is_active
     claim_request(request, context)
-    assert request.is_ignored  # pylint:disable=no-member
+    assert request.ignored.is_active
 
 
 def test_request_garbage_collection_without_claim():

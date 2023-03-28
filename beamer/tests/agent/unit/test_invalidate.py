@@ -60,10 +60,10 @@ def test_handle_fill_invalidated_resolved():
     assert process_event(event, context) == (True, None)
 
     # Check that a matching event invalidates the claim
-    assert claim_1.is_invalidated_l1_resolved  # pylint:disable=no-member
+    assert claim_1.invalidated_l1_resolved.is_active
 
     # Check that a non-matching event does not invalidate the claim
-    assert claim_2.is_claimer_winning  # pylint:disable=no-member
+    assert claim_2.claimer_winning.is_active
 
 
 def test_handle_fill_invalidated():
@@ -93,7 +93,7 @@ def test_handle_fill_invalidated():
     assert process_event(event, context) == (True, None)
 
     # Check that the event changes the claim state
-    assert claim.is_claimer_winning  # pylint:disable=no-member
+    assert claim.claimer_winning.is_active
     assert claim.invalidation_tx == tx_hash
 
 
@@ -116,9 +116,9 @@ def test_maybe_invalidate_claim_wrong_fill_id(mocked_invalidate, fill_id):
     claim = context.claims.get(claim_event.claim_id)
     assert claim is not None
 
-    assert claim.is_started
+    assert claim.started.is_active
     process_claims(context)
-    assert claim.is_claimer_winning
+    assert claim.claimer_winning.is_active
     # invalidate must only be called if the fill ids do not match
     assert mocked_invalidate.called == (fill_id != FILL_ID)
 
@@ -143,9 +143,9 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_in_back_off(mocked_invalidate)
     assert claim is not None
     claim.challenge_back_off_timestamp = int(time.time() + 100)
 
-    assert claim.is_started
+    assert claim.started.is_active
     process_claims(context)
-    assert not claim.is_claimer_winning
+    assert not claim.claimer_winning.is_active
     assert not mocked_invalidate.called
 
 
@@ -166,9 +166,9 @@ def test_maybe_invalidate_claim_wrong_fill_id_but_timed_out(mocked_invalidate):
     claim = context.claims.get(claim_event.claim_id)
     assert claim is not None
 
-    assert claim.is_started
+    assert claim.started.is_active
     process_claims(context)
-    assert claim.is_claimer_winning
+    assert claim.claimer_winning.is_active
     assert mocked_invalidate.called
 
 
@@ -201,7 +201,7 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
     context.claims.add(claim.id, claim)
     claim.start_challenge(make_tx_hash(), TIMESTAMP)
     claim.l1_invalidate()
-    assert claim.is_invalidated_l1_resolved  # pylint:disable=no-member
+    assert claim.invalidated_l1_resolved.is_active
 
     assert not mocked_withdraw.called
 

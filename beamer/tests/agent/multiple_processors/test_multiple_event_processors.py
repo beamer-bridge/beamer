@@ -157,7 +157,7 @@ def _start_agent_test(config: Config):
             request = next(iter(agent.get_context(direction).requests))
 
             with Sleeper(20) as sleeper:
-                while not request.is_claimed:
+                while not request.claimed.is_active:
                     sleeper.sleep(0.1)
     finally:
         agent.stop()

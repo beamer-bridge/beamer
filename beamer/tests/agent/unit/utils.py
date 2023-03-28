@@ -131,10 +131,7 @@ def make_claim_challenged(
         # In a challenged state, the claim must be in the challenge game states
         claim.start_challenge()
 
-        if (
-            claim.is_claimer_winning  # pylint:disable=no-member
-            and challenger_stake > claimer_stake
-        ):
+        if claim.claimer_winning.is_active and challenger_stake > claimer_stake:
             claim.challenge(claim.latest_claim_made)
 
     return claim

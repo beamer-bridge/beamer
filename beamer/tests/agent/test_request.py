@@ -78,7 +78,7 @@ def test_fill_and_claim(request_manager, token, agent, direction):
     assert request.id == request_id
 
     with Sleeper(5) as sleeper:
-        while not request.is_claimed:
+        while not request.claimed.is_active:
             sleeper.sleep(0.1)
 
     found_claims: list[Claim] = []
@@ -145,14 +145,14 @@ def test_withdraw(request_manager, token, agent, direction):
         while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
-        while not request.is_claimed:
+        while not request.claimed.is_active:
             sleeper.sleep(0.1)
 
     claim_period = request_manager.claimPeriod()
     ape.chain.mine(deltatime=claim_period)
 
     with Sleeper(5) as sleeper:
-        while not request.is_withdrawn:
+        while not request.withdrawn.is_active:
             sleeper.sleep(0.1)
 
 
@@ -175,11 +175,11 @@ def test_expired_request_is_ignored(request_manager, token, agent, direction):
         while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
-    assert request.is_pending
+    assert request.pending.is_active
 
     ape.chain.mine(deltatime=validity_period // 2 + 1)
     with Sleeper(2) as sleeper:
-        while not request.is_ignored:
+        while not request.ignored.is_active:
             sleeper.sleep(0.1)
 
 
@@ -225,7 +225,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         ]
     )
     time.sleep(1)
-    assert not request.is_filled
+    assert not request.filled.is_active
 
     # Test wrong `source_chain_id`
     event_processor.add_events(
@@ -244,7 +244,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         ]
     )
     time.sleep(1)
-    assert not request.is_filled
+    assert not request.filled.is_active
 
     # Test wrong `target_token_address`
     event_processor.add_events(
@@ -263,7 +263,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         ]
     )
     time.sleep(1)
-    assert not request.is_filled
+    assert not request.filled.is_active
 
     # Test correct event
     event_processor.add_events(
@@ -282,7 +282,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         ]
     )
     with Sleeper(1) as sleeper:
-        while not request.is_filled:
+        while not request.filled.is_active:
             sleeper.sleep(0.1)
 
 
@@ -302,7 +302,7 @@ def test_unsafe_fill_time(
         while (request := agent.get_context(direction).requests.get(request_id)) is None:
             sleeper.sleep(0.1)
 
-    assert request.is_ignored
+    assert request.ignored.is_active
 
     agent.stop()
 
