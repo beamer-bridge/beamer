@@ -1,23 +1,24 @@
 import ape
 import pytest
 
+from numpy.random import randint
+
 from beamer.tests.constants import (
     FILL_ID,
     RM_R_FIELD_LP_FEE,
     RM_R_FIELD_PROTOCOL_FEE,
     RM_T_FIELD_COLLECTED_PROTOCOL_FEES,
-    RM_T_FIELD_PROTOCOL_FEE_PPM,
 )
 from beamer.tests.util import (
     alloc_accounts,
     alloc_whitelisted_accounts,
     make_request,
     temp_fee_data,
-    update_token,
 )
 
 # Using this makes sure that we get nonzero fees when making requests.
-_NONZERO_FEE_DATA = dict(eth_in_token=int(1300e18), lp_fee_ppm=15_000, protocol_fee_ppm=14_000)
+# Reflects minFeePPM, lpFeePPM, protocolFeePPM
+_NONZERO_FEE_DATA = 300_000, 15_000, 14_000
 
 
 def test_fee_split_works(request_manager, token, claim_stake, claim_period):
@@ -25,7 +26,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     (claimer,) = alloc_whitelisted_accounts(1, [request_manager])
     transfer_amount = 23_000_000
 
-    update_token(request_manager, token, _NONZERO_FEE_DATA)
+    request_manager.updateFees(*_NONZERO_FEE_DATA)
     request_id = make_request(
         request_manager,
         token,
@@ -40,7 +41,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     lp_fee = request_manager.lpFee(target_chain_id, token.address, transfer_amount)
     assert lp_fee > 0
 
-    protocol_fee = request_manager.protocolFee(token.address, transfer_amount)
+    protocol_fee = request_manager.protocolFee(transfer_amount)
     assert protocol_fee > 0
 
     assert lp_fee + protocol_fee == request_manager.totalFee(
@@ -57,11 +58,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
 
     # Update fees, which should not have any effect on the fee amounts that
     # were computed when the request was made.
-    update_token(
-        request_manager,
-        token,
-        dict(eth_in_token=int(1200e18), lp_fee_ppm=145_000, protocol_fee_ppm=21_000),
-    )
+    request_manager.updateFees(200_000, 145_000, 21_000)
 
     # Timetravel after claim period
     ape.chain.mine(deltatime=claim_period)
@@ -73,10 +70,10 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     assert token.balanceOf(claimer) == transfer_amount + lp_fee
 
 
-def test_protocol_fee_is_zero(request_manager, token):
+def test_protocol_fee_is_zero(request_manager):
     # For the time being, the protocol fee percentage should be zero.
-    assert request_manager.tokens(token.address)[RM_T_FIELD_PROTOCOL_FEE_PPM] == 0
-    assert request_manager.protocolFee(token.address, 23_000_000) == 0
+    assert request_manager.protocolFeePPM() == 0
+    assert request_manager.protocolFee(23_000_000) == 0
 
 
 def test_protocol_fee_withdrawable_by_owner(
@@ -92,7 +89,7 @@ def test_protocol_fee_withdrawable_by_owner(
         requester,
         requester,
         amount,
-        fee_data=tuple(_NONZERO_FEE_DATA.values()),
+        fee_data=_NONZERO_FEE_DATA,
     )
     protocol_fee = request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE]
 
@@ -117,27 +114,20 @@ def test_protocol_fee_withdrawable_by_owner(
     assert token.balanceOf(owner) == owner_token + protocol_fee
 
 
-def test_fee_data_updatable_by_owner(request_manager, token):
+def test_fee_data_updatable_by_owner(request_manager):
     (requester,) = alloc_accounts(1)
 
-    new_fee_data = dict(eth_in_token=int(1100e18), lp_fee_ppm=13_000, protocol_fee_ppm=12_000)
-
     with ape.reverts("Ownable: caller is not the owner"):
-        update_token(
-            request_manager,
-            token,
-            new_fee_data,
+        request_manager.updateFees(
+            *_NONZERO_FEE_DATA,
             sender=requester,
         )
 
-    update_token(
-        request_manager,
-        token,
-        new_fee_data,
-    )
+    request_manager.updateFees(*_NONZERO_FEE_DATA)
 
-    token_data = request_manager.tokens(token.address)
-    assert token_data[1:-1] == tuple(new_fee_data.values())
+    assert request_manager.minFeePPM() == _NONZERO_FEE_DATA[0]
+    assert request_manager.lpFeePPM() == _NONZERO_FEE_DATA[1]
+    assert request_manager.protocolFeePPM() == _NONZERO_FEE_DATA[2]
 
 
 def test_fee_reimbursed_on_expiration(request_manager, token):
@@ -145,7 +135,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
     transfer_amount = 23_000_000
     validity_period = request_manager.MIN_VALIDITY_PERIOD()
 
-    update_token(request_manager, token, _NONZERO_FEE_DATA)
+    request_manager.updateFees(*_NONZERO_FEE_DATA)
     request_id = make_request(
         request_manager,
         token,
@@ -168,6 +158,7 @@ def test_fee_reimbursed_on_expiration(request_manager, token):
     assert token.balanceOf(requester) == transfer_amount + total_fee
 
 
+@pytest.mark.parametrize("lp_fee_ppm", [1000])
 def test_insufficient_lp_fee(request_manager, token):
     (requester,) = alloc_accounts(1)
     amount = 23_000_000
@@ -197,29 +188,31 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     (requester,) = alloc_accounts(1)
     (claimer,) = alloc_whitelisted_accounts(1, [request_manager])
     amount = int(9e18)
-    fee_data_1 = int(6e18), 8_000, 7_000
-    fee_data_2 = int(2e18), 4_000, 31_000
+
+    fee_data_1 = 300_000, 8_000, 7_000
+    fee_data_2 = 300_000, 4_000, 31_000
     target_chain_id = ape.chain.chain_id
 
     with ape.accounts.test_accounts.use_sender(requester):
         token.mint(requester, amount * 10)
         token.approve(request_manager.address, 2**256 - 1)
 
-    with temp_fee_data(request_manager, token, *fee_data_1):
+    with temp_fee_data(request_manager, *fee_data_1):
         request_id_1 = make_request(
             request_manager, token, requester, requester, amount, fee_data="standard"
         )
         lp_fee_1 = request_manager.lpFee(target_chain_id, token.address, amount)
-        protocol_fee_1 = request_manager.protocolFee(token.address, amount)
+        protocol_fee_1 = request_manager.protocolFee(amount)
         assert lp_fee_1 == 72e15
         assert protocol_fee_1 == 63e15
 
-    with temp_fee_data(request_manager, token, *fee_data_2):
+    with temp_fee_data(request_manager, *fee_data_2):
         request_id_2 = make_request(
             request_manager, token, requester, requester, amount, fee_data="standard"
         )
         lp_fee_2 = request_manager.lpFee(target_chain_id, token.address, amount)
-        protocol_fee_2 = request_manager.protocolFee(token.address, amount)
+        protocol_fee_2 = request_manager.protocolFee(amount)
+
         assert lp_fee_2 == 36e15
         assert protocol_fee_2 == 279e15
 
@@ -255,22 +248,22 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
     assert token.balanceOf(claimer) == amount * 2 + lp_fee_1 + lp_fee_2
 
 
-def test_ppm_out_of_bound(request_manager, token):
+def test_ppm_out_of_bound(request_manager):
     ppm = 999_999
 
-    request_manager.updateToken(token.address, 0, 0, ppm, 0)
-    request_manager.updateToken(token.address, 0, 0, 0, ppm)
+    request_manager.updateFees(0, ppm, ppm)
 
     ppm = 1_000_000
 
     with ape.reverts("Maximum PPM of 999999 exceeded"):
-        request_manager.updateToken(token.address, 0, 0, ppm, 0)
+        request_manager.updateFees(0, ppm, 0)
 
     with ape.reverts("Maximum PPM of 999999 exceeded"):
-        request_manager.updateToken(token.address, 0, 0, 0, ppm)
+        request_manager.updateFees(0, 0, ppm)
 
 
-def test_min_lp_fee(request_manager, token, chain_params, token_params, lp_margin_ppm):
+@pytest.mark.parametrize("transfer_cost", [int(400e12)])
+def test_min_lp_fee(request_manager, token, chain_params, min_fee_ppm, token_params):
     target_chain_params = chain_params[0], int(3e12), 750_000
     request_manager.updateChain(999, *target_chain_params)
 
@@ -279,7 +272,7 @@ def test_min_lp_fee(request_manager, token, chain_params, token_params, lp_margi
     min_lp_fee = (
         (source_chain_cost + target_chain_cost)
         * token_params[1]
-        * (1_000_000 + lp_margin_ppm)
+        * (1_000_000 + min_fee_ppm)
         / 1e30
     )
 
@@ -287,6 +280,8 @@ def test_min_lp_fee(request_manager, token, chain_params, token_params, lp_margi
 
 
 @pytest.mark.parametrize("transfer_cost", [int(400e12)])
+@pytest.mark.parametrize("lp_fee_ppm", [1000])
+@pytest.mark.parametrize("protocol_fee_ppm", [1000])
 def test_total_fee(request_manager, token, chain_params):
     target_chain_params = chain_params[0], int(3e12), 750_000
     request_manager.updateChain(999, *target_chain_params)
@@ -297,13 +292,40 @@ def test_total_fee(request_manager, token, chain_params):
 
     assert min_lp_fee == request_manager.lpFee(999, token.address, conjunction_amount)
 
-    test_amounts = [conjunction_amount, conjunction_amount // 2, conjunction_amount * 2]
+    test_amounts = [conjunction_amount // 2, conjunction_amount, conjunction_amount * 2]
 
     for amount in test_amounts:
-        assert request_manager.totalFee(
-            ape.chain.chain_id, 999, token.address, amount
-        ) == request_manager.lpFee(
-            ape.chain.chain_id, 999, token.address, amount
-        ) + request_manager.protocolFee(
-            amount
+        assert request_manager.totalFee(999, token.address, amount) == request_manager.lpFee(
+            999, token.address, amount
+        ) + request_manager.protocolFee(amount)
+
+
+@pytest.mark.parametrize("transfer_cost", [int(400e12)])
+@pytest.mark.parametrize("lp_fee_ppm", [1000])
+@pytest.mark.parametrize("protocol_fee_ppm", [1000])
+def test_transferable_amount(request_manager, token, chain_params):
+    target_chain_params = chain_params[0], int(300e12), 750_000
+    target_chain_id = 999
+    request_manager.updateChain(target_chain_id, *target_chain_params)
+
+    min_lp_fee = request_manager.minLpFee(target_chain_id, token.address)
+    # find the value where lpFee == minLpFee to test with values lower and higher
+    conjunction_amount = min_lp_fee * 1_000_000 // request_manager.lpFeePPM()
+
+    test_amounts = [
+        conjunction_amount // 2,
+        conjunction_amount,
+        conjunction_amount * 2,
+        randint(1, 2**63),
+    ]
+
+    for transferable_amount in test_amounts:
+        total_amount = transferable_amount + request_manager.totalFee(
+            target_chain_id, token.address, transferable_amount
         )
+        calculated_transferable_amount = request_manager.transferableAmount(
+            target_chain_id, token.address, total_amount
+        )
+        # FIXME: There is a possible off by one error due to the absence
+        #  of rounding in the contracts
+        assert calculated_transferable_amount in [transferable_amount, transferable_amount - 1]
