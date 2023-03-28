@@ -65,16 +65,14 @@ class Agent:
         self._init()
 
     def _init_l1_chain(self) -> _BaseChain:
-        l1_w3 = make_web3(self._config.rpc_urls["l1"], self._config.account)
+        l1_w3 = make_web3(self._config.base_chain_rpc_url, self._config.account)
         l1_w3.middleware_onion.add(latest_block_based_cache_middleware)
         chain_id = ChainId(l1_w3.eth.chain_id)
-        return _BaseChain(w3=l1_w3, id=chain_id, rpc_url=self._config.rpc_urls["l1"])
+        return _BaseChain(w3=l1_w3, id=chain_id, rpc_url=self._config.base_chain_rpc_url)
 
     def _init_chains(self) -> dict[ChainId, _Chain]:
         chains: dict[ChainId, _Chain] = {}
         for chain_name, rpc_url in self._config.rpc_urls.items():
-            if chain_name == "l1":
-                continue
             w3 = make_web3(rpc_url, self._config.account)
             chain_id = ChainId(w3.eth.chain_id)
             if chain_id in chains:

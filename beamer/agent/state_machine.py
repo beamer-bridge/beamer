@@ -462,7 +462,7 @@ def _handle_initiate_l1_resolution(
     if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
-            context.config.rpc_urls["l1"],
+            context.config.base_chain_rpc_url,
             context.target_rpc_url,
             context.source_rpc_url,
             context.config.account.key,
@@ -516,7 +516,7 @@ def _handle_initiate_l1_invalidation(
     if _l1_resolution_threshold_reached(claim, context):
         future = context.task_pool.submit(
             run_relayer_for_tx,
-            context.config.rpc_urls["l1"],
+            context.config.base_chain_rpc_url,
             context.target_rpc_url,
             context.source_rpc_url,
             context.config.account.key,

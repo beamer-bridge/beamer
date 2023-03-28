@@ -20,6 +20,7 @@ class ConfigError(Exception):
 class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
+    base_chain_rpc_url: URL
     rpc_urls: dict[str, URL]
     token_checker: TokenChecker
     fill_wait_time: int
@@ -133,6 +134,7 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         deployment_info=deployment_info,
         rpc_urls=rpc_urls,
         token_checker=token_checker,
+        base_chain_rpc_url=config["base-chain"]["rpc-url"],
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
