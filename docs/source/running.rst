@@ -11,6 +11,10 @@ an agent requires the following:
 
    .. :note: The same address is being used for both chains.
 
+ * Configuring base chain.
+
+   Related options: ``--base-chain``
+
  * Names and RPC endpoints of the L1 chain, source and target chains.
 
    Related options: ``--source-chain``, ``--target-chain``, ``--chain``
@@ -63,7 +67,7 @@ To run an agent container simply do::
 
     docker run ghcr.io/beamer-bridge/beamer agent --account-path <path> \
                                                   --account-password <password> \
-                                                  --chain l1=<l1-rpc-url> \
+                                                  --base-chain <l1-rpc-url> \
                                                   --chain source=<source-l2-rpc-url> \
                                                   --chain target=<target-l2-rpc-url> \
                                                   --deployment-dir <contract-deployment-dir> \
