@@ -12,7 +12,7 @@ import {
 
 function generateDeploymentInfoForFolder(folderName?: string) {
   return generateDeploymentInfo({
-    L2: {
+    chains: {
       [getRandomNumber()]: generateMintableTokenDeploymentInfo(),
     },
     folderName,
@@ -88,7 +88,7 @@ describe('configure', () => {
         }),
       ];
       const deploymentInfo = generateDeploymentInfo({
-        L2: {
+        chains: {
           1337: {
             RequestManager: {
               address: getRandomEthereumAddress(),
