@@ -18,6 +18,14 @@ vi.mock('@ethersproject/providers');
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 
+function mockGetSafeEventHandler() {
+  Object.defineProperties(transactionUtils, {
+    getSafeEventHandler: {
+      value: vi.fn().mockImplementation((handler) => handler),
+    },
+  });
+}
+
 function mockGetContract() {
   const contract = new MockedERC20TokenContract();
 
@@ -36,8 +44,11 @@ function mockGetContract() {
 describe('token', () => {
   beforeEach(() => {
     SIGNER.getAddress = vi.fn().mockReturnValue(getRandomEthereumAddress());
+    SIGNER.getChainId = vi.fn().mockReturnValue(1);
     mockGetContract();
+    mockGetSafeEventHandler();
   });
+
   describe('ensureTokenAllowance()', () => {
     describe("when signer's current token allowance is lower than the required amount", () => {
       it('triggers a token allowance approve transaction', async () => {

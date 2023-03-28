@@ -42,6 +42,14 @@ const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const DEFAULT_REQUEST_IDENTIFIER = '1';
 
+function mockGetSafeEventHandler() {
+  Object.defineProperties(transactionUtils, {
+    getSafeEventHandler: {
+      value: vi.fn().mockImplementation((handler) => handler),
+    },
+  });
+}
+
 function mockGetLatestBlock(options?: { timestamp?: number }) {
   Object.defineProperties(transactionUtils, {
     getLatestBlock: {
@@ -54,7 +62,7 @@ function mockGetLatestBlock(options?: { timestamp?: number }) {
 
 function mockGetProvider() {
   const provider = new JsonRpcProvider();
-
+  provider.getNetwork = vi.fn().mockResolvedValue({ chainId: 1 });
   Object.defineProperties(transactionUtils, {
     getJsonRpcProvider: {
       value: vi.fn().mockReturnValue(provider),
@@ -88,6 +96,9 @@ describe('request-manager', () => {
     global.console.error = vi.fn();
     global.Date.now = vi.fn();
 
+    SIGNER.getChainId = vi.fn().mockReturnValue(1);
+
+    mockGetSafeEventHandler();
     mockGetContract();
     mockGetLatestBlock();
     mockGetProvider();
@@ -302,6 +313,12 @@ describe('request-manager', () => {
 
       const provider = mockGetProvider();
       provider.waitForTransaction = vi.fn().mockReturnValue(new MockedTransactionReceipt());
+
+      Object.defineProperties(transactionUtils, {
+        getConfirmationTimeBlocksForChain: {
+          value: vi.fn().mockReturnValue(1),
+        },
+      });
 
       const identifier = await getRequestIdentifier(
         RPC_URL,
@@ -739,6 +756,8 @@ describe('request-manager', () => {
       const contract = mockGetContract();
       contract.estimateGas.withdrawExpiredRequest = vi.fn().mockReturnValue(gasLimit);
       contract.withdrawExpiredRequest = vi.fn().mockReturnValue(new MockedTransaction());
+
+      SIGNER.getChainId = vi.fn().mockReturnValue(1);
 
       await withdrawRequest(SIGNER, REQUEST_MANAGER_ADDRESS, requestIdentifier);
 

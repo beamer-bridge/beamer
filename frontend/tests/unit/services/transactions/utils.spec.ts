@@ -2,18 +2,97 @@ import * as providers from '@ethersproject/providers';
 import * as ethers from 'ethers';
 
 import {
+  CONFIRMATION_TIME_BLOCKS,
   getCurrentBlockNumber,
   getJsonRpcProvider,
   getLatestBlock,
   getReadOnlyContract,
   getReadWriteContract,
+  getSafeEventHandler,
 } from '@/services/transactions/utils';
 import { getRandomEthereumAddress, getRandomUrl } from '~/utils/data_generators';
+import { MockedEvent, MockedTransactionReceipt } from '~/utils/mocks/ethers';
 
 vi.mock('@ethersproject/providers');
 vi.mock('ethers');
 
 describe('utils', () => {
+  describe('getSafeEventHandler()', () => {
+    it('returns a function that wraps the handler with additional functionality', async () => {
+      const eventTxHash = '0x123';
+      const event = new MockedEvent({ removed: 0, transactionHash: eventTxHash });
+      const handler = vi.fn();
+
+      const provider = new providers.JsonRpcProvider();
+      provider.getNetwork = vi.fn().mockResolvedValue({ chainId: 1 });
+      provider.waitForTransaction = vi
+        .fn()
+        .mockResolvedValue(new MockedTransactionReceipt({ status: 1 }));
+
+      const safeHandler = getSafeEventHandler(handler, provider);
+      expect(safeHandler).toBeTypeOf('function');
+
+      await safeHandler(event);
+      expect(handler).toHaveBeenCalledWith(event);
+    });
+    describe('returned safe event handler', () => {
+      it('on call waits until event transaction has been finalized before running the related action', async () => {
+        const confirmationTimeBlocks = 5;
+        const chainId = 100;
+        const eventTxHash = '0x123';
+        const event = new MockedEvent({ removed: 0, transactionHash: eventTxHash });
+        const handler = vi.fn();
+
+        CONFIRMATION_TIME_BLOCKS[chainId] = confirmationTimeBlocks;
+
+        const provider = new providers.JsonRpcProvider();
+        provider.getNetwork = vi.fn().mockResolvedValue({ chainId });
+        provider.waitForTransaction = vi
+          .fn()
+          .mockResolvedValue(new MockedTransactionReceipt({ status: 1 }));
+
+        const safeHandler = getSafeEventHandler(handler, provider);
+        await safeHandler(event);
+
+        expect(provider.getNetwork).toHaveBeenCalled();
+        expect(provider.waitForTransaction).toHaveBeenCalledWith(
+          event.transactionHash,
+          confirmationTimeBlocks,
+        );
+        expect(handler).toHaveBeenCalled();
+      });
+
+      describe('in case of re-org', () => {
+        it('ignores the duplicate event coming from the re-orged block', async () => {
+          const confirmationTimeBlocks = 5;
+          const chainId = 100;
+          const eventTxHash = '0x123';
+          const event = new MockedEvent({ removed: 0, transactionHash: eventTxHash });
+          const reorgedEvent = new MockedEvent({ removed: 1, transactionHash: eventTxHash });
+
+          CONFIRMATION_TIME_BLOCKS[chainId] = confirmationTimeBlocks;
+          const handler = vi.fn();
+
+          const provider = new providers.JsonRpcProvider();
+          provider.getNetwork = vi.fn().mockResolvedValue({ chainId });
+          provider.waitForTransaction = vi
+            .fn()
+            .mockResolvedValue(new MockedTransactionReceipt({ status: 1 }));
+
+          const safeHandler = getSafeEventHandler(handler, provider);
+
+          await safeHandler(event);
+          expect(handler).toHaveBeenCalled();
+
+          handler.mockReset();
+
+          await safeHandler(reorgedEvent);
+          expect(handler).not.toHaveBeenCalled();
+        });
+      });
+    });
+  });
+
   describe('getLatestBlock()', () => {
     it('returns the latest block for the network found on the provided RPC url', () => {
       const rpcUrl = getRandomUrl('rpc');
