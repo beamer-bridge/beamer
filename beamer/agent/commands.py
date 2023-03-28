@@ -77,6 +77,11 @@ def _sigint_handler(agent: Agent) -> None:
     help="Provide Prometheus metrics on PORT.",
 )
 @click.option(
+    "--base-chain",
+    type=str,
+    help="Associate a JSON-RPC endpoint URL with base chain. Example: http://foo.bar:8545.",
+)
+@click.option(
     "--chain",
     type=str,
     multiple=True,
@@ -97,6 +102,7 @@ def agent(
     deployment_dir: Optional[Path],
     fill_wait_time: Optional[int],
     log_level: Optional[str],
+    base_chain: str,
     chain: tuple[str],
     source_chain: Optional[str],
     target_chain: Optional[str],
@@ -122,6 +128,7 @@ def agent(
         "account.password": account_password,
         "unsafe-fill-time": unsafe_fill_time,
         "poll-period": poll_period,
+        "base-chain.rpc-url": base_chain,
     }
 
     for chainspec in chain:

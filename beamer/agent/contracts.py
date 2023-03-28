@@ -38,7 +38,7 @@ def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
     with deployment_dir.joinpath("deployment.json").open("rt") as f:
         deployment = json.load(f)
 
-    for chain_id, deployed_contracts in deployment["L2"].items():
+    for chain_id, deployed_contracts in deployment["chains"].items():
         infos = {}
         for name, deployment_data in deployed_contracts.items():
             if name not in abis:
