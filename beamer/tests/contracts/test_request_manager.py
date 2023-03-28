@@ -9,15 +9,10 @@ from beamer.tests.constants import (
     FILL_ID,
     RM_C_FIELD_TERMINATION,
     RM_R_FIELD_VALID_UNTIL,
+    RM_T_FIELD_ETH_IN_TOKEN,
     RM_T_FIELD_TRANSFER_LIMIT,
 )
-from beamer.tests.util import (
-    alloc_accounts,
-    alloc_whitelisted_accounts,
-    earnings,
-    make_request,
-    update_token,
-)
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
 
 
 def test_request_invalid_target_chain(request_manager, token):
@@ -1362,59 +1357,52 @@ def test_contract_unpause(request_manager, token):
     )
 
 
-def test_transfer_limit_update_only_owner(request_manager, token):
+def test_token_update_only_owner(request_manager, token):
     (random_guy,) = alloc_accounts(1)
-    original_transfer_limit = request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT]
+    original_token_data = request_manager.tokens(token.address)
+    original_transfer_limit = original_token_data[RM_T_FIELD_TRANSFER_LIMIT]
     new_transfer_limit = original_transfer_limit + 1
+    original_eth_in_token = original_token_data[RM_T_FIELD_ETH_IN_TOKEN]
+    new_eth_in_token = original_eth_in_token + 1
+
+    def _assert_token_values(expected_transfer_limit, expected_eth_in_token):
+        token_data = request_manager.tokens(token.address)
+        assert token_data[RM_T_FIELD_TRANSFER_LIMIT] == expected_transfer_limit
+        assert token_data[RM_T_FIELD_ETH_IN_TOKEN] == expected_eth_in_token
 
     with ape.reverts("Ownable: caller is not the owner"):
-        update_token(
-            request_manager,
+        request_manager.updateToken(
             token,
-            dict(transfer_limit=new_transfer_limit),
+            new_transfer_limit,
+            new_eth_in_token,
             sender=random_guy,
         )
+    _assert_token_values(original_transfer_limit, original_eth_in_token)
 
-    assert (
-        request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == original_transfer_limit
-    )
-    update_token(
-        request_manager,
-        token,
-        dict(transfer_limit=new_transfer_limit),
-    )
-    assert request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == new_transfer_limit
-    # Also show that transfer limit can be decreased again
-    update_token(
-        request_manager,
-        token,
-        dict(transfer_limit=original_transfer_limit),
-    )
-    assert (
-        request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT] == original_transfer_limit
-    )
+    request_manager.updateToken(token, new_transfer_limit, new_eth_in_token)
+    _assert_token_values(new_transfer_limit, new_eth_in_token)
+
+    # Also show that transfer limit and eth in token can be decreased again
+    request_manager.updateToken(token, original_transfer_limit, original_eth_in_token)
+    _assert_token_values(original_transfer_limit, original_eth_in_token)
 
 
 def test_transfer_limit_requests(request_manager, token):
     (requester,) = alloc_accounts(1)
-    transfer_limit = request_manager.tokens(token.address)[RM_T_FIELD_TRANSFER_LIMIT]
+    token_data = request_manager.tokens(token.address)
+    transfer_limit = token_data[RM_T_FIELD_TRANSFER_LIMIT]
+    eth_in_token = token_data[RM_T_FIELD_ETH_IN_TOKEN]
 
     assert token.balanceOf(requester) == 0
-    token.mint(requester, transfer_limit)
 
     make_request(request_manager, token, requester, requester, transfer_limit)
-
     assert token.balanceOf(requester) == 0
-    token.mint(requester, transfer_limit + 1)
 
     with ape.reverts("Amount exceeds transfer limit"):
         make_request(request_manager, token, requester, requester, transfer_limit + 1)
 
-    update_token(
-        request_manager,
-        token,
-        dict(transfer_limit=transfer_limit + 1),
-    )
+    request_manager.updateToken(token, transfer_limit + 1, eth_in_token)
+
     make_request(request_manager, token, requester, requester, transfer_limit + 1)
 
     assert token.balanceOf(requester) == 0

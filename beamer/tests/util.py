@@ -15,7 +15,6 @@ from eth_utils import keccak, to_canonical_address
 from web3.types import FilterParams
 
 from beamer.agent.typing import RequestId
-from beamer.tests.constants import RM_T_FIELD_TRANSFER_LIMIT
 
 FUNDER = ape.accounts.test_accounts[0]
 
@@ -170,32 +169,24 @@ def earnings(w3, account):
     yield lambda: w3.eth.get_balance(address) + calculate_gas_spending() - balance_before
 
 
-# The function updates the token values partially whatever variable is in the params dictionary
-# This function works similar to adding a parameters dict to a transaction in web3.py
-def update_token(request_manager, token, params, *args, **kwargs):
-    token_data = list(request_manager.tokens(token.address))
-    fields = ["transfer_limit", "eth_in_token", "lp_fee_ppm", "protocol_fee_ppm"]
-    new_token_data = tuple(params.get(key, token_data[i]) for i, key in enumerate(fields))
-    request_manager.updateToken(token.address, *new_token_data, *args, **kwargs)
-
-
-def get_token_data(request_manager, token_address):
-    return request_manager.tokens(token_address)
+def get_fees(request_manager):
+    return (
+        request_manager.minFeePPM(),
+        request_manager.lpFeePPM(),
+        request_manager.protocolFeePPM(),
+    )
 
 
 @contextlib.contextmanager
-def temp_fee_data(request_manager, token, eth_in_token, lp_fee_ppm, protocol_fee_ppm):
-    old_token_data = get_token_data(request_manager, token)
-    request_manager.updateToken(
-        token.address,
-        old_token_data[RM_T_FIELD_TRANSFER_LIMIT],
-        eth_in_token,
+def temp_fee_data(request_manager, min_fee_ppm, lp_fee_ppm, protocol_fee_ppm):
+    old_fees = get_fees(request_manager)
+    request_manager.updateFees(
+        min_fee_ppm,
         lp_fee_ppm,
         protocol_fee_ppm,
     )
     yield
-    # the last element of token data is collectedProtocolFees which is not part of the update
-    request_manager.updateToken(token.address, *old_token_data[:-1])
+    request_manager.updateFees(*old_fees)
 
 
 def make_request(
@@ -212,7 +203,7 @@ def make_request(
     if fee_data == "standard":
         fees_context = contextlib.nullcontext()
     else:
-        fees_context = temp_fee_data(request_manager, token, *fee_data)
+        fees_context = temp_fee_data(request_manager, *fee_data)
 
     if target_chain_id is None:
         target_chain_id = ape.chain.chain_id
@@ -223,7 +214,7 @@ def make_request(
                 target_chain_id, token.address, amount
             )
             if token.balanceOf(requester) < total_token_amount:
-                token.mint(requester, total_token_amount)
+                token.mint(requester, total_token_amount - token.balanceOf(requester))
 
             token.approve(request_manager.address, total_token_amount)
 

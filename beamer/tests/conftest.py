@@ -82,22 +82,36 @@ def challenge_period_extension():
     return 50
 
 
-@pytest.fixture
-def lp_margin_ppm():
-    return 300_000
-
-
 @pytest.fixture()
 def request_manager_params(
-    claim_stake, claim_request_extension, claim_period, challenge_period_extension, lp_margin_ppm
+    claim_stake, claim_request_extension, claim_period, challenge_period_extension
 ):
     return (
         claim_stake,
         claim_request_extension,
         claim_period,
         challenge_period_extension,
-        lp_margin_ppm,
     )
+
+
+@pytest.fixture
+def min_fee_ppm():
+    return 300_000
+
+
+@pytest.fixture
+def lp_fee_ppm():
+    return 0
+
+
+@pytest.fixture
+def protocol_fee_ppm():
+    return 0
+
+
+@pytest.fixture
+def fees_params(min_fee_ppm, lp_fee_ppm, protocol_fee_ppm):
+    return min_fee_ppm, lp_fee_ppm, protocol_fee_ppm
 
 
 @pytest.fixture
@@ -107,7 +121,7 @@ def finality_period():
 
 @pytest.fixture
 def transfer_cost():
-    return int(400e12)
+    return 0
 
 
 @pytest.fixture
@@ -122,7 +136,7 @@ def chain_params(finality_period, transfer_cost, target_weight_ppm):
 
 @pytest.fixture
 def token_params():
-    return int(10_000e18), int(1_500e18), 1_000, 0
+    return int(10_000e18), int(1_500e18)
 
 
 @pytest.fixture
@@ -131,7 +145,9 @@ def forward_state():
 
 
 @pytest.fixture
-def contracts(deployer, token, forward_state, request_manager_params, chain_params, token_params):
+def contracts(
+    deployer, token, forward_state, request_manager_params, fees_params, chain_params, token_params
+):
     # L1 contracts
     l1_messenger = deployer.deploy(ape.project.TestL1Messenger)
     l1_messenger.setForwardState(forward_state)
@@ -161,6 +177,7 @@ def contracts(deployer, token, forward_state, request_manager_params, chain_para
     l1_messenger.addCaller(resolver.address)
     request_manager.addCaller(l1_chain_id, l1_messenger.address, l2_messenger.address)
     resolver.addRequestManager(l2_chain_id, request_manager.address, l1_messenger.address)
+    request_manager.updateFees(*fees_params)
     request_manager.updateChain(l2_chain_id, *chain_params)
     request_manager.updateToken(token.address, *token_params)
 
