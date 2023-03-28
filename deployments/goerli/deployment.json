@@ -1,7 +1,7 @@
 {
   "beamer_commit": "3096300c3129b31356f048c3982cbf38ef31d1ef",
   "deployer": "0xeDD5273fa20Ca7E1adf3d9D9cC3Bc998Fe3e63A3",
-  "L1": {
+  "base_chain": {
     "Resolver": {
       "address": "0x72bA6ed8A14809cfc9B8CA4A820ee666ce338856",
       "deployment_block": 8169278,
@@ -23,7 +23,7 @@
       ]
     }
   },
-  "L2": {
+  "chains": {
     "421613": {
       "MintableToken": {
         "address": "0xf1168c58B95C5236727A1ABE26D0e3199458B548",

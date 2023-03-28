@@ -1,7 +1,7 @@
 {
   "beamer_commit": "8c00f02494ef699c4b7fb260a956e7e4f2fa5b5c",
   "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
-  "L1": {
+  "base_chain": {
     "Resolver": {
       "address": "0xcEA770441aa5eFCD3f5501b796185Ec3055A76D7",
       "deployment_block": 16184792,
@@ -23,7 +23,7 @@
       ]
     }
   },
-  "L2": {
+  "chains": {
     "42161": {
       "RequestManager": {
         "address": "0x6d00f6994f36Ec1a3Bd008DBbC84DFa46A939001",
