@@ -13,6 +13,7 @@ import {
   getLatestBlock,
   getReadOnlyContract,
   getReadWriteContract,
+  getSafeEventHandler,
 } from './utils';
 
 export async function getTokenAttributes(
@@ -241,8 +242,8 @@ export function listenOnClaimCountChange(options: {
   const reduceFilter = contract.filters.ClaimStakeWithdrawn(undefined, options.requestIdentifier);
   const increaseFilter = contract.filters.ClaimMade(options.requestIdentifier);
 
-  contract.on(reduceFilter, options.onReduce);
-  contract.on(increaseFilter, options.onIncrease);
+  contract.on(reduceFilter, getSafeEventHandler(options.onReduce, provider));
+  contract.on(increaseFilter, getSafeEventHandler(options.onIncrease, provider));
 
   const cancel = () => {
     contract.removeAllListeners();
@@ -271,12 +272,14 @@ export function waitUntilClaimsWithdrawn(
 
   const promise = new Promise<void>((resolve) => {
     let claimCount = activeClaimCount;
+    const reduceClaimCountOrResolve = () => {
+      if (--claimCount == 0) {
+        resolve();
+      }
+    };
+
     if (claimCount > 0) {
-      contract.on(queryFilter, () => {
-        if (--claimCount == 0) {
-          resolve();
-        }
-      });
+      contract.on(queryFilter, getSafeEventHandler(reduceClaimCountOrResolve, provider));
     } else {
       resolve();
     }

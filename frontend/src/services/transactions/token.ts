@@ -6,6 +6,7 @@ import {
   getConfirmationTimeBlocksForChain,
   getReadOnlyContract,
   getReadWriteContract,
+  getSafeEventHandler,
 } from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress, Token } from '@/types/data';
@@ -86,8 +87,8 @@ export function listenOnTokenBalanceChange(options: {
   const sendFilter = tokenContract.filters.Transfer(options.addressToListen, undefined);
   const receiveFilter = tokenContract.filters.Transfer(undefined, options.addressToListen);
 
-  tokenContract.on(sendFilter, options.onReduce);
-  tokenContract.on(receiveFilter, options.onIncrease);
+  tokenContract.on(sendFilter, getSafeEventHandler(options.onReduce, tokenContract.provider));
+  tokenContract.on(receiveFilter, getSafeEventHandler(options.onIncrease, tokenContract.provider));
 
   return tokenContract;
 }
