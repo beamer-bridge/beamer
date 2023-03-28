@@ -212,12 +212,12 @@ export function generateDeploymentInfo(
   return new DeploymentInfo({
     beamer_commit: getRandomString(ALPHABET_CHARACTERS, 40),
     deployer: getRandomEthereumAddress(),
-    L1: {
+    base_chain: {
       [getRandomString(ALPHABET_CHARACTERS, 10)]: {
         address: getRandomEthereumAddress(),
       },
     },
-    L2: {
+    chains: {
       [getRandomNumber()]: {
         [getRandomString(ALPHABET_CHARACTERS, 10)]: {
           address: getRandomEthereumAddress(),

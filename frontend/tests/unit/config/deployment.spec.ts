@@ -9,7 +9,7 @@ describe('DeploymentInfo', () => {
       const contractAddress1 = getRandomEthereumAddress();
       const contractAddress2 = getRandomEthereumAddress();
       const deploymentInfo = generateDeploymentInfo({
-        L2: {
+        chains: {
           '1': {
             MintableToken: {
               address: contractAddress1,
@@ -30,7 +30,7 @@ describe('DeploymentInfo', () => {
     });
     it('retrieves empty object when there are no mintable token addresses', () => {
       const deploymentInfo = generateDeploymentInfo({
-        L2: {
+        chains: {
           '1': {},
           '2': {
             TestContract: {
@@ -47,7 +47,7 @@ describe('DeploymentInfo', () => {
   describe('supportedChains()', () => {
     it('retrieves all chains for which there was a deployment', () => {
       const deploymentInfo = generateDeploymentInfo({
-        L2: {
+        chains: {
           '1': {},
           '2': {},
         },
@@ -62,7 +62,7 @@ describe('DeploymentInfo', () => {
         const requestManagerAddress = getRandomEthereumAddress();
         const fillManagerAddress = getRandomEthereumAddress();
         const deploymentInfo = generateDeploymentInfo({
-          L2: {
+          chains: {
             '1': {
               RequestManager: {
                 address: requestManagerAddress,
