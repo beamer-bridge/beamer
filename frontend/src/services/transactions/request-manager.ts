@@ -42,32 +42,26 @@ export async function getAmountBeforeFees(
   totalAmount: TokenAmount,
   rpcUrl: string,
   requestManagerAddress: string,
+  targetChainId: number,
 ): Promise<UInt256> {
-  const { minLpFee, lpFeePPM, protocolFeePPM } = await getTokenAttributes(
-    rpcUrl,
+  const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    totalAmount.token.address,
+    RequestManagerDeployment.abi,
+    getJsonRpcProvider(rpcUrl),
   );
+  const tokenAddress = totalAmount.token.address;
 
-  const PARTS_IN_MILLION = new UInt256('1000000');
-  const totalAmountWei = totalAmount.uint256;
-  const lpFeePPMAmount = totalAmountWei.multiply(lpFeePPM).divide(PARTS_IN_MILLION);
-
-  if (lpFeePPMAmount.gte(minLpFee)) {
-    return totalAmountWei
-      .multiply(PARTS_IN_MILLION)
-      .divide(PARTS_IN_MILLION.add(protocolFeePPM).add(lpFeePPM));
-  } else {
-    try {
-      return totalAmountWei
-        .multiply(PARTS_IN_MILLION)
-        .divide(PARTS_IN_MILLION.add(protocolFeePPM))
-        .subtract(minLpFee);
-    } catch (e) {
-      throw new Error(
-        'Cannot derive base amount. Total amount is not high enough to cover the fees.',
-      );
-    }
+  try {
+    const transferableAmount = await contract.transferableAmount(
+      targetChainId,
+      tokenAddress,
+      totalAmount.uint256.asBigNumber,
+    );
+    return new UInt256(transferableAmount.toString());
+  } catch (e) {
+    throw new Error(
+      'Cannot derive base amount. Total amount is not high enough to cover the fees.',
+    );
   }
 }
 

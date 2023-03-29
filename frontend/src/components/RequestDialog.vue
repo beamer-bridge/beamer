@@ -3,6 +3,7 @@
     <RequestSourceInputs
       ref="requestSourceInputsRef"
       v-model="requestSource"
+      :target-chain="requestTarget.targetChain"
       class="rounded-br-lg bg-teal px-4 py-4 md:px-8 md:py-6"
     />
     <div class="relative">

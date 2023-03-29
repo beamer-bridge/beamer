@@ -155,6 +155,7 @@ import SimpleTextButton from './layout/SimpleTextButton.vue';
 
 interface Props {
   modelValue: RequestSource;
+  targetChain: SelectorOption<Chain> | null;
 }
 
 interface Emits {
@@ -242,6 +243,7 @@ const {
 } = useMaxTransferableTokenAmount(
   balance,
   computed(() => selectedSourceChain.value?.value),
+  computed(() => props.targetChain?.value),
 );
 
 const { transferLimitTokenAmount, formattedMinFee } = useTokenAttributes(

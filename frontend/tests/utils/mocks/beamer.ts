@@ -45,10 +45,12 @@ export class MockedRequest {
 export class MockedRequestManagerContract {
   totalFee = vi.fn();
   requests = vi.fn();
+  transferableAmount = vi.fn();
   tokens = vi.fn().mockReturnValue(() => new MockedToken());
 
   createRequest = vi.fn().mockImplementation(() => new MockedTransaction());
   withdrawExpiredRequest = vi.fn().mockImplementation(() => new MockedTransaction());
+
   estimateGas = {
     createRequest: vi.fn(),
     withdrawExpiredRequest: vi.fn(),
