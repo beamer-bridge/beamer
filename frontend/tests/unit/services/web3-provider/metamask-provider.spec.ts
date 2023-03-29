@@ -11,7 +11,6 @@ import { MockedEip1193Provider, MockedWeb3Provider } from '~/utils/mocks/ethereu
 
 vi.mock('@/services/web3-provider/util-export');
 vi.mock('@ethersproject/providers');
-vi.mock('ethers/lib/utils');
 
 function mockWeb3Provider() {
   const web3Provider = new MockedWeb3Provider();
@@ -146,6 +145,59 @@ describe('metamask-provider', () => {
         // There is a bug with the disconnect event in MetaMask
         // See https://github.com/MetaMask/metamask-extension/issues/13375
         expect(eipProvider.on).not.toHaveBeenCalledWith('disconnect', expect.anything());
+      });
+    });
+
+    describe('switchChain()', () => {
+      it('triggers the rpc call to switch the chain', async () => {
+        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
+        const metamaskProvider = new MetaMaskProvider(eipProvider);
+        const newChainId = 15;
+        const newChainIdHex = '0xf';
+
+        const successful = await metamaskProvider['switchChain'](newChainId);
+
+        expect(metamaskProvider['web3Provider'].send).toHaveBeenCalledWith(
+          'wallet_switchEthereumChain',
+          [{ chainId: newChainIdHex }],
+        );
+        expect(successful).toBe(true);
+      });
+
+      it('returns false if rpc provider does not know the chain', async () => {
+        const web3Provider = mockWeb3Provider();
+        web3Provider.send = vi.fn().mockRejectedValue({ code: 4902 });
+        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
+        const metamaskProvider = new MetaMaskProvider(eipProvider);
+
+        const successful = await metamaskProvider['switchChain'](99);
+
+        expect(successful).toBe(false);
+      });
+
+      it('throws any other errors from the rpc provider', async () => {
+        const error = { code: -32603, message: 'RPC error!' };
+        const web3Provider = mockWeb3Provider();
+        web3Provider.send = vi.fn().mockRejectedValue(error);
+        const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
+        const metamaskProvider = new MetaMaskProvider(eipProvider);
+
+        await expect(metamaskProvider['switchChain'](99)).rejects.toThrow('RPC error!');
+      });
+
+      describe('on MetaMask Mobile', () => {
+        it('returns false if rpc provider does not know the chain', async () => {
+          const web3Provider = mockWeb3Provider();
+          web3Provider.send = vi
+            .fn()
+            .mockRejectedValue({ data: { originalError: { code: 4902 } } });
+          const eipProvider = new MockedEip1193Provider({ isMetaMask: true });
+          const metamaskProvider = new MetaMaskProvider(eipProvider);
+
+          const successful = await metamaskProvider['switchChain'](99);
+
+          expect(successful).toBe(false);
+        });
       });
     });
   });
