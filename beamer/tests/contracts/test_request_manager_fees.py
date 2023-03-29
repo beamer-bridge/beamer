@@ -281,6 +281,37 @@ def test_min_lp_fee(request_manager, token, chain_params, min_fee_ppm, token_par
 
 @pytest.mark.parametrize("transfer_cost", [int(400e12)])
 @pytest.mark.parametrize("lp_fee_ppm", [1000])
+def test_lp_fee(request_manager, token):
+    chain_id = ape.chain.chain_id
+    min_lp_fee = request_manager.minLpFee(chain_id, token.address)
+    lp_fee_ppm = request_manager.lpFeePPM()
+    conjunction_amount = min_lp_fee * 1_000_000 // lp_fee_ppm
+    lp_fee_take_off = 1_000_000 // lp_fee_ppm
+
+    test_values = [
+        (1, True),
+        (conjunction_amount - 1, True),
+        (conjunction_amount, True),
+        (conjunction_amount + 1, True),
+        (conjunction_amount + lp_fee_take_off - 1, True),
+        (conjunction_amount + lp_fee_take_off, False),
+        (conjunction_amount * 10, False),
+    ]
+
+    for test_amount, is_min_lp_fee in test_values:
+        calculated_fee = request_manager.lpFee(chain_id, token.address, test_amount)
+
+        if is_min_lp_fee:
+            expected_fee = min_lp_fee
+        else:
+            expected_fee = test_amount * lp_fee_ppm // 1_000_000
+            assert calculated_fee > min_lp_fee
+
+        assert calculated_fee == expected_fee
+
+
+@pytest.mark.parametrize("transfer_cost", [int(400e12)])
+@pytest.mark.parametrize("lp_fee_ppm", [1000])
 @pytest.mark.parametrize("protocol_fee_ppm", [1000])
 def test_total_fee(request_manager, token, chain_params):
     target_chain_params = chain_params[0], int(3e12), 750_000
