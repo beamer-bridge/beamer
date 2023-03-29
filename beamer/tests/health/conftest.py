@@ -96,6 +96,8 @@ def transfer_request():
         block_number=BLOCK_NUMBER,
         tx_hash=HexBytes(b"1"),
         chain_id=SOURCE_CHAIN_ID,
+        lp_fee=TokenAmount(1),
+        protocol_fee=TokenAmount(1),
     )
 
 
