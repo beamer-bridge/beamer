@@ -9,7 +9,11 @@ import { UInt256 } from '@/types/uint-256';
 import { generateChain, generateToken } from '~/utils/data_generators';
 
 const TOKEN = generateToken();
-const CHAIN = generateChain();
+const SOURCE_CHAIN = generateChain();
+const TARGET_CHAIN = generateChain();
+const SOURCE_CHAIN_REF = ref(SOURCE_CHAIN);
+const TARGET_CHAIN_REF = ref(TARGET_CHAIN);
+const TOKEN_AMOUNT = ref(new TokenAmount({ amount: '1000', token: TOKEN })) as Ref<TokenAmount>;
 
 vi.mock('@/services/transactions/request-manager');
 
@@ -21,39 +25,45 @@ describe('useMaxTransferableTokenAmount', () => {
   describe('maxTransferableTokenAmount', () => {
     it('is undefined when provided total amount is undefined', async () => {
       const totalAmount = ref(undefined);
-      const chain = ref(CHAIN);
 
-      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
+      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+        totalAmount,
+        SOURCE_CHAIN_REF,
+        TARGET_CHAIN_REF,
+      );
       await flushPromises();
 
       expect(maxTransferableTokenAmount.value).toBeUndefined();
     });
 
-    it('is undefined when provided chain is undefined', async () => {
-      const totalAmount = ref(
-        new TokenAmount({ amount: '1000', token: TOKEN }),
-      ) as Ref<TokenAmount>;
-      const chain = ref(undefined);
+    it('is undefined when provided source chain is undefined', async () => {
+      const sourceChain = ref(undefined);
 
-      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
+      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+        TOKEN_AMOUNT,
+        sourceChain,
+        TARGET_CHAIN_REF,
+      );
       await flushPromises();
 
       expect(maxTransferableTokenAmount.value).toBeUndefined();
     });
 
-    it('holds the actual transferable amount derived from the provided total amount by deducting the expected fees', async () => {
+    it('holds the actual transferable amount derived from the provided total amount', async () => {
       const totalAmount = ref(
         new TokenAmount({ amount: '1000', token: TOKEN }),
       ) as Ref<TokenAmount>;
-
-      const chain = ref(CHAIN);
 
       const mockedAmountBeforeFees = totalAmount.value.uint256.subtract(new UInt256('100'));
       Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
         value: vi.fn().mockReturnValue(mockedAmountBeforeFees),
       });
 
-      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
+      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+        totalAmount,
+        SOURCE_CHAIN_REF,
+        TARGET_CHAIN_REF,
+      );
       await flushPromises();
 
       expect(maxTransferableTokenAmount.value).not.toBeUndefined();
@@ -63,10 +73,6 @@ describe('useMaxTransferableTokenAmount', () => {
     });
 
     it('is undefined when calculation fails with an exception', async () => {
-      const totalAmount = ref(
-        new TokenAmount({ amount: '1000', token: TOKEN }),
-      ) as Ref<TokenAmount>;
-      const chain = ref(CHAIN);
       const mockedGetAmountBeforeFees = vi.fn().mockImplementation(() => {
         throw new Error('error');
       });
@@ -75,7 +81,11 @@ describe('useMaxTransferableTokenAmount', () => {
         value: mockedGetAmountBeforeFees,
       });
 
-      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
+      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+        TOKEN_AMOUNT,
+        SOURCE_CHAIN_REF,
+        TARGET_CHAIN_REF,
+      );
       await flushPromises();
 
       expect(mockedGetAmountBeforeFees).toHaveBeenCalled();
@@ -84,13 +94,12 @@ describe('useMaxTransferableTokenAmount', () => {
   });
 
   describe('loading', () => {
-    it('indicates that a recalculation for maxTransferableTokenAmount is running', async () => {
-      const totalAmount = ref(
-        new TokenAmount({ amount: '1000', token: TOKEN }),
-      ) as Ref<TokenAmount>;
-      const chain = ref(CHAIN);
-
-      const { loading } = useMaxTransferableTokenAmount(totalAmount, chain);
+    it('indicates that the transferable token amount is being fetched', async () => {
+      const { loading } = useMaxTransferableTokenAmount(
+        TOKEN_AMOUNT,
+        SOURCE_CHAIN_REF,
+        TARGET_CHAIN_REF,
+      );
 
       expect(loading.value).toBe(true);
       await flushPromises();
@@ -98,11 +107,14 @@ describe('useMaxTransferableTokenAmount', () => {
     });
   });
 
-  it('watches for changes on the provided token amount and recalculates maxTransferableTokenAmount', async () => {
+  it('watches for changes on the provided token amount and refetches the transferable token amount', async () => {
     const totalAmount = ref(undefined) as Ref<TokenAmount | undefined>;
-    const chain = ref(CHAIN);
 
-    const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(totalAmount, chain);
+    const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+      totalAmount,
+      SOURCE_CHAIN_REF,
+      TARGET_CHAIN_REF,
+    );
     await flushPromises();
 
     expect(maxTransferableTokenAmount.value).toBeUndefined();
