@@ -87,6 +87,8 @@ class RequestCreated(RequestEvent, SourceChainEvent):
     amount: TokenAmount
     nonce: Nonce
     valid_until: Termination
+    lp_fee: TokenAmount
+    protocol_fee: TokenAmount
 
 
 @dataclass(frozen=True)
