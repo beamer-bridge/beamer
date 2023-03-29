@@ -79,7 +79,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         address targetAddress,
         uint256 amount,
         uint96 nonce,
-        uint32 validUntil
+        uint32 validUntil,
+        uint256 lpFee,
+        uint256 protocolFee
     );
 
     /// Emitted when the token deposit for request ``requestId`` has been
@@ -338,7 +340,9 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
             targetAddress,
             amount,
             nonce,
-            uint32(block.timestamp + validityPeriod)
+            uint32(block.timestamp + validityPeriod),
+            lpFeeTokenAmount,
+            protocolFeeTokenAmount
         );
 
         IERC20(sourceTokenAddress).safeTransferFrom(
