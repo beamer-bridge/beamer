@@ -67,7 +67,7 @@ export class MetaMaskProvider extends InjectedProvider implements ISigner {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
     } catch (error) {
-      if ((error as { code: number })?.code === unrecognizedChainErrorCode) {
+      if (hasErrorCode(error as MetaMaskError, unrecognizedChainErrorCode)) {
         return false;
       }
       throw error;
@@ -77,4 +77,10 @@ export class MetaMaskProvider extends InjectedProvider implements ISigner {
   listenToEvents(): void {
     this.listenToChangeEvents();
   }
+}
+
+type MetaMaskError = { code?: number; data?: { originalError?: { code: number } } };
+
+function hasErrorCode(error: MetaMaskError, code: number) {
+  return error.code === code || error.data?.originalError?.code === code;
 }
