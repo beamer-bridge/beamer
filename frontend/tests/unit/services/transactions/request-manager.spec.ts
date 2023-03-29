@@ -176,7 +176,7 @@ describe('request-manager', () => {
           }),
         );
 
-        expect(
+        await expect(
           getAmountBeforeFees(totalAmountWei, RPC_URL, REQUEST_MANAGER_ADDRESS),
         ).rejects.toThrow('Total amount is not high enough to cover the fees.');
       });
@@ -278,7 +278,7 @@ describe('request-manager', () => {
         throw new Error('transaction failed');
       });
 
-      expect(
+      await expect(
         sendRequestTransaction(
           SIGNER,
           amount,
@@ -323,7 +323,7 @@ describe('request-manager', () => {
         .fn()
         .mockReturnValue(new MockedTransactionReceipt({ status: 0 }));
 
-      expect(
+      await expect(
         getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction reverted on chain.');
     });
@@ -336,7 +336,7 @@ describe('request-manager', () => {
       const provider = mockGetProvider();
       provider.waitForTransaction = vi.fn().mockReturnValue(undefined);
 
-      expect(
+      await expect(
         getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction not found.');
     });
@@ -354,7 +354,7 @@ describe('request-manager', () => {
         .fn()
         .mockReturnValue(new MockedTransactionReceipt({ status: 1, logs: undefined }));
 
-      expect(
+      await expect(
         getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow("Request Failed. Couldn't retrieve Request ID.");
     });
@@ -365,7 +365,7 @@ describe('request-manager', () => {
       const provider = mockGetProvider();
       provider.waitForTransaction = vi.fn().mockReturnValue(null);
 
-      expect(
+      await expect(
         getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction not found.');
     });
