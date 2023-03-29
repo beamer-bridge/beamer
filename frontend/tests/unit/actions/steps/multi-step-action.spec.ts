@@ -121,7 +121,7 @@ describe('MultiStepAction', () => {
   });
 
   describe('executeSteps()', () => {
-    it('fails if action has already failed', () => {
+    it('fails if action has already failed', async () => {
       const action = new TestMultiStepAction([
         new Step(generateStepData({ identifier: 'one' })),
         new Step(generateStepData({ identifier: 'two', errorMessage: 'error' })),
@@ -129,12 +129,12 @@ describe('MultiStepAction', () => {
       const methods = { one: vi.fn(), two: vi.fn() };
       expect(action.failed).toBeTruthy();
 
-      return expect(action.executeSteps(methods)).rejects.toThrow(
+      await expect(action.executeSteps(methods)).rejects.toThrow(
         'Attempt to run already failed action!',
       );
     });
 
-    it('fails if action is already active', () => {
+    it('fails if action is already active', async () => {
       const action = new TestMultiStepAction([
         new Step(generateStepData({ identifier: 'one' })),
         new Step(generateStepData({ identifier: 'two', active: true })),
@@ -142,12 +142,12 @@ describe('MultiStepAction', () => {
       const methods = { one: vi.fn(), two: vi.fn() };
       expect(action.active).toBeTruthy();
 
-      return expect(action.executeSteps(methods)).rejects.toThrow(
+      await expect(action.executeSteps(methods)).rejects.toThrow(
         'Attempt to run already in progress action!',
       );
     });
 
-    it('fails if any step has no method defined', () => {
+    it('fails if any step has no method defined', async () => {
       const action = new TestMultiStepAction([
         new Step(generateStepData({ identifier: 'one' })),
         new Step(generateStepData({ identifier: 'two' })),
@@ -155,12 +155,12 @@ describe('MultiStepAction', () => {
       ]);
       const methods = { one: vi.fn() };
 
-      return expect(action.executeSteps(methods)).rejects.toThrow(
+      await expect(action.executeSteps(methods)).rejects.toThrow(
         'Can not (continue) execution of action. Missing methods for steps: two,three',
       );
     });
 
-    it('ignores missing methods for already completed steps', () => {
+    it('ignores missing methods for already completed steps', async () => {
       const action = new TestMultiStepAction([
         new Step(generateStepData({ identifier: 'one', completed: true })),
         new Step(generateStepData({ identifier: 'two' })),
@@ -168,7 +168,7 @@ describe('MultiStepAction', () => {
       ]);
       const methods = { two: vi.fn() };
 
-      return expect(action.executeSteps(methods)).rejects.toThrow(
+      await expect(action.executeSteps(methods)).rejects.toThrow(
         'Can not (continue) execution of action. Missing methods for steps: three',
       );
     });

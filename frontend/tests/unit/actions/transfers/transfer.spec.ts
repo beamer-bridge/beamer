@@ -146,12 +146,12 @@ describe('transfer', () => {
     });
   });
 
-  describe('ensureTokenAllowance()', () => {
+  describe('ensureTokenAllowance()', async () => {
     it('fails if given signer is undefined', async () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
 
-      return expect(transfer.ensureTokenAllowance()).rejects.toThrow('Missing wallet connection!');
+      await expect(transfer.ensureTokenAllowance()).rejects.toThrow('Missing wallet connection!');
     });
 
     it('makes a call to set the allowance for the source token with minimum value of source amount plus fees ', async () => {
@@ -203,20 +203,20 @@ describe('transfer', () => {
   });
 
   describe('sendRequestTransaction()', () => {
-    it('fails if given signer is undefined', () => {
+    it('fails if given signer is undefined', async () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
 
-      return expect(transfer.sendRequestTransaction(undefined, SIGNER_ADDRESS)).rejects.toThrow(
+      await expect(transfer.sendRequestTransaction(undefined, SIGNER_ADDRESS)).rejects.toThrow(
         'Missing wallet connection!',
       );
     });
 
-    it('fails if given signer address is undefined', () => {
+    it('fails if given signer address is undefined', async () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
 
-      return expect(transfer.sendRequestTransaction(SIGNER, undefined)).rejects.toThrow(
+      await expect(transfer.sendRequestTransaction(SIGNER, undefined)).rejects.toThrow(
         'Missing wallet connection!',
       );
     });
@@ -278,7 +278,7 @@ describe('transfer', () => {
       });
       const transfer = new TestTransfer(data);
 
-      return expect(transfer.waitForRequestEvent()).rejects.toThrow(
+      await expect(transfer.waitForRequestEvent()).rejects.toThrow(
         'Attempt to get request event before sending transaction!',
       );
     });
@@ -321,7 +321,7 @@ describe('transfer', () => {
         }),
       });
 
-      return expect(transfer.waitForFulfillment()).rejects.toThrow(
+      await expect(transfer.waitForFulfillment()).rejects.toThrow(
         'Attempting to wait for fulfillment without request identifier!',
       );
     });
@@ -427,21 +427,21 @@ describe('transfer', () => {
       }),
     });
 
-    it('fails if the transfer is not expired', () => {
+    it('fails if the transfer is not expired', async () => {
       const transfer = new TestTransfer({ ...TRANSFER_DATA, expired: false });
 
-      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+      await expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Can only withdraw transfer funds after request expired!',
       );
     });
 
-    it('fails when request identifier has not been set', () => {
+    it('fails when request identifier has not been set', async () => {
       const transfer = new TestTransfer({
         ...TRANSFER_DATA,
         requestInformation: generateRequestInformationData({ identifier: undefined }),
       });
 
-      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+      await expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Attempting to withdraw without request identifier!',
       );
     });
@@ -459,28 +459,28 @@ describe('transfer', () => {
       expect(transfer.checkAndUpdateState).toHaveBeenCalledOnce();
     });
 
-    it('fails when funds are already withdrawn', () => {
+    it('fails when funds are already withdrawn', async () => {
       const transfer = new TestTransfer({ ...TRANSFER_DATA, withdrawn: true });
 
-      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+      await expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Funds have been already withdrawn!',
       );
     });
 
-    it('fails when there are active claims', () => {
+    it('fails when there are active claims', async () => {
       const transfer = new TestTransfer({ ...TRANSFER_DATA, claimCount: 2 });
       transfer.checkAndUpdateState = vi.fn().mockReturnValue({ claimCount: 2 });
 
-      return expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
+      await expect(transfer.withdraw(PROVIDER)).rejects.toThrow(
         'Cannot withdraw when there are active claims!',
       );
     });
 
-    it('fails when no signer is available', () => {
+    it('fails when no signer is available', async () => {
       const transfer = new TestTransfer(TRANSFER_DATA);
       const provider = new MockedEthereumProvider({ signer: undefined });
 
-      return expect(transfer.withdraw(provider)).rejects.toThrow(
+      await expect(transfer.withdraw(provider)).rejects.toThrow(
         'Cannot withdraw without connected wallet!',
       );
     });
@@ -498,7 +498,7 @@ describe('transfer', () => {
       expect(provider.switchChainSafely).toHaveBeenCalledOnce();
     });
 
-    it('fails when the chain switch was not successful', () => {
+    it('fails when the chain switch was not successful', async () => {
       const transfer = new TestTransfer({
         ...TRANSFER_DATA,
         sourceChain: generateChain({ identifier: 1 }),
@@ -506,7 +506,7 @@ describe('transfer', () => {
       const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
       provider.switchChainSafely = vi.fn().mockResolvedValue(false);
 
-      return expect(transfer.withdraw(provider)).rejects.toThrow(
+      await expect(transfer.withdraw(provider)).rejects.toThrow(
         'Cannot withdraw without switching to the chain where the tokens are!',
       );
     });
@@ -553,7 +553,7 @@ describe('transfer', () => {
         }),
       });
 
-      return expect(transfer.checkAndUpdateState()).rejects.toThrow(
+      await expect(transfer.checkAndUpdateState()).rejects.toThrow(
         'Can not check state without request identfier!',
       );
     });
