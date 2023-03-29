@@ -2,11 +2,7 @@
   "abi": [
     {
       "inputs": [
-        {
-          "internalType": "uint96",
-          "name": "_claimStake",
-          "type": "uint96"
-        },
+        { "internalType": "uint96", "name": "_claimStake", "type": "uint96" },
         {
           "internalType": "uint256",
           "name": "_claimRequestExtension",
@@ -25,6 +21,37 @@
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "chainId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "finalityPeriod",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "transferCost",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "targetWeightPPM",
+          "type": "uint256"
+        }
+      ],
+      "name": "ChainUpdated",
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -130,6 +157,31 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "uint32",
+          "name": "minFeePPM",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "lpFeePPM",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "protocolFeePPM",
+          "type": "uint32"
+        }
+      ],
+      "name": "FeesUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "bytes32",
           "name": "requestId",
           "type": "bytes32"
@@ -142,25 +194,6 @@
         }
       ],
       "name": "FillInvalidatedResolved",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "targetChainId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "finalityPeriod",
-          "type": "uint256"
-        }
-      ],
-      "name": "FinalityPeriodUpdated",
       "type": "event"
     },
     {
@@ -277,6 +310,18 @@
           "internalType": "uint32",
           "name": "validUntil",
           "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "lpFee",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "protocolFee",
+          "type": "uint256"
         }
       ],
       "name": "RequestCreated",
@@ -311,7 +356,7 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
           "name": "tokenAddress",
           "type": "address"
@@ -324,21 +369,9 @@
         },
         {
           "indexed": false,
-          "internalType": "uint96",
-          "name": "minLpFee",
-          "type": "uint96"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint32",
-          "name": "lpFeePPM",
-          "type": "uint32"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint32",
-          "name": "protocolFeePPM",
-          "type": "uint32"
+          "internalType": "uint256",
+          "name": "ethInToken",
+          "type": "uint256"
         }
       ],
       "name": "TokenUpdated",
@@ -360,50 +393,26 @@
     {
       "inputs": [],
       "name": "CLAIM_ID_WITHDRAWN_EXPIRED",
-      "outputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "MAX_VALIDITY_PERIOD",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "MIN_VALIDITY_PERIOD",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newLp",
-          "type": "address"
-        }
-      ],
+      "inputs": [{ "internalType": "address", "name": "newLp", "type": "address" }],
       "name": "addAllowedLp",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -416,16 +425,8 @@
           "name": "callerChainId",
           "type": "uint256"
         },
-        {
-          "internalType": "address",
-          "name": "caller",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "messenger",
-          "type": "address"
-        }
+        { "internalType": "address", "name": "caller", "type": "address" },
+        { "internalType": "address", "name": "messenger", "type": "address" }
       ],
       "name": "addCaller",
       "outputs": [],
@@ -433,34 +434,16 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "caller",
-          "type": "address"
-        }
-      ],
+      "inputs": [{ "internalType": "address", "name": "caller", "type": "address" }],
       "name": "addCaller",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "inputs": [{ "internalType": "address", "name": "lp", "type": "address" }],
       "name": "allowedLps",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [{ "internalType": "bool", "name": "allowed", "type": "bool" }],
       "stateMutability": "view",
       "type": "function"
     },
@@ -468,34 +451,41 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "callerChainId",
           "type": "uint256"
         },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
+        { "internalType": "uint256", "name": "", "type": "uint256" }
       ],
       "name": "callers",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "chainId", "type": "uint256" }],
+      "name": "chains",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
+          "internalType": "uint256",
+          "name": "finalityPeriod",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "transferCost",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "targetWeightPPM",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint96",
-          "name": "claimId",
-          "type": "uint96"
-        }
-      ],
+      "inputs": [{ "internalType": "uint96", "name": "claimId", "type": "uint96" }],
       "name": "challengeClaim",
       "outputs": [],
       "stateMutability": "payable",
@@ -504,133 +494,59 @@
     {
       "inputs": [],
       "name": "challengePeriodExtension",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "claimPeriod",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "claimer",
-          "type": "address"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        }
+        { "internalType": "address", "name": "claimer", "type": "address" },
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
       ],
       "name": "claimRequest",
-      "outputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
       "stateMutability": "payable",
       "type": "function"
     },
     {
       "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        }
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
       ],
       "name": "claimRequest",
-      "outputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
       "stateMutability": "payable",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "claimRequestExtension",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "claimStake",
-      "outputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "inputs": [{ "internalType": "uint96", "name": "claimId", "type": "uint96" }],
       "name": "claims",
       "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "claimer",
-          "type": "address"
-        },
-        {
-          "internalType": "uint96",
-          "name": "claimerStake",
-          "type": "uint96"
-        },
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "address", "name": "claimer", "type": "address" },
+        { "internalType": "uint96", "name": "claimerStake", "type": "uint96" },
         {
           "internalType": "address",
           "name": "lastChallenger",
@@ -646,16 +562,8 @@
           "name": "withdrawnAmount",
           "type": "uint256"
         },
-        {
-          "internalType": "uint256",
-          "name": "termination",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        }
+        { "internalType": "uint256", "name": "termination", "type": "uint256" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
       ],
       "stateMutability": "view",
       "type": "function"
@@ -682,11 +590,7 @@
           "name": "targetAddress",
           "type": "address"
         },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" },
         {
           "internalType": "uint256",
           "name": "validityPeriod",
@@ -694,60 +598,21 @@
         }
       ],
       "name": "createRequest",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
+      "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "currentNonce",
-      "outputs": [
-        {
-          "internalType": "uint96",
-          "name": "",
-          "type": "uint96"
-        }
-      ],
+      "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "finalityPeriods",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        },
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" },
         {
           "internalType": "uint256",
           "name": "resolutionChainId",
@@ -761,81 +626,72 @@
     },
     {
       "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        }
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
       ],
       "name": "isInvalidFill",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        }
-      ],
+      "inputs": [{ "internalType": "bytes32", "name": "requestId", "type": "bytes32" }],
       "name": "isWithdrawn",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "targetChainId",
+          "type": "uint256"
+        },
         {
           "internalType": "address",
           "name": "tokenAddress",
           "type": "address"
         },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
       ],
       "name": "lpFee",
-      "outputs": [
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lpFeePPM",
+      "outputs": [{ "internalType": "uint32", "name": "", "type": "uint32" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minFeePPM",
+      "outputs": [{ "internalType": "uint32", "name": "", "type": "uint32" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "targetChainId",
           "type": "uint256"
-        }
+        },
+        { "internalType": "address", "name": "tokenAddress", "type": "address" }
       ],
+      "name": "minLpFee",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "owner",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
       "stateMutability": "view",
       "type": "function"
     },
@@ -849,48 +705,26 @@
     {
       "inputs": [],
       "name": "paused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
+      "inputs": [{ "internalType": "uint256", "name": "amount", "type": "uint256" }],
       "name": "protocolFee",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "oldLp",
-          "type": "address"
-        }
-      ],
+      "inputs": [],
+      "name": "protocolFeePPM",
+      "outputs": [{ "internalType": "uint32", "name": "", "type": "uint32" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "address", "name": "oldLp", "type": "address" }],
       "name": "removeAllowedLp",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -904,20 +738,10 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
+      "inputs": [{ "internalType": "bytes32", "name": "requestId", "type": "bytes32" }],
       "name": "requests",
       "outputs": [
-        {
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
+        { "internalType": "address", "name": "sender", "type": "address" },
         {
           "internalType": "address",
           "name": "sourceTokenAddress",
@@ -928,45 +752,52 @@
           "name": "targetChainId",
           "type": "uint256"
         },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint32",
-          "name": "validUntil",
-          "type": "uint32"
-        },
-        {
-          "internalType": "uint96",
-          "name": "lpFee",
-          "type": "uint96"
-        },
-        {
-          "internalType": "uint96",
-          "name": "protocolFee",
-          "type": "uint96"
-        },
-        {
-          "internalType": "uint32",
-          "name": "activeClaims",
-          "type": "uint32"
-        },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" },
+        { "internalType": "uint32", "name": "validUntil", "type": "uint32" },
+        { "internalType": "uint256", "name": "lpFee", "type": "uint256" },
+        { "internalType": "uint256", "name": "protocolFee", "type": "uint256" },
+        { "internalType": "uint32", "name": "activeClaims", "type": "uint32" },
         {
           "internalType": "uint96",
           "name": "withdrawClaimId",
           "type": "uint96"
         },
+        { "internalType": "address", "name": "filler", "type": "address" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fillId", "type": "bytes32" },
         {
-          "internalType": "address",
-          "name": "filler",
-          "type": "address"
+          "internalType": "uint256",
+          "name": "resolutionChainId",
+          "type": "uint256"
         },
+        { "internalType": "address", "name": "filler", "type": "address" }
+      ],
+      "name": "resolveRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "address", "name": "tokenAddress", "type": "address" }],
+      "name": "tokens",
+      "outputs": [
         {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
+          "internalType": "uint256",
+          "name": "transferLimit",
+          "type": "uint256"
+        },
+        { "internalType": "uint256", "name": "ethInToken", "type": "uint256" },
+        {
+          "internalType": "uint256",
+          "name": "collectedProtocolFees",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -975,27 +806,25 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "fillId",
-          "type": "bytes32"
-        },
-        {
           "internalType": "uint256",
-          "name": "resolutionChainId",
+          "name": "targetChainId",
           "type": "uint256"
         },
         {
           "internalType": "address",
-          "name": "filler",
+          "name": "tokenAddress",
           "type": "address"
-        }
+        },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
       ],
-      "name": "resolveRequest",
+      "name": "totalFee",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "address", "name": "newOwner", "type": "address" }],
+      "name": "transferOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1008,90 +837,15 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "finalityPeriod",
-          "type": "uint256"
-        }
-      ],
-      "name": "setFinalityPeriod",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "tokens",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "transferLimit",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint96",
-          "name": "minLpFee",
-          "type": "uint96"
-        },
-        {
-          "internalType": "uint32",
-          "name": "lpFeePPM",
-          "type": "uint32"
-        },
-        {
-          "internalType": "uint32",
-          "name": "protocolFeePPM",
-          "type": "uint32"
-        },
-        {
-          "internalType": "uint96",
-          "name": "collectedProtocolFees",
-          "type": "uint96"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "tokenAddress",
           "type": "address"
         },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
       ],
-      "name": "totalFee",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
+      "name": "transferableAmount",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1103,6 +857,45 @@
     },
     {
       "inputs": [
+        { "internalType": "uint256", "name": "chainId", "type": "uint256" },
+        {
+          "internalType": "uint256",
+          "name": "finalityPeriod",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "transferCost",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "targetWeightPPM",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateChain",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint32", "name": "_minFeePPM", "type": "uint32" },
+        { "internalType": "uint32", "name": "_lpFeePPM", "type": "uint32" },
+        {
+          "internalType": "uint32",
+          "name": "_protocolFeePPM",
+          "type": "uint32"
+        }
+      ],
+      "name": "updateFees",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
         {
           "internalType": "address",
           "name": "tokenAddress",
@@ -1113,21 +906,7 @@
           "name": "transferLimit",
           "type": "uint256"
         },
-        {
-          "internalType": "uint96",
-          "name": "minLpFee",
-          "type": "uint96"
-        },
-        {
-          "internalType": "uint32",
-          "name": "lpFeePPM",
-          "type": "uint32"
-        },
-        {
-          "internalType": "uint32",
-          "name": "protocolFeePPM",
-          "type": "uint32"
-        }
+        { "internalType": "uint256", "name": "ethInToken", "type": "uint256" }
       ],
       "name": "updateToken",
       "outputs": [],
@@ -1136,55 +915,23 @@
     },
     {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "participant",
-          "type": "address"
-        },
-        {
-          "internalType": "uint96",
-          "name": "claimId",
-          "type": "uint96"
-        }
+        { "internalType": "address", "name": "participant", "type": "address" },
+        { "internalType": "uint96", "name": "claimId", "type": "uint96" }
       ],
       "name": "withdraw",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint96",
-          "name": "claimId",
-          "type": "uint96"
-        }
-      ],
+      "inputs": [{ "internalType": "uint96", "name": "claimId", "type": "uint96" }],
       "name": "withdraw",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "requestId",
-          "type": "bytes32"
-        }
-      ],
+      "inputs": [{ "internalType": "bytes32", "name": "requestId", "type": "bytes32" }],
       "name": "withdrawExpiredRequest",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -1197,11 +944,7 @@
           "name": "tokenAddress",
           "type": "address"
         },
-        {
-          "internalType": "address",
-          "name": "recipient",
-          "type": "address"
-        }
+        { "internalType": "address", "name": "recipient", "type": "address" }
       ],
       "name": "withdrawProtocolFees",
       "outputs": [],
