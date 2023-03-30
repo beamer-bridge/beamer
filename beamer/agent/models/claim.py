@@ -31,14 +31,14 @@ class Claim(StateMachine):
         self.unprocessed_claim_made_events: set[ClaimMade] = set()
         super().__init__()
 
-    started = State("Started", initial=True)
+    started = State(initial=True)
     # Claimer is winning
-    claimer_winning = State("ClaimerWinning")
+    claimer_winning = State()
     # Challenger is winning
-    challenger_winning = State("ChallengerWinning")
-    invalidated_l1_resolved = State("InvalidatedL1Resolved")
-    ignored = State("Ignored")
-    withdrawn = State("Withdrawn")
+    challenger_winning = State()
+    invalidated_l1_resolved = State()
+    ignored = State()
+    withdrawn = State()
 
     start_challenge = (
         started.to(claimer_winning)
