@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import Iterable, Optional
 
 import structlog
@@ -70,7 +71,7 @@ class TxEvent(Event):
 class ChainUpdated(TxEvent, SourceChainEvent):
     chain_id: ChainId
     finality_period: int
-    target_weight_p_p_m: int
+    target_weight_ppm: int
     transfer_cost: int
 
 
@@ -149,7 +150,13 @@ class FillInvalidated(TxEvent, TargetChainEvent):
 
 
 def _camel_to_snake(s: str) -> str:
-    return "".join("_" + c.lower() if c.isupper() else c for c in s).lstrip("_")
+    snake = "".join(
+        "%c_" % current if current.islower() and next.isupper() else current.lower()
+        for current, next in pairwise(s)
+    )
+    # The last character isn't included in snake due to how pairwise() works,
+    # so add it manually.
+    return snake.lstrip("_") + s[-1].lower()
 
 
 _EVENT_TYPES = dict(
