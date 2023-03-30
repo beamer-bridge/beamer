@@ -5,6 +5,7 @@
     "func-visibility": ["error", {"ignoreConstructors": true}],
     "reason-string": ["warn", {"maxLength": 80}],
     "avoid-low-level-calls": "off",
-    "not-rely-on-time": "off"
+    "not-rely-on-time": "off",
+    "no-global-import": "off"
   }
 }
