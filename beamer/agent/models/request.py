@@ -42,12 +42,12 @@ class Request(StateMachine):
         self.l1_resolution_invalid_fill_ids: set[FillId] = set()
         super().__init__()
 
-    pending = State("Pending", initial=True)
-    filled = State("Filled")
-    claimed = State("Claimed")
-    l1_resolved = State("L1Resolved")
-    withdrawn = State("Withdrawn")
-    ignored = State("Ignored")
+    pending = State(initial=True)
+    filled = State()
+    claimed = State()
+    l1_resolved = State()
+    withdrawn = State()
+    ignored = State()
 
     fill = pending.to(filled) | filled.to(filled) | ignored.to(filled) | claimed.to(claimed)
     try_to_fill = pending.to(filled)
