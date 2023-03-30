@@ -6,11 +6,13 @@ import {
   getTokenBalance,
   listenOnTokenBalanceChange,
 } from '@/services/transactions/token';
-import * as transactionUtils from '@/services/transactions/utils';
 import * as ethersTypes from '@/types/uint-256';
 import { generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
-import { MockedERC20TokenContract } from '~/utils/mocks/ethers';
+import {
+  mockGetERC20Contract,
+  mockGetSafeEventHandler,
+} from '~/utils/mocks/services/transactions/utils';
 
 vi.mock('@/services/transactions/utils');
 vi.mock('@ethersproject/providers');
@@ -18,34 +20,11 @@ vi.mock('@ethersproject/providers');
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 
-function mockGetSafeEventHandler() {
-  Object.defineProperties(transactionUtils, {
-    getSafeEventHandler: {
-      value: vi.fn().mockImplementation((handler) => handler),
-    },
-  });
-}
-
-function mockGetContract() {
-  const contract = new MockedERC20TokenContract();
-
-  Object.defineProperties(transactionUtils, {
-    getReadOnlyContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-    getReadWriteContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-  });
-
-  return contract;
-}
-
 describe('token', () => {
   beforeEach(() => {
     SIGNER.getAddress = vi.fn().mockReturnValue(getRandomEthereumAddress());
     SIGNER.getChainId = vi.fn().mockReturnValue(1);
-    mockGetContract();
+    mockGetERC20Contract();
     mockGetSafeEventHandler();
   });
 
@@ -57,7 +36,7 @@ describe('token', () => {
         const approvalAmount = new ethersTypes.UInt256('1000');
         const allowance = '100';
 
-        const mockedTokenContract = mockGetContract();
+        const mockedTokenContract = mockGetERC20Contract();
         mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
 
         await ensureTokenAllowance(SIGNER, tokenAddress, spender, approvalAmount);
@@ -76,7 +55,7 @@ describe('token', () => {
         const approvalAmount = new ethersTypes.UInt256('1000');
         const allowance = '1100';
 
-        const mockedTokenContract = mockGetContract();
+        const mockedTokenContract = mockGetERC20Contract();
         mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
 
         await ensureTokenAllowance(SIGNER, tokenAddress, spender, approvalAmount);
@@ -91,7 +70,7 @@ describe('token', () => {
       const token = generateToken({ decimals: 1 });
       const accountAddress = getRandomEthereumAddress();
 
-      const mockedTokenContract = mockGetContract();
+      const mockedTokenContract = mockGetERC20Contract();
       mockedTokenContract.balanceOf = vi.fn().mockReturnValue('1000');
 
       const result = await getTokenBalance(new MockedEthereumProvider(), token, accountAddress);
@@ -107,7 +86,7 @@ describe('token', () => {
       const ownerAddress = getRandomEthereumAddress();
       const spenderAddress = getRandomEthereumAddress();
 
-      const mockedTokenContract = mockGetContract();
+      const mockedTokenContract = mockGetERC20Contract();
       mockedTokenContract.allowance = vi.fn().mockReturnValue('99');
 
       const result = await getTokenAllowance(
@@ -135,7 +114,7 @@ describe('token', () => {
         onIncrease,
       };
 
-      const contract = mockGetContract();
+      const contract = mockGetERC20Contract();
       contract.filters.Transfer = vi.fn().mockReturnValue('test-filter');
 
       listenOnTokenBalanceChange(options);
@@ -156,7 +135,7 @@ describe('token', () => {
         onIncrease: vi.fn(),
       };
 
-      const contract = mockGetContract();
+      const contract = mockGetERC20Contract();
       contract.filters.Transfer = vi.fn().mockReturnValue('test-filter');
 
       listenOnTokenBalanceChange(options);
