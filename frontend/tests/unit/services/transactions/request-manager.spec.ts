@@ -27,8 +27,14 @@ import {
   getRandomString,
   getRandomUrl,
 } from '~/utils/data_generators';
-import { MockedRequest, MockedRequestManagerContract, MockedToken } from '~/utils/mocks/beamer';
+import { MockedRequest, MockedToken } from '~/utils/mocks/beamer';
 import { MockedTransaction, MockedTransactionReceipt } from '~/utils/mocks/ethers';
+import {
+  mockGetLatestBlock,
+  mockGetProvider,
+  mockGetRequestManagerContract,
+  mockGetSafeEventHandler,
+} from '~/utils/mocks/services/transactions/utils';
 
 vi.mock('@/services/transactions/utils');
 vi.mock('@ethersproject/providers');
@@ -42,51 +48,6 @@ const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const DEFAULT_REQUEST_IDENTIFIER = '1';
 
-function mockGetSafeEventHandler() {
-  Object.defineProperties(transactionUtils, {
-    getSafeEventHandler: {
-      value: vi.fn().mockImplementation((handler) => handler),
-    },
-  });
-}
-
-function mockGetLatestBlock(options?: { timestamp?: number }) {
-  Object.defineProperties(transactionUtils, {
-    getLatestBlock: {
-      value: vi.fn().mockReturnValue({
-        timestamp: options?.timestamp ?? 1,
-      }),
-    },
-  });
-}
-
-function mockGetProvider() {
-  const provider = new JsonRpcProvider();
-  provider.getNetwork = vi.fn().mockResolvedValue({ chainId: 1 });
-  Object.defineProperties(transactionUtils, {
-    getJsonRpcProvider: {
-      value: vi.fn().mockReturnValue(provider),
-    },
-  });
-
-  return provider;
-}
-
-function mockGetContract(): MockedRequestManagerContract {
-  const contract = new MockedRequestManagerContract();
-
-  Object.defineProperties(transactionUtils, {
-    getReadOnlyContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-    getReadWriteContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-  });
-
-  return contract;
-}
-
 function transformPercentToPPM(percent: number): string {
   return (percent * (PARTS_IN_MILLION / PARTS_IN_PERCENT)).toString();
 }
@@ -99,7 +60,7 @@ describe('request-manager', () => {
     SIGNER.getChainId = vi.fn().mockReturnValue(1);
 
     mockGetSafeEventHandler();
-    mockGetContract();
+    mockGetRequestManagerContract();
     mockGetLatestBlock();
     mockGetProvider();
   });
@@ -107,7 +68,7 @@ describe('request-manager', () => {
   describe('getTokenAttributes()', () => {
     it('returns all the attributes related to a token', async () => {
       const token = new MockedToken();
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.tokens = vi.fn().mockReturnValue(token);
 
       const tokenAttributes = await getTokenAttributes(
@@ -137,7 +98,7 @@ describe('request-manager', () => {
         const lpFeePercent = 0.3;
         const protocolFeePercent = 0.3;
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.tokens = vi.fn().mockReturnValue(
           new MockedToken({
             minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
@@ -179,7 +140,7 @@ describe('request-manager', () => {
 
         const totalAmountWei = TokenAmount.parse(totalAmountDecimal.toString(), token);
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.tokens = vi.fn().mockReturnValue(
           new MockedToken({
             minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
@@ -200,7 +161,7 @@ describe('request-manager', () => {
         const lpFeePercent = 0.003;
         const protocolFeePercent = 0.3;
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.tokens = vi.fn().mockReturnValue(
           new MockedToken({
             minLpFee: UInt256.parse(minLpFee.toString(), token.decimals).asString,
@@ -238,7 +199,7 @@ describe('request-manager', () => {
       const token = generateToken();
       const transferAmount = TokenAmount.parse('100', token);
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.totalFee = vi.fn().mockReturnValue('50');
 
       const transferLimit = await getRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, transferAmount);
@@ -256,7 +217,7 @@ describe('request-manager', () => {
     const amount = new UInt256('1000');
 
     it('attempts to create a transfer request transaction', async () => {
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       const estimatedGas = '100';
       contract.estimateGas.createRequest = vi.fn().mockReturnValue(estimatedGas);
 
@@ -283,7 +244,7 @@ describe('request-manager', () => {
     });
 
     it('throws an exception when a transfer request transaction failed', async () => {
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
 
       contract.createRequest = vi.fn().mockImplementation(() => {
         throw new Error('transaction failed');
@@ -308,7 +269,7 @@ describe('request-manager', () => {
     it('queries and returns the request identifier for a given transaction hash', async () => {
       const transactionHash = getRandomString();
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.interface.parseLog = vi.fn().mockReturnValue({ args: { requestId: '1' } });
 
       const provider = mockGetProvider();
@@ -333,7 +294,7 @@ describe('request-manager', () => {
     it('throws an error if the transaction has reverted', async () => {
       const transactionHash = getRandomString();
 
-      mockGetContract();
+      mockGetRequestManagerContract();
 
       const provider = mockGetProvider();
       provider.waitForTransaction = vi
@@ -348,7 +309,7 @@ describe('request-manager', () => {
     it('throws an error if the transaction receipt is undefined', async () => {
       const transactionHash = getRandomString();
 
-      mockGetContract();
+      mockGetRequestManagerContract();
 
       const provider = mockGetProvider();
       provider.waitForTransaction = vi.fn().mockReturnValue(undefined);
@@ -361,7 +322,7 @@ describe('request-manager', () => {
     it('throws an error if there are no logs in the transaction receipt', async () => {
       const transactionHash = getRandomString();
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.interface.parseLog = vi.fn().mockImplementation(() => {
         throw new Error("Cannot read properties of undefined (reading '0')");
       });
@@ -396,7 +357,7 @@ describe('request-manager', () => {
 
       const requestIdentifier = getRandomString();
       const request = new MockedRequest({ activeClaims, validUntil, withdrawClaimId });
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.requests = vi.fn().mockReturnValue(request);
 
       const response = await getRequestData(RPC_URL, REQUEST_MANAGER_ADDRESS, requestIdentifier);
@@ -502,7 +463,7 @@ describe('request-manager', () => {
         onIncrease,
       };
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.filters.ClaimMade = vi.fn().mockReturnValue('test-filter');
       contract.filters.ClaimStakeWithdrawn = vi.fn();
 
@@ -523,7 +484,7 @@ describe('request-manager', () => {
         onIncrease: vi.fn(),
       };
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.filters.ClaimMade = vi.fn();
       contract.filters.ClaimStakeWithdrawn = vi.fn().mockReturnValue('test-filter');
 
@@ -542,7 +503,7 @@ describe('request-manager', () => {
       let activeClaimCount = 3;
       const requestIdentifier = getRandomString();
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.filters.ClaimStakeWithdrawn = vi.fn().mockReturnValue('test-filter');
       contract.on = vi.fn().mockImplementation((_, callback) => {
         while (activeClaimCount-- > 0) {
@@ -568,7 +529,7 @@ describe('request-manager', () => {
     it('instantly resolves if provided active claim count is 0', async () => {
       const activeClaimCount = 0;
       const requestIdentifier = getRandomString();
-      mockGetContract();
+      mockGetRequestManagerContract();
 
       const { promise } = waitUntilClaimsWithdrawn(
         RPC_URL,
@@ -584,7 +545,7 @@ describe('request-manager', () => {
       it('can be executed in order to stop listening for events', () => {
         const requestIdentifier = getRandomString();
         const activeClaimCount = 1;
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.removeAllListeners = vi.fn();
 
         const { cancel } = waitUntilClaimsWithdrawn(
@@ -622,7 +583,7 @@ describe('request-manager', () => {
         const activeClaims = 2;
         global.Date.now = vi.fn().mockReturnValue(localClockTimestampMilliseconds);
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.requests = vi.fn().mockReturnValue(
           new MockedRequest({
             validUntil: validUntilSeconds,
@@ -646,7 +607,7 @@ describe('request-manager', () => {
         const activeClaims = 0;
         global.Date.now = vi.fn().mockReturnValue(localClockTimestampMilliseconds);
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.requests = vi.fn().mockReturnValue(
           new MockedRequest({
             validUntil: validUntilSeconds,
@@ -677,7 +638,7 @@ describe('request-manager', () => {
 
         global.Date.now = vi.fn().mockReturnValue(localClockTimestampMilliseconds);
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.requests = vi.fn().mockReturnValue(
           new MockedRequest({
             validUntil: validUntilSeconds,
@@ -707,7 +668,7 @@ describe('request-manager', () => {
 
         global.Date.now = vi.fn().mockReturnValue(localClockTimestampMilliseconds);
 
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.requests = vi.fn().mockReturnValue(
           new MockedRequest({
             validUntil: validUntilSeconds,
@@ -730,7 +691,7 @@ describe('request-manager', () => {
 
     describe('cancel()', () => {
       it('can be executed in order to stop listening for events', () => {
-        const contract = mockGetContract();
+        const contract = mockGetRequestManagerContract();
         contract.requests = vi.fn().mockReturnValue(new MockedRequest());
 
         const provider = mockGetProvider();
@@ -753,7 +714,7 @@ describe('request-manager', () => {
       const requestIdentifier = getRandomString();
       const gasLimit = '1';
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.estimateGas.withdrawExpiredRequest = vi.fn().mockReturnValue(gasLimit);
       contract.withdrawExpiredRequest = vi.fn().mockReturnValue(new MockedTransaction());
 
@@ -770,7 +731,7 @@ describe('request-manager', () => {
     it('throws an exception when a transfer withdrawal transaction failed', async () => {
       const requestIdentifier = getRandomString();
 
-      const contract = mockGetContract();
+      const contract = mockGetRequestManagerContract();
       contract.withdrawExpiredRequest = vi.fn().mockImplementation(() => {
         throw new Error('transaction failed');
       });

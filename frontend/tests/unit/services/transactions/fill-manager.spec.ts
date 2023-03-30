@@ -12,7 +12,7 @@ import {
   getRandomString,
   getRandomUrl,
 } from '~/utils/data_generators';
-import { MockedFillManagerContract } from '~/utils/mocks/beamer';
+import { mockGetFillManagerContract } from '~/utils/mocks/services/transactions/utils';
 
 vi.mock('@/services/transactions/utils');
 vi.mock('ethers');
@@ -32,24 +32,9 @@ function createConfig(options?: {
   };
 }
 
-function mockGetContract(): MockedFillManagerContract {
-  const contract = new MockedFillManagerContract();
-
-  Object.defineProperties(transactionUtils, {
-    getReadOnlyContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-    getReadWriteContract: {
-      value: vi.fn().mockReturnValue(contract),
-    },
-  });
-
-  return contract;
-}
-
 describe('fill-manager', () => {
   beforeEach(() => {
-    mockGetContract();
+    mockGetFillManagerContract();
 
     Object.defineProperty(transactionUtils, 'getCurrentBlockNumber', {
       value: vi.fn(),
@@ -68,7 +53,7 @@ describe('fill-manager', () => {
 
       const toBlockNumber = 10;
 
-      const contract = mockGetContract();
+      const contract = mockGetFillManagerContract();
       const filter = 'fake-filter';
       contract.filters.RequestFilled = vi.fn().mockReturnValue(filter);
 
@@ -113,7 +98,7 @@ describe('fill-manager', () => {
     it('initiates the awaitable operation for finding a fulfillment event', async () => {
       const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-      const contract = mockGetContract();
+      const contract = mockGetFillManagerContract();
 
       waitForFulfillment(rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber);
       await flushPromises();
@@ -126,7 +111,7 @@ describe('fill-manager', () => {
     it('resolves & stops listening for fulfillment events when a matching event was found', async () => {
       const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-      const contract = mockGetContract();
+      const contract = mockGetFillManagerContract();
 
       Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
         value: vi.fn().mockResolvedValue(true),
@@ -147,7 +132,7 @@ describe('fill-manager', () => {
       it('can be executed in order to stop listening for fulfillment events', () => {
         const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-        const contract = mockGetContract();
+        const contract = mockGetFillManagerContract();
 
         const { cancel } = waitForFulfillment(
           rpcUrl,
