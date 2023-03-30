@@ -2,7 +2,7 @@ import type { JsonRpcSigner, Listener, TransactionResponse } from '@ethersprojec
 
 import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
-import type { EthereumAddress, TokenAttributes } from '@/types/data';
+import type { EthereumAddress } from '@/types/data';
 import type { RequestManager } from '@/types/ethers-contracts';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -16,11 +16,28 @@ import {
   getSafeEventHandler,
 } from './utils';
 
-export async function getTokenAttributes(
+export async function getTokenMinLpFee(
+  rpcUrl: string,
+  requestManagerAddress: string,
+  targetChainId: number,
+  tokenAddress: string,
+): Promise<UInt256> {
+  const contract = getReadOnlyContract<RequestManager>(
+    requestManagerAddress,
+    RequestManagerDeployment.abi,
+    getJsonRpcProvider(rpcUrl),
+  );
+
+  const minLpFee = await contract.minLpFee(targetChainId, tokenAddress);
+
+  return new UInt256(minLpFee.toString());
+}
+
+export async function getTokenTransferLimit(
   rpcUrl: string,
   requestManagerAddress: string,
   tokenAddress: string,
-): Promise<TokenAttributes> {
+): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
     RequestManagerDeployment.abi,
@@ -29,13 +46,7 @@ export async function getTokenAttributes(
 
   const tokenDefinition = await contract.tokens(tokenAddress);
 
-  return {
-    transferLimit: new UInt256(tokenDefinition.transferLimit.toString()),
-    minLpFee: new UInt256(tokenDefinition.minLpFee.toString()),
-    lpFeePPM: new UInt256(tokenDefinition.lpFeePPM.toString()),
-    protocolFeePPM: new UInt256(tokenDefinition.protocolFeePPM.toString()),
-    collectedProtocolFees: new UInt256(tokenDefinition.collectedProtocolFees.toString()),
-  };
+  return new UInt256(tokenDefinition.transferLimit.toString());
 }
 
 export async function getAmountBeforeFees(
