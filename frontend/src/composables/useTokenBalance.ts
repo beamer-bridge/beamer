@@ -51,8 +51,8 @@ export function useTokenBalance(
         provider: provider,
         token: token,
         addressToListen: signerAddress,
-        onReduce: updateTokenBalance,
-        onIncrease: updateTokenBalance,
+        onReduce: updateTokenBalance.bind(null, provider, token, signerAddress),
+        onIncrease: updateTokenBalance.bind(null, provider, token, signerAddress),
       });
     } catch (exception: unknown) {
       handleException(exception);
