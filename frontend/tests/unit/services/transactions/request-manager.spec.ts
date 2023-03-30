@@ -8,7 +8,8 @@ import {
   getRequestFee,
   getRequestIdentifier,
   getTimeToExpiredMilliseconds,
-  getTokenAttributes,
+  getTokenMinLpFee,
+  getTokenTransferLimit,
   isRequestClaimed,
   isRequestExpiredByLatestBlock,
   isRequestExpiredByLocalClock,
@@ -62,26 +63,42 @@ describe('request-manager', () => {
     mockGetProvider();
   });
 
-  describe('getTokenAttributes()', () => {
-    it('returns all the attributes related to a token', async () => {
-      const token = new MockedToken();
+  describe('getTokenTransferLimit()', () => {
+    it('returns the defined transfer limit for a token', async () => {
+      const tokenDefinedTransferLimit = '100';
+      const tokenAddress = getRandomEthereumAddress();
+      const token = new MockedToken({ transferLimit: tokenDefinedTransferLimit });
       const contract = mockGetRequestManagerContract();
       contract.tokens = vi.fn().mockReturnValue(token);
 
-      const tokenAttributes = await getTokenAttributes(
+      const transferLimit = await getTokenTransferLimit(
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
-        getRandomEthereumAddress(),
+        tokenAddress,
       );
 
-      expect(tokenAttributes).not.toBeUndefined();
-      expect(Object.keys(tokenAttributes)).toEqual([
-        'transferLimit',
-        'minLpFee',
-        'lpFeePPM',
-        'protocolFeePPM',
-        'collectedProtocolFees',
-      ]);
+      expect(transferLimit).not.toBeUndefined();
+      expect(transferLimit.asString).toBe(tokenDefinedTransferLimit);
+    });
+  });
+
+  describe('getTokenMinLpFee()', () => {
+    it('returns the current minLpFee for a token', async () => {
+      const definedMinLpFee = '100';
+      const tokenAddress = getRandomEthereumAddress();
+      const contract = mockGetRequestManagerContract();
+      const targetChainId = 5;
+      contract.minLpFee = vi.fn().mockResolvedValue(definedMinLpFee);
+
+      const minLpFee = await getTokenMinLpFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        targetChainId,
+        tokenAddress,
+      );
+
+      expect(minLpFee).not.toBeUndefined();
+      expect(minLpFee.asString).toBe(definedMinLpFee);
     });
   });
 

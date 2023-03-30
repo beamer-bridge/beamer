@@ -140,9 +140,10 @@ import { useFaucet } from '@/composables/useFaucet';
 import { useMaxTransferableTokenAmount } from '@/composables/useMaxTransferableTokenAmount';
 import { useRequestFee } from '@/composables/useRequestFee';
 import { useRequestSourceInputValidations } from '@/composables/useRequestSourceInputValidations';
-import { useTokenAttributes } from '@/composables/useTokenAttributes';
 import { useTokenBalance } from '@/composables/useTokenBalance';
+import { useTokenMinLpFee } from '@/composables/useTokenMinLpFee';
 import { useTokenSelection } from '@/composables/useTokenSelection';
+import { useTokenTransferLimit } from '@/composables/useTokenTransferLimit';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { usePortals } from '@/stores/portals';
@@ -246,7 +247,12 @@ const {
   computed(() => props.targetChain?.value),
 );
 
-const { transferLimitTokenAmount, formattedMinFee } = useTokenAttributes(
+const { formattedMinFee } = useTokenMinLpFee(
+  computed(() => selectedSourceChain.value?.value),
+  computed(() => props.targetChain?.value),
+  computed(() => selectedToken.value?.value),
+);
+const { transferLimitTokenAmount } = useTokenTransferLimit(
   computed(() => selectedSourceChain.value?.value),
   computed(() => selectedToken.value?.value),
 );
