@@ -1,5 +1,5 @@
 {
-    "base-chain": {
+    "base_chain": {
         "name": "mainnet",
         "rpc": "",
         "chain_id": 1

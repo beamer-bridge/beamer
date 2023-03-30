@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from apischema import ValidationError, alias, deserialize, schema
+from apischema import ValidationError, deserialize, schema
 from apischema.metadata import validators
 from eth_typing import ChecksumAddress
 from eth_utils import is_checksum_address
@@ -51,7 +51,7 @@ class Chain:
     chain_id: ChainId = field(metadata=schema(min=1))
     l1_messenger: str | tuple[str, ...]
     l2_messenger: str | tuple[str, ...]
-    finality_period: int = field(metadata=schema(min=0))
+    finality_period: int = field(metadata=schema(min=1))
     transfer_cost: int = field(metadata=schema(min=0))
     target_weight_ppm: int = field(metadata=schema(min=0))
     request_manager_arguments: _RequestManagerArgs
@@ -67,7 +67,7 @@ class ConfigValidationError(Exception):
 
 @dataclass
 class Config:
-    base_chain: _BaseChain = field(metadata=alias("base-chain"))
+    base_chain: _BaseChain
     chains: tuple[Chain, ...] = field(metadata=schema(min_items=1))
 
     @staticmethod
