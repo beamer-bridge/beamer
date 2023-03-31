@@ -39,11 +39,15 @@ export class RelayerProgram {
       options.l1RpcUrl,
       options.l2RelayFromRpcUrl,
       options.walletPrivateKey,
+      fromL2ChainId,
+      toL2ChainId,
     ]);
     const relayerTo = createRelayer(toL2ChainId, [
       options.l1RpcUrl,
       options.l2RelayToRpcUrl,
       options.walletPrivateKey,
+      fromL2ChainId,
+      toL2ChainId,
     ]);
 
     return new this(relayerFrom, relayerTo, options.l2TransactionHash);
