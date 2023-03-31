@@ -18,10 +18,20 @@ export type ExtendedRelayerService =
 export abstract class BaseRelayerService {
   readonly l1Wallet: Wallet;
   readonly l2Wallet: Wallet;
+  readonly fromL2ChainId: number;
+  readonly toL2ChainId: number;
 
-  constructor(l1RpcURL: string, l2RpcURL: string, privateKey: string) {
+  constructor(
+    l1RpcURL: string,
+    l2RpcURL: string,
+    privateKey: string,
+    fromL2ChainId: number,
+    toL2ChainId: number,
+  ) {
     this.l1Wallet = new Wallet(privateKey, new JsonRpcProvider(l1RpcURL));
     this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
+    this.fromL2ChainId = fromL2ChainId;
+    this.toL2ChainId = toL2ChainId;
   }
 
   get l2RpcProvider(): Provider {
