@@ -16,7 +16,7 @@ type RelayCallParams = {
 
 const L1_CONTRACTS: Record<number, { ETHEREUM_L2_MESSENGER: string }> = {
   1: {
-    ETHEREUM_L2_MESSENGER: "",
+    ETHEREUM_L2_MESSENGER: "0x3222C9a1e5d7856FCBc551A30a63634e7Fd634Da",
   },
   5: {
     ETHEREUM_L2_MESSENGER: "",
