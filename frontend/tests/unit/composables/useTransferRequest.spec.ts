@@ -59,6 +59,7 @@ describe('useTransferRequest', () => {
         sourceChain.rpcUrl,
         sourceChain.requestManagerAddress,
         sourceTokenAmount,
+        targetChain.identifier,
       );
       expect(transfer).toBeDefined();
       expect(transfer).toBeInstanceOf(Transfer);

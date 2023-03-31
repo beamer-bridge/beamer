@@ -127,11 +127,17 @@ describe('request-manager', () => {
     it('returns the calculated fee for the provided token amount', async () => {
       const token = generateToken();
       const transferAmount = TokenAmount.parse('100', token);
+      const targetChainId = 5;
 
       const contract = mockGetRequestManagerContract();
       contract.totalFee = vi.fn().mockReturnValue('50');
 
-      const transferLimit = await getRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, transferAmount);
+      const transferLimit = await getRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        transferAmount,
+        targetChainId,
+      );
 
       expect(transferLimit.asString).toBe('50');
     });

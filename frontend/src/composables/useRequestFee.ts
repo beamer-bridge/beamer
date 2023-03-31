@@ -3,12 +3,14 @@ import { ref, watch } from 'vue';
 
 import { useDebouncedTask } from '@/composables/useDebouncedTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
+import type { Chain } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 
 export function useRequestFee(
   rpcUrl: Ref<string | undefined>,
   requestManagerAddress: Ref<string | undefined>,
   requestAmount: Ref<TokenAmount | undefined>,
+  targetChain: Ref<Chain | undefined>,
   debounced?: boolean,
   debouncedDelay = 500,
 ) {
@@ -20,7 +22,12 @@ export function useRequestFee(
     loading.value = true;
     error.value = '';
 
-    if (!rpcUrl.value || !requestManagerAddress.value || !requestAmount.value) {
+    if (
+      !rpcUrl.value ||
+      !requestManagerAddress.value ||
+      !requestAmount.value ||
+      !targetChain.value
+    ) {
       amount.value = undefined;
       loading.value = false;
       return;
@@ -31,6 +38,7 @@ export function useRequestFee(
         rpcUrl.value,
         requestManagerAddress.value,
         requestAmount.value,
+        targetChain.value.identifier,
       );
       amount.value = TokenAmount.new(requestFee, requestAmount.value.token);
     } catch (exception: unknown) {
@@ -47,7 +55,7 @@ export function useRequestFee(
     : updateRequestFeeAmount;
 
   watch(
-    [rpcUrl, requestManagerAddress, requestAmount],
+    [rpcUrl, requestManagerAddress, targetChain, requestAmount],
     () => {
       // Prevent loading indicator spinning on page load
       if (!requestAmount.value) {

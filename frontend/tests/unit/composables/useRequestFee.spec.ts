@@ -7,6 +7,7 @@ import * as requestManagerService from '@/services/transactions/request-manager'
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 import {
+  generateChain,
   generateTokenAmountData,
   generateUInt256Data,
   getRandomEthereumAddress,
@@ -17,7 +18,7 @@ vi.mock('@/services/transactions/request-manager');
 const RPC_URL = ref('https://test.rpc');
 const REQUEST_MANAGER_ADDRESS = ref(getRandomEthereumAddress());
 const REQUEST_AMOUNT = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
-
+const TARGET_CHAIN = ref(generateChain());
 describe('useRequestFee', () => {
   beforeEach(() => {
     Object.defineProperty(requestManagerService, 'getRequestFee', {
@@ -29,19 +30,40 @@ describe('useRequestFee', () => {
 
   describe('amount', () => {
     it('should be undefined if the RPC URL is missing', () => {
-      const { amount } = useRequestFee(ref(undefined), REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
+      const { amount } = useRequestFee(
+        ref(undefined),
+        REQUEST_MANAGER_ADDRESS,
+        REQUEST_AMOUNT,
+        TARGET_CHAIN,
+      );
 
       expect(amount.value).toBeUndefined();
     });
 
     it('should be undefined if the request manager address is missing', () => {
-      const { amount } = useRequestFee(RPC_URL, ref(undefined), REQUEST_AMOUNT);
+      const { amount } = useRequestFee(RPC_URL, ref(undefined), REQUEST_AMOUNT, TARGET_CHAIN);
 
       expect(amount.value).toBeUndefined();
     });
 
     it('should be undefined if the request amount is missing', () => {
-      const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, ref(undefined));
+      const { amount } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        ref(undefined),
+        TARGET_CHAIN,
+      );
+
+      expect(amount.value).toBeUndefined();
+    });
+
+    it('should be undefined if the target chain is missing', () => {
+      const { amount } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        REQUEST_AMOUNT,
+        ref(undefined),
+      );
 
       expect(amount.value).toBeUndefined();
     });
@@ -52,7 +74,12 @@ describe('useRequestFee', () => {
       });
       const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
 
-      const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, requestAmount);
+      const { amount } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        requestAmount,
+        TARGET_CHAIN,
+      );
       await flushPromises();
 
       expect(amount.value).toEqual(
@@ -63,7 +90,12 @@ describe('useRequestFee', () => {
     it('should update itself when the request amount changes', async () => {
       const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
 
-      const { amount } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, requestAmount);
+      const { amount } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        requestAmount,
+        TARGET_CHAIN,
+      );
       await flushPromises();
 
       Object.defineProperty(requestManagerService, 'getRequestFee', {
@@ -84,14 +116,24 @@ describe('useRequestFee', () => {
         value: vi.fn().mockRejectedValue(new Error('error')),
       });
 
-      const { error } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
+      const { error } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        REQUEST_AMOUNT,
+        TARGET_CHAIN,
+      );
       await flushPromises();
 
       expect(error.value).toBe('error');
     });
 
     it('should be empty if fetching succeeds', async () => {
-      const { error } = useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT);
+      const { error } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        REQUEST_AMOUNT,
+        TARGET_CHAIN,
+      );
       await flushPromises();
 
       expect(error.value).toBe('');
@@ -100,7 +142,14 @@ describe('useRequestFee', () => {
 
   it('should delay execution of task when initialized as a debounced task', async () => {
     const delayInMillis = 500;
-    useRequestFee(RPC_URL, REQUEST_MANAGER_ADDRESS, REQUEST_AMOUNT, true, delayInMillis);
+    useRequestFee(
+      RPC_URL,
+      REQUEST_MANAGER_ADDRESS,
+      REQUEST_AMOUNT,
+      TARGET_CHAIN,
+      true,
+      delayInMillis,
+    );
     await flushPromises();
     expect(requestManagerService.getRequestFee).not.toHaveBeenCalled();
     await new Promise((r) => setTimeout(r, delayInMillis));
