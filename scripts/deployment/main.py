@@ -24,6 +24,10 @@ class DeployedContract(Contract):
     name: str
 
 
+def _margin_gas_price_strategy(web3: Web3, transaction_params: TxParams) -> Wei:
+    return Wei(int(rpc_gas_price_strategy(web3, transaction_params) * 1.3))
+
+
 def _transact(func: Union[ContractConstructor, ContractFunction]) -> Any:
     return transact(func, timeout=600, poll_latency=1)
 
@@ -106,7 +110,7 @@ def deploy_beamer(
     deploy_mintable_token: bool,
 ) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
 
-    web3 = make_web3(chain.rpc, account)
+    web3 = make_web3(chain.rpc, account, _margin_gas_price_strategy)
     assert web3.eth.chain_id == chain.chain_id
 
     deployed_contracts = []
@@ -263,9 +267,6 @@ def main(
 
     account = account_from_keyfile(keystore_file, password)
     print("Deployer:", account.address)
-
-    def _margin_gas_price_strategy(web3: Web3, transaction_params: TxParams) -> Wei:
-        return Wei(int(rpc_gas_price_strategy(web3, transaction_params) * 1.5))
 
     web3_l1 = make_web3(config.base_chain.rpc, account, _margin_gas_price_strategy)
 
