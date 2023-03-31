@@ -7,9 +7,10 @@ import "../../Resolver.sol";
 
 contract EthereumL1Messenger is IMessenger, RestrictedCalls {
     function callAllowed(address, address) external pure returns (bool) {
-        // The call must be delivered by the Resolver
-        // Since we are on the same chain as the Resolver
-        // we should never see an execution of this function.
+        // For the case of Ethereum, L2 contracts like (RequestManager, FillManager, etc)
+        // are stored on the same chain as the resolver.
+        // Thus there is no origin address to resolve and it should always default to
+        // msg.sender. Therefore this function should never be called.
         revert("Unexpected call to callAllowed");
     }
 
@@ -19,7 +20,7 @@ contract EthereumL1Messenger is IMessenger, RestrictedCalls {
         bytes calldata message
     ) external restricted(block.chainid) {
         (bool sent, ) = target.call(message);
-        require(sent, "sending message failed");
+        require(sent, "Sending message failed");
     }
 }
 
@@ -43,8 +44,9 @@ contract EthereumL2Messenger is IMessenger, RestrictedCalls {
     }
 
     function callAllowed(address, address) external pure returns (bool) {
-        // Since we are on the same chain as the FillManager & RequestManager
-        // we should never see an execution of this function.
+        // For the case of Ethereum, L2 and L1 contracts are deployed on the same chain.
+        // Thus there is no origin address to resolve and it should always default to
+        // msg.sender. Therefore this function should never be called.
         revert("Unexpected call to callAllowed");
     }
 
@@ -94,6 +96,6 @@ contract EthereumL2Messenger is IMessenger, RestrictedCalls {
         messageHashes[messageHash] = MessageStatus.RELAYED;
 
         (bool sent, ) = address(resolver).call(message);
-        require(sent, "relaying message failed");
+        require(sent, "Relaying message failed");
     }
 }
