@@ -24,10 +24,16 @@ export function useTransferRequest() {
   }): Promise<Transfer> => {
     const sourceTokenAmount = TokenAmount.parse(options.sourceAmount, options.sourceToken);
     const targetTokenAmount = TokenAmount.parse(options.sourceAmount, options.targetToken);
+    const targetChainId = options.targetChain.identifier;
 
     const validityPeriod = new UInt256(VALIDITY_PERIOD_SECONDS);
     const { rpcUrl, requestManagerAddress } = options.sourceChain;
-    const requestFee = await getRequestFee(rpcUrl, requestManagerAddress, sourceTokenAmount);
+    const requestFee = await getRequestFee(
+      rpcUrl,
+      requestManagerAddress,
+      sourceTokenAmount,
+      targetChainId,
+    );
     const fees = TokenAmount.new(requestFee, sourceTokenAmount.token);
 
     const transfer = reactive(

@@ -80,6 +80,7 @@ export async function getRequestFee(
   rpcUrl: string,
   requestManagerAddress: string,
   transferAmount: TokenAmount,
+  targetChainId: number,
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
@@ -88,7 +89,11 @@ export async function getRequestFee(
   );
   return new UInt256(
     (
-      await contract.totalFee(transferAmount.token.address, transferAmount.uint256.asBigNumber)
+      await contract.totalFee(
+        targetChainId,
+        transferAmount.token.address,
+        transferAmount.uint256.asBigNumber,
+      )
     ).toString(),
   );
 }
