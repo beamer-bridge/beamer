@@ -43,3 +43,9 @@ docs:
 
 clean:
 	make -C docs clean
+	rm -rf dist
+	rm -rf contracts/.build
+	rm -rf contracts/contracts/.cache
+	rm -rf .pytest_cache
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type d -name .mypy_cache -exec rm -rf {} +
