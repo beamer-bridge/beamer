@@ -1,8 +1,7 @@
 import { BigNumber } from "ethers";
 
-import { parseFillInvalidatedEvent } from "@/common/events/FillInvalidated";
-
 import { EthereumL2Messenger__factory } from "../../types-gen/contracts";
+import { parseFillInvalidatedEvent } from "../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../common/events/RequestFilled";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
