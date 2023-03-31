@@ -16,6 +16,9 @@ dependencies:
   - name: Interfaces
     local: ./contracts
     contracts_folder: ./interfaces
+  - name: Optimism
+    local: ./contracts/contracts/chains/
+    contracts_folder: ./optimism
 
 default_ecosystem: ethereum
 
@@ -25,6 +28,7 @@ solidity:
   import_remapping:
     - 'OpenZeppelin/openzeppelin-contracts@4.8.0/contracts=OpenZeppelin/4.8.0'
     - 'interfaces=Interfaces'
+    - 'optimism=Optimism'
 
 ganache:
   server:

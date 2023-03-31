@@ -5,7 +5,7 @@ import "../../../interfaces/IMessenger.sol";
 
 import "../../RestrictedCalls.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/vendor/optimism/ICrossDomainMessenger.sol";
-import "./Lib_PredeployAddresses.sol";
+import "optimism/Lib_PredeployAddresses.sol";
 
 abstract contract OptimismMessengerBase is IMessenger, RestrictedCalls {
     uint32 private constant MESSAGE_GAS_LIMIT = 1_000_000;
