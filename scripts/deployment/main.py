@@ -9,7 +9,7 @@ from config import Chain, Config, ConfigValidationError
 from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex, to_wei
 from web3 import Web3
-from web3.contract import Contract
+from web3.contract import Contract, ContractConstructor, ContractFunction
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.types import TxParams, Wei
 
@@ -22,6 +22,10 @@ class DeployedContract(Contract):
     deployment_block: int
     deployment_args: list[Any]
     name: str
+
+
+def _transact(func: Union[ContractConstructor, ContractFunction]) -> Any:
+    return transact(func, timeout=600, poll_latency=1)
 
 
 def load_contracts_info(contracts_path: Path) -> dict[str, tuple]:
@@ -74,7 +78,7 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
     print(f"Deploying {name}")
     ContractFactory = cast(Contract, web3.eth.contract(abi=data[0], bytecode=data[1]))
 
-    receipt = transact(ContractFactory.constructor(*args), timeout=600)
+    receipt = _transact(ContractFactory.constructor(*args))
 
     address = receipt.contractAddress
     deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
@@ -126,7 +130,7 @@ def deploy_beamer(
             chain.request_manager_arguments.challenge_period_extension,
         ),
     )
-    transact(
+    _transact(
         request_manager.functions.updateFees(
             chain.fees.min_fee_ppm, chain.fees.lp_fee_ppm, chain.fees.protocol_fee_ppm
         )
@@ -139,7 +143,7 @@ def deploy_beamer(
             or other_chain is not chain
             or other_chain.chain_id == GANACHE_CHAIN_ID
         ):
-            transact(
+            _transact(
                 request_manager.functions.updateChain(
                     other_chain.chain_id,
                     other_chain.finality_period,
@@ -149,26 +153,24 @@ def deploy_beamer(
             )
 
     fill_manager = deploy_contract(web3, ("FillManager", l2_messenger.address))
-    transact(fill_manager.functions.setResolver(resolver.address))
+    _transact(fill_manager.functions.setResolver(resolver.address))
 
     # Authorize call chain
-    transact(l2_messenger.functions.addCaller(fill_manager.address))
-    transact(
+    _transact(l2_messenger.functions.addCaller(fill_manager.address))
+    _transact(
         resolver.functions.addCaller(
             chain.chain_id,
             l2_messenger.address,
             l1_messenger.address,
-        ),
-        timeout=600,
+        )
     )
-    transact(
+    _transact(
         resolver.functions.addRequestManager(
             chain.chain_id, request_manager.address, l1_messenger.address
-        ),
-        timeout=600,
+        )
     )
-    transact(l1_messenger.functions.addCaller(resolver.address), timeout=600)
-    transact(
+    _transact(l1_messenger.functions.addCaller(resolver.address))
+    _transact(
         request_manager.functions.addCaller(
             resolver.w3.eth.chain_id,
             l1_messenger.address,
@@ -194,7 +196,7 @@ def deploy_beamer(
             token.transfer_limit * 10**decimals,
             int(token.eth_in_token * 10**decimals),
         )
-        transact(request_manager.functions.updateToken(*token_arguments))
+        _transact(request_manager.functions.updateToken(*token_arguments))
 
     l1_contracts = {l1_messenger.name: l1_messenger}
     deployed_contracts.extend(
