@@ -6,13 +6,15 @@ import {
   OptimismRelayerService,
 } from "@/services";
 import type { BaseRelayerService } from "@/services/types";
-import { getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
+import { getRandomNumber, getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
 
 describe("createRelayer", () => {
   const testArgs: ConstructorParameters<typeof BaseRelayerService> = [
     getRandomUrl("l1"),
     getRandomUrl("l2"),
     getRandomPrivateKey(),
+    getRandomNumber(),
+    getRandomNumber(),
   ];
 
   it("maps arbitrum chain ids to an ArbitrumRelayerService", () => {
