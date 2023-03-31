@@ -4,7 +4,7 @@
   "rpcUrl": "https://rpc.ankr.com/eth_goerli",
   "name": "Ethereum Testnet Goerli",
   "imageUrl": "/images/ethereum.svg",
-  "tokenSymbols": ["USDC", "DAI"],
+  "tokenSymbols": ["TST"],
   "nativeCurrency": {
     "name": "Goerli Ether",
     "symbol": "ETH",
