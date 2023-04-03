@@ -9,7 +9,8 @@ from eth_utils.abi import event_abi_to_log_topic
 from hexbytes import HexBytes
 from requests.exceptions import HTTPError, ReadTimeout, RequestException
 from web3 import HTTPProvider, Web3
-from web3.contract import Contract, get_event_data
+from web3.contract import Contract
+from web3.contract.contract import get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
 
 from beamer.agent.typing import (

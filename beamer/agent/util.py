@@ -1,4 +1,3 @@
-import functools
 import json
 import logging
 import pathlib
@@ -7,7 +6,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Type, Union, cast
+from typing import Any, List, Optional, Union, cast
 
 import lru
 import requests
@@ -16,7 +15,8 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_utils import is_checksum_address, to_checksum_address
 from web3 import HTTPProvider, Web3
-from web3.contract import ContractConstructor, ContractFunction
+from web3.contract import ContractConstructor
+from web3.contract.contract import ContractFunction
 from web3.exceptions import ContractLogicError
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import (
@@ -25,6 +25,7 @@ from web3.middleware import (
     geth_poa_middleware,
 )
 from web3.types import GasPriceStrategy, TxParams
+from web3.utils.caching import SimpleCache
 
 import beamer.agent.middleware
 from beamer.agent.typing import URL, ChainId, ChecksumAddress
@@ -111,6 +112,23 @@ def account_from_keyfile(keyfile: Path, password: str) -> LocalAccount:
     return cast(LocalAccount, Account.from_key(privkey))
 
 
+class _LRUCache(SimpleCache):
+    def __init__(self, size: int):
+        self._size = size
+        self._data: lru.LRU[str, Any] = lru.LRU(size)
+
+    def cache(self, key: str, value: Any) -> tuple[Any, dict[str, Any]]:
+        # This is taken from SimpleCache implementation and modified to
+        # work with lru.LRU.
+        evicted_items = {}
+        if key not in self._data:
+            while len(self._data) >= self._size:
+                k, v = self._data.popitem()
+                evicted_items[k] = v
+        self._data[key] = value
+        return value, evicted_items
+
+
 def make_web3(
     url: URL, account: LocalAccount, gas_price_strategy: GasPriceStrategy = rpc_gas_price_strategy
 ) -> Web3:
@@ -121,8 +139,7 @@ def make_web3(
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
 
     # Cache data of 1000 least recently used blocks.
-    cache_class = cast(Type[dict[Any, Any]], functools.partial(lru.LRU, 1000))
-    middleware = construct_simple_cache_middleware(cache_class=cache_class)
+    middleware = construct_simple_cache_middleware(_LRUCache(1000))
     w3.middleware_onion.add(middleware)
 
     # Cache data of 1000 least recently used blocks, fetched via eth_getBlockByNumber.
