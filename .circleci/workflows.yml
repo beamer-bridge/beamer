@@ -369,6 +369,7 @@ workflows:
       - e2e-test-optimism:
           requires:
             - compile-contracts
+            - create-relayers
       - e2e-test-arbitrum:
           requires:
             - compile-contracts
