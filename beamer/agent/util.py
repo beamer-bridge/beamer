@@ -144,15 +144,6 @@ class _TokenData:
     allowance: None | int
 
 
-# dictionary from base chain ID to deployed roll up IDs
-SUPPORTED_CONNECTED_L2S = {
-    # Mainnet
-    1: frozenset({10, 42161, 288, 1088}),  # Optimism, Arbitrum, Boba, Metis
-    # Goerli
-    5: frozenset({421613, 420, 2888}),  # Arbitrum, Optimism, Boba
-}
-
-
 class TokenChecker:
     def __init__(self, tokens: List[List[List[str]]]) -> None:
         # A mapping of tokens to equivalence classes. Each frozenset contains
@@ -162,15 +153,6 @@ class TokenChecker:
             equiv_class = frozenset(
                 (ChainId(int(token[0])), to_checksum_address(token[1])) for token in token_mapping
             )
-            l2_chain_ids = frozenset(chain_id for chain_id, _ in equiv_class)
-
-            # check if equiv class contains chain ids from different base layers
-            for connected_l2s in SUPPORTED_CONNECTED_L2S.values():
-                intersection = connected_l2s.intersection(l2_chain_ids)
-                if len(intersection) > 0:
-                    msg = f"""All tokens' L2 chains must share the same base chain.
-                     Please check {l2_chain_ids}"""
-                    assert intersection == l2_chain_ids, msg
 
             for token in token_mapping:
                 chain_id = ChainId(int(token[0]))
