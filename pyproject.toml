@@ -21,9 +21,9 @@ toml = "^0.10.2"
 atomics = "^1.0.2"
 apischema = "^0.18.0"
 xdg-base-dirs = "^6.0.0"
+typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
-typing-extensions = "^4.5.0"
 types-pyyaml = "^6.0.12"
 psutil = "^5.9.4"
 eth-ape = "^0.6.6"
