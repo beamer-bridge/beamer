@@ -141,7 +141,7 @@ class EventCollector:
 
         for log in logs:
             try:
-                self._events.append(self._event.processLog(log))
+                self._events.append(self._event.process_log(log))
             except web3.exceptions.MismatchedABI:
                 pass
         self._from_block = to_block + 1
