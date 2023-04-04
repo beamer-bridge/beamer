@@ -133,6 +133,9 @@ export class ArbitrumRelayerService extends BaseRelayerService {
   async finalize(l1TransactionHash: string): Promise<void> {
     console.log("Finalizing message travelling to Arbitrum.");
     const l1TransactionReceipt = await this.l1RpcProvider.getTransactionReceipt(l1TransactionHash);
+    if (!l1TransactionReceipt) {
+      throw new Error(`Transaction "${l1TransactionHash}" cannot be found on L1...`);
+    }
 
     /**
      * In principle, a single L1 txn can trigger any number of L1-to-L2 messages (each with its own sequencer number).
