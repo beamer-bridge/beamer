@@ -5,13 +5,7 @@ from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.typing import ClaimId, FillId, Termination
 from beamer.tests.agent.utils import make_address
-from beamer.tests.constants import (
-    FILL_ID,
-    RM_C_FIELD_TERMINATION,
-    RM_R_FIELD_VALID_UNTIL,
-    RM_T_FIELD_ETH_IN_TOKEN,
-    RM_T_FIELD_TRANSFER_LIMIT,
-)
+from beamer.tests.constants import FILL_ID
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
 
 
@@ -292,7 +286,7 @@ def test_claim_period_extension(
     claim_id = claim.return_value
 
     def _get_claim_termination(_claim_id: ClaimId) -> Termination:
-        return request_manager.claims(_claim_id)[RM_C_FIELD_TERMINATION]
+        return request_manager.claims(_claim_id).termination
 
     assert ape.chain.blocks[-1].timestamp + claim_period == _get_claim_termination(claim_id)
 
@@ -363,7 +357,7 @@ def test_claim_request_extension(request_manager, token, claim_stake):
     token.mint(requester, 1, sender=requester)
     request_id = make_request(request_manager, token, requester, requester, 1)
 
-    valid_until = request_manager.requests(request_id)[RM_R_FIELD_VALID_UNTIL]
+    valid_until = request_manager.requests(request_id).validUntil
     claim_request_extension = request_manager.claimRequestExtension()
     # test that request expiration does not prevent claiming
     timestamps = [valid_until - 1, valid_until, valid_until + claim_request_extension - 1]
@@ -1360,15 +1354,15 @@ def test_contract_unpause(request_manager, token):
 def test_token_update_only_owner(request_manager, token):
     (random_guy,) = alloc_accounts(1)
     original_token_data = request_manager.tokens(token.address)
-    original_transfer_limit = original_token_data[RM_T_FIELD_TRANSFER_LIMIT]
+    original_transfer_limit = original_token_data.transferLimit
     new_transfer_limit = original_transfer_limit + 1
-    original_eth_in_token = original_token_data[RM_T_FIELD_ETH_IN_TOKEN]
+    original_eth_in_token = original_token_data.ethInToken
     new_eth_in_token = original_eth_in_token + 1
 
     def _assert_token_values(expected_transfer_limit, expected_eth_in_token):
         token_data = request_manager.tokens(token.address)
-        assert token_data[RM_T_FIELD_TRANSFER_LIMIT] == expected_transfer_limit
-        assert token_data[RM_T_FIELD_ETH_IN_TOKEN] == expected_eth_in_token
+        assert token_data.transferLimit == expected_transfer_limit
+        assert token_data.ethInToken == expected_eth_in_token
 
     with ape.reverts("Ownable: caller is not the owner"):
         request_manager.updateToken(
@@ -1390,8 +1384,8 @@ def test_token_update_only_owner(request_manager, token):
 def test_transfer_limit_requests(request_manager, token):
     (requester,) = alloc_accounts(1)
     token_data = request_manager.tokens(token.address)
-    transfer_limit = token_data[RM_T_FIELD_TRANSFER_LIMIT]
-    eth_in_token = token_data[RM_T_FIELD_ETH_IN_TOKEN]
+    transfer_limit = token_data.transferLimit
+    eth_in_token = token_data.ethInToken
 
     assert token.balanceOf(requester) == 0
 
