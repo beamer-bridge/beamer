@@ -5,7 +5,6 @@ from pathlib import Path
 import eth_utils
 from web3 import HTTPProvider, Web3
 
-from beamer.tests.constants import RM_R_FIELD_FILLER
 from scripts._util import contracts_for_web3
 
 
@@ -23,10 +22,8 @@ def main() -> None:
     print("Waiting for resolution data...", flush=True, end="")
     for _ in range(60):
         time.sleep(1)
-        if (
-            request_manager.functions.requests(request_id).call()[RM_R_FIELD_FILLER]
-            == deployer_address
-        ):
+        filler = request_manager.functions.requests(request_id).call().filler
+        if filler == deployer_address:
             print("ok")
             sys.exit()
 
