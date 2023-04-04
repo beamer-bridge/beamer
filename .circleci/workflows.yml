@@ -416,6 +416,9 @@ workflows:
         - and:
           - <<pipeline.parameters.backend-updated>>
           - equal: [ main, <<pipeline.git.branch>> ]
+        - and:
+          - <<pipeline.parameters.relayer-updated>>
+          - equal: [ main, <<pipeline.git.branch>> ]
     jobs:
       - checkout
       - install-npm-packages:
