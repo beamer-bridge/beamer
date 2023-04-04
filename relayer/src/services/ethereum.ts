@@ -91,8 +91,9 @@ export class EthereumRelayerService extends BaseRelayerService {
     const transaction = await ethereumMessenger.relayMessage(...parameters, {
       gasLimit: estimatedGasLimit,
     });
+    const transactionReceipt = await transaction.wait();
 
-    return transaction.hash;
+    return transactionReceipt.transactionHash;
   }
 
   async finalize(): Promise<void> {
