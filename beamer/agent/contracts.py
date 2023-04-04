@@ -18,7 +18,7 @@ class ContractInfo:
 
 def make_contracts(w3: web3.Web3, contracts_info: dict[str, ContractInfo]) -> dict[str, Contract]:
     return {
-        name: cast(Contract, w3.eth.contract(info.address, abi=info.abi))
+        name: cast(Contract, w3.eth.contract(info.address, abi=info.abi, decode_tuples=True))
         for name, info in contracts_info.items()
     }
 
