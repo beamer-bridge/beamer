@@ -30,7 +30,7 @@ def main() -> None:
     request_id = create_request_id(
         chain_id, chain_id, token.address, deployer.address, request_amount, nonce
     )
-    print("Request ID:", request_id.hex())
+    print("Request ID:", "0x%s" % request_id.hex())
 
     tx_hash = token.functions.mint(deployer.address, request_amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
