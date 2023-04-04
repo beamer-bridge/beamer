@@ -9,7 +9,8 @@ from config import Chain, Config, ConfigValidationError
 from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex, to_wei
 from web3 import Web3
-from web3.contract import Contract, ContractConstructor, ContractFunction
+from web3.contract import Contract, ContractConstructor
+from web3.contract.contract import ContractFunction
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.types import TxParams, Wei
 
