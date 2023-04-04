@@ -3,12 +3,7 @@ import pytest
 
 from numpy.random import randint
 
-from beamer.tests.constants import (
-    FILL_ID,
-    RM_R_FIELD_LP_FEE,
-    RM_R_FIELD_PROTOCOL_FEE,
-    RM_T_FIELD_COLLECTED_PROTOCOL_FEES,
-)
+from beamer.tests.constants import FILL_ID
 from beamer.tests.util import (
     alloc_accounts,
     alloc_whitelisted_accounts,
@@ -49,9 +44,9 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
     )
 
     # The request is not claimed yet, so no beamer fee has been collected yet
-    assert request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES] == 0
-    assert request_manager.requests(request_id)[RM_R_FIELD_LP_FEE] == lp_fee
-    assert request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE] == protocol_fee
+    assert request_manager.tokens(token).collectedProtocolFees == 0
+    assert request_manager.requests(request_id).lpFee == lp_fee
+    assert request_manager.requests(request_id).protocolFee == protocol_fee
 
     claim_tx = request_manager.claimRequest(request_id, FILL_ID, value=claim_stake, sender=claimer)
     claim_id = claim_tx.return_value
@@ -65,7 +60,7 @@ def test_fee_split_works(request_manager, token, claim_stake, claim_period):
 
     withdraw_tx = request_manager.withdraw(claim_id, sender=claimer)
     assert withdraw_tx.events.filter(request_manager.ClaimStakeWithdrawn)
-    assert request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES] == protocol_fee
+    assert request_manager.tokens(token).collectedProtocolFees == protocol_fee
     assert token.balanceOf(request_manager) == protocol_fee
     assert token.balanceOf(claimer) == transfer_amount + lp_fee
 
@@ -91,7 +86,7 @@ def test_protocol_fee_withdrawable_by_owner(
         amount,
         fee_data=_NONZERO_FEE_DATA,
     )
-    protocol_fee = request_manager.requests(request_id)[RM_R_FIELD_PROTOCOL_FEE]
+    protocol_fee = request_manager.requests(request_id).protocolFee
 
     with ape.reverts("Ownable: caller is not the owner"):
         request_manager.withdrawProtocolFees(token, requester, sender=requester)
@@ -232,7 +227,7 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
 
         withdraw_tx = request_manager.withdraw(claim_id_1)
         assert withdraw_tx.events.filter(request_manager.ClaimStakeWithdrawn)
-        assert request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES] == protocol_fee_1
+        assert request_manager.tokens(token).collectedProtocolFees == protocol_fee_1
         assert (
             token.balanceOf(request_manager) == amount + protocol_fee_1 + protocol_fee_2 + lp_fee_2
         )
@@ -240,10 +235,8 @@ def test_different_fees(request_manager, token, claim_period, claim_stake):
 
         withdraw_tx = request_manager.withdraw(claim_id_2)
         assert withdraw_tx.events.filter(request_manager.ClaimStakeWithdrawn)
-    assert (
-        request_manager.tokens(token)[RM_T_FIELD_COLLECTED_PROTOCOL_FEES]
-        == protocol_fee_1 + protocol_fee_2
-    )
+
+    assert request_manager.tokens(token).collectedProtocolFees == protocol_fee_1 + protocol_fee_2
     assert token.balanceOf(request_manager) == protocol_fee_1 + protocol_fee_2
     assert token.balanceOf(claimer) == amount * 2 + lp_fee_1 + lp_fee_2
 

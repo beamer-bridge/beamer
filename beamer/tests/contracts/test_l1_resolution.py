@@ -5,7 +5,7 @@ from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.typing import RequestId
 from beamer.tests.agent.utils import make_address
-from beamer.tests.constants import FILL_ID, FILL_ID_EMPTY, RM_R_FIELD_FILL_ID, RM_R_FIELD_FILLER
+from beamer.tests.constants import FILL_ID, FILL_ID_EMPTY
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
 
 
@@ -43,8 +43,8 @@ def test_l1_resolution_correct_id(request_manager, fill_manager, token, amount):
 
     request = request_manager.requests(request_id)
 
-    assert request[RM_R_FIELD_FILLER] == expected_address
-    assert request[RM_R_FIELD_FILL_ID] == ape.convert(expected_fill_id, bytes)
+    assert request.filler == expected_address
+    assert request.fillId == ape.convert(expected_fill_id, bytes)
 
 
 @pytest.mark.parametrize("forward_state", [True])
@@ -70,7 +70,7 @@ def test_invalidation_before_and_after_resolution(contracts, request_manager):
     # Fill must be invalidated
     assert request_manager.isInvalidFill(request_id, FILL_ID)
 
-    assert request_manager.requests(request_id)[RM_R_FIELD_FILLER] == ADDRESS_ZERO
+    assert request_manager.requests(request_id).filler == ADDRESS_ZERO
 
     request_manager.resolveRequest(
         request_id, FILL_ID, chain_id, address, sender=contracts.l1_messenger
@@ -78,7 +78,7 @@ def test_invalidation_before_and_after_resolution(contracts, request_manager):
 
     # Resolution validates fill again
     assert not request_manager.isInvalidFill(request_id, FILL_ID)
-    assert request_manager.requests(request_id)[RM_R_FIELD_FILLER] == address
+    assert request_manager.requests(request_id).filler == address
 
     # Invalidation of a resolved request should fail
     with ape.reverts("Cannot invalidate resolved fills"):
