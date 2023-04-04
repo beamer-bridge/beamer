@@ -35,8 +35,8 @@ relayers:
 	yarn --cwd relayer build
 	yarn --cwd relayer run pkg -t node18-linux-x64 -o relayer-node18-linux-x64 build/src/service.js
 	yarn --cwd relayer run pkg -t node18-macos-x64 -o relayer-node18-macos-x64 build/src/service.js
-	mkdir -p beamer/data/relayers
-	cp relayer/relayer-*-x64 beamer/data/relayers
+	mkdir -p beamer/agent/data/relayers
+	cp relayer/relayer-*-x64 beamer/agent/data/relayers
 
 docs:
 	make -C docs html

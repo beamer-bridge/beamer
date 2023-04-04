@@ -1,8 +1,8 @@
 FROM python:3.10-slim
 
 COPY . /src
-RUN mkdir -p /src/beamer/data/relayers
-COPY ./relayer/relayer-node18-linux-x64 /src/beamer/data/relayers/
+RUN mkdir -p /src/beamer/agent/data/relayers
+COPY ./relayer/relayer-node18-linux-x64 /src/beamer/agent/data/relayers/
 RUN pip install shiv
 WORKDIR /src
 RUN mkdir -p dist && shiv -c beamer -o dist/beamer .
