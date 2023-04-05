@@ -26,7 +26,7 @@ from beamer.agent.typing import (
 
 @dataclass(frozen=True)
 class Event:
-    chain_id: ChainId
+    event_chain_id: ChainId
 
 
 @dataclass(frozen=True)
@@ -44,10 +44,11 @@ class LatestBlockUpdatedEvent(Event):
     block_data: BlockData
 
     def __repr__(self) -> str:
-        chain_id = self.chain_id
+        chain_id = self.event_chain_id
         number = self.block_data["number"]
         hash_ = self.block_data["hash"].hex()
-        return f"<LatestBlockUpdatedEvent chain_id={chain_id} block_number={number} hash={hash_}>"
+        return f"""<LatestBlockUpdatedEvent event_chain_id={chain_id} block_number={number}
+            hash={hash_}>"""
 
 
 @dataclass(frozen=True)
@@ -206,7 +207,7 @@ def _decode_event(
     data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
     if data.event in _EVENT_TYPES:
         kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
-        kwargs["chain_id"] = chain_id
+        kwargs["event_chain_id"] = chain_id
         kwargs["block_number"] = log_entry["blockNumber"]
         kwargs["tx_hash"] = log_entry["transactionHash"]
         _convert_bytes(kwargs)
@@ -346,7 +347,7 @@ class EventFetcher:
         else:
             result.append(
                 LatestBlockUpdatedEvent(
-                    chain_id=self._chain_id,
+                    event_chain_id=self._chain_id,
                     block_data=block_data,
                 )
             )

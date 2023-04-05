@@ -81,9 +81,9 @@ HandlerResult = tuple[bool, Optional[list[Event]]]
 
 
 def process_event(event: Event, context: Context) -> HandlerResult:
-    if isinstance(event, SourceChainEvent) and event.chain_id != context.source_chain_id:
+    if isinstance(event, SourceChainEvent) and event.event_chain_id != context.source_chain_id:
         return True, None
-    if isinstance(event, TargetChainEvent) and event.chain_id != context.target_chain_id:
+    if isinstance(event, TargetChainEvent) and event.event_chain_id != context.target_chain_id:
         return True, None
 
     if isinstance(event, LatestBlockUpdatedEvent):
@@ -166,7 +166,7 @@ def _timestamp_is_l1_finalized(
 def _handle_latest_block_updated(
     event: LatestBlockUpdatedEvent, context: Context
 ) -> HandlerResult:
-    context.latest_blocks[event.chain_id] = event.block_data
+    context.latest_blocks[event.event_chain_id] = event.block_data
     return True, None
 
 
@@ -187,7 +187,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
             return True, None
     else:
         is_valid_request = context.token_checker.is_valid_pair(
-            event.chain_id,
+            event.event_chain_id,
             event.source_token_address,
             event.target_chain_id,
             event.target_token_address,
@@ -199,7 +199,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
     request = Request(
         request_id=event.request_id,
-        source_chain_id=event.chain_id,
+        source_chain_id=event.event_chain_id,
         target_chain_id=event.target_chain_id,
         source_token_address=event.source_token_address,
         target_token_address=event.target_token_address,
@@ -319,7 +319,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     if _invalidation_ready_for_l1_relay(claim):
         events.append(
             InitiateL1InvalidationEvent(
-                chain_id=request.target_chain_id,  # Resolution happens on the target chain
+                event_chain_id=request.target_chain_id,  # Resolution happens on the target chain
                 claim_id=claim.id,
             )
         )
@@ -337,7 +337,7 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
     if _proof_ready_for_l1_relay(request):
         events.append(
             InitiateL1ResolutionEvent(
-                chain_id=request.target_chain_id,  # Resolution happens on the target chain
+                event_chain_id=request.target_chain_id,  # Resolution happens on the target chain
                 request_id=request.id,
                 claim_id=claim.id,
             )
