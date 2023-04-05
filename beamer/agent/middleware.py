@@ -10,9 +10,40 @@ import lru
 import requests.exceptions
 import structlog
 from web3 import HTTPProvider, Web3
-from web3.types import RPCEndpoint, RPCResponse
+from web3.types import Middleware, RPCEndpoint, RPCResponse
+from beamer.agent.typing import ChainId
+
 
 log = structlog.get_logger(__name__)
+
+CacheMiddleware = Callable[
+    [Callable[[RPCEndpoint, Any], RPCResponse], Web3, "_BlockCache"],
+    Callable[[RPCEndpoint, Any], RPCResponse],
+]
+
+
+class _BlockCache:
+    def __init__(self) -> None:
+        self._block_cache = lru.LRU(1000)
+        self._latest_block_number = -1
+        self._latest_key: tuple[str, bool] | None = None
+        self._lock = threading.Lock()
+
+    def add_block(self, key: tuple[str, bool], data: RPCResponse) -> None:
+        with self._lock:
+            self._block_cache[key] = data
+            if self._latest_block_number < data["result"].number:
+                self._latest_key = key
+                self._latest_block_number = data["result"].number
+
+    def get_block(self, key: tuple[str, bool]) -> RPCResponse:
+        return self._block_cache.get(key)
+
+    def get_latest_block(self) -> RPCResponse | None:
+        return self._block_cache.get(self._latest_key)
+
+
+_BLOCK_STORAGE: dict[ChainId, _BlockCache] = {}
 
 
 def _result_ok(response: RPCResponse) -> bool:
@@ -21,16 +52,24 @@ def _result_ok(response: RPCResponse) -> bool:
     return response.get("result") is not None
 
 
+def generate_middleware_with_cache(middleware: CacheMiddleware, chain_id: ChainId) -> Middleware:
+    global _BLOCK_STORAGE
+
+    if chain_id not in _BLOCK_STORAGE:
+        _BLOCK_STORAGE[chain_id] = _BlockCache()
+
+    cache = _BLOCK_STORAGE[chain_id]
+    return cast(Middleware, functools.partial(middleware, cache=cache))
+
+
 # This middleware caches responses of eth_getBlockByNumber calls. Requests with
 # block number set to 'latest' will never be returned from the cache. However,
 # successful responses of those calls will be stored into the cache so that
 # further requests specifying a concrete block number can be satisfied from
 # the cache.
 def cache_get_block_by_number(
-    make_request: Callable[[RPCEndpoint, Any], RPCResponse], _w3: Web3
+    make_request: Callable[[RPCEndpoint, Any], RPCResponse], _w3: Web3, cache: _BlockCache
 ) -> Callable[[RPCEndpoint, Any], RPCResponse]:
-    cache = lru.LRU(1000)
-
     def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
         if method != "eth_getBlockByNumber":
             return make_request(method, params)
@@ -39,13 +78,13 @@ def cache_get_block_by_number(
             response = make_request(method, params)
             if _result_ok(response):
                 key = hex(response["result"].number), params[1]
-                cache[key] = response
+                cache.add_block(key, response)
         elif params[0].startswith("0x"):
-            response = cache.get(params)
+            response = cache.get_block(params)
             if response is None:
                 response = make_request(method, params)
                 if _result_ok(response):
-                    cache[params] = response
+                    cache.add_block(params, response)
         else:
             response = make_request(method, params)
         return response
@@ -282,3 +321,31 @@ def rate_limiter(
 ) -> Callable[[RPCEndpoint, Any], RPCResponse]:
     state = _RateLimiterState()
     return functools.partial(_rate_limiter, make_request=make_request, w3=w3, state=state)
+
+
+def max_fee_setter(
+    make_request: _MakeRequest, _w3: Web3, cache: _BlockCache
+) -> Callable[[RPCEndpoint, Any], RPCResponse]:
+    def middleware(method: RPCEndpoint, params: Any) -> RPCResponse:
+        if method != "eth_sendTransaction":
+            return make_request(method, params)
+        priority_fee_response = make_request(RPCEndpoint("eth_maxPriorityFeePerGas"), [])
+        if _result_ok(priority_fee_response):
+            priority_fee = priority_fee_response["result"]
+        else:
+            return priority_fee_response
+
+        latest_block = cache.get_latest_block()
+        if latest_block is None:
+            latest_block_response = make_request(RPCEndpoint("eth_getBlockByNumber"), ["latest"])
+            if _result_ok(latest_block_response):
+                latest_block = latest_block_response
+            else:
+                return latest_block_response
+        base_fee = latest_block["result"].baseFeePerGas
+        max_fee = 2 * base_fee + priority_fee
+        params[0]["maxPriorityFeePerGas"] = priority_fee
+        params[0]["maxFeePerGas"] = max_fee
+        return make_request(method, params)
+
+    return middleware
