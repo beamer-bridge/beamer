@@ -133,7 +133,7 @@ def make_web3(
     url: URL, account: LocalAccount, gas_price_strategy: GasPriceStrategy = rpc_gas_price_strategy
 ) -> Web3:
     w3 = Web3(HTTPProvider(url, request_kwargs=dict(timeout=5)))
-    w3.eth.set_gas_price_strategy(gas_price_strategy)
+
     # Add POA middleware for geth POA chains, no/op for other chains
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
     w3.middleware_onion.add(construct_sign_and_send_raw_middleware(account))
@@ -142,8 +142,24 @@ def make_web3(
     middleware = construct_simple_cache_middleware(_LRUCache(1000))
     w3.middleware_onion.add(middleware)
 
+    chain_id = ChainId(w3.eth.chain_id)
+
+    if chain_id == 1:
+        w3.middleware_onion.add(
+            beamer.agent.middleware.generate_middleware_with_cache(
+                middleware=beamer.agent.middleware.max_fee_setter,
+                chain_id=chain_id,
+            )
+        )
+    else:
+        w3.eth.set_gas_price_strategy(gas_price_strategy)
     # Cache data of 1000 least recently used blocks, fetched via eth_getBlockByNumber.
-    w3.middleware_onion.add(beamer.agent.middleware.cache_get_block_by_number)
+    w3.middleware_onion.add(
+        beamer.agent.middleware.generate_middleware_with_cache(
+            middleware=beamer.agent.middleware.cache_get_block_by_number,
+            chain_id=chain_id,
+        )
+    )
 
     # Handle RPCs that rate limit us.
     w3.middleware_onion.add(beamer.agent.middleware.rate_limiter)
