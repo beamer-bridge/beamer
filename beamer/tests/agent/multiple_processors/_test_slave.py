@@ -11,7 +11,8 @@ def test_sending_request_slave(contracts, token, chain_params):
     requester, target = alloc_accounts(2)
     chain_id = ape.chain.chain_id
     request_count = int(os.environ["REQUEST_COUNT"])
-    for i in range(8546, 8546 + request_count):
+    first_chain_id = int(os.environ["FIRST_CHAIN_ID"])
+    for i in range(first_chain_id, first_chain_id + request_count):
         if i == chain_id:
             continue
         contracts.request_manager.updateChain(i, *chain_params)
