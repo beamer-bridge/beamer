@@ -51,7 +51,7 @@ def test_handle_fill_invalidated_resolved():
     context.claims.add(claim_2.id, claim_2)
 
     event = FillInvalidatedResolved(
-        chain_id=request.source_chain_id,
+        event_chain_id=request.source_chain_id,
         tx_hash=HexBytes(""),
         request_id=request.id,
         fill_id=request.fill_id,
@@ -84,7 +84,7 @@ def test_handle_fill_invalidated():
 
     tx_hash = make_tx_hash()
     event = FillInvalidated(
-        chain_id=request.target_chain_id,
+        event_chain_id=request.target_chain_id,
         tx_hash=tx_hash,
         request_id=request.id,
         fill_id=request.fill_id,
@@ -230,7 +230,7 @@ def test_handle_generate_l1_invalidation_event(timestamp):
 
     assert events == [
         InitiateL1InvalidationEvent(
-            chain_id=TARGET_CHAIN_ID,
+            event_chain_id=TARGET_CHAIN_ID,
             claim_id=CLAIM_ID,
         )
     ]

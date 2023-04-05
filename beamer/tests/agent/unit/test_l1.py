@@ -26,7 +26,7 @@ def test_handle_initiate_l1_resolution(timestamp):
     context.requests.add(request.id, request)
 
     event = InitiateL1ResolutionEvent(
-        chain_id=TARGET_CHAIN_ID,
+        event_chain_id=TARGET_CHAIN_ID,
         request_id=REQUEST_ID,
         claim_id=CLAIM_ID,
     )
@@ -63,7 +63,7 @@ def test_handle_initiate_l1_invalidation(timestamp):
     context.requests.add(request.id, request)
 
     event = InitiateL1InvalidationEvent(
-        chain_id=TARGET_CHAIN_ID,
+        event_chain_id=TARGET_CHAIN_ID,
         claim_id=CLAIM_ID,
     )
 

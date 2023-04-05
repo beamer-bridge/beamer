@@ -211,7 +211,7 @@ def test_handle_request_resolved():
     request.try_to_claim()
 
     event = RequestResolved(
-        chain_id=SOURCE_CHAIN_ID,
+        event_chain_id=SOURCE_CHAIN_ID,
         tx_hash=HexBytes(""),
         request_id=request.id,
         filler=filler,
@@ -253,7 +253,7 @@ def test_handle_generate_l1_resolution_event():
     assert flag
     assert events == [
         InitiateL1ResolutionEvent(
-            chain_id=TARGET_CHAIN_ID,
+            event_chain_id=TARGET_CHAIN_ID,
             request_id=REQUEST_ID,
             claim_id=CLAIM_ID,
         )
