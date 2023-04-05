@@ -24,6 +24,8 @@ from beamer.agent.typing import (
     TokenAmount,
 )
 
+_BLOCK_UPDATED_FORMAT = "<LatestBlockUpdatedEvent event_chain_id=%s block_number=%s hash=%s>"
+
 
 @dataclass(frozen=True)
 class Event:
@@ -48,8 +50,7 @@ class LatestBlockUpdatedEvent(Event):
         chain_id = self.event_chain_id
         number = self.block_data["number"]
         hash_ = self.block_data["hash"].hex()
-        return f"""<LatestBlockUpdatedEvent event_chain_id={chain_id} block_number={number}
-            hash={hash_}>"""
+        return _BLOCK_UPDATED_FORMAT % (chain_id, number, hash_)
 
 
 @dataclass(frozen=True)
