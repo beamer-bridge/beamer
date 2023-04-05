@@ -82,7 +82,17 @@ export const useRequestSourceInputValidations = (
           Object.assign(selectedTokenAmountRules, {
             maxValue: helpers.withMessage(
               'Transfer limit: ' + options.transferLimitTokenAmount.value.formatFullValue(),
-              makeMaxTokenAmountValidator(options.transferLimitTokenAmount.value),
+              (value: TokenAmount) => {
+                if (
+                  !value ||
+                  !options.selectedToken.value ||
+                  !options.transferLimitTokenAmount.value
+                ) {
+                  return true;
+                }
+                // Due to reactivity issues `max` has to be initialized here
+                return makeMaxTokenAmountValidator(options.transferLimitTokenAmount.value)(value);
+              },
             ),
           });
         }
