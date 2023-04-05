@@ -4,6 +4,7 @@ import os
 import signal
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from subprocess import DEVNULL, PIPE
 
@@ -32,7 +33,13 @@ _CONFIG_PATH = ape.project.local_project.path / ape.project.local_project.config
 _LOCAL_ACCOUNT = ape.accounts.test_accounts[-1]
 
 
-def _start_ganache(chain_id: ChainId, port: int) -> psutil.Popen:
+@dataclass
+class _ChainInfo:
+    port: int
+    is_legacy: bool
+
+
+def _start_ganache(chain_id: ChainId, port: int, is_legacy: bool = True) -> psutil.Popen:
     cmd = [
         "ganache-cli",
         "--chain.vmErrorsOnRPCResponse",
@@ -43,13 +50,13 @@ def _start_ganache(chain_id: ChainId, port: int) -> psutil.Popen:
         "12000000",
         "--wallet.totalAccounts",
         "10",
-        "--hardfork",
-        "istanbul",
         "--wallet.mnemonic",
         "brownie",
         "--chain.chainId",
         str(chain_id),
     ]
+    if is_legacy:
+        cmd += ["--hardfork", "istanbul"]
     return psutil.Popen(cmd, stdin=DEVNULL, stdout=PIPE, stderr=PIPE)
 
 
@@ -68,22 +75,27 @@ def _configure_ganache_port(port: int):
         os.rename(backup_path, _CONFIG_PATH)
 
 
-def _start_slave_test(port: int, request_count: int) -> psutil.Popen:
+def _start_slave_test(first_chain_id: ChainId, port: int, request_count: int) -> psutil.Popen:
     return psutil.Popen(
         ["ape", "test", str(_SLAVE_TEST_PATH), "-s"],
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE,
-        env=dict(os.environ, PORT=str(port), REQUEST_COUNT=str(request_count)),
+        env=dict(
+            os.environ,
+            PORT=str(port),
+            REQUEST_COUNT=str(request_count),
+            FIRST_CHAIN_ID=str(first_chain_id),
+        ),
     )
 
 
 @contextlib.contextmanager
-def _new_networks(chain_port_map: dict[ChainId, int]):
+def _new_networks(chain_port_map: dict[ChainId, _ChainInfo]):
     processes = {}
     try:
-        for chain_id, port in chain_port_map.items():
-            processes[chain_id] = _start_ganache(chain_id, port)
+        for chain_id, chain_info in chain_port_map.items():
+            processes[chain_id] = _start_ganache(chain_id, chain_info.port, chain_info.is_legacy)
         yield
     finally:
         for process in processes.values():
@@ -91,13 +103,13 @@ def _new_networks(chain_port_map: dict[ChainId, int]):
             process.wait()
 
 
-def _get_chain_map() -> dict[ChainId, int]:
+def _get_chain_map() -> dict[ChainId, _ChainInfo]:
     number_of_chains = 4
-    return {ChainId(i): i for i in range(8546, 8546 + number_of_chains)}
+    return {ChainId(i): _ChainInfo(i, True) for i in range(8546, 8546 + number_of_chains)}
 
 
 def _get_config(
-    chain_map: dict[ChainId, int],
+    chain_map: dict[ChainId, _ChainInfo],
     contracts: Contracts,
     slave_contract_addresses: dict[ChainId, dict[str, str]],
 ) -> Config:
@@ -123,8 +135,8 @@ def _get_config(
         deployment_info[chain_id] = contracts_info
     rpc_urls = {}
     confirmation_blocks = {}
-    for chain_id, port in chain_map.items():
-        rpc_url = f"http://127.0.0.1:{port}"
+    for chain_id, chain_info in chain_map.items():
+        rpc_url = f"http://127.0.0.1:{chain_info.port}"
         rpc_urls[str(chain_id)] = URL(rpc_url)
         confirmation_blocks[str(chain_id)] = 0
 
@@ -191,7 +203,7 @@ def _stop_slave_tests(slave_procs: list[psutil.Popen]):
 
 
 def _get_token_list(
-    chain_map: dict[ChainId, int], slave_contract_addresses: dict[ChainId, dict[str, str]]
+    chain_map: dict[ChainId, _ChainInfo], slave_contract_addresses: dict[ChainId, dict[str, str]]
 ) -> list[list[list[str]]]:
     tokens: list[list[str]] = []
     for chain_id in chain_map:
@@ -222,13 +234,57 @@ def test_multiple_event_processors(contracts: Contracts, token: ape.project.Mint
     with _new_networks(chain_map):
         slave_test_procs = []
         slave_contract_addresses: dict[ChainId, dict[str, str]] = {}
-        for chain_id, port in chain_map.items():
-            with _configure_ganache_port(port):
-                slave = _start_slave_test(port, len(chain_map))
+        for chain_id, chain_info in chain_map.items():
+            with _configure_ganache_port(chain_info.port):
+                slave = _start_slave_test(min(chain_map.keys()), chain_info.port, len(chain_map))
                 contract_addresses = _get_slave_contract_addresses(slave)
                 slave_contract_addresses[chain_id] = contract_addresses
                 slave_test_procs.append(slave)
         config = _get_config(chain_map, contracts, slave_contract_addresses)
         _mint_agent_tokens(config, token, slave_contract_addresses)
         _start_agent_test(config)
+        _stop_slave_tests(slave_test_procs)
+
+
+def _start_agent_fee_test(config: Config):
+    agent = Agent(config)
+    agent.start()
+
+    directions = agent.get_directions()
+    fee_map = {}
+    try:
+        for direction in directions:
+            with Sleeper(20) as sleeper:
+                while len(agent.get_context(direction).requests) != 1:
+                    sleeper.sleep(0.1)
+
+            context = agent.get_context(direction)
+            request = next(iter(context.requests))
+
+            with Sleeper(20) as sleeper:
+                while request.fill_tx is None:
+                    sleeper.sleep(0.1)
+
+            receipt = context.fill_manager.w3.eth.get_transaction_receipt(request.fill_tx)
+            fee_map[context.target_chain_id] = receipt["effectiveGasPrice"]
+        # For chain id 1 type 2 transactions are used so fee is lower than legacy transactions
+        assert min(fee_map.values()) == fee_map[ChainId(1)]
+    finally:
+        agent.stop()
+
+
+def test_l1_base_fees(contracts: Contracts, token: ape.project.MintableToken):
+    chain_map = {ChainId(1): _ChainInfo(8546, False), ChainId(2): _ChainInfo(8547, True)}
+    with _new_networks(chain_map):
+        slave_test_procs = []
+        slave_contract_addresses: dict[ChainId, dict[str, str]] = {}
+        for chain_id, chain_info in chain_map.items():
+            with _configure_ganache_port(chain_info.port):
+                slave = _start_slave_test(min(chain_map.keys()), chain_info.port, len(chain_map))
+                contract_addresses = _get_slave_contract_addresses(slave)
+                slave_contract_addresses[chain_id] = contract_addresses
+                slave_test_procs.append(slave)
+        config = _get_config(chain_map, contracts, slave_contract_addresses)
+        _mint_agent_tokens(config, token, slave_contract_addresses)
+        _start_agent_fee_test(config)
         _stop_slave_tests(slave_test_procs)
