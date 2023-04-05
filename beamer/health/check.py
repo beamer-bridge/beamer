@@ -219,7 +219,7 @@ def fetch_events() -> ChainEventMap:
 def get_transfer_token_symbol(transfer: Transfer, token_deployments: TokenMap) -> str | None:
     for token_symbol, deployments in token_deployments.items():
         source_token_address = transfer["created"].source_token_address.lower()
-        source_chain_id = transfer["created"].chain_id
+        source_chain_id = transfer["created"].event_chain_id
         if any(
             source_token_address == address.lower() and source_chain_id == int(chain_id)
             for chain_id, address in deployments
@@ -232,7 +232,7 @@ def get_transfer_token_symbol(transfer: Transfer, token_deployments: TokenMap) -
 def get_transfer_value_formatted(
     request: RequestCreated, token_deployments: TokenMap, token_details: TokenDetailsMap
 ) -> str:
-    token_source_chain = request.chain_id
+    token_source_chain = request.event_chain_id
     token_source_address = request.source_token_address
     request_token = [str(token_source_chain), token_source_address]
     token = None
@@ -506,7 +506,7 @@ def create_unclaimed_fill_notification(
         "meta": {
             "request_id": request.request_id.hex(),
             "message_type": NotificationTypes.UNCLAIMED_FILL,
-            "message_link": link_to_explorer(request.chain_id, request.tx_hash.hex()),
+            "message_link": link_to_explorer(request.event_chain_id, request.tx_hash.hex()),
         },
         "body": f"""
 v1: Unclaimed fill!
@@ -528,7 +528,7 @@ def create_expired_request_notification(request: RequestCreated, ctx: Context) -
         "meta": {
             "request_id": request.request_id.hex(),
             "message_type": NotificationTypes.REQUEST_EXPIRED,
-            "message_link": link_to_explorer(request.chain_id, request.tx_hash.hex()),
+            "message_link": link_to_explorer(request.event_chain_id, request.tx_hash.hex()),
         },
         "body": f"""
 Request expired with no fill {request.request_id.hex()}
@@ -553,7 +553,7 @@ def create_challenge_game_notification(
         "meta": {
             "request_id": request.request_id.hex(),
             "message_type": message_type,
-            "message_link": link_to_explorer(request.chain_id, last_claim.tx_hash.hex()),
+            "message_link": link_to_explorer(request.event_chain_id, last_claim.tx_hash.hex()),
         },
         "body": f"""
 v1: {title[message_type]}
