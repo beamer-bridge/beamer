@@ -17,7 +17,7 @@ from eth_utils import is_checksum_address, to_checksum_address
 from web3 import HTTPProvider, Web3
 from web3.contract import ContractConstructor
 from web3.contract.contract import ContractFunction
-from web3.exceptions import ContractLogicError
+from web3.exceptions import ContractLogicError, TimeExhausted
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import (
     construct_sign_and_send_raw_middleware,
@@ -66,9 +66,16 @@ def transact(
     except (ContractLogicError, requests.exceptions.RequestException) as exc:
         raise TransactionFailed() from exc
 
-    receipt = func.w3.eth.wait_for_transaction_receipt(
-        txn_hash, timeout=timeout, poll_latency=poll_latency
-    )
+    while True:
+        try:
+            receipt = func.w3.eth.wait_for_transaction_receipt(
+                txn_hash, timeout=timeout, poll_latency=poll_latency
+            )
+        except TimeExhausted as exc:
+            log.error("Timed out waiting for tx receipt, retrying", exc=exc)
+        else:
+            break
+
     if receipt.status == 0:  # type: ignore
         raise TransactionFailed("unknown error")
     return receipt
