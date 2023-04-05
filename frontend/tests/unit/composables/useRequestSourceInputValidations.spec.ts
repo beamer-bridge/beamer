@@ -148,6 +148,7 @@ describe('useRequestSourceInputValidations', () => {
 
         expect(v$.value.selectedTokenAmount?.$invalid).toBe(false);
       });
+
       it('is invalid when it holds a positive token amount that is higher than the provided transfer limit', () => {
         const token = generateTokenSelectorOption({ decimals: 6 });
         const selectedToken = ref(token);
@@ -168,6 +169,30 @@ describe('useRequestSourceInputValidations', () => {
         );
 
         expect(v$.value.selectedTokenAmount?.$invalid).toBe(true);
+      });
+
+      it('is valid when the provided transfer limit later changes to a lower value than the token amount that is hold', () => {
+        const token = generateTokenSelectorOption({ decimals: 6 });
+        const selectedToken = ref(token);
+        const selectedAmount = ref('0.3');
+        const selectedTokenAmount = computed(() =>
+          TokenAmount.parse(selectedAmount.value, selectedToken.value?.value),
+        );
+        const transferLimitTokenAmount: Ref<TokenAmount | undefined> = ref(undefined);
+        transferLimitTokenAmount.value = TokenAmount.parse('0.2', selectedToken.value.value);
+
+        const v$ = useRequestSourceInputValidations(
+          createConfig({
+            selectedToken,
+            selectedAmount,
+            selectedTokenAmount,
+            transferLimitTokenAmount,
+          }),
+        );
+
+        transferLimitTokenAmount.value = TokenAmount.parse('0.4', selectedToken.value.value);
+
+        expect(v$.value.selectedTokenAmount?.$invalid).toBe(false);
       });
     });
   });
