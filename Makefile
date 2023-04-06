@@ -39,10 +39,13 @@ relayers:
 	cp relayer/relayer-*-x64 beamer/agent/data/relayers
 
 docs:
+	python scripts/generate-contract-addresses-doc-page.py < deployments/mainnet/deployment.json \
+														   > docs/source/contracts-addresses.rst
 	make -C docs html
 
 clean:
 	make -C docs clean
+	rm -f docs/source/contracts-addresses.rst
 	rm -rf dist
 	rm -rf contracts/.build
 	rm -rf contracts/contracts/.cache
