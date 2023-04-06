@@ -260,7 +260,6 @@ def test_challenge_5(request_manager, fill_manager, token, config, honest_claim)
     nonce = 1
     fill_id = FILL_ID
     with ape.accounts.test_accounts.use_sender(charlie):
-
         if honest_claim:
             # Fill by Charlie
             token.mint(charlie, amount)

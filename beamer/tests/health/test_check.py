@@ -81,7 +81,6 @@ def test_check_if_request_has_fill_with_no_fill_and_request_created_not_expired(
 def test_check_if_request_has_fill_with_no_fill_and_request_created_has_expired(
     ctx, transfer_request
 ):
-
     transfer: Transfer = {
         "created": transfer_request,
     }
@@ -176,7 +175,6 @@ def test_check_if_challenge_game_no_challenge(
 def test_check_if_challenge_game_one_challenge(
     ctx, transfer_request, transfer_fill, transfer_claim
 ):
-
     transfer: Transfer = {
         "created": transfer_request,
         "filled": transfer_fill,

@@ -98,7 +98,6 @@ def test_restricted_calls(contracts, resolver, request_manager):
         contracts.l2_messenger.sendMessage(resolver.address, b"")
 
     with ape.accounts.test_accounts.use_sender(caller):
-
         with ape.reverts("RestrictedCalls: call disallowed"):
             contracts.resolver.resolve(b"0", b"0", ape.chain.chain_id, ape.chain.chain_id, caller)
 

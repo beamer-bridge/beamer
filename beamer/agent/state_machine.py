@@ -171,7 +171,6 @@ def _handle_latest_block_updated(
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
-
     if event.target_chain_id != context.target_chain_id:
         return True, None
 

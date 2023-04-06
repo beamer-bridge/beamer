@@ -60,7 +60,6 @@ def test_challenge_as_claimer():
 
 @pytest.mark.parametrize("filler", [ADDRESS1, None])
 def test_join_false_claim_challenge_only_when_unfilled(filler):
-
     context, _ = make_context()
 
     request = make_request()
