@@ -110,7 +110,6 @@ def deploy_beamer(
     allow_same_chain: bool,
     deploy_mintable_token: bool,
 ) -> tuple[dict[str, DeployedContract], dict[str, DeployedContract]]:
-
     web3 = make_web3(chain.rpc, account, _margin_gas_price_strategy)
     assert web3.eth.chain_id == chain.chain_id
 
