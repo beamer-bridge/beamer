@@ -10,6 +10,7 @@ Welcome to Beamer's documentation!
    commands.rst
    configuration.rst
    contracts.rst
+   contracts-addresses.rst
    contracts-api-reference.rst
    protocol.rst
    l1_resolution.rst
