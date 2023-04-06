@@ -1050,7 +1050,6 @@ def test_withdraw_l1_resolved_muliple_claims(contracts, request_manager, token, 
     assert withdraw_tx.events.filter(request_manager.ClaimStakeWithdrawn)
 
     with ape.accounts.test_accounts.use_sender(claimer1):
-
         # Another valid claim, deposit is already withdrawn but stakes go back to claimer
         withdraw_tx = request_manager.withdraw(claim_id_3)
         assert not withdraw_tx.events.filter(request_manager.DepositWithdrawn)
@@ -1217,7 +1216,6 @@ def test_withdraw_two_challengers(
     snap_id = ape.chain.snapshot()
 
     def _withdraw_by_order(first_withdrawer, second_withdrawer):
-
         with ape.accounts.test_accounts.use_sender(first_withdrawer):
             request_manager.withdraw(claim_id)
 

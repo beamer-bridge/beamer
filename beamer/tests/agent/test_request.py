@@ -335,7 +335,6 @@ def test_request_for_wrong_target_chain(request_manager, token, agent, direction
 
 
 def test_agent_only_claim_once_after_restart(request_manager, token, agent, direction):
-
     (requester,) = alloc_accounts(1)
 
     make_request(request_manager, token, requester, requester.address, 1)
@@ -346,7 +345,6 @@ def test_agent_only_claim_once_after_restart(request_manager, token, agent, dire
 
     # Restart the agent twice
     for _ in range(2):
-
         agent.stop()
         agent.start()
 
