@@ -337,7 +337,9 @@ def max_fee_setter(
 
         latest_block = cache.get_latest_block()
         if latest_block is None:
-            latest_block_response = make_request(RPCEndpoint("eth_getBlockByNumber"), ["latest"])
+            latest_block_response = make_request(
+                RPCEndpoint("eth_getBlockByNumber"), ["latest", False]
+            )
             if _result_ok(latest_block_response):
                 latest_block = latest_block_response
             else:
