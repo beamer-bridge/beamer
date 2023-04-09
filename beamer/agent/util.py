@@ -151,7 +151,9 @@ def make_web3(
 
     chain_id = ChainId(w3.eth.chain_id)
 
-    if chain_id == 1:
+    # Apply type 2 transaction middleware for ETH2 PoS chains
+    # Currently Mainnet and Goerli
+    if chain_id in [1, 5]:
         w3.middleware_onion.add(
             beamer.agent.middleware.generate_middleware_with_cache(
                 middleware=beamer.agent.middleware.max_fee_setter,
