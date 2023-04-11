@@ -1,6 +1,7 @@
 import { BigNumber } from "ethers";
+import { keccak256 } from "ethers/lib/utils";
 
-import { EthereumL2Messenger__factory } from "../../types-gen/contracts";
+import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts";
 import { parseFillInvalidatedEvent } from "../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../common/events/RequestFilled";
 import type { TransactionHash } from "./types";
@@ -24,6 +25,10 @@ const L1_CONTRACTS: Record<number, { ETHEREUM_L2_MESSENGER: string }> = {
     ETHEREUM_L2_MESSENGER: process.env.ETHEREUM_L2_MESSENGER || "",
   },
 };
+
+const FILTER_BLOCKS_PER_ITERATION = 5000;
+// TODO: import from `deployments` npm package once ready
+const RESOLVER_DEPLOY_BLOCK_NUMBER = 16946576;
 
 export class EthereumRelayerService extends BaseRelayerService {
   async parseEventDataFromTxHash(
@@ -59,6 +64,67 @@ export class EthereumRelayerService extends BaseRelayerService {
     return null;
   }
 
+  private async findTransactionHashForMessage(
+    requestId: string,
+    fillId: string,
+    sourceChainId: BigNumber,
+    filler: string,
+    fillChainId: BigNumber,
+    resolverAddress: string,
+  ): Promise<string | null> {
+    const resolver = Resolver__factory.connect(resolverAddress, this.l1Wallet);
+    const currentBlock = await this.l1Wallet.provider.getBlock("latest");
+    let currentBlockNumber = currentBlock.number;
+
+    while (currentBlockNumber > RESOLVER_DEPLOY_BLOCK_NUMBER) {
+      const events = await resolver.queryFilter(
+        "Resolution" as unknown,
+        currentBlockNumber - FILTER_BLOCKS_PER_ITERATION,
+        currentBlockNumber,
+      );
+
+      for (const event of events) {
+        if (event.event === "Resolution") {
+          const args = event.args;
+
+          if (
+            sourceChainId.eq(args.sourceChainId) &&
+            fillChainId.eq(args.fillChainId) &&
+            args.requestId === requestId &&
+            args.filler === filler &&
+            args.fillId === fillId
+          ) {
+            console.log(event.transactionHash);
+            process.exit();
+            return event.transactionHash;
+          }
+        }
+      }
+      currentBlockNumber -= FILTER_BLOCKS_PER_ITERATION;
+    }
+
+    return null;
+  }
+
+  private createMessageHash(
+    requestId: string,
+    fillId: string,
+    sourceChainId: BigNumber,
+    filler: string,
+    fillChainId: BigNumber,
+  ): string {
+    const contractInterface = Resolver__factory.createInterface();
+    const encodedCall = contractInterface.encodeFunctionData("resolve", [
+      requestId,
+      fillId,
+      fillChainId,
+      sourceChainId,
+      filler,
+    ]);
+
+    return keccak256(encodedCall);
+  }
+
   async prepare(): Promise<boolean> {
     return true;
   }
@@ -73,7 +139,8 @@ export class EthereumRelayerService extends BaseRelayerService {
     }
 
     // Execute EthereumL2Messenger.relayMessage
-    const ethereumMessengerAddress = L1_CONTRACTS[await this.getL2ChainId()].ETHEREUM_L2_MESSENGER;
+    const l2ChainId = await this.getL2ChainId();
+    const ethereumMessengerAddress = L1_CONTRACTS[l2ChainId].ETHEREUM_L2_MESSENGER;
     const ethereumMessenger = EthereumL2Messenger__factory.connect(
       ethereumMessengerAddress,
       this.l2Wallet,
@@ -85,6 +152,21 @@ export class EthereumRelayerService extends BaseRelayerService {
       callParameters.sourceChainId,
       callParameters.filler,
     ] as const;
+
+    const messageHash = this.createMessageHash(...parameters, BigNumber.from(l2ChainId));
+    const storedMessageHashStatus = await ethereumMessenger.messageHashes(messageHash);
+    const isMessageRelayed = storedMessageHashStatus == 2;
+
+    if (isMessageRelayed) {
+      console.log("Message has already been relayed..");
+
+      const resolverAddress = await ethereumMessenger.resolver();
+      return await this.findTransactionHashForMessage(
+        ...parameters,
+        BigNumber.from(l2ChainId),
+        resolverAddress,
+      );
+    }
 
     const estimatedGasLimit = await ethereumMessenger.estimateGas.relayMessage(...parameters);
 
