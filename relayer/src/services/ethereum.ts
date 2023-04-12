@@ -94,8 +94,6 @@ export class EthereumRelayerService extends BaseRelayerService {
             args.filler === filler &&
             args.fillId === fillId
           ) {
-            console.log(event.transactionHash);
-            process.exit();
             return event.transactionHash;
           }
         }
