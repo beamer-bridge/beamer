@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.3 (2023-03-09)
+
+* agent: properly handle HTTP 413 errors (notably used by QuickNode RPC)
+
 ## v1.0.2 (2023-02-17)
 
 * docs: added a section on updating to a new agent version
