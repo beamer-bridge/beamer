@@ -1,5 +1,32 @@
 # Changelog
 
+## v2.0.0 (2023-04-12)
+
+* change directory structure and add multiple sub commands to the beamer command (i.e. beamer agent ...)
+* contracts: implement Ethereum messengers in order to add Ethereum as a chain
+* contracts: add automatic withdrawal in ArbitrumL1Messenger
+* contracts: update to Solidity 0.8.19
+* contracts: implement new minLpFee calculation
+* agent: support multiple chain pairs in one process
+* agent: predefine allowance value per token per chain
+* agent: deprecate --source-chain and --target-chain options
+* agent: introduce poll period in agent config
+* agent: introduce confirmation blocks in agent config to wait for confirmation of events
+* agent: Use dynamic fee transactions on ETH2 chains (type 2)
+* relayer: relay to and from Ethereum
+* relayer: Handle redeem on Arbitrum even if message was already relayed
+* health-check: introduce health check script for agents
+* health-check: add monitoring for DAI
+* scripts: validate deployment config with apischema
+* dependencies: switch from brownie to ape
+* docs: add section about beamer commands
+* docs: add section containing latest mainnet addresses
+* frontend: add a checkbox to approve the maximum token allowance
+* frontend: add support for any injected provider
+* frontend: add DAI token support
+* frontend: add support for bridging from/to Ethereum mainnet
+* frontend: plenty of bug fixes
+
 ## v1.0.3 (2023-03-09)
 
 * agent: properly handle HTTP 413 errors (notably used by QuickNode RPC)
