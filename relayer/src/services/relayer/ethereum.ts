@@ -1,12 +1,13 @@
 import { BigNumber } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 
+import type { EthereumL2Messenger } from "../../../types-gen/contracts";
 import { EthereumL2Messenger__factory, Resolver__factory } from "../../../types-gen/contracts";
 import type { TypedEvent, TypedEventFilter } from "../../../types-gen/contracts/common";
 import { parseFillInvalidatedEvent } from "../../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../../common/events/RequestFilled";
 import type { TransactionHash } from "../types";
-import { BaseRelayerService } from "../types";
+import { BaseRelayerService, RelayStep } from "../types";
 
 type RelayCallParams = {
   requestId: string;
@@ -36,6 +37,22 @@ const L1_CONTRACTS: Record<
 const FILTER_BLOCKS_PER_ITERATION = 5000;
 
 export class EthereumRelayerService extends BaseRelayerService {
+  prepareStep = undefined;
+  relayTxToL1Step = new RelayStep(
+    async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
+    async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+  );
+  finalizeStep = undefined;
+
+  messenger: EthereumL2Messenger;
+
+  constructor(...args: ConstructorParameters<typeof BaseRelayerService>) {
+    super(...args);
+
+    const ethereumMessengerAddress = L1_CONTRACTS[this.l2ChainId].ETHEREUM_L2_MESSENGER;
+    this.messenger = EthereumL2Messenger__factory.connect(ethereumMessengerAddress, this.l2Wallet);
+  }
+
   async parseEventDataFromTxHash(
     l1TransactionHash: TransactionHash,
   ): Promise<RelayCallParams | null> {
@@ -130,31 +147,22 @@ export class EthereumRelayerService extends BaseRelayerService {
     return keccak256(encodedCall);
   }
 
-  async prepare(): Promise<boolean> {
-    return true;
-  }
-
-  async relayTxToL1(l1TransactionHash: TransactionHash): Promise<string | undefined> {
-    console.log("\nExecuting message on Ethereum L1.");
-
+  private async getCallParameters(l1TransactionHash: TransactionHash): Promise<RelayCallParams> {
     const callParameters = await this.parseEventDataFromTxHash(l1TransactionHash);
-
     if (!callParameters) {
       throw new Error(
         "Couldn't find a matching event (RequestFilled | FillInvalidated) in the transaction logs.",
       );
     }
+    return callParameters;
+  }
 
-    console.log("Found matching event. Proceeding with the next steps...");
+  private async isRelayCompleted(
+    l1TransactionHash: TransactionHash,
+  ): Promise<TransactionHash | false> {
+    const callParameters = await this.getCallParameters(l1TransactionHash);
 
-    // Execute EthereumL2Messenger.relayMessage
     const l2ChainId = await this.getL2ChainId();
-    const ethereumMessengerAddress = L1_CONTRACTS[l2ChainId].ETHEREUM_L2_MESSENGER;
-    const ethereumMessenger = EthereumL2Messenger__factory.connect(
-      ethereumMessengerAddress,
-      this.l2Wallet,
-    );
-
     const parameters = [
       callParameters.requestId,
       callParameters.fillId,
@@ -163,31 +171,46 @@ export class EthereumRelayerService extends BaseRelayerService {
     ] as const;
 
     const messageHash = this.createMessageHash(...parameters, BigNumber.from(l2ChainId));
-    const storedMessageHashStatus = await ethereumMessenger.messageHashes(messageHash);
+    const storedMessageHashStatus = await this.messenger.messageHashes(messageHash);
     const isMessageRelayed = storedMessageHashStatus == 2;
 
     if (isMessageRelayed) {
-      const resolverAddress = await ethereumMessenger.resolver();
+      console.log("Message has already been relayed..");
+
+      const resolverAddress = await this.messenger.resolver();
       const transactionHash = await this.findTransactionHashForMessage(
         ...parameters,
         BigNumber.from(l2ChainId),
         resolverAddress,
       );
-
-      if (transactionHash) {
-        console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
-        return transactionHash;
-      } else {
+      if (!transactionHash) {
         throw new Error(
           `Message has already been relayed but the related L1 transaction hash cannot be found. \n
           Did you properly configure the EthereumL2Messenger contract address & Resolver's deployed block number?`,
         );
       }
+      console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
+      return transactionHash;
     }
 
-    const estimatedGasLimit = await ethereumMessenger.estimateGas.relayMessage(...parameters);
+    return false;
+  }
 
-    const transaction = await ethereumMessenger.relayMessage(...parameters, {
+  private async relayTxToL1(l1TransactionHash: TransactionHash): Promise<TransactionHash> {
+    const callParameters = await this.getCallParameters(l1TransactionHash);
+
+    console.log("Ethereum execution");
+
+    const parameters = [
+      callParameters.requestId,
+      callParameters.fillId,
+      callParameters.sourceChainId,
+      callParameters.filler,
+    ] as const;
+
+    const estimatedGasLimit = await this.messenger.estimateGas.relayMessage(...parameters);
+
+    const transaction = await this.messenger.relayMessage(...parameters, {
       gasLimit: estimatedGasLimit,
     });
     const transactionReceipt = await transaction.wait();
@@ -195,9 +218,5 @@ export class EthereumRelayerService extends BaseRelayerService {
 
     console.log(`Successfully executed the message on L1. Transaction hash: ${transactionHash}\n`);
     return transactionHash;
-  }
-
-  async finalize(): Promise<void> {
-    return;
   }
 }

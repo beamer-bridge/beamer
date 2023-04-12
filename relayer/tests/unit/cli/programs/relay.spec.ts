@@ -1,6 +1,7 @@
 import type { ProgramOptions } from "@/cli/programs/relay";
 import { RelayerProgram } from "@/cli/programs/relay";
 import { getNetworkId } from "@/common/network";
+import type { ArbitrumRelayerService, PolygonZKEvmRelayerService } from "@/services";
 import { SERVICES } from "@/services/relayer/map";
 import {
   getRandomPrivateKey,
@@ -89,47 +90,90 @@ describe("RelayerProgram", () => {
 
   describe("run()", () => {
     it("runs all the necessary methods for successful relaying of a transaction", async () => {
-      const fromChainId = Number(Object.keys(SERVICES)[0]);
-      const toChainId = Number(Object.keys(SERVICES)[3]);
+      const fromChainId = 1101;
+      const toChainId = 42161;
       (getNetworkId as jest.Mock)
         .mockResolvedValueOnce(fromChainId)
         .mockResolvedValueOnce(toChainId)
         .mockResolvedValueOnce(L1_CHAIN_ID);
 
       const program = await RelayerProgram.createFromArgs(validOptions);
+      const relayerFrom = program.l2RelayerFrom as PolygonZKEvmRelayerService;
+      const relayerTo = program.l2RelayerTo as ArbitrumRelayerService;
 
-      jest.spyOn(program.l2RelayerTo, "prepare");
+      jest.spyOn(relayerTo.prepareStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.prepareStep, "isCompleted").mockResolvedValue(false);
       jest
-        .spyOn(program.l2RelayerFrom, "relayTxToL1")
+        .spyOn(relayerFrom.relayTxToL1Step, "execute")
         .mockResolvedValue(getRandomTransactionHash());
-      jest.spyOn(program.l2RelayerTo, "finalize");
+      jest.spyOn(relayerFrom.relayTxToL1Step, "isCompleted").mockResolvedValue(false);
+      jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
 
       await program.run();
 
-      expect(program.l2RelayerTo.prepare).toHaveBeenCalled();
-      expect(program.l2RelayerFrom.relayTxToL1).toHaveBeenCalled();
-      expect(program.l2RelayerTo.finalize).toHaveBeenCalled();
+      expect(relayerTo.prepareStep.execute).toHaveBeenCalled();
+      expect(relayerFrom.relayTxToL1Step.execute).toHaveBeenCalled();
+      expect(relayerTo.finalizeStep.execute).toHaveBeenCalled();
     });
 
-    it("ignores the `finalize` step when l1 transaction hash was not returned by the `relayTxToL1` step", async () => {
-      const fromChainId = Number(Object.keys(SERVICES)[0]);
-      const toChainId = Number(Object.keys(SERVICES)[3]);
+    it("ignores the `finalize` step when it is completed already", async () => {
+      const fromChainId = 1101;
+      const toChainId = 42161;
       (getNetworkId as jest.Mock)
         .mockResolvedValueOnce(fromChainId)
         .mockResolvedValueOnce(toChainId)
         .mockResolvedValueOnce(L1_CHAIN_ID);
 
       const program = await RelayerProgram.createFromArgs(validOptions);
+      const relayerFrom = program.l2RelayerFrom as PolygonZKEvmRelayerService;
+      const relayerTo = program.l2RelayerTo as ArbitrumRelayerService;
 
-      jest.spyOn(program.l2RelayerTo, "prepare");
-      jest.spyOn(program.l2RelayerFrom, "relayTxToL1").mockResolvedValue(undefined);
-      jest.spyOn(program.l2RelayerTo, "finalize");
+      jest.spyOn(relayerTo.prepareStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.prepareStep, "isCompleted").mockResolvedValue(false);
+      jest
+        .spyOn(relayerFrom.relayTxToL1Step, "execute")
+        .mockResolvedValue(getRandomTransactionHash());
+      jest.spyOn(relayerFrom.relayTxToL1Step, "isCompleted").mockResolvedValue(false);
+      jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue();
 
       await program.run();
 
-      expect(program.l2RelayerTo.prepare).toHaveBeenCalled();
-      expect(program.l2RelayerFrom.relayTxToL1).toHaveBeenCalled();
-      expect(program.l2RelayerTo.finalize).not.toHaveBeenCalled();
+      expect(relayerTo.prepareStep.execute).toHaveBeenCalled();
+      expect(relayerFrom.relayTxToL1Step.execute).toHaveBeenCalled();
+      expect(relayerTo.finalizeStep.isCompleted).toHaveBeenCalled();
+      expect(relayerTo.finalizeStep.execute).not.toHaveBeenCalled();
+    });
+
+    it("ignores the `prepare` step when `relay` step is completed already", async () => {
+      const fromChainId = 1101;
+      const toChainId = 42161;
+      (getNetworkId as jest.Mock)
+        .mockResolvedValueOnce(fromChainId)
+        .mockResolvedValueOnce(toChainId)
+        .mockResolvedValueOnce(L1_CHAIN_ID);
+
+      const program = await RelayerProgram.createFromArgs(validOptions);
+      const relayerFrom = program.l2RelayerFrom as PolygonZKEvmRelayerService;
+      const relayerTo = program.l2RelayerTo as ArbitrumRelayerService;
+
+      jest.spyOn(relayerTo.prepareStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.prepareStep, "isCompleted").mockResolvedValue(false);
+      jest
+        .spyOn(relayerFrom.relayTxToL1Step, "execute")
+        .mockResolvedValue(getRandomTransactionHash());
+      jest
+        .spyOn(relayerFrom.relayTxToL1Step, "isCompleted")
+        .mockResolvedValue(getRandomTransactionHash());
+      jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
+
+      await program.run();
+
+      expect(relayerTo.prepareStep.execute).not.toHaveBeenCalled();
+      expect(relayerFrom.relayTxToL1Step.execute).not.toHaveBeenCalled();
+      expect(relayerTo.finalizeStep.execute).toHaveBeenCalled();
     });
   });
 });

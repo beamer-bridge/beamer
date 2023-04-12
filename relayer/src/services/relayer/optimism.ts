@@ -8,10 +8,18 @@ import {
 import type { TransactionResponse } from "@ethersproject/providers";
 
 import type { TransactionHash } from "../types";
-import { BaseRelayerService } from "../types";
+import { BaseRelayerService, RelayStep } from "../types";
 
 export class OptimismRelayerService extends BaseRelayerService {
   customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
+
+  prepareStep = undefined;
+  relayTxToL1Step = new RelayStep(
+    async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
+    async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+  );
+  finalizeStep = undefined;
+
   messenger: CrossChainMessenger;
 
   /**
@@ -102,6 +110,25 @@ export class OptimismRelayerService extends BaseRelayerService {
     return isWithdrawn;
   }
 
+  private async isRelayCompleted(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash | false> {
+    await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
+    const message = await this.getMessageInTransaction(l2TransactionHash);
+    const status = await this.messenger.getMessageStatus(message);
+
+    console.log(`Message status: ${MessageStatus[status]}`);
+    if (status === MessageStatus.RELAYED) {
+      const receipt = await this.messenger.waitForMessageReceipt(message);
+      console.log(
+        `Message already relayed with tx hash: ${receipt.transactionReceipt.transactionHash}`,
+      );
+      return receipt.transactionReceipt.transactionHash;
+    }
+
+    return false;
+  }
+
   private async relayMessageViaCrossDomainMessenger(
     message: CrossChainMessage,
   ): Promise<TransactionResponse> {
@@ -158,25 +185,12 @@ export class OptimismRelayerService extends BaseRelayerService {
     return true;
   }
 
-  async prepare(): Promise<boolean> {
-    return true;
-  }
-
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
+  private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash> {
     console.log("Optimism outbox execution.");
-
     await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
+
     const message = await this.getMessageInTransaction(l2TransactionHash);
     const status = await this.messenger.getMessageStatus(message);
-
-    console.log(`Message status: ${MessageStatus[status]}`);
-    if (status === MessageStatus.RELAYED) {
-      const receipt = await this.messenger.waitForMessageReceipt(message);
-      console.log(
-        `Message already relayed with tx hash: ${receipt.transactionReceipt.transactionHash}`,
-      );
-      return receipt.transactionReceipt.transactionHash;
-    }
 
     if (status !== MessageStatus.READY_FOR_RELAY) {
       throw new Error("Message not ready for relaying.");
@@ -184,7 +198,6 @@ export class OptimismRelayerService extends BaseRelayerService {
 
     // Now we can relay the message to L1.
     console.log("Relaying...");
-
     await this.safeRelayMessage(message);
     const receipt = await this.messenger.waitForMessageReceipt(message);
 
@@ -195,9 +208,5 @@ export class OptimismRelayerService extends BaseRelayerService {
     } else {
       throw new Error("Message relaying failed!");
     }
-  }
-
-  async finalize(): Promise<void> {
-    return;
   }
 }
