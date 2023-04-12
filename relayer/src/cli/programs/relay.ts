@@ -1,13 +1,13 @@
 import { getNetworkId } from "../../common/network";
 import { createRelayer } from "../../services/relayer/map";
-import type { BaseRelayerService } from "../../services/types";
+import type { BaseRelayerService, TransactionHash } from "../../services/types";
 
 export type ProgramOptions = {
   l1RpcUrl: string;
   l2RelayFromRpcUrl: string;
   l2RelayToRpcUrl: string;
   walletPrivateKey: string;
-  l2TransactionHash: string;
+  l2TransactionHash: TransactionHash;
   networkFrom?: string;
   networkTo?: string;
 };
@@ -16,7 +16,7 @@ export class RelayerProgram {
   constructor(
     readonly l2RelayerFrom: BaseRelayerService,
     readonly l2RelayerTo: BaseRelayerService,
-    readonly l2TransactionHash: string,
+    readonly l2TransactionHash: TransactionHash,
   ) {}
 
   static validateArgs(args: ProgramOptions): Array<string> {
@@ -59,10 +59,33 @@ export class RelayerProgram {
   }
 
   async run(): Promise<void> {
-    await this.l2RelayerTo.prepare();
-    const l1TransactionHash = await this.l2RelayerFrom.relayTxToL1(this.l2TransactionHash);
-    if (l1TransactionHash) {
-      await this.l2RelayerTo.finalize(l1TransactionHash);
+    const relayStepCompleted = await this.l2RelayerFrom.relayTxToL1Step.isCompleted(
+      this.l2TransactionHash,
+    );
+    let l1TransactionHash: string;
+
+    if (relayStepCompleted === false) {
+      if (this.l2RelayerTo.prepareStep) {
+        const prepareStepCompleted = await this.l2RelayerTo.prepareStep.isCompleted();
+
+        if (prepareStepCompleted === false) {
+          await this.l2RelayerTo.prepareStep.execute();
+        }
+      }
+
+      l1TransactionHash = await this.l2RelayerFrom.relayTxToL1Step.execute(this.l2TransactionHash);
+    } else {
+      l1TransactionHash = relayStepCompleted;
+    }
+
+    if (this.l2RelayerTo.finalizeStep) {
+      const finalizeStepCompleted = await this.l2RelayerTo.finalizeStep.isCompleted(
+        l1TransactionHash,
+      );
+
+      if (finalizeStepCompleted === false) {
+        await this.l2RelayerTo.finalizeStep.execute(l1TransactionHash);
+      }
     }
   }
 }

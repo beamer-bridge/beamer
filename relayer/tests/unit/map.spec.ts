@@ -6,28 +6,34 @@ import {
 } from "@/services/relayer";
 import { createRelayer } from "@/services/relayer/map";
 import type { BaseRelayerService } from "@/services/types";
-import { getRandomNumber, getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
+import { getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
 
 jest.mock("@eth-optimism/sdk");
 
-describe("createRelayer", () => {
-  const testArgs: ConstructorParameters<typeof BaseRelayerService> = [
+function createTestArgs(
+  l1ChainId: number,
+  l2ChainId: number,
+  destinationChainId?: number,
+): ConstructorParameters<typeof BaseRelayerService> {
+  return [
     getRandomUrl("l1"),
     getRandomUrl("l2"),
     getRandomPrivateKey(),
-    getRandomNumber(),
-    getRandomNumber(),
-    getRandomNumber(),
+    l1ChainId,
+    l2ChainId,
+    destinationChainId,
   ];
+}
 
+describe("createRelayer", () => {
   it("maps arbitrum chain ids to an ArbitrumRelayerService", () => {
     const chainId = 42161;
     const goerliChainId = 421613;
     const testnetChainId = 412346;
 
-    const relayer = createRelayer(chainId, testArgs);
-    const goerliRelayer = createRelayer(goerliChainId, testArgs);
-    const testnetRelayer = createRelayer(testnetChainId, testArgs);
+    const relayer = createRelayer(chainId, createTestArgs(1, chainId));
+    const goerliRelayer = createRelayer(goerliChainId, createTestArgs(5, goerliChainId));
+    const testnetRelayer = createRelayer(testnetChainId, createTestArgs(1337, testnetChainId));
 
     expect(relayer instanceof ArbitrumRelayerService).toBe(true);
     expect(goerliRelayer instanceof ArbitrumRelayerService).toBe(true);
@@ -38,8 +44,8 @@ describe("createRelayer", () => {
     const chainId = 288;
     const goerliChainId = 2888;
 
-    const relayer = createRelayer(chainId, testArgs);
-    const goerliRelayer = createRelayer(goerliChainId, testArgs);
+    const relayer = createRelayer(chainId, createTestArgs(1, chainId));
+    const goerliRelayer = createRelayer(goerliChainId, createTestArgs(5, goerliChainId));
 
     expect(relayer instanceof BobaRelayerService).toBe(true);
     expect(goerliRelayer instanceof BobaRelayerService).toBe(true);
@@ -49,8 +55,8 @@ describe("createRelayer", () => {
     const chainId = 10;
     const goerliChainId = 420;
 
-    const relayer = createRelayer(chainId, testArgs);
-    const goerliRelayer = createRelayer(goerliChainId, testArgs);
+    const relayer = createRelayer(chainId, createTestArgs(1, chainId));
+    const goerliRelayer = createRelayer(goerliChainId, createTestArgs(5, goerliChainId));
 
     expect(relayer instanceof OptimismRelayerService).toBe(true);
     expect(goerliRelayer instanceof OptimismRelayerService).toBe(true);
@@ -61,9 +67,9 @@ describe("createRelayer", () => {
     const goerliChainId = 5;
     const localChainId = 1337;
 
-    const relayer = createRelayer(chainId, testArgs);
-    const goerliRelayer = createRelayer(goerliChainId, testArgs);
-    const localChainRelayer = createRelayer(localChainId, testArgs);
+    const relayer = createRelayer(chainId, createTestArgs(1, chainId));
+    const goerliRelayer = createRelayer(goerliChainId, createTestArgs(5, goerliChainId));
+    const localChainRelayer = createRelayer(localChainId, createTestArgs(1337, localChainId));
 
     expect(relayer instanceof EthereumRelayerService).toBe(true);
     expect(goerliRelayer instanceof EthereumRelayerService).toBe(true);
@@ -72,7 +78,7 @@ describe("createRelayer", () => {
 
   it("throws for unknown chain ids", () => {
     const chainId = 9372855;
-    expect(() => createRelayer(chainId, testArgs)).toThrow(
+    expect(() => createRelayer(chainId, createTestArgs(1, chainId))).toThrow(
       `No relayer program found for ${chainId}!`,
     );
   });

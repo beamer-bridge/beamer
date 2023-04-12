@@ -27,6 +27,10 @@ export abstract class BaseRelayerService {
   readonly l2ChainId: number;
   readonly destinationChainId?: number;
 
+  abstract readonly prepareStep?: PrepareStep;
+  abstract readonly relayTxToL1Step: RelayStep;
+  abstract readonly finalizeStep?: FinalizeStep;
+
   constructor(
     l1RpcURL: string,
     l2RpcURL: string,
@@ -68,8 +72,15 @@ export abstract class BaseRelayerService {
   addCustomNetwork(_filePath: string): void {
     return;
   }
-
-  abstract prepare(): Promise<boolean>;
-  abstract relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined>;
-  abstract finalize(l1TransactionHash: TransactionHash): Promise<void>;
 }
+
+abstract class Step<T, U> {
+  constructor(
+    public execute: (arg: T) => Promise<U>,
+    public isCompleted: (arg: T) => Promise<U | false>,
+  ) {}
+}
+
+export class PrepareStep extends Step<void, void> {}
+export class RelayStep extends Step<TransactionHash, TransactionHash> {}
+export class FinalizeStep extends Step<TransactionHash, void> {}

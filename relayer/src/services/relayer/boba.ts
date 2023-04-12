@@ -1,7 +1,8 @@
+import type { CrossChainMessage } from "@eth-optimism/sdk-1.0.2";
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk-1.0.2";
 
 import type { TransactionHash } from "../types";
-import { BaseRelayerService } from "../types";
+import { BaseRelayerService, RelayStep } from "../types";
 
 const L1_CONTRACTS = {
   288: {
@@ -23,23 +24,30 @@ const L1_CONTRACTS = {
 };
 
 export class BobaRelayerService extends BaseRelayerService {
-  async prepare(): Promise<boolean> {
-    return true;
-  }
+  prepareStep = undefined;
+  relayTxToL1Step = new RelayStep(
+    async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
+    async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+  );
+  finalizeStep = undefined;
 
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
-    console.log("Boba outbox execution.");
+  messenger: CrossChainMessenger;
 
-    const messenger = new CrossChainMessenger({
+  constructor(...args: ConstructorParameters<typeof BaseRelayerService>) {
+    super(...args);
+
+    this.messenger = new CrossChainMessenger({
       contracts: {
-        l1: L1_CONTRACTS[await this.getL2ChainId()],
+        l1: L1_CONTRACTS[this.l2ChainId],
       },
       l1SignerOrProvider: this.l1Wallet,
       l2SignerOrProvider: this.l2RpcProvider,
-      l1ChainId: await this.getL1ChainId(),
+      l1ChainId: this.l1ChainId,
     });
+  }
 
-    const messages = await messenger.getMessagesByTransaction(l2TransactionHash);
+  private async getMessage(l2TransactionHash: TransactionHash): Promise<CrossChainMessage> {
+    const messages = await this.messenger.getMessagesByTransaction(l2TransactionHash);
 
     // No messages in this transaction, so there's nothing to do
     if (messages.length === 0) {
@@ -49,33 +57,49 @@ export class BobaRelayerService extends BaseRelayerService {
       throw new Error(`Multiple messages found in L2 transaction ${l2TransactionHash}.`);
     }
 
-    const message = messages[0];
-    const status = await messenger.getMessageStatus(message);
+    return messages[0];
+  }
+
+  private async isRelayCompleted(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash | false> {
+    const message = await this.getMessage(l2TransactionHash);
+
+    const status = await this.messenger.getMessageStatus(message);
 
     console.log(`Message status: ${MessageStatus[status]}`);
     if (status === MessageStatus.RELAYED) {
-      const receipt = await messenger.waitForMessageReceipt(message);
+      const receipt = await this.messenger.waitForMessageReceipt(message);
       console.log(
         `Message already relayed with tx hash: ${receipt.transactionReceipt.transactionHash}`,
       );
       return receipt.transactionReceipt.transactionHash;
     }
 
+    return false;
+  }
+
+  private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash> {
+    const message = await this.getMessage(l2TransactionHash);
+
+    const status = await this.messenger.getMessageStatus(message);
     if (status !== MessageStatus.READY_FOR_RELAY) {
       throw new Error("Message not ready for relaying.");
     }
 
+    console.log("Boba outbox execution.");
+
     // Now we can relay the message to L1.
     console.log("Relaying...");
     try {
-      await messenger.finalizeMessage(message);
+      await this.messenger.finalizeMessage(message);
     } catch (err) {
       if (!(err instanceof Error && err.message.includes("message has already been received."))) {
         throw err;
       } // Otherwise the message was relayed by someone else
     }
 
-    const receipt = await messenger.waitForMessageReceipt(message, { confirmations: 1 });
+    const receipt = await this.messenger.waitForMessageReceipt(message, { confirmations: 1 });
 
     console.log(`Transaction hash: ${receipt.transactionReceipt.transactionHash}`);
 
@@ -85,9 +109,5 @@ export class BobaRelayerService extends BaseRelayerService {
     } else {
       throw new Error("Message relaying failed!");
     }
-  }
-
-  async finalize(): Promise<void> {
-    return;
   }
 }

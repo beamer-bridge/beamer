@@ -2,10 +2,11 @@ import type { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { readFileSync } from "fs";
 
 import { PolygonZKEvmBridge__factory } from "../../../types-gen/contracts";
+import type { BridgeEventData } from "../../common/events/polygon-zkevm/BridgeEvent";
 import { parseBridgeEvent } from "../../common/events/polygon-zkevm/BridgeEvent";
 import { sleep } from "../../common/util";
 import type { TransactionHash } from "../types";
-import { BaseRelayerService } from "../types";
+import { BaseRelayerService, FinalizeStep, RelayStep } from "../types";
 
 const CONTRACTS: Record<number, NetworkContracts> = {
   1101: {
@@ -31,6 +32,16 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
   MERKLE_PROOF_ENDPOINT = "/merkle-proof";
   BRIDGES_ENDPOINT = "/bridge";
   customNetworkContracts?: NetworkContracts;
+
+  prepareStep = undefined;
+  relayTxToL1Step = new RelayStep(
+    async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
+    async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+  );
+  finalizeStep = new FinalizeStep(
+    async (l1TransactionHash) => await this.finalize(l1TransactionHash),
+    async (l1TransactionHash) => await this.isFinalizeCompleted(l1TransactionHash),
+  );
 
   async getNetworkConfig(): Promise<NetworkContracts> {
     const l2NetworkId = await this.getL2ChainId();
@@ -105,45 +116,61 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     }
   }
 
-  async prepare(): Promise<boolean> {
-    return true;
-  }
-
-  async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string | undefined> {
-    console.log("\nClaiming PolygonZKEVM message on Ethereum L1.");
-
+  private async getRelayBridgeEventParameters(
+    l2TransactionHash: TransactionHash,
+  ): Promise<BridgeEventData> {
     const receipt = await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1, 300000);
 
     this.checkTransactionValidity(receipt, "Polygon ZKEvm");
 
     // 1. Extract bridge event parameters required for claiming a message
-    const bridgeEventParameters = await parseBridgeEvent(receipt.logs);
+    const bridgeEventParameters = parseBridgeEvent(receipt.logs);
     if (!bridgeEventParameters) {
       throw new Error(
         `Cannot find an event ("BridgeEvent") in the L2 transaction ${l2TransactionHash}`,
       );
     }
     console.log("Found BridgeEvent. Proceeding with the next steps...");
+    return bridgeEventParameters;
+  }
 
+  private async isRelayCompleted(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash | false> {
+    const relayBridgeEventParameters = await this.getRelayBridgeEventParameters(l2TransactionHash);
     // 2. Fetch message data
-    const message = await this.getMessageInfoSafe(
-      bridgeEventParameters.depositCount,
-      bridgeEventParameters.originNetwork,
+    const relayMessage = await this.getMessageInfoSafe(
+      relayBridgeEventParameters.depositCount,
+      relayBridgeEventParameters.originNetwork,
     );
 
     // 3. Check if the message was already claimed on the destination network
-    if (message.claim_tx_hash.length) {
-      console.log(`Message already relayed to L1 with transaction hash: ${message.claim_tx_hash}`);
-      return message.claim_tx_hash;
+    if (relayMessage.claim_tx_hash.length) {
+      console.log(
+        `Message already relayed to L1 with transaction hash: ${relayMessage.claim_tx_hash}`,
+      );
+      return relayMessage.claim_tx_hash;
     }
+
+    return false;
+  }
+
+  private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string> {
+    console.log("\nClaiming PolygonZKEVM message on Ethereum L1.");
+    const relayBridgeEventParameters = await this.getRelayBridgeEventParameters(l2TransactionHash);
+    // 2. Fetch message data
+    const relayMessage = await this.getMessageInfoSafe(
+      relayBridgeEventParameters.depositCount,
+      relayBridgeEventParameters.originNetwork,
+    );
 
     // 4. Wait until the message is ready to be claimed
     console.log("Waiting for message to be ready for claiming.");
-    let readyForClaim = message.ready_for_claim;
+    let readyForClaim = relayMessage.ready_for_claim;
     while (!readyForClaim) {
       const { ready_for_claim } = await this.getMessageInfoSafe(
-        bridgeEventParameters.depositCount,
-        bridgeEventParameters.originNetwork,
+        relayBridgeEventParameters.depositCount,
+        relayBridgeEventParameters.originNetwork,
       );
 
       readyForClaim = ready_for_claim;
@@ -158,8 +185,8 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
     // 5. Fetch merkle proof
     const { proof } = await this.getMessageMerkleProof(
-      bridgeEventParameters.depositCount,
-      bridgeEventParameters.originNetwork,
+      relayBridgeEventParameters.depositCount,
+      relayBridgeEventParameters.originNetwork,
     );
     console.log("Found MerkleProof, proceeding with the next steps...");
 
@@ -172,15 +199,15 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
     const L1ClaimTxHash = await polygonBridgeContract.claimMessage(
       proof.merkle_proof,
-      bridgeEventParameters.depositCount,
+      relayBridgeEventParameters.depositCount,
       proof.main_exit_root,
       proof.rollup_exit_root,
-      bridgeEventParameters.originNetwork,
-      bridgeEventParameters.originAddress,
-      bridgeEventParameters.destinationNetwork,
-      bridgeEventParameters.destinationAddress,
-      bridgeEventParameters.amount,
-      bridgeEventParameters.metadata,
+      relayBridgeEventParameters.originNetwork,
+      relayBridgeEventParameters.originAddress,
+      relayBridgeEventParameters.destinationNetwork,
+      relayBridgeEventParameters.destinationAddress,
+      relayBridgeEventParameters.amount,
+      relayBridgeEventParameters.metadata,
     );
 
     console.log("Claim message transaction sent: ", L1ClaimTxHash.hash);
@@ -191,9 +218,9 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     return L1ClaimTxHash.hash;
   }
 
-  async finalize(l1TransactionHash: string): Promise<void> {
-    console.log("\nClaiming message travelling to PolygonZKEVM");
-
+  private async getFinalizeBridgeEventParameters(
+    l1TransactionHash: TransactionHash,
+  ): Promise<BridgeEventData> {
     const receipt = await this.l1RpcProvider.waitForTransaction(l1TransactionHash, 1, 300000);
 
     this.checkTransactionValidity(receipt, "L1");
@@ -206,26 +233,48 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
       );
     }
     console.log("Found BridgeEvent. Proceeding with the next steps...");
+    return bridgeEventParameters;
+  }
 
+  private async isFinalizeCompleted(l1TransactionHash: string): Promise<void | false> {
+    const finalizeBridgeEventParameters = await this.getFinalizeBridgeEventParameters(
+      l1TransactionHash,
+    );
     // 2. Fetch message data
-    const message = await this.getMessageInfoSafe(
-      bridgeEventParameters.depositCount,
-      bridgeEventParameters.originNetwork,
+    const finalizeMessage = await this.getMessageInfoSafe(
+      finalizeBridgeEventParameters.depositCount,
+      finalizeBridgeEventParameters.originNetwork,
     );
 
     // 3. Check if the message was already claimed on the destination network
-    if (message.claim_tx_hash.length) {
-      console.log(`Message already relayed to L2 with transaction hash: ${message.claim_tx_hash}`);
+    if (finalizeMessage.claim_tx_hash.length) {
+      console.log(
+        `Message already relayed to L2 with transaction hash: ${finalizeMessage.claim_tx_hash}`,
+      );
       return;
     }
 
+    return false;
+  }
+
+  private async finalize(l1TransactionHash: string): Promise<void> {
+    console.log("\nClaiming message travelling to PolygonZKEVM");
+    const finalizeBridgeEventParameters = await this.getFinalizeBridgeEventParameters(
+      l1TransactionHash,
+    );
+    // 2. Fetch message data
+    const finalizeMessage = await this.getMessageInfoSafe(
+      finalizeBridgeEventParameters.depositCount,
+      finalizeBridgeEventParameters.originNetwork,
+    );
+
     // 4. Wait until the message is ready to be claimed
     console.log("Waiting for message to be ready for claiming.");
-    let readyForClaim = message.ready_for_claim;
+    let readyForClaim = finalizeMessage.ready_for_claim;
     while (!readyForClaim) {
       const { ready_for_claim } = await this.getMessageInfoSafe(
-        bridgeEventParameters.depositCount,
-        bridgeEventParameters.originNetwork,
+        finalizeBridgeEventParameters.depositCount,
+        finalizeBridgeEventParameters.originNetwork,
       );
 
       readyForClaim = ready_for_claim;
@@ -240,8 +289,8 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
     // 5. Fetch merkle proof
     const { proof } = await this.getMessageMerkleProof(
-      bridgeEventParameters.depositCount,
-      bridgeEventParameters.originNetwork,
+      finalizeBridgeEventParameters.depositCount,
+      finalizeBridgeEventParameters.originNetwork,
     );
     console.log("Found MerkleProof, proceeding with the next steps...");
 
@@ -254,15 +303,15 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
     const L2ClaimTxHash = await polygonBridgeContract.claimMessage(
       proof.merkle_proof,
-      bridgeEventParameters.depositCount,
+      finalizeBridgeEventParameters.depositCount,
       proof.main_exit_root,
       proof.rollup_exit_root,
-      bridgeEventParameters.originNetwork,
-      bridgeEventParameters.originAddress,
-      bridgeEventParameters.destinationNetwork,
-      bridgeEventParameters.destinationAddress,
-      bridgeEventParameters.amount,
-      bridgeEventParameters.metadata,
+      finalizeBridgeEventParameters.originNetwork,
+      finalizeBridgeEventParameters.originAddress,
+      finalizeBridgeEventParameters.destinationNetwork,
+      finalizeBridgeEventParameters.destinationAddress,
+      finalizeBridgeEventParameters.amount,
+      finalizeBridgeEventParameters.metadata,
     );
 
     console.log("Claim message transaction sent: ", L2ClaimTxHash.hash);
