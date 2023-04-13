@@ -12,7 +12,7 @@ password = "test"
 [metrics]
 prometheus-port = 9101
 
-[chains.l1]
+[base-chain]
 rpc-url = "GOERLI_TESTNET_RPC_URL"
 poll-period = 60.0
 
