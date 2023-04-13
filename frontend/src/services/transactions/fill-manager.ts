@@ -36,13 +36,13 @@ export function waitForFulfillment(
     FillManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const eventFilter = contract.filters.RequestFilled(requestIdentifier);
   const promise = new Promise<void>((resolve) => {
     const cleanUpAndResolve = () => {
       contract.removeAllListeners();
       resolve();
     };
 
+    const eventFilter = contract.filters.RequestFilled(requestIdentifier);
     contract.on(eventFilter, getSafeEventHandler(cleanUpAndResolve, contract.provider));
 
     checkForPastFulfillmentEvent(
