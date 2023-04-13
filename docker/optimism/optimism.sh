@@ -24,6 +24,8 @@ down() {
 up() {
     echo "Starting the end-to-end environment"
     docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
+    # FIXME: Need removal after: https://github.com/beamer-bridge/beamer/issues/1242
+    export DOCKER_TAG_MESSAGE_RELAYER=0.5.25
     docker compose ${docker_compose_file} up -d
 
     echo "Wait to make sure all services are up and running"
