@@ -55,33 +55,41 @@ export const useRequestSourceInputValidations = (
     };
 
     if (options.selectedToken.value) {
-      const selectedTokenValue = options.selectedToken.value.value;
-      const selectedTokenDecimals = selectedTokenValue.decimals;
       const selectedAmountRules = {
         required: helpers.withMessage('Amount is required', required),
         isMatchingDecimals: helpers.withMessage(
-          `Max. number of decimals: ${selectedTokenDecimals}`,
-          makeMatchingDecimalsValidator(selectedTokenDecimals),
+          () => `Max. number of decimals: ${options.selectedToken.value?.value.decimals}`,
+          (value: string) => {
+            if (!value || !options.selectedToken.value) {
+              return true;
+            }
+            return makeMatchingDecimalsValidator(options.selectedToken.value.value.decimals)(
+              value,
+            );
+          },
         ),
       };
       Object.assign(rules.selectedAmount, selectedAmountRules);
 
       if (options.selectedTokenAmount.value) {
-        const min = TokenAmount.parse(
-          `0.${'0'.repeat(selectedTokenDecimals - 1)}1`,
-          selectedTokenValue,
-        );
         const selectedTokenAmountRules = {
-          minValue: helpers.withMessage(
-            `Must be a positive number`,
-            makeMinTokenAmountValidator(min),
-          ),
+          minValue: helpers.withMessage(`Must be a positive number`, (value: TokenAmount) => {
+            if (!value || !options.selectedToken.value) {
+              return true;
+            }
+
+            const min = TokenAmount.parse(
+              `0.${'0'.repeat(options.selectedToken.value.value.decimals - 1)}1`,
+              options.selectedToken.value.value,
+            );
+            return makeMinTokenAmountValidator(min)(value);
+          }),
         };
 
         if (options.transferLimitTokenAmount.value) {
           Object.assign(selectedTokenAmountRules, {
             maxValue: helpers.withMessage(
-              'Transfer limit: ' + options.transferLimitTokenAmount.value.formatFullValue(),
+              () => 'Transfer limit: ' + options.transferLimitTokenAmount.value?.formatFullValue(),
               (value: TokenAmount) => {
                 if (
                   !value ||
