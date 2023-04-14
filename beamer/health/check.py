@@ -44,6 +44,7 @@ class HealthConfig(TypedDict):
     agent_address: str
     deployment_dir: Path
     notification_system: str
+    notification_message_prefix: str
     rpcs: dict[int, str]
     explorers: dict[int, str]
     notification: NotificationConfig
@@ -149,6 +150,7 @@ def _set_config(path: Path) -> None:
         "agent_address": config["agent-address"].lower(),
         "deployment_dir": Path(config["deployment-dir"]),
         "notification_system": config["notification-system"],
+        "notification_message_prefix": config["notification-message-prefix"],
         "rpcs": rpcs,
         "explorers": explorers,
         "notification": config["notification"],
@@ -461,7 +463,7 @@ def analyze_transfers(transfers: TransferMap, ctx: Context) -> None:
 
     message: Message = {
         "text": f"""
-v1: Processing complete. {processing_status}
+{config["notification_message_prefix"]}: Processing complete. {processing_status}
 {render_liquidity_info()}
 Total requests in network: {ctx.stats.requests}
 Total expired requests in network: {ctx.stats.expired_requests}
@@ -501,6 +503,7 @@ def create_unclaimed_fill_notification(
     request: RequestCreated, fill: RequestFilled, ctx: Context
 ) -> Notification:
     transfer_value = get_transfer_value_formatted(request, ctx.token_deployments, ctx.tokens)
+    config = get_config()
 
     return {
         "meta": {
@@ -509,7 +512,7 @@ def create_unclaimed_fill_notification(
             "message_link": link_to_explorer(request.event_chain_id, request.tx_hash.hex()),
         },
         "body": f"""
-v1: Unclaimed fill!
+{config["notification_message_prefix"]}: Unclaimed fill!
 Request: `{request.request_id.hex()}`
 Value: `{transfer_value}`
 Block: `{request.block_number}`
@@ -523,6 +526,7 @@ Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_unti
 
 def create_expired_request_notification(request: RequestCreated, ctx: Context) -> Notification:
     transfer_value = get_transfer_value_formatted(request, ctx.token_deployments, ctx.tokens)
+    config = get_config()
 
     return {
         "meta": {
@@ -531,7 +535,7 @@ def create_expired_request_notification(request: RequestCreated, ctx: Context) -
             "message_link": link_to_explorer(request.event_chain_id, request.tx_hash.hex()),
         },
         "body": f"""
-Request expired with no fill {request.request_id.hex()}
+{config["notification_message_prefix"]}: Request expired with no fill {request.request_id.hex()}
 Request: `{request.request_id.hex()}`
 Value: `{transfer_value}`
 Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_until)
@@ -548,6 +552,7 @@ def create_challenge_game_notification(
         NotificationTypes.CHALLENGE_GAME: "Challenge game!",
         NotificationTypes.CHALLENGE_GAME_CLAIMED_BY_SOMEONE_ELSE: "Claimed by someone else!",
     }
+    config = get_config()
 
     return {
         "meta": {
@@ -556,7 +561,7 @@ def create_challenge_game_notification(
             "message_link": link_to_explorer(request.event_chain_id, last_claim.tx_hash.hex()),
         },
         "body": f"""
-v1: {title[message_type]}
+{config["notification_message_prefix"]}: : {title[message_type]}
 Request: `{request.request_id.hex()}`
 Claim_id: `{last_claim.claim_id}`
 Request filled by: `{fill.filler}` | `{fill.tx_hash.hex()}`
