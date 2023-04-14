@@ -1,0 +1,97 @@
+{
+    "deployment_dir": "deployments/mainnet",
+    "chains": {
+        "1": {
+            "name": "Ethereum",
+            "rpc": "https://eth-mainnet.g.alchemy.com/v2/846ZyXYGItwqGPXIGYxzxjmZAhUlRbf6",
+            "tokens": [
+                [
+                    "USDC",
+                    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                ],
+                [
+                    "DAI",
+                    "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+                ]
+            ]
+        },
+        "10": {
+            "name": "Optimism",
+            "rpc": "https://opt-mainnet.g.alchemy.com/v2/vwHU74Q04-hqpB-8gHIAQcQ1rsBipjPX",
+            "tokens": [
+                [
+                    "USDC",
+                    "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+                ],
+                [
+                    "DAI",
+                    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+                ]
+            ]
+        },
+        "42161": {
+            "name": "Arbitrum",
+            "rpc": "https://arb-mainnet.g.alchemy.com/v2/u66kdJE3hM6rh0sYAcV6PqTee9YbIP-F",
+            "tokens": [
+                [
+                    "USDC",
+                    "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+                ],
+                [
+                    "DAI",
+                    "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+                ]
+            ]
+        }
+    },
+    "commands": [
+        {
+            "name": "updateChain",
+            "params": [
+                {
+                    "key": 1,
+                    "values": {
+                        "finality_period": "",
+                        "transfer_cost": "",
+                        "target_weight_ppm": ""
+                    }
+                },
+                {
+                    "key": 10,
+                    "values": {
+                        "finality_period": "",
+                        "transfer_cost": "",
+                        "target_weight_ppm": ""
+                    }
+                },
+                {
+                    "key": 42161,
+                    "values": {
+                        "finality_period": "",
+                        "transfer_cost": "",
+                        "target_weight_ppm": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "updateToken",
+            "params": [
+                {
+                    "key": "USDC",
+                    "values": {
+                        "transfer_limit": 50000000000,
+                        "eth_in_token": ""
+                    }
+                },
+                {
+                    "key": "DAI",
+                    "values": {
+                        "transfer_limit": 50000000000000000000000,
+                        "eth_in_token": ""
+                    }
+                }
+            ]
+        }
+    ]
+}

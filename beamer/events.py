@@ -142,7 +142,7 @@ class FillInvalidated(TxEvent, TargetChainEvent):
     fill_id: FillId
 
 
-def _camel_to_snake(s: str) -> str:
+def camel_to_snake(s: str) -> str:
     snake = "".join(
         "%c_" % current if current.islower() and next.isupper() else current.lower()
         for current, next in pairwise(s)
@@ -198,7 +198,7 @@ def _decode_event(
     event_abi = event_abis[topic]
     data = get_event_data(abi_codec=codec, event_abi=event_abi, log_entry=log_entry)
     if data.event in _EVENT_TYPES:
-        kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
+        kwargs = {camel_to_snake(name): value for name, value in data.args.items()}
         kwargs["event_chain_id"] = chain_id
         kwargs["block_number"] = log_entry["blockNumber"]
         kwargs["tx_hash"] = log_entry["transactionHash"]
