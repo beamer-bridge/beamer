@@ -5,19 +5,13 @@ import pytest
 from hexbytes import HexBytes
 
 from beamer.agent.chain import process_claims
-from beamer.agent.events import (
-    FillInvalidated,
-    FillInvalidatedResolved,
-    InitiateL1InvalidationEvent,
-)
+from beamer.agent.events import FillInvalidated, FillInvalidatedResolved
 from beamer.agent.state_machine import process_event
 from beamer.agent.typing import ClaimId, FillId, Termination
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
     BLOCK_NUMBER,
-    CLAIM_ID,
-    TARGET_CHAIN_ID,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
@@ -208,29 +202,3 @@ def test_maybe_withdraw_after_invalidation(mocked_withdraw, test_data):
     process_claims(context)
 
     assert should_withdraw == mocked_withdraw.called
-
-
-@pytest.mark.parametrize("timestamp", [TIMESTAMP, int(time.time())])
-def test_handle_generate_l1_invalidation_event(timestamp):
-    context, _ = make_context()
-
-    request = make_request()
-    context.requests.add(request.id, request)
-
-    claim = make_claim_unchallenged(
-        request=request,
-    )
-    claim.start_challenge(make_tx_hash(), timestamp)
-    context.claims.add(claim.id, claim)
-
-    event = make_claim_challenged(request, claim_id=claim.id).latest_claim_made
-    flag, events = process_event(event, context)
-
-    assert flag
-
-    assert events == [
-        InitiateL1InvalidationEvent(
-            event_chain_id=TARGET_CHAIN_ID,
-            claim_id=CLAIM_ID,
-        )
-    ]

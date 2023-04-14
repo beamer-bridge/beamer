@@ -4,11 +4,13 @@ import time
 import ape
 import pytest
 from eth_utils import to_checksum_address
+from web3.constants import ADDRESS_ZERO
 
 import beamer.agent.agent
 from beamer.tests.constants import FILL_ID
 from beamer.tests.util import (
     EventCollector,
+    Sleeper,
     alloc_accounts,
     alloc_whitelisted_accounts,
     earnings,
@@ -192,7 +194,6 @@ def test_challenge_4(request_manager, fill_manager, token, config):
 
         stake = request_manager.claimStake()
         request_manager.claimRequest(request_id, FILL_ID, sender=charlie, value=stake)
-
         collector = EventCollector(request_manager, "ClaimMade")
         claim = collector.next_event()
 
@@ -408,3 +409,91 @@ def test_challenge_7(request_manager, fill_manager, token, config):
 
     assert agent_earnings() == stake
     assert dave_earnings() == stake + 1
+
+
+@pytest.mark.usefixtures("setup_relayer_executable")
+def test_l1_resolution(request_manager, token, l1_messenger, agent, direction, chain_params):
+    requester, target, exploiter = alloc_accounts(3)
+    ape.accounts.test_accounts[0].transfer(exploiter, ape.convert("10 ether", int))
+    amount = 1
+
+    new_chain_params = (1, *chain_params[1:])
+    request_manager.updateChain(ape.chain.chain_id, *new_chain_params)
+
+    request_id = make_request(request_manager, token, requester, target, amount)
+
+    with Sleeper(5) as sleeper:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
+            sleeper.sleep(0.1)
+
+    with Sleeper(5) as sleeper:
+        while not request.claimed.is_active:
+            sleeper.sleep(0.1)
+
+    collector = EventCollector(request_manager, "ClaimMade")
+    claim = collector.next_event()
+
+    assert claim is not None
+
+    # challenge with enough to go to l1
+    request_manager.challengeClaim(
+        claim.claimId, sender=exploiter, value=ape.convert("2 ether", int)
+    )
+
+    with Sleeper(5) as sleeper:
+        while agent.get_context(direction).l1_resolutions.get(request.fill_tx) is None:
+            sleeper.sleep(0.1)
+
+    request_manager.resolveRequest(
+        request_id, request.fill_id, ape.chain.chain_id, ADDRESS_ZERO, sender=l1_messenger
+    )
+
+    with Sleeper(5) as sleeper:
+        while not request.l1_resolved.is_active:
+            sleeper.sleep(0.1)
+
+
+@pytest.mark.usefixtures("setup_relayer_executable")
+def test_invalidation(
+    request_manager, fill_manager, token, l1_messenger, agent, direction, chain_params
+):
+    agent_balance = token.balanceOf(agent.address)
+
+    requester, target = alloc_accounts(2)
+    (exploiter,) = alloc_whitelisted_accounts(1, [request_manager, fill_manager])
+    ape.accounts.test_accounts[0].transfer(
+        exploiter, ape.convert("10 ether", int)
+    )  # exploiter has much more funds
+    amount = agent_balance + 1
+
+    new_chain_params = (1, *chain_params[1:])
+    request_manager.updateChain(ape.chain.chain_id, *new_chain_params)
+
+    request_id = make_request(request_manager, token, requester, target, amount)
+
+    stake = request_manager.claimStake()
+    claim_id = request_manager.claimRequest(
+        request_id, FILL_ID, sender=exploiter, value=stake
+    ).return_value
+
+    with Sleeper(5) as sleeper:
+        while (claim := agent.get_context(direction).claims.get(claim_id)) is None:
+            sleeper.sleep(0.1)
+
+    with Sleeper(10) as sleeper:
+        while not claim.challenger_winning.is_active:
+            sleeper.sleep(0.1)
+
+    # challenge with enough to go to l1
+    request_manager.challengeClaim(claim_id, sender=exploiter, value=ape.convert("2 ether", int))
+
+    with Sleeper(5) as sleeper:
+        while agent.get_context(direction).l1_resolutions.get(claim.invalidation_tx) is None:
+            sleeper.sleep(0.1)
+
+    request_manager.invalidateFill(request_id, FILL_ID, ape.chain.chain_id, sender=l1_messenger)
+
+    ape.chain.mine(timestamp=claim.termination + 100)
+    with Sleeper(5) as sleeper:
+        while not claim.invalidated_l1_resolved.is_active:
+            sleeper.sleep(0.1)

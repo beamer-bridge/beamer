@@ -1,4 +1,5 @@
 # flake8: noqa: E402
+import stat
 from dataclasses import dataclass
 from typing import cast
 
@@ -11,6 +12,7 @@ import beamer.agent.metrics
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
 from beamer.agent.contracts import ContractInfo, DeploymentInfo
+from beamer.agent.l1_resolution import get_relayer_executable
 from beamer.agent.typing import URL, BlockNumber, ChainId, TransferDirection
 from beamer.agent.util import TokenChecker
 from beamer.tests.util import alloc_accounts
@@ -255,8 +257,8 @@ def request_manager(contracts):
 
 
 @pytest.fixture
-def test_cross_domain_messenger(contracts):
-    return contracts.messenger
+def l1_messenger(contracts):
+    return contracts.l1_messenger
 
 
 @pytest.fixture
@@ -272,3 +274,13 @@ def fill_manager(contracts):
 @pytest.fixture
 def direction():
     return TransferDirection(ChainId(ape.chain.chain_id), ChainId(ape.chain.chain_id))
+
+
+@pytest.fixture
+def setup_relayer_executable():
+    relayer = get_relayer_executable()
+    relayer.parent.mkdir(parents=True, exist_ok=True)
+    relayer.write_text("#!/bin/sh\nsleep 5\necho 'hello'")
+    relayer.chmod(relayer.stat().st_mode | stat.S_IEXEC)
+    yield
+    relayer.unlink()

@@ -1,6 +1,5 @@
-from copy import deepcopy
 from typing import cast
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from eth_typing import BlockNumber, HexStr
@@ -9,7 +8,7 @@ from web3.datastructures import AttributeDict
 from web3.types import ChecksumAddress, TxReceipt, Wei
 
 from beamer.agent.chain import claim_request, fill_request, process_claims, process_requests
-from beamer.agent.events import InitiateL1ResolutionEvent, RequestResolved
+from beamer.agent.events import RequestResolved
 from beamer.agent.state_machine import process_event
 from beamer.agent.typing import FillId, Termination
 from beamer.agent.util import load_ERC20_abi
@@ -17,11 +16,7 @@ from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
     BLOCK_NUMBER,
-    CLAIM_ID,
-    CLAIMER_STAKE,
-    REQUEST_ID,
     SOURCE_CHAIN_ID,
-    TARGET_CHAIN_ID,
     TIMESTAMP,
     make_claim_challenged,
     make_claim_unchallenged,
@@ -204,10 +199,11 @@ def test_handle_request_resolved():
     context, config = make_context()
     filler = make_address()
     fill_id = FILL_ID
+    fill_tx = b"0xxxxxx"
 
     # Must store the result in the request
     request = make_request()
-    request.fill(config.account.address, b"", fill_id, TIMESTAMP)
+    request.fill(config.account.address, fill_tx, fill_id, TIMESTAMP)
     request.try_to_claim()
 
     event = RequestResolved(
@@ -227,37 +223,10 @@ def test_handle_request_resolved():
     claim = make_claim_unchallenged(request, fill_id=fill_id)
     context.claims.add(claim.id, claim)
 
+    context.l1_resolutions[HexBytes(fill_tx)] = MagicMock()
     assert request.l1_resolution_filler is None
     assert process_event(event, context) == (True, None)
     assert request.l1_resolution_filler == filler
-
-
-def test_handle_generate_l1_resolution_event():
-    context, config = make_context()
-
-    request = make_request()
-    request.fill(config.account.address, b"", b"", TIMESTAMP)
-    context.requests.add(request.id, request)
-
-    claim = make_claim_challenged(
-        request=request,
-        claimer=config.account.address,
-        challenger=make_address(),
-        challenger_stake=Wei(CLAIMER_STAKE + 1),
-    )
-    context.claims.add(claim.id, claim)
-
-    event = deepcopy(claim.latest_claim_made)
-    flag, events = process_event(event, context)
-
-    assert flag
-    assert events == [
-        InitiateL1ResolutionEvent(
-            event_chain_id=TARGET_CHAIN_ID,
-            request_id=REQUEST_ID,
-            claim_id=CLAIM_ID,
-        )
-    ]
 
 
 def test_maybe_claim_no_l1():
@@ -279,7 +248,6 @@ def test_maybe_claim_no_l1():
     # Make sure we're outside the challenge period
     block = context.latest_blocks[request.source_chain_id]
     assert block["timestamp"] >= claim.termination
-
     assert not claim.transaction_pending
     process_claims(context)
     assert not claim.transaction_pending
