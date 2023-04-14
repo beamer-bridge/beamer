@@ -45,6 +45,7 @@ BLOCK_NUMBER = BlockNumber(12345)
 ACCOUNT = Account.from_key(0xB25C7DB31FEED9122727BF0939DC769A96564B2DE4C4726D035B36ECF1E5B364)
 ADDRESS1 = make_address()
 NULL_ADDRESS = to_checksum_address("0x0000000000000000000000000000000000000000")
+GAS_PRICE = Wei(2000000000)
 
 
 class MockEth:
@@ -182,9 +183,10 @@ def make_context() -> Tuple[Context, Config]:
         task_pool=MagicMock(),
         claim_request_extension=100,
         l1_resolutions={},
-        l1_invalidations={},
         fill_mutexes={},
         logger=MagicMock(),
+        finality_periods={TARGET_CHAIN_ID: 200},
     )
     context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore
+    context.web3_l1.eth.gas_price = GAS_PRICE  # type: ignore
     return context, config

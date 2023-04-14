@@ -9,7 +9,6 @@ import pytest
 from click.testing import CliRunner
 
 from beamer.agent.commands import agent
-from beamer.agent.l1_resolution import get_relayer_executable
 
 
 def _generate_deployment_dir(output_dir, root, contracts):
@@ -31,19 +30,6 @@ def _generate_deployment_dir(output_dir, root, contracts):
     src = root / "contracts/.build"
     shutil.copy(src / "RequestManager.json", output_dir)
     shutil.copy(src / "FillManager.json", output_dir)
-
-
-@pytest.fixture
-def setup_relayer_executable():
-    relayer = get_relayer_executable()
-    if relayer.exists():
-        yield
-        return
-
-    relayer.parent.mkdir(parents=True, exist_ok=True)
-    relayer.write_text("")
-    yield
-    relayer.unlink()
 
 
 _CONFIG_FILE = """
@@ -117,7 +103,13 @@ def _generate_options_config(
 @pytest.mark.parametrize("generate_options", (_generate_options, _generate_options_config))
 @pytest.mark.parametrize("unsafe_fill_time_option", [(1, True), (1000000, False)])
 @pytest.mark.usefixtures("setup_relayer_executable")
-def test_cli(config, tmp_path, contracts, generate_options, unsafe_fill_time_option):
+def test_cli(
+    config,
+    tmp_path,
+    contracts,
+    generate_options,
+    unsafe_fill_time_option,
+):
     key = "0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa"
     acc = eth_account.Account.from_key(key)
     obj = eth_account.Account.encrypt(key, "test")
