@@ -28,6 +28,7 @@ config = {
     "agent_address": "",
     "deployment-dir": "../deployments/mainnet",
     "notification_system": "rocketchat",
+    "notification_message_prefix": "v2",
     "rpcs": {
         10: "https://example.rpc.com",
         42161: "https://example.rpc.com",
