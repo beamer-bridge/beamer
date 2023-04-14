@@ -3,20 +3,21 @@ import sys
 import threading
 import time
 import traceback
+from concurrent.futures import Future
 from typing import Callable
 
 import structlog
 from web3 import Web3
 from web3.contract import Contract
-from web3.types import Wei
+from web3.types import Timestamp, Wei
 
 from beamer.agent.events import Event, EventFetcher
+from beamer.agent.l1_resolution import run_relayer_for_tx
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.state_machine import Context, process_event
 from beamer.agent.typing import BlockNumber, ChainId
 from beamer.agent.util import TransactionFailed, load_ERC20_abi, transact
-
 
 _ERC20_ABI = load_ERC20_abi()
 
@@ -194,11 +195,9 @@ class EventProcessor:
             unprocessed: list[Event] = []
             any_state_changed = False
             for event in events:
-                state_changed, new_events = process_event(event, self._context)
+                state_changed, _ = process_event(event, self._context)
                 any_state_changed |= state_changed
 
-                if new_events:
-                    created_events.extend(new_events)
                 if not state_changed:
                     unprocessed.append(event)
 
@@ -293,6 +292,7 @@ def process_claims(context: Context) -> None:
         if claim.claimer_winning.is_active or claim.challenger_winning.is_active:
             maybe_withdraw(claim, context)
             maybe_challenge(claim, context)
+            maybe_resolve(claim, context)
 
     for claim_id in to_remove:
         context.claims.remove(claim_id)
@@ -474,6 +474,109 @@ def maybe_invalidate(claim: Claim, context: Context) -> None:
 
     _invalidate(request, claim, context)
     claim.start_challenge()
+
+
+def _proof_ready_for_l1_relay(request: Request) -> bool:
+    return (
+        not request.l1_resolved.is_active
+        and request.fill_tx is not None
+        and request.fill_timestamp is not None
+    )
+
+
+def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
+    return (
+        not claim.invalidated_l1_resolved.is_active
+        and claim.invalidation_tx is not None
+        and claim.invalidation_timestamp is not None
+    )
+
+
+def _l1_resolution_threshold_reached(claim: Claim, context: Context) -> bool:
+    l1_gas_cost = 1_000_000  # TODO: Adapt to real price
+    l1_gas_price = context.web3_l1.eth.gas_price
+    l1_safety_factor = 1.25
+    limit = int(l1_gas_cost * l1_gas_price * l1_safety_factor)
+
+    # Agent is claimer
+    if claim.claimer == context.address:
+        reward = int(claim.latest_claim_made.challenger_stake_total)
+    else:
+        # Agent is challenger
+        reward = claim.get_challenger_stake(context.address)
+        last_challenger = claim.latest_claim_made.last_challenger
+        if last_challenger == context.address:
+            reward -= (
+                claim.latest_claim_made.challenger_stake_total
+                - claim.latest_claim_made.claimer_stake
+            )
+    return reward > limit
+
+
+def _timestamp_is_l1_finalized(
+    timestamp: Timestamp, context: Context, target_chain_id: ChainId
+) -> bool:
+    # The internal memory should not be none because at this point
+    # the ChainUpdated event must have arrived, otherwise there would be no request
+    target_chain_finality = context.finality_periods[target_chain_id]
+    return int(time.time()) > timestamp + target_chain_finality
+
+
+def maybe_resolve(claim: Claim, context: Context) -> bool:
+    request = context.requests.get(claim.request_id)
+
+    assert request is not None, "Active claim for non-existent request"
+
+    if not _proof_ready_for_l1_relay(request) and not _invalidation_ready_for_l1_relay(claim):
+        return False
+
+    timestamp_finalized = False
+
+    if request.fill_timestamp:
+        timestamp_finalized = _timestamp_is_l1_finalized(
+            request.fill_timestamp, context, request.target_chain_id
+        )
+        assert request.fill_tx is not None
+        proof_tx = request.fill_tx
+    elif claim.invalidation_timestamp:
+        timestamp_finalized = _timestamp_is_l1_finalized(
+            claim.invalidation_timestamp, context, request.target_chain_id
+        )
+        assert claim.invalidation_tx is not None
+        proof_tx = claim.invalidation_tx
+
+    if not timestamp_finalized:
+        return False
+
+    if not _l1_resolution_threshold_reached(claim, context):
+        return False
+
+    if proof_tx in context.l1_resolutions:
+        return False
+
+    future = context.task_pool.submit(
+        run_relayer_for_tx,
+        context.config.base_chain_rpc_url,
+        context.target_rpc_url,
+        context.source_rpc_url,
+        context.config.account.key,
+        proof_tx,
+    )
+
+    def on_future_done(f: Future) -> None:
+        try:
+            f.result()
+        except Exception as ex:
+            context.logger.error("L1 resolution failed", ex=ex, tx_hash=proof_tx)
+        finally:
+            del context.l1_resolutions[proof_tx]
+
+    future.add_done_callback(on_future_done)
+    context.l1_resolutions[proof_tx] = future
+
+    context.logger.info("Initiated L1 resolution", request=request, claim=claim, tx_hash=proof_tx)
+
+    return True
 
 
 def maybe_withdraw(claim: Claim, context: Context) -> None:

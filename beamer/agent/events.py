@@ -54,17 +54,6 @@ class LatestBlockUpdatedEvent(Event):
 
 
 @dataclass(frozen=True)
-class InitiateL1ResolutionEvent(Event):
-    request_id: RequestId
-    claim_id: ClaimId
-
-
-@dataclass(frozen=True)
-class InitiateL1InvalidationEvent(Event):
-    claim_id: ClaimId
-
-
-@dataclass(frozen=True)
 class TxEvent(Event):
     block_number: BlockNumber
     tx_hash: HexBytes
