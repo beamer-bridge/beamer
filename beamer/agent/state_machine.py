@@ -12,7 +12,7 @@ from statemachine.exceptions import TransitionNotAllowed
 from web3 import HTTPProvider, Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
-from web3.types import BlockData, Timestamp
+from web3.types import BlockData
 
 import beamer.agent.metrics
 from beamer.agent.config import Config
@@ -24,8 +24,6 @@ from beamer.agent.events import (
     Event,
     FillInvalidated,
     FillInvalidatedResolved,
-    InitiateL1InvalidationEvent,
-    InitiateL1ResolutionEvent,
     LatestBlockUpdatedEvent,
     RequestCreated,
     RequestFilled,
@@ -33,7 +31,6 @@ from beamer.agent.events import (
     SourceChainEvent,
     TargetChainEvent,
 )
-from beamer.agent.l1_resolution import run_relayer_for_tx
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.tracker import Tracker
@@ -58,8 +55,7 @@ class Context:
     web3_l1: Web3
     task_pool: Executor
     claim_request_extension: int
-    l1_resolutions: dict[RequestId, Future]
-    l1_invalidations: dict[ClaimId, Future]
+    l1_resolutions: dict[HexBytes, Future]
     fill_mutexes: dict[tuple[ChainId, ChecksumAddress], Lock]
     logger: structlog.BoundLogger
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
@@ -113,12 +109,6 @@ def process_event(event: Event, context: Context) -> HandlerResult:
     elif isinstance(event, FillInvalidatedResolved):
         return _handle_fill_invalidated_resolved(event, context)
 
-    elif isinstance(event, InitiateL1ResolutionEvent):
-        return _handle_initiate_l1_resolution(event, context)
-
-    elif isinstance(event, InitiateL1InvalidationEvent):
-        return _handle_initiate_l1_invalidation(event, context)
-
     elif isinstance(event, ChainUpdated):
         return _handle_chain_updated(event, context)
 
@@ -136,31 +126,6 @@ def _find_claims(context: Context, request_id: RequestId, fill_id: FillId) -> li
             matching_claims.append(claim)
 
     return matching_claims
-
-
-def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
-    return (
-        not claim.invalidated_l1_resolved.is_active
-        and claim.invalidation_tx is not None
-        and claim.invalidation_timestamp is not None
-    )
-
-
-def _proof_ready_for_l1_relay(request: Request) -> bool:
-    return (
-        not request.l1_resolved.is_active
-        and request.fill_tx is not None
-        and request.fill_timestamp is not None
-    )
-
-
-def _timestamp_is_l1_finalized(
-    timestamp: Timestamp, context: Context, target_chain_id: ChainId
-) -> bool:
-    # The internal memory should not be none because at this point
-    # the ChainUpdated event must have arrived, otherwise there would be no request
-    target_chain_finality = context.finality_periods[target_chain_id]
-    return int(time.time()) > timestamp + target_chain_finality
 
 
 def _handle_latest_block_updated(
@@ -314,36 +279,17 @@ def _handle_claim_made(event: ClaimMade, context: Context) -> HandlerResult:
         claim.unprocessed_claim_made_events.add(event)
         return False, None
 
-    events: list[Event] = []
-    if _invalidation_ready_for_l1_relay(claim):
-        events.append(
-            InitiateL1InvalidationEvent(
-                event_chain_id=request.target_chain_id,  # Resolution happens on the target chain
-                claim_id=claim.id,
-            )
-        )
-
     # this is at least the second ClaimMade event for this claim id
     assert event.last_challenger != ADDRESS_ZERO, "Second ClaimMade event must contain challenger"
     try:
         claim.challenge(event)
     except TransitionNotAllowed:
-        claim.unprocessed_claim_made_events.add(event)
-        return False, events
+        return False, None
 
     claim.unprocessed_claim_made_events.discard(event)
 
-    if _proof_ready_for_l1_relay(request):
-        events.append(
-            InitiateL1ResolutionEvent(
-                event_chain_id=request.target_chain_id,  # Resolution happens on the target chain
-                request_id=request.id,
-                claim_id=claim.id,
-            )
-        )
-
     context.logger.debug("Request claimed", request=request, claim_id=event.claim_id)
-    return True, events
+    return True, None
 
 
 def _handle_claim_stake_withdrawn(event: ClaimStakeWithdrawn, context: Context) -> HandlerResult:
@@ -375,6 +321,8 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
         try:
             request.l1_resolve(event.filler, event.fill_id)
             request.invalid_fill_ids.pop(event.fill_id, None)
+            if request.fill_tx is not None:
+                context.l1_resolutions.pop(request.fill_tx)
         except TransitionNotAllowed:
             return False, None
     return True, None
@@ -407,136 +355,8 @@ def _handle_fill_invalidated_resolved(
         request = context.requests.get(claim.request_id)
         assert request is not None
         request.l1_resolution_invalid_fill_ids.add(claim.fill_id)
-
-    return True, None
-
-
-def _l1_resolution_threshold_reached(claim: Claim, context: Context) -> bool:
-    l1_gas_cost = 1_000_000  # TODO: Adapt to real price
-    l1_gas_price = context.web3_l1.eth.gas_price
-    l1_safety_factor = 1.25
-    limit = int(l1_gas_cost * l1_gas_price * l1_safety_factor)
-
-    # Agent is claimer
-    if claim.claimer == context.address:
-        if claim.latest_claim_made.challenger_stake_total > limit:
-            return True
-    else:
-        # Agent is challenger
-        reward = claim.get_challenger_stake(context.address)
-        last_challenger = claim.latest_claim_made.last_challenger
-        if last_challenger == context.address:
-            reward -= (
-                claim.latest_claim_made.challenger_stake_total
-                - claim.latest_claim_made.claimer_stake
-            )
-
-        if reward > limit:
-            return True
-    return False
-
-
-def _handle_initiate_l1_resolution(
-    event: InitiateL1ResolutionEvent, context: Context
-) -> HandlerResult:
-    request = context.requests.get(event.request_id)
-    claim = context.claims.get(event.claim_id)
-    if claim is None:
-        return True, None
-
-    # A request should never be dropped before all claims are finalized
-    assert request is not None, "Request object missing"
-    assert request.fill_tx is not None, "Request not yet filled"
-    assert request.fill_timestamp is not None, "Request not yet filled"
-
-    # Check that message is finalized on L1
-    if not _timestamp_is_l1_finalized(request.fill_timestamp, context, request.target_chain_id):
-        return False, None
-
-    # There is already a process running
-    if request.id in context.l1_resolutions:
-        return True, None
-
-    # Check if L1 resolution is cheaper than the winning from challenge
-    if _l1_resolution_threshold_reached(claim, context):
-        future = context.task_pool.submit(
-            run_relayer_for_tx,
-            context.config.base_chain_rpc_url,
-            context.target_rpc_url,
-            context.source_rpc_url,
-            context.config.account.key,
-            request.fill_tx,
-        )
-
-        def on_future_done(f: Future) -> None:
-            try:
-                f.result()
-                assert request is not None, "Request object missing"
-                assert claim is not None, "Claim object missing"
-
-                del context.l1_resolutions[request.id]
-            except Exception as ex:
-                context.logger.error("L1 resolution failed", ex=ex)
-
-        future.add_done_callback(on_future_done)
-        context.l1_resolutions[request.id] = future
-        request.l1_resolve()
-
-        context.logger.info("Initiated L1 resolution", request=request, claim=claim)
-
-        return True, None
-    return False, None
-
-
-def _handle_initiate_l1_invalidation(
-    event: InitiateL1InvalidationEvent, context: Context
-) -> HandlerResult:
-    claim = context.claims.get(event.claim_id)
-    if claim is None:
-        return True, None
-
-    # A request should never be dropped before all claims are finalized
-    request = context.requests.get(claim.request_id)
-    assert request is not None, "Request object missing"
-    assert claim.invalidation_tx is not None, "Claim not invalidated"
-    assert claim.invalidation_timestamp is not None, "Claim not invalidated"
-
-    # Check that message is finalized on L1
-    if not _timestamp_is_l1_finalized(
-        claim.invalidation_timestamp, context, request.target_chain_id
-    ):
-        return False, None
-
-    # There is already a process running
-    if claim.id in context.l1_invalidations:
-        return True, None
-
-    # Check if L1 resolution is cheaper than the winning from challenge
-    if _l1_resolution_threshold_reached(claim, context):
-        future = context.task_pool.submit(
-            run_relayer_for_tx,
-            context.config.base_chain_rpc_url,
-            context.target_rpc_url,
-            context.source_rpc_url,
-            context.config.account.key,
-            claim.invalidation_tx,
-        )
-
-        def on_future_done(f: Future) -> None:
-            try:
-                f.result()
-                assert request is not None, "Request object missing"
-                assert claim is not None, "Claim object missing"
-
-                del context.l1_invalidations[claim.id]
-            except Exception as ex:
-                context.logger.error("L1 invalidation failed", ex=ex)
-
-        future.add_done_callback(on_future_done)
-        context.l1_invalidations[claim.id] = future
-        claim.l1_invalidate()
-
-        context.logger.info("Initiated L1 invalidation", request=request, claim=claim)
+        if claim.invalidation_tx is not None:
+            context.l1_resolutions.pop(claim.invalidation_tx)
 
     return True, None
 

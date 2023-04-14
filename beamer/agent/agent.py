@@ -162,7 +162,6 @@ class Agent:
             task_pool=self._task_pool,
             claim_request_extension=claim_request_extension,
             l1_resolutions={},
-            l1_invalidations={},
             fill_mutexes=mutexes,
             logger=logger,
         )
