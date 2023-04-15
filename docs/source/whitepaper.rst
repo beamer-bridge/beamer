@@ -392,31 +392,66 @@ Fees
 
 There are two fees that users need to pay to bridge their tokens:
 
-agent fee
-    The fee paid in token being moved, covering the gas costs and rewarding the
-    liquidity provider. Variable, collected by the agent and currently set to
+Liquidity provider fee
+++++++++++++++++++++++
 
-    .. math::
-
-        max(10^\textnormal{token.decimals()}, 0.3\% \textnormal{ of token amount transferred})
-
-protocol fee
-    The fee paid in token being moved, intended to support further development
-    of the Beamer protocol. Variable, collected by the smart contract and
-    currently set to
-
-    .. math::
-
-        0\% \textnormal{ of token amount transferred}
+This fee is paid in token being moved, rewarding the LP for providing the bridging service.
+The fee is variable, collected by the agent and defined in the request manager contract under ``lpFeePPM``
+(percentage in parts per million). The ``lpFeePPM`` will be applied on the token amount transferred in order
+to determine the absolute LP fee.
 
 In theory, the agent fee should cover the gas costs, the opportunity costs of
-the funds being locked and include a reward for providing the service.
+the funds being locked plus all additional costs for running an agent and include a reward for providing the service.
+However, for small transfer amounts the LP fee might not be enough to cover all of the above.
+Therefore, a minimum LP fee is defined.
 
-In practice, the transaction fees depend on the current gas price, which depends on the status of the network.
-Additionally, the opportunity costs can only be estimated. To have a truly faithful fee for the liquidity provider, the
-user would have to register the maximum fee they are willing to pay for their transfer. This would create
-a fee market where different liquidity providers would compete and accept different fees. Users would then need to query the
-market for which fee they should use.
+The final LP fee is defined as:
+
+    .. math::
+        max(minLpFee, (1+\frac{lpFeePPM}{1000000}) * amount)
+
+Minimum LP fee
+==============
+The minimum LP fee is derived from the total transfer costs paid by the agent and the conversion rate from ETH to the
+token. Additionally, a margin is applied to reward the LP for providing the service. Since the agent partially sends
+transactions on the source (claimRequest and withdraw) and on the target chain (fillRequest) respectively, the fee needs
+to be composed from two different base values. The reason for this is that transactions might have different costs on
+two given chains.
+
+The exact formula how the minimum LP fee is calculated is:
+
+    .. math::
+        ((1 - \tau(source)) * cost_{source, ETH}(\Delta t) + \tau(target) *cost_{target, ETH}(\Delta t)) *
+        Price_{\frac{Token}{ETH}}(\Delta t) * margin_{LP}
+
+The variables of the above formula are stored in the request manager contract:
+
+For each chain:
+
+- :math:`\tau(chain)` as ``Chain.targetChainPPM`` (the ETH cost for a fill on :math:`chain`, divided by 
+    :math:`cost_{chain,ETH}`)
+- :math:`cost_{chain,ETH}`  as ``Chain.transferCost`` (the sum of ETH costs for fill, claim and withdraw on that chain)
+
+For each token:
+
+- :math:`Price_\frac{token}{ETH}` as ``Token.ethInToken`` (the token -> ETH price conversion factor)
+
+Global parameter:
+
+- :math:`margin_{LP}` as ``minLpFeePPM``
+
+Protocol fee
+++++++++++++
+The fee paid in token being moved, intended to support further development
+of the Beamer protocol. The fee is variable, collected by the contract owner and defined in the request manager contract
+under ``protocolFeePPM`` (percentage in parts per million). The ``protocolFeePPM`` will be applied on the token amount
+transferred in order to determine the absolute protocol fee.
+
+
+It is important to note that the opportunity costs can only be estimated. To have a truly faithful fee for the
+liquidity provider, the user would have to register the maximum fee they are willing to pay for their transfer. This
+would create a fee market where different liquidity providers would compete and accept different fees. Users would then
+need to query the market for which fee they should use.
 
 However, as the protocol intends to be as easy to use as possible, and
 transactions fees are mostly stable on rollups, the gas reimbursement fee is
