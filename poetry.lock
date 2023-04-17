@@ -219,26 +219,26 @@ test = ["ape-arbitrum", "ape-bsc", "ape-fantom", "ape-infura", "ape-optimism", "
 
 [[package]]
 name = "ape-ganache"
-version = "0.6.3"
+version = "0.6.5"
 description = "ape-ganache: Ape network provider for Ganache"
 category = "dev"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-ganache-0.6.3.tar.gz", hash = "sha256:146b395301a7d5f1b3a65351c47ba0258b19818f2fbef5e82efbc972a4f2a3e6"},
-    {file = "ape_ganache-0.6.3-py3-none-any.whl", hash = "sha256:618974a72e8813ef07e4df8fab862f8c1a677523fe713593e4f0b47e78b8d0cc"},
+    {file = "ape-ganache-0.6.5.tar.gz", hash = "sha256:9efc6b0a83389a1b8338f6279abd15effc19a4e5ce848d04d6f3a8f157fdb5de"},
+    {file = "ape_ganache-0.6.5-py3-none-any.whl", hash = "sha256:85e4a8f18fcd4eb741b712cbf54617c2477fb8a35a1e7c5f49b2f562bf0cd722"},
 ]
 
 [package.dependencies]
-eth-ape = ">=0.6.7,<0.7"
-evm-trace = ">=0.1.0a14"
+eth-ape = ">=0.6.8,<0.7"
+evm-trace = "*"
 hexbytes = "*"
 web3 = "*"
 
 [package.extras]
-dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-alchemy", "ape-ens", "ape-polygon", "black (>=22.12.0)", "commitizen", "flake8 (>=5.0.4)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1.0)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-PyYAML", "types-requests", "types-setuptools", "wheel"]
+dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-alchemy", "ape-ens", "ape-polygon", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1.0)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-PyYAML", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=3.4.3,<4)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
-lint = ["black (>=22.12.0)", "flake8 (>=5.0.4)", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1.0)", "types-PyYAML", "types-requests", "types-setuptools"]
+lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1.0)", "types-PyYAML", "types-requests", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine", "wheel"]
 test = ["ape-alchemy", "ape-ens", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
 
@@ -4626,4 +4626,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "ee4c061101e7a692e3108daf4fd662c1e5fee306102927b5a9a5b4e0caf110eb"
+content-hash = "c0bc68a86080b5e7e3d48fbef14ee6545370c48f85f303800bc3e1d80a311b2c"
