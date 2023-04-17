@@ -69,7 +69,7 @@ import { useTransferHistory } from '@/stores/transfer-history';
 import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
 import { useClaimCountListeners } from './composables/useClaimCountListeners';
 
-const enableFeedback = process.env.NODE_ENV === 'production' && true;
+const enableFeedback = process.env.NODE_ENV === 'production' && false;
 
 const { setConfiguration } = useConfiguration();
 const { loadConfiguration, configurationLoaded, configurationError } =
