@@ -23,6 +23,10 @@ format: black
 	npx prettier --write $(CONTRACTS)
 
 dist-exe:
+	mkdir -p dist
+	# Since shiv only knows about pyproject.toml and not about poetry.lock,
+	# make sure to fail if poetry.lock is not consistent with pyproject.toml.
+	poetry lock --check
 	shiv -c beamer -o dist/beamer .
 
 container-image: relayers
