@@ -2,6 +2,7 @@ import contextlib
 import socket
 import threading
 import time
+from datetime import datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, List, Optional, cast
@@ -13,6 +14,7 @@ from ape.api.providers import Web3Provider
 from ape.contracts import ContractInstance
 from eth_abi.packed import encode_packed
 from eth_utils import keccak, to_canonical_address
+from freezegun import freeze_time
 from web3.types import FilterParams
 
 from beamer.agent.typing import RequestId
@@ -252,3 +254,9 @@ def create_request_id(
             ],
         )
     )
+
+
+@contextlib.contextmanager
+def jump_to_challenge_phase(proof_timestamp, finality_period):
+    with freeze_time(datetime.fromtimestamp(proof_timestamp + finality_period + 1), tick=True):
+        yield
