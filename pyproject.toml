@@ -24,6 +24,7 @@ xdg-base-dirs = "^6.0.0"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
+freezegun = "^1.2.2"
 types-pyyaml = "^6.0.12"
 psutil = "^5.9.5"
 eth-ape = "^0.6.8"
