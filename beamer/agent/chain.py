@@ -326,8 +326,10 @@ def process_claims(context: Context) -> None:
 
         if claim.claimer_winning.is_active or claim.challenger_winning.is_active:
             maybe_withdraw(claim, context)
-            maybe_challenge(claim, context)
-            maybe_resolve(claim, context)
+            if _l1_resolution_threshold_reached(claim, context):
+                maybe_resolve(claim, context)
+            else:
+                maybe_challenge(claim, context)
 
     for claim_id in to_remove:
         context.claims.remove(claim_id)
@@ -447,10 +449,22 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     # a request which has active claims
     assert request is not None, "Active claim for non-existent request"
 
+    finalized = False
+
+    if request.fill_timestamp is not None:
+        finalized = _timestamp_is_l1_finalized(
+            request.fill_timestamp, context, context.target_chain_id
+        )
+    elif claim.invalidation_timestamp is not None:
+        finalized = _timestamp_is_l1_finalized(
+            claim.invalidation_timestamp, context, context.target_chain_id
+        )
+    if not finalized:
+        return False
+
     block = context.latest_blocks[request.source_chain_id]
     if block["timestamp"] >= claim.termination:
         return False
-
     if int(time.time()) < claim.challenge_back_off_timestamp:
         return False
 
@@ -472,8 +486,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     initial_claim_stake = context.request_manager.functions.claimStake().call()
     stake = claim.get_minimum_challenge_stake(initial_claim_stake)
 
-    # TODO: have a central variable and proper L1 cost calculations
-    l1_cost = Wei(initial_claim_stake + 10**15)
+    l1_cost = Wei(initial_claim_stake + get_l1_cost(context))
 
     if claim.latest_claim_made.challenger_stake_total > 0:
         stake = max(stake, Wei(l1_cost - own_challenge_stake))
@@ -527,12 +540,15 @@ def _invalidation_ready_for_l1_relay(claim: Claim) -> bool:
     )
 
 
-def _l1_resolution_threshold_reached(claim: Claim, context: Context) -> bool:
+def get_l1_cost(context: Context) -> int:
     l1_gas_cost = 1_000_000  # TODO: Adapt to real price
     l1_gas_price = context.web3_l1.eth.gas_price
     l1_safety_factor = 1.25
-    limit = int(l1_gas_cost * l1_gas_price * l1_safety_factor)
+    return int(l1_gas_cost * l1_gas_price * l1_safety_factor)
 
+
+def _l1_resolution_threshold_reached(claim: Claim, context: Context) -> bool:
+    limit = get_l1_cost(context)
     # Agent is claimer
     if claim.claimer == context.address:
         reward = int(claim.latest_claim_made.challenger_stake_total)
