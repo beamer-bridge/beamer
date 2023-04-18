@@ -322,7 +322,7 @@ def _handle_request_resolved(event: RequestResolved, context: Context) -> Handle
             request.l1_resolve(event.filler, event.fill_id)
             request.invalid_fill_ids.pop(event.fill_id, None)
             if request.fill_tx is not None:
-                context.l1_resolutions.pop(request.fill_tx)
+                context.l1_resolutions.pop(request.fill_tx, None)
         except TransitionNotAllowed:
             return False, None
     return True, None
