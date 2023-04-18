@@ -25,6 +25,7 @@ def test_challenge_as_challenger(filler, fill_id):
     context.requests.add(request.id, request)
     request.filler = ADDRESS1
     request.fill_id = FILL_ID
+    request.fill_timestamp = TIMESTAMP
     claim = make_claim_unchallenged(
         request=request,
         claimer=filler,
@@ -44,6 +45,7 @@ def test_challenge_as_claimer():
     request = make_request()
     context.requests.add(request.id, request)
     request.filler = make_address()
+    request.fill_timestamp = TIMESTAMP
     claim = make_claim_challenged(
         request=request,
         claimer=context.address,
@@ -65,6 +67,7 @@ def test_join_false_claim_challenge_only_when_unfilled(filler):
     request = make_request()
     context.requests.add(request.id, request)
     request.filler = filler
+    request.fill_timestamp = TIMESTAMP
     claim = make_claim_challenged(
         request=request,
         challenger=make_address(),

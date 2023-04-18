@@ -185,7 +185,7 @@ def make_context() -> Tuple[Context, Config]:
         l1_resolutions={},
         fill_mutexes={},
         logger=MagicMock(),
-        finality_periods={TARGET_CHAIN_ID: 200},
+        finality_periods={TARGET_CHAIN_ID: 1},
     )
     context.request_manager.functions.claimStake().call.return_value = 1  # type: ignore
     context.web3_l1.eth.gas_price = GAS_PRICE  # type: ignore
