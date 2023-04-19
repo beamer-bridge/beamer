@@ -553,6 +553,19 @@ describe('transfer', () => {
       );
     });
 
+    it('fails when a chain switch is necessary but switching chains is not implemented', async () => {
+      const transfer = new TestTransfer({
+        ...TRANSFER_DATA,
+        sourceChain: generateChain({ identifier: 1 }),
+      });
+      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      provider.switchChainSafely = undefined;
+
+      await expect(transfer.withdraw(provider)).rejects.toThrow(
+        'For a withdrawal, you need to connect to the chain where the tokens are through your wallet!',
+      );
+    });
+
     it('uses the correct parameters to make the withdraw', async () => {
       const identifier = getRandomString();
       const data = generateTransferData({

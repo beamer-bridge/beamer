@@ -1,4 +1,5 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
+import type { SpyInstanceFn } from 'vitest';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
@@ -67,11 +68,11 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   getLatestBlock = vi.fn();
   getProvider = vi.fn();
   connectContract = vi.fn();
-  switchChainSafely = vi.fn();
+  switchChainSafely: SpyInstanceFn | undefined = vi.fn();
   switchChain = vi.fn();
   addChain = vi.fn();
   getChainId = vi.fn(async () => this.chainId.value);
-  addToken = vi.fn();
+  addToken: SpyInstanceFn | undefined = vi.fn();
   on = vi.fn();
   emit = vi.fn();
 }

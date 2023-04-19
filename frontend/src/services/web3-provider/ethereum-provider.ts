@@ -8,7 +8,7 @@ import { ref, shallowRef, toRaw } from 'vue';
 import type { Eip1193Provider, IEthereumProvider } from '@/services/web3-provider/types';
 import type { Chain, Token } from '@/types/data';
 
-export abstract class BasicEthereumProvider extends EventEmitter {
+export abstract class BasicEthereumProvider extends EventEmitter implements IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
@@ -77,7 +77,7 @@ export abstract class BasicEthereumProvider extends EventEmitter {
   }
 }
 
-export abstract class EthereumProvider extends BasicEthereumProvider implements IEthereumProvider {
+export abstract class EthereumProvider extends BasicEthereumProvider {
   async switchChainSafely(newChain: Chain): Promise<boolean> {
     let successful = true;
     if (newChain.identifier !== this.chainId.value) {

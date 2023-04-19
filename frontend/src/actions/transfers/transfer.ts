@@ -225,7 +225,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     const currentChainIdentifier = await provider.getChainId();
 
     if (currentChainIdentifier !== this.sourceChain.identifier) {
-      const switched = await provider.switchChainSafely(this.sourceChain);
+      let switched = false;
+      if (provider.switchChainSafely) {
+        switched = await provider.switchChainSafely(this.sourceChain);
+      } else {
+        throw new Error(
+          'For a withdrawal, you need to connect to the chain where the tokens are through your wallet!',
+        );
+      }
       if (!switched) {
         throw new Error('Cannot withdraw without switching to the chain where the tokens are!');
       }
