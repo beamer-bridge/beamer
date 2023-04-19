@@ -88,7 +88,7 @@
             @opened="hideActionButton"
             @closed="showActionButton"
           />
-          <Tooltip class="-mr-3 self-end">
+          <Tooltip v-if="provider?.addToken" class="-mr-3 self-end">
             <SimpleTextButton :disabled="!addTokenAvailable" @click="handleAddTokenClick">
               Add to Wallet
             </SimpleTextButton>
