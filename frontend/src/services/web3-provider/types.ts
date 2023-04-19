@@ -15,9 +15,9 @@ export interface IEthereumProvider {
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   getProvider(): Web3Provider;
-  switchChainSafely(newChain: Chain): Promise<boolean>;
+  switchChainSafely?(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
-  addToken(token: Token): Promise<boolean>;
+  addToken?(token: Token): Promise<boolean>;
 }
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;

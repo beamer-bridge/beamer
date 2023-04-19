@@ -187,16 +187,19 @@ const selectedSourceChain = computed({
   },
   async set(chain: SelectorOption<Chain> | null) {
     _selectedSourceChain.value = chain;
-    if (chain) {
-      await provider.value?.switchChainSafely(chain.value);
+    if (chain && provider.value?.switchChainSafely) {
+      await provider.value.switchChainSafely(chain.value);
     }
   },
 });
 
 // Need to switch chain in case the user selected one before connecting a wallet
-watch(providerChainOption, (_newProviderChainOption, previousProviderChainOption) => {
+watch(providerChainOption, async (_newProviderChainOption, previousProviderChainOption) => {
   if (provider.value && !previousProviderChainOption && _selectedSourceChain.value) {
-    const switchSuccessful = provider.value.switchChainSafely(_selectedSourceChain.value.value);
+    let switchSuccessful = false;
+    if (provider.value.switchChainSafely) {
+      switchSuccessful = await provider.value.switchChainSafely(_selectedSourceChain.value.value);
+    }
     if (!switchSuccessful) {
       _selectedSourceChain.value = null;
     }
@@ -337,7 +340,7 @@ const setMaxTokenAmount = async () => {
 };
 
 const handleAddTokenClick = () => {
-  if (provider.value && selectedToken.value) {
+  if (provider.value && selectedToken.value && provider.value.addToken) {
     provider.value.addToken(selectedToken.value.value);
   }
 };
