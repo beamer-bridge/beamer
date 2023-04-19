@@ -1,1 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap");
+
+@media (prefers-color-scheme: light) {
+  body[data-theme="dark"] .mermaid line {
+    stroke: white !important;
+  }
+
+  body[data-theme="dark"] .mermaid path {
+    stroke: white !important;
+  }
+
+  body[data-theme="dark"] .mermaid .messageText {
+    stroke: none;
+    fill: white !important;
+  }
+
+  body[data-theme="dark"] .mermaid #arrowhead path {
+    stroke: white !important;
+    fill: white !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .mermaid line {
+    stroke: white !important;
+  }
+
+  body:not([data-theme="light"]) .mermaid path {
+    stroke: white !important;
+  }
+
+  body:not([data-theme="light"]) .mermaid .messageText {
+    stroke: none;
+    fill: white !important;
+  }
+  body:not([data-theme="light"]) .mermaid #arrowhead path {
+    stroke: white !important;
+    fill: white !important;
+  }
+}
