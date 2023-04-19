@@ -8,7 +8,7 @@ import { ref, shallowRef, toRaw } from 'vue';
 import type { Eip1193Provider, IEthereumProvider } from '@/services/web3-provider/types';
 import type { Chain, Token } from '@/types/data';
 
-export abstract class EthereumProvider extends EventEmitter implements IEthereumProvider {
+export abstract class BasicEthereumProvider extends EventEmitter {
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
@@ -28,6 +28,56 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
     this.listenToEvents();
   }
 
+  async getLatestBlock(): Promise<Block> {
+    return this.web3Provider.getBlock('latest');
+  }
+
+  getProvider(): Web3Provider {
+    return this.web3Provider;
+  }
+
+  async getChainId(): Promise<number> {
+    const { chainId } = await this.web3Provider.getNetwork();
+    return chainId;
+  }
+
+  async tryAccessingDefaultSigner(): Promise<void> {
+    const accounts = await this.web3Provider.listAccounts();
+    if (accounts.length === 0) {
+      return this.disconnect();
+    }
+
+    this.setSigner(accounts[0]);
+  }
+
+  setSigner(account: string): void {
+    this.signer.value = this.web3Provider.getSigner(account);
+    this.signerAddress.value = account;
+  }
+
+  disconnect(): void {
+    this.signer.value = undefined;
+    this.signerAddress.value = undefined;
+    this.emit('disconnect');
+  }
+
+  listenToEvents(): void {
+    this.listenToChangeEvents();
+    this.externalProvider.on('disconnect', () => this.disconnect());
+  }
+
+  protected listenToChangeEvents(): void {
+    this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
+    this.web3Provider.on('network', (newNetwork: Network, oldNetwork: Network) => {
+      this.chainId.value = newNetwork.chainId;
+      if (oldNetwork) {
+        window.location.replace(window.location.pathname);
+      }
+    });
+  }
+}
+
+export abstract class EthereumProvider extends BasicEthereumProvider implements IEthereumProvider {
   async switchChainSafely(newChain: Chain): Promise<boolean> {
     let successful = true;
     if (newChain.identifier !== this.chainId.value) {
@@ -103,53 +153,5 @@ export abstract class EthereumProvider extends EventEmitter implements IEthereum
       console.error(error);
       return false;
     }
-  }
-
-  async getLatestBlock(): Promise<Block> {
-    return this.web3Provider.getBlock('latest');
-  }
-
-  getProvider(): Web3Provider {
-    return this.web3Provider;
-  }
-
-  async getChainId(): Promise<number> {
-    const { chainId } = await this.web3Provider.getNetwork();
-    return chainId;
-  }
-
-  async tryAccessingDefaultSigner(): Promise<void> {
-    const accounts = await this.web3Provider.listAccounts();
-    if (accounts.length === 0) {
-      return this.disconnect();
-    }
-
-    this.setSigner(accounts[0]);
-  }
-
-  setSigner(account: string): void {
-    this.signer.value = this.web3Provider.getSigner(account);
-    this.signerAddress.value = account;
-  }
-
-  disconnect(): void {
-    this.signer.value = undefined;
-    this.signerAddress.value = undefined;
-    this.emit('disconnect');
-  }
-
-  listenToEvents(): void {
-    this.listenToChangeEvents();
-    this.externalProvider.on('disconnect', () => this.disconnect());
-  }
-
-  protected listenToChangeEvents(): void {
-    this.externalProvider.on('accountsChanged', () => this.tryAccessingDefaultSigner());
-    this.web3Provider.on('network', (newNetwork: Network, oldNetwork: Network) => {
-      this.chainId.value = newNetwork.chainId;
-      if (oldNetwork) {
-        window.location.replace(window.location.pathname);
-      }
-    });
   }
 }
