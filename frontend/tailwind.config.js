@@ -20,6 +20,11 @@ module.exports = {
       'red-fire': '#EF4C13',
       fire: '#F1612E',
       rosa: '#FFEDEB',
+      neon: {
+        green: '#6DF451',
+        yellow: '#BDFF3E',
+        orange: '#EFBB54',
+      },
       transparent: 'transparent',
     },
     boxShadow: {

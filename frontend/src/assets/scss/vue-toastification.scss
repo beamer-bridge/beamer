@@ -1,0 +1,13 @@
+// Override default toastification variables 
+$vt-color-success: theme('colors.sea-green.DEFAULT');
+$vt-color-danger: theme('colors.red-fire');
+$vt-color-warning: theme('colors.neon.orange');
+$vt-color-info: theme('colors.teal-dark');
+
+@import "vue-toastification/src/scss/_variables";
+@import "vue-toastification/src/scss/_toastContainer";
+@import "vue-toastification/src/scss/_toast";
+@import "vue-toastification/src/scss/_closeButton";
+@import "vue-toastification/src/scss/_progressBar";
+@import "vue-toastification/src/scss/_icon";
+@import "vue-toastification/src/scss/animations/_bounce";
