@@ -130,7 +130,7 @@ jobs:
             # Remove other versions so they don't end up in the cache.
             for x in $(ls -1 ${NVM_DIR}/versions/node | grep -v $(nvm version default)); do nvm uninstall $x; done
       - run: npm install yarn --location=global
-      - run: npm install ganache@7.5.0 --location=global
+      - run: npm install ganache@7.7.7 --location=global
       - run: yarn install --frozen-lockfile
       - save_cache:
           key: node18-packages-{{ .Environment.CACHE_VERSION }}
