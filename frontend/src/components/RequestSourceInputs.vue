@@ -286,6 +286,11 @@ const totalRequestTokenAmount = computed(() => {
 });
 
 watch(totalRequestTokenAmount, () => v$.value.selectedTokenAmount?.$touch());
+watch(selectedSourceChain, () => {
+  selectedToken.value =
+    tokenOptions.value.find((token) => token.value.symbol === selectedToken.value?.value.symbol) ||
+    null;
+});
 
 const inputValues: WritableComputedRef<RequestSource> = computed({
   get: () => ({
