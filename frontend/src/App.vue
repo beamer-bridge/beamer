@@ -68,6 +68,7 @@ import { useTransferHistory } from '@/stores/transfer-history';
 
 import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
 import { useClaimCountListeners } from './composables/useClaimCountListeners';
+import { useTransferStepNotifications } from './composables/useTransferStepNotifications';
 
 const enableFeedback = process.env.NODE_ENV === 'production' && false;
 
@@ -78,6 +79,7 @@ const { loadConfiguration, configurationLoaded, configurationError } =
 const { isBlacklistedWallet } = storeToRefs(useEthereumProvider());
 
 const { transfers, loaded } = storeToRefs(useTransferHistory());
+useTransferStepNotifications(transfers as Ref<Array<Transfer>>);
 useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
 useClaimCountListeners(transfers as Ref<Array<Transfer>>);
 

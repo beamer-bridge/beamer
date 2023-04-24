@@ -1,3 +1,5 @@
+import EventEmitter from 'events';
+
 import type { Step } from './step';
 
 /**
@@ -40,10 +42,11 @@ import type { Step } from './step';
  * extended and NEVER introduce breaking changes to itself. Tests are an approach
  * to ensure this.
  */
-export class MultiStepAction {
+export class MultiStepAction extends EventEmitter {
   readonly _steps: Array<Step>;
 
   constructor(steps: Array<Step>) {
+    super();
     this._steps = steps;
   }
 
@@ -121,6 +124,8 @@ export class MultiStepAction {
         step.deactivate();
       }
     }
+
+    this.emit('completed');
   }
 }
 
