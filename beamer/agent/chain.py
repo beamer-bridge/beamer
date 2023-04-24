@@ -569,7 +569,7 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
         except Exception as ex:
             context.logger.error("L1 resolution failed", ex=ex, tx_hash=proof_tx)
         finally:
-            del context.l1_resolutions[proof_tx]
+            context.l1_resolutions.pop(proof_tx, None)
 
     future.add_done_callback(on_future_done)
     context.l1_resolutions[proof_tx] = future
