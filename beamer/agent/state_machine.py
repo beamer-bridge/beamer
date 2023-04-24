@@ -356,7 +356,7 @@ def _handle_fill_invalidated_resolved(
         assert request is not None
         request.l1_resolution_invalid_fill_ids.add(claim.fill_id)
         if claim.invalidation_tx is not None:
-            context.l1_resolutions.pop(claim.invalidation_tx)
+            context.l1_resolutions.pop(claim.invalidation_tx, None)
 
     return True, None
 

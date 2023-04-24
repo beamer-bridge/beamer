@@ -638,7 +638,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     func = context.fill_manager.functions.invalidateFill(
-        request.id, claim.latest_claim_made.fill_id, request.source_chain_id
+        request.id, claim.fill_id, request.source_chain_id
     )
     try:
         receipt = transact(func)
@@ -649,7 +649,7 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     context.logger.info(
         "Invalidated fill",
         request=request.id,
-        fill_id=request.fill_id,
+        fill_id=claim.fill_id,
         claim=claim.id,
         txn_hash=receipt.transactionHash.hex(),
     )
