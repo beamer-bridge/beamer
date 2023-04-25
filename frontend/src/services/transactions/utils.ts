@@ -55,6 +55,12 @@ export async function getCurrentBlockNumber(rpcUrl: string): Promise<number> {
   return provider.getBlockNumber();
 }
 
+export async function getBlockTimestamp(rpcUrl: string, blockHash: string) {
+  const provider = getJsonRpcProvider(rpcUrl);
+  const block = await provider.getBlock(blockHash);
+  return block.timestamp;
+}
+
 export function getJsonRpcProvider(rpcUrl: string): JsonRpcProvider {
   return new JsonRpcProvider(rpcUrl);
 }

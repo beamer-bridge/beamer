@@ -8,6 +8,7 @@ import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 import {
+  getBlockTimestamp,
   getConfirmationTimeBlocksForChain,
   getJsonRpcProvider,
   getLatestBlock,
@@ -144,11 +145,14 @@ export async function sendRequestTransaction(
   }
 }
 
-export async function getRequestIdentifier(
+export async function getRequestInformation(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
-): Promise<string> {
+): Promise<{
+  requestId: string;
+  timestamp: number;
+}> {
   const provider = getJsonRpcProvider(rpcUrl);
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
@@ -168,7 +172,8 @@ export async function getRequestIdentifier(
         const event = contract.interface.parseLog(receipt.logs[0]);
 
         if (event) {
-          return event.args.requestId;
+          const timestamp = await getBlockTimestamp(rpcUrl, receipt.blockHash);
+          return { requestId: event.args.requestId, timestamp };
         }
       } catch (e) {
         throw new Error("Request Failed. Couldn't retrieve Request ID.");
