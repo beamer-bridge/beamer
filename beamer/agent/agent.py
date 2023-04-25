@@ -91,6 +91,7 @@ class Agent:
                 confirmation_blocks=self._config.confirmation_blocks[chain_name],
                 on_new_events=[],
                 on_sync_done=[],
+                on_rpc_status_change=[],
             )
             chains[chain_id] = _Chain(
                 w3=w3,
