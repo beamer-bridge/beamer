@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import DefaultDict, TypedDict, cast
 
+import requests
 import toml
 from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
@@ -212,8 +213,10 @@ def fetch_events() -> ChainEventMap:
             BlockNumber(info["RequestManager"].deployment_block),
             0,
         )
-
-        events[chain_id] = ef.fetch()
+        try:
+            events[chain_id] = ef.fetch()
+        except requests.exceptions.ConnectionError:
+            events[chain_id] = []
 
     return cast(ChainEventMap, events)
 
