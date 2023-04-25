@@ -6,7 +6,7 @@ import {
   getAmountBeforeFees,
   getRequestData,
   getRequestFee,
-  getRequestIdentifier,
+  getRequestInformation,
   getTimeToExpiredMilliseconds,
   getTokenMinLpFee,
   getTokenTransferLimit,
@@ -200,9 +200,10 @@ describe('request-manager', () => {
     });
   });
 
-  describe('getRequestIdentifier()', async () => {
-    it('queries and returns the request identifier for a given transaction hash', async () => {
+  describe('getRequestInformation()', async () => {
+    it('queries and returns the request information for a given transaction hash', async () => {
       const transactionHash = getRandomString();
+      const transactionMinedTimestamp = 100;
 
       const contract = mockGetRequestManagerContract();
       contract.interface.parseLog = vi.fn().mockReturnValue({ args: { requestId: '1' } });
@@ -214,16 +215,20 @@ describe('request-manager', () => {
         getConfirmationTimeBlocksForChain: {
           value: vi.fn().mockReturnValue(1),
         },
+        getBlockTimestamp: {
+          value: vi.fn().mockReturnValue(transactionMinedTimestamp),
+        },
       });
 
-      const identifier = await getRequestIdentifier(
+      const requestInformation = await getRequestInformation(
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         transactionHash,
       );
 
       expect(provider.waitForTransaction).toHaveBeenCalledWith(transactionHash, expect.anything());
-      expect(identifier).toBe('1');
+      expect(requestInformation.requestId).toBe('1');
+      expect(requestInformation.timestamp).toBe(transactionMinedTimestamp);
     });
 
     it('throws an error if the transaction has reverted', async () => {
@@ -237,7 +242,7 @@ describe('request-manager', () => {
         .mockReturnValue(new MockedTransactionReceipt({ status: 0 }));
 
       await expect(
-        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+        getRequestInformation(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction reverted on chain.');
     });
 
@@ -250,7 +255,7 @@ describe('request-manager', () => {
       provider.waitForTransaction = vi.fn().mockReturnValue(undefined);
 
       await expect(
-        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+        getRequestInformation(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction not found.');
     });
 
@@ -268,7 +273,7 @@ describe('request-manager', () => {
         .mockReturnValue(new MockedTransactionReceipt({ status: 1, logs: undefined }));
 
       await expect(
-        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+        getRequestInformation(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow("Request Failed. Couldn't retrieve Request ID.");
     });
 
@@ -279,7 +284,7 @@ describe('request-manager', () => {
       provider.waitForTransaction = vi.fn().mockReturnValue(null);
 
       await expect(
-        getRequestIdentifier(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
+        getRequestInformation(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),
       ).rejects.toThrow('Transaction not found.');
     });
   });

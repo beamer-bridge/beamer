@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils';
 
-import { fetchUntilFirstMatchingEvent } from '@/services/events/filter-utils';
+import { fetchFirstMatchingEvent } from '@/services/events/filter-utils';
 
 const moveTimerToNextTick = async () => {
   await flushPromises();
@@ -17,19 +17,19 @@ describe('filter-utils', () => {
   });
 
   describe('fetchUntilFirstMatchingEvent()', () => {
-    it('does nothing if block range is negative and returns false', async () => {
+    it('does nothing if block range is negative and returns undefined', async () => {
       const contract = { queryFilter: vi.fn() };
 
-      const found = await fetchUntilFirstMatchingEvent(contract, {}, 2, 1);
+      const event = await fetchFirstMatchingEvent(contract, {}, 2, 1);
 
       expect(contract.queryFilter).not.toHaveBeenCalled();
-      expect(found).toBe(false);
+      expect(event).toBeUndefined();
     });
 
     it('queries for events multiple times per chunk size', async () => {
       const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
 
-      fetchUntilFirstMatchingEvent(contract, {}, 1, 9, 2);
+      fetchFirstMatchingEvent(contract, {}, 1, 9, 2);
 
       expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 3);
       await moveTimerToNextTick();
@@ -44,7 +44,7 @@ describe('filter-utils', () => {
     it('last event query reduces chunk size to match final block number', async () => {
       const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
 
-      fetchUntilFirstMatchingEvent(contract, {}, 1, 5, 2);
+      fetchFirstMatchingEvent(contract, {}, 1, 5, 2);
 
       expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 3);
       await moveTimerToNextTick();
@@ -53,24 +53,24 @@ describe('filter-utils', () => {
       await moveTimerToNextTick();
     });
 
-    it('returns true if event was found', async () => {
+    it('returns event object if event was found', async () => {
       const contract = { queryFilter: vi.fn().mockResolvedValue(['fake-event']) };
 
-      const found = fetchUntilFirstMatchingEvent(contract, {}, 1, 2);
+      const event = fetchFirstMatchingEvent(contract, {}, 1, 2);
       await moveTimerToNextTick();
 
-      expect(await found).toBe(true);
+      expect(await event).not.toBeUndefined();
     });
 
-    it('returns false if no event was found', async () => {
+    it('returns undefined if no event was found', async () => {
       const contract = { queryFilter: vi.fn().mockResolvedValue([]) };
 
-      const found = fetchUntilFirstMatchingEvent(contract, {}, 1, 2);
+      const found = fetchFirstMatchingEvent(contract, {}, 1, 2);
 
       expect(contract.queryFilter).toHaveBeenCalled();
       await moveTimerToNextTick();
 
-      expect(await found).toBe(false);
+      expect(await found).toBeUndefined();
     });
 
     it('stops querying events once an event was found', async () => {
@@ -82,7 +82,7 @@ describe('filter-utils', () => {
           .mockResolvedValue([]),
       };
 
-      fetchUntilFirstMatchingEvent(contract, {}, 1, 9, 2);
+      fetchFirstMatchingEvent(contract, {}, 1, 9, 2);
 
       await moveTimerToNextTick();
 
@@ -103,7 +103,7 @@ describe('filter-utils', () => {
           .mockResolvedValue([]),
       };
 
-      fetchUntilFirstMatchingEvent(contract, {}, 1, 6, 4);
+      fetchFirstMatchingEvent(contract, {}, 1, 6, 4);
 
       expect(contract.queryFilter).toHaveBeenNthCalledWith(1, expect.anything(), 1, 5);
       await moveTimerToNextTick();
