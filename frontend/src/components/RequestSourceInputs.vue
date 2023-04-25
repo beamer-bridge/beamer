@@ -21,6 +21,7 @@
         name="sourceChain"
         label="From"
         :options="chainOptions"
+        :disabled="!sourceChainSelectionAvailable"
         placeholder="Source Rollup"
         required
         @opened="hideActionButton"
@@ -192,6 +193,10 @@ const selectedSourceChain = computed({
     }
   },
 });
+
+const sourceChainSelectionAvailable = computed(
+  () => !provider.value || !!provider.value.switchChainSafely,
+);
 
 // Need to switch chain in case the user selected one before connecting a wallet
 watch(providerChainOption, async (_newProviderChainOption, previousProviderChainOption) => {
