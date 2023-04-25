@@ -3,6 +3,7 @@ import time
 
 import ape
 import pytest
+import structlog
 from eth_utils import to_checksum_address
 from web3.constants import ADDRESS_ZERO
 
@@ -10,12 +11,15 @@ import beamer.agent.agent
 from beamer.tests.constants import FILL_ID
 from beamer.tests.util import (
     EventCollector,
+    HTTPProxy,
     Sleeper,
     alloc_accounts,
     alloc_whitelisted_accounts,
     earnings,
     make_request,
 )
+
+_CONNECTION_CLOSED = False
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -497,3 +501,71 @@ def test_invalidation(
     with Sleeper(5) as sleeper:
         while not claim.invalidated_l1_resolved.is_active:
             sleeper.sleep(0.1)
+
+
+def _do_post(handler, url, post_body):
+    response = handler.forward_request(url, post_body)
+    if response is not None:
+        handler.complete(response)
+
+
+def test_rpc_down_on_challenge(request_manager, token, config, direction, chain_params):
+    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], _do_post)
+    proxy_l2a.start()
+    config.rpc_urls["l2a"] = proxy_l2a.url()
+
+    agent = beamer.agent.agent.Agent(config)
+    agent.start()
+
+    requester, target, exploiter = alloc_accounts(3)
+    ape.accounts.test_accounts[0].transfer(exploiter, ape.convert("10 ether", int))
+    amount = 1
+
+    new_chain_params = (1, *chain_params[1:])
+    request_manager.updateChain(ape.chain.chain_id, *new_chain_params)
+
+    request_id = make_request(request_manager, token, requester, target, amount)
+
+    with Sleeper(5) as sleeper:
+        while (request := agent.get_context(direction).requests.get(request_id)) is None:
+            sleeper.sleep(0.1)
+
+    with Sleeper(10) as sleeper:
+        while not request.claimed.is_active:
+            sleeper.sleep(0.1)
+
+    collector = EventCollector(request_manager, "ClaimMade")
+    claim = collector.next_event()
+
+    assert claim is not None
+    with structlog.testing.capture_logs() as captured_logs:
+        proxy_l2a.stop()
+        ape.chain.mine(200)
+        request_manager.challengeClaim(
+            claim.claimId, sender=exploiter, value=ape.convert("2 ether", int)
+        )
+
+        exploiter_claim = collector.next_event()
+
+        assert exploiter_claim is not None
+
+        # as agent lost the RPC connection, it couldn't counter-challenge because the event
+        # processor is halted
+        challenge_claim = collector.next_event()
+
+        assert challenge_claim is None
+
+        proxy_l2a.start()
+
+        # as agent has the RPC connection again, start processing events and counter challenge
+        challenge_claim = collector.next_event()
+
+        assert challenge_claim is not None
+
+        agent.stop()
+        proxy_l2a.stop()
+
+    stop_log = next(log for log in captured_logs if log["event"] == "RPC stopped working")
+    start_log = next(log for log in captured_logs if log["event"] == "RPC started working")
+
+    assert captured_logs.index(stop_log) + 2 == captured_logs.index(start_log)
