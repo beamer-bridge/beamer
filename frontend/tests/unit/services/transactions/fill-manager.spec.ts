@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils';
 
 import * as eventFiltersService from '@/services/events/filter-utils';
 import {
-  checkForPastFulfillmentEvent,
+  fetchPastFulfillmentEvent,
   waitForFulfillment,
 } from '@/services/transactions/fill-manager';
 import * as transactionUtils from '@/services/transactions/utils';
@@ -12,6 +12,7 @@ import {
   getRandomString,
   getRandomUrl,
 } from '~/utils/data_generators';
+import { MockedEvent } from '~/utils/mocks/ethers';
 import { mockGetFillManagerContract } from '~/utils/mocks/services/transactions/utils';
 
 vi.mock('@/services/transactions/utils');
@@ -40,13 +41,13 @@ describe('fill-manager', () => {
       value: vi.fn(),
     });
 
-    Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
+    Object.defineProperty(eventFiltersService, 'fetchFirstMatchingEvent', {
       value: vi.fn(),
     });
   });
 
   describe('checkForPastFulfillmentEvent()', () => {
-    it('calls fetchUntilFirstMatchingEvent with the right parameters', async () => {
+    it('calls fetchFirstMatchingEvent with the right parameters', async () => {
       const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig({
         fromBlockNumber: 1,
       });
@@ -61,14 +62,14 @@ describe('fill-manager', () => {
         value: vi.fn().mockReturnValue(toBlockNumber),
       });
 
-      await checkForPastFulfillmentEvent(
+      await fetchPastFulfillmentEvent(
         rpcUrl,
         fillManagerAddress,
         requestIdentifier,
         fromBlockNumber,
       );
 
-      expect(eventFiltersService.fetchUntilFirstMatchingEvent).toHaveBeenNthCalledWith(
+      expect(eventFiltersService.fetchFirstMatchingEvent).toHaveBeenNthCalledWith(
         1,
         contract,
         filter,
@@ -79,18 +80,14 @@ describe('fill-manager', () => {
     it('returns the result from the event filter operation', async () => {
       const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig();
 
-      Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
-        value: vi.fn().mockResolvedValue(true),
+      const event = new MockedEvent();
+      Object.defineProperty(eventFiltersService, 'fetchFirstMatchingEvent', {
+        value: vi.fn().mockResolvedValue(event),
       });
 
       await expect(
-        checkForPastFulfillmentEvent(
-          rpcUrl,
-          fillManagerAddress,
-          requestIdentifier,
-          fromBlockNumber,
-        ),
-      ).resolves.toBe(true);
+        fetchPastFulfillmentEvent(rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber),
+      ).resolves.toBe(event);
     });
   });
 
@@ -104,7 +101,7 @@ describe('fill-manager', () => {
       await flushPromises();
 
       expect(contract.on).toHaveBeenCalled();
-      expect(eventFiltersService.fetchUntilFirstMatchingEvent).toHaveBeenCalled();
+      expect(eventFiltersService.fetchFirstMatchingEvent).toHaveBeenCalled();
       expect(contract.removeAllListeners).not.toHaveBeenCalled();
     });
 
@@ -113,8 +110,9 @@ describe('fill-manager', () => {
 
       const contract = mockGetFillManagerContract();
 
-      Object.defineProperty(eventFiltersService, 'fetchUntilFirstMatchingEvent', {
-        value: vi.fn().mockResolvedValue(true),
+      const event = new MockedEvent();
+      Object.defineProperty(eventFiltersService, 'fetchFirstMatchingEvent', {
+        value: vi.fn().mockResolvedValue(event),
       });
 
       const { promise } = waitForFulfillment(
