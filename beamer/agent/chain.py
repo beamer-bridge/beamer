@@ -6,8 +6,9 @@ import traceback
 from concurrent.futures import Future
 from typing import Callable
 
+import requests
 import structlog
-from web3 import Web3
+from web3 import HTTPProvider, Web3
 from web3.contract import Contract
 from web3.types import Timestamp, Wei
 
@@ -27,6 +28,7 @@ _STOP_TIMEOUT = 2
 
 
 _SyncDoneCallback = Callable[[], None]
+_RPCStatusCallback = Callable[[bool], None]
 _NewEventsCallback = Callable[[list[Event]], None]
 
 
@@ -51,6 +53,7 @@ class EventMonitor:
         deployment_block: BlockNumber,
         on_new_events: list[_NewEventsCallback],
         on_sync_done: list[_SyncDoneCallback],
+        on_rpc_status_change: list[_RPCStatusCallback],
         poll_period: float,
         confirmation_blocks: int,
     ):
@@ -61,6 +64,8 @@ class EventMonitor:
         self._stop = False
         self._on_new_events = on_new_events
         self._on_sync_done = on_sync_done
+        self._on_rpc_status_change = on_rpc_status_change
+        self._rpc_working = True
         self._poll_period = poll_period
         self._confirmation_blocks = confirmation_blocks
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
@@ -81,6 +86,25 @@ class EventMonitor:
     def subscribe(self, event_processor: "EventProcessor") -> None:
         self._on_new_events.append(event_processor.add_events)
         self._on_sync_done.append(event_processor.mark_sync_done)
+        self._on_rpc_status_change.append(event_processor.set_rpc_working)
+
+    def _inner_fetch(self, fetcher: EventFetcher) -> list[Event]:
+        events = []
+        was_working = self._rpc_working
+        try:
+            events.extend(fetcher.fetch())
+        except requests.exceptions.ConnectionError:
+            self._rpc_working = False
+        else:
+            self._rpc_working = True
+        if was_working != self._rpc_working:
+            self._call_on_rpc_status_change(self._rpc_working)
+            assert isinstance(self._web3.provider, HTTPProvider)
+            self._log.info(
+                "RPC stopped working" if was_working else "RPC started working",
+                rpc_url=self._web3.provider.endpoint_uri,
+            )
+        return events
 
     def _thread_func(self) -> None:
         self._log.info(
@@ -93,13 +117,13 @@ class EventMonitor:
         current_block = self._web3.eth.block_number
         events = []
         while fetcher.synced_block < current_block:
-            events.extend(fetcher.fetch())
+            events.extend(self._inner_fetch(fetcher))
         if events:
             self._call_on_new_events(events)
         self._call_on_sync_done()
         self._log.info("Sync done")
         while not self._stop:
-            events = fetcher.fetch()
+            events = self._inner_fetch(fetcher)
             if events:
                 self._call_on_new_events(events)
             time.sleep(self._poll_period)
@@ -112,6 +136,10 @@ class EventMonitor:
     def _call_on_sync_done(self) -> None:
         for on_sync_done in self._on_sync_done:
             on_sync_done()
+
+    def _call_on_rpc_status_change(self, rpc_working: bool) -> None:
+        for on_rpc_change in self._on_rpc_status_change:
+            on_rpc_change(rpc_working)
 
 
 class EventProcessor:
@@ -132,6 +160,7 @@ class EventProcessor:
         # 2 = If there are 2 different chains, the sync is done
         self._num_syncs_done = 0
         self._context = context
+        self._rpc_working = True
         self._chain_ids = {self._context.source_chain_id, self._context.target_chain_id}
 
     @property
@@ -164,6 +193,9 @@ class EventProcessor:
             self._context.logger.debug("New events", events=events)
         self._have_new_events.set()
 
+    def set_rpc_working(self, rpc_working: bool) -> None:
+        self._rpc_working = rpc_working
+
     def _thread_func(self) -> None:
         self._context.logger.info("EventProcessor started")
 
@@ -178,6 +210,9 @@ class EventProcessor:
                 self._have_new_events.clear()
             if self._events:
                 self._process_events()
+
+            if not self._rpc_working:
+                continue
 
             process_requests(self._context)
             process_claims(self._context)

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from itertools import pairwise
 from typing import Iterable, Optional
 
+import requests
 import structlog
 from eth_abi.codec import ABICodec
 from eth_utils.abi import event_abi_to_log_topic
@@ -284,7 +285,7 @@ class EventFetcher:
             )
             return None
 
-        except ConnectionError as exc:
+        except requests.exceptions.ConnectionError as exc:
             assert isinstance(self._web3.provider, HTTPProvider)
             url = self._web3.provider.endpoint_uri
             self._log.error("Connection error", url=url, exc=exc)
@@ -308,6 +309,8 @@ class EventFetcher:
     def fetch(self) -> list[Event]:
         try:
             block_data = self._web3.eth.get_block("latest")
+        except requests.exceptions.ConnectionError:
+            raise
         except RequestException:
             return []
 
@@ -321,10 +324,7 @@ class EventFetcher:
 
         while from_block <= block_number:
             to_block = min(block_number, BlockNumber(from_block + self._blocks_to_fetch))
-            try:
-                events = self._fetch_range(from_block, to_block)
-            except ConnectionError:
-                break
+            events = self._fetch_range(from_block, to_block)
             if events is not None:
                 result.extend(events)
             from_block = BlockNumber(to_block + 1)
@@ -333,6 +333,8 @@ class EventFetcher:
         try:
             # Block number needs to be decremented here, because it is already incremented above
             block_data = self._web3.eth.get_block(from_block - 1)
+        except requests.exceptions.ConnectionError:
+            raise
         except RequestException:
             return result
         else:
