@@ -56,7 +56,7 @@ export async function createCoinbaseProvider(rpcList: {
   return undefined;
 }
 
-export class CoinbaseProvider extends EthereumProvider {
+export class CoinbaseProvider extends EthereumProvider<Eip1193Provider> {
   constructor(_provider: Eip1193Provider) {
     super(_provider);
   }

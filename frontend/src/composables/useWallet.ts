@@ -23,7 +23,7 @@ export function useWallet(
       metaMaskProvider.requestSigner();
       provider.value = metaMaskProvider;
       connectedWallet.value = WalletType.MetaMask;
-      metaMaskProvider.on('disconnect', disconnectWallet);
+      metaMaskProvider.on('disconnect', disconnect.run);
     } else if (withOnboarding) {
       onboardMetaMask();
     }
@@ -36,7 +36,7 @@ export function useWallet(
       injectedProvider.requestSigner();
       provider.value = injectedProvider;
       connectedWallet.value = WalletType.Injected;
-      injectedProvider.on('disconnect', disconnectWallet);
+      injectedProvider.on('disconnect', disconnect.run);
     }
   }
 
@@ -46,7 +46,7 @@ export function useWallet(
     if (walletConnectProvider) {
       provider.value = walletConnectProvider;
       connectedWallet.value = WalletType.WalletConnect;
-      walletConnectProvider.on('disconnect', disconnectWallet);
+      walletConnectProvider.on('disconnect', disconnect.run);
     }
   }
 
@@ -56,7 +56,7 @@ export function useWallet(
     if (coinbaseProvider) {
       provider.value = coinbaseProvider;
       connectedWallet.value = WalletType.Coinbase;
-      coinbaseProvider.on('disconnect', disconnectWallet);
+      coinbaseProvider.on('disconnect', disconnect.run);
     }
   }
 
@@ -77,6 +77,7 @@ export function useWallet(
   }
 
   async function disconnectWallet() {
+    await provider.value?.closeExternalConnection();
     connectedWallet.value = undefined;
     provider.value = undefined;
   }
@@ -85,6 +86,7 @@ export function useWallet(
   const walletConnectTask = useAsynchronousTask(connectWalletConnect);
   const coinbaseTask = useAsynchronousTask(connectCoinbase);
   const injectedTask = useAsynchronousTask(connectInjected);
+  const disconnect = useAsynchronousTask(disconnectWallet);
 
   return {
     connectMetaMask: metamaskTask.run,
@@ -95,7 +97,9 @@ export function useWallet(
     connectingCoinbase: coinbaseTask.active,
     connectInjected: injectedTask.run,
     connectingInjected: injectedTask.active,
+    disconnectInProgress: disconnect.active,
+    disconnectWallet: disconnect.run,
+    disconnectError: disconnect.error,
     reconnectToWallet,
-    disconnectWallet,
   };
 }
