@@ -4,10 +4,10 @@
  Remove the above mentioned package from project once coinbase fixes this:
  https://github.com/coinbase/coinbase-wallet-sdk/issues/56
  */
+import type { CoinbaseWalletProvider } from '@coinbase/wallet-sdk';
 import { hexValue } from 'ethers/lib/utils';
 
 import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
-import type { Eip1193Provider } from '@/services/web3-provider/types';
 import { CoinbaseWalletSDK } from '@/services/web3-provider/util-export';
 
 const APP_NAME = 'Beamer Bridge';
@@ -46,7 +46,7 @@ export async function createCoinbaseProvider(rpcList: {
   await provider.enable();
 
   if (provider.connected) {
-    const coinbaseProvider = new CoinbaseProvider(provider as unknown as Eip1193Provider);
+    const coinbaseProvider = new CoinbaseProvider(provider);
 
     await coinbaseProvider.init();
 
@@ -56,9 +56,14 @@ export async function createCoinbaseProvider(rpcList: {
   return undefined;
 }
 
-export class CoinbaseProvider extends EthereumProvider<Eip1193Provider> {
-  constructor(_provider: Eip1193Provider) {
+export class CoinbaseProvider extends EthereumProvider<CoinbaseWalletProvider> {
+  constructor(_provider: CoinbaseWalletProvider) {
     super(_provider);
+  }
+
+  async closeExternalConnection() {
+    await this.externalProvider.close();
+    this.externalProvider.disconnect();
   }
 
   protected async switchChain(newChainId: number): Promise<boolean> {
