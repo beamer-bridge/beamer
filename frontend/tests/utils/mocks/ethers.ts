@@ -15,6 +15,7 @@ export class MockedTransaction {
 export class MockedTransactionReceipt {
   logs = [];
   status = 1;
+  blockHash = '0x123';
 
   constructor(public props: Partial<MockedTransactionReceipt> = {}) {
     Object.assign(this, props);

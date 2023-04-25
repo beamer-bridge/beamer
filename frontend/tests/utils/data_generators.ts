@@ -157,6 +157,7 @@ export function generateTransfer(options?: {
       requestInformation: generateRequestInformationData({
         transactionHash: getRandomTransactionHash(),
       }),
+      requestFulfillment: generateRequestFulfillmentData(),
       ...transferData,
     };
   }

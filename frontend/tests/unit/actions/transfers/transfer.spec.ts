@@ -85,7 +85,9 @@ describe('transfer', () => {
 
     Object.defineProperties(requestManager, {
       sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
-      getRequestIdentifier: { value: vi.fn().mockResolvedValue(1) },
+      getRequestInformation: {
+        value: vi.fn().mockResolvedValue({ requestId: 1, timestamp: 100 }),
+      },
       getRequestData: {
         value: vi.fn().mockResolvedValue({
           withdrawn: false,
@@ -111,7 +113,7 @@ describe('transfer', () => {
     Object.defineProperties(fillManager, {
       waitForFulfillment: {
         value: vi.fn().mockReturnValue({
-          promise: new Promise<void>((resolve) => resolve()),
+          promise: new Promise<number>((resolve) => resolve(100)),
           cancel: vi.fn(),
         }),
       },
@@ -140,7 +142,7 @@ describe('transfer', () => {
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
-      expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
+      expect(requestManager.getRequestInformation).toHaveBeenCalledTimes(1);
       expect(requestManager.failWhenRequestExpires).toHaveBeenCalledTimes(1);
       expect(fillManager.waitForFulfillment).toHaveBeenCalledTimes(1);
     });
@@ -297,8 +299,8 @@ describe('transfer', () => {
 
       await transfer.waitForRequestEvent();
 
-      expect(requestManager.getRequestIdentifier).toHaveBeenCalledTimes(1);
-      expect(requestManager.getRequestIdentifier).toHaveBeenLastCalledWith(
+      expect(requestManager.getRequestInformation).toHaveBeenCalledTimes(1);
+      expect(requestManager.getRequestInformation).toHaveBeenLastCalledWith(
         'https://source.rpc',
         '0xRequestManager',
         '0xHash',
