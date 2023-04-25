@@ -8,7 +8,10 @@ import { ref, shallowRef, toRaw } from 'vue';
 import type { Eip1193Provider, IEthereumProvider } from '@/services/web3-provider/types';
 import type { Chain, Token } from '@/types/data';
 
-export abstract class BasicEthereumProvider extends EventEmitter implements IEthereumProvider {
+export abstract class BasicEthereumProvider<T extends Eip1193Provider>
+  extends EventEmitter
+  implements IEthereumProvider
+{
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
@@ -16,9 +19,9 @@ export abstract class BasicEthereumProvider extends EventEmitter implements IEth
   isContractWallet = false;
 
   protected web3Provider: Web3Provider;
-  protected externalProvider: Eip1193Provider;
+  protected externalProvider: T;
 
-  constructor(_provider: Eip1193Provider) {
+  constructor(_provider: T) {
     super();
     this.web3Provider = new Web3Provider(_provider, 'any');
     this.externalProvider = _provider;
@@ -93,7 +96,9 @@ export abstract class BasicEthereumProvider extends EventEmitter implements IEth
   }
 }
 
-export abstract class EthereumProvider extends BasicEthereumProvider {
+export abstract class EthereumProvider<
+  T extends Eip1193Provider,
+> extends BasicEthereumProvider<T> {
   async switchChainSafely(newChain: Chain): Promise<boolean> {
     let successful = true;
     if (newChain.identifier !== this.chainId.value) {
@@ -117,6 +122,10 @@ export abstract class EthereumProvider extends BasicEthereumProvider {
       }
     }
     return successful;
+  }
+
+  async closeExternalConnection(): Promise<void> {
+    return;
   }
 
   // Returns false in case the provider does not have the chain.

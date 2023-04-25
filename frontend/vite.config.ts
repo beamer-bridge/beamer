@@ -22,11 +22,6 @@ export default defineConfig({
       '@': source_directory,
       '~': test_directory,
       config: config_directory,
-      /* 
-        Fixes the misconfigured resolution (import resolves to a .cjs file) inside walletconnect's package.json
-        TODO: remove when they address this issue: https://github.com/WalletConnect/walletconnect-monorepo/issues/1943
-       */
-      '@walletconnect/ethereum-provider': '@walletconnect/ethereum-provider/dist/index.umd.js',
     },
   },
   define: {

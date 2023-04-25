@@ -95,6 +95,9 @@ export function useWallet(
   }
 
   async function disconnectWallet() {
+    if (provider.value?.closeExternalConnection) {
+      await provider.value.closeExternalConnection();
+    }
     connectedWallet.value = undefined;
     provider.value = undefined;
   }
