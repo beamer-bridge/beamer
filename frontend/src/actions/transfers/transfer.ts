@@ -6,7 +6,7 @@ import { waitForFulfillment } from '@/services/transactions/fill-manager';
 import {
   failWhenRequestExpires,
   getRequestData,
-  getRequestIdentifier,
+  getRequestInformation,
   listenOnClaimCountChange,
   RequestExpiredError,
   sendRequestTransaction,
@@ -22,6 +22,8 @@ import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
+import type { RequestFulfillmentData } from './request-fulfillment';
+import { RequestFulfillment } from './request-fulfillment';
 import type { RequestInformationData } from './request-information';
 import { RequestInformation } from './request-information';
 
@@ -81,6 +83,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly date: Date;
   readonly approveInfiniteAmount: boolean;
   private _requestInformation?: RequestInformation;
+  private _requestFulfillment?: RequestFulfillment;
   private _expired: boolean;
   private _claimCount: number;
   private _withdrawn: boolean;
@@ -137,6 +140,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
   get requestInformation(): RequestInformation | undefined {
     return this._requestInformation;
+  }
+
+  get requestFulfillment(): RequestFulfillment | undefined {
+    return this._requestFulfillment;
   }
 
   get expired(): boolean {
@@ -237,6 +244,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       approveInfiniteAmount: this.approveInfiniteAmount,
       steps: this.steps.map((step) => step.encode()),
       requestInformation: this._requestInformation?.encode(),
+      requestFulfillment: this._requestFulfillment?.encode(),
       expired: this._expired,
       withdrawn: this._withdrawn,
       claimCount: this._claimCount,
@@ -296,13 +304,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempt to get request event before sending transaction!');
     }
 
-    const identifier = await getRequestIdentifier(
+    const { requestId, timestamp } = await getRequestInformation(
       this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.transactionHash,
     );
 
-    this._requestInformation.setIdentifier(identifier);
+    this._requestInformation.setIdentifier(requestId);
+    this._requestInformation.setTimestamp(timestamp);
   }
 
   protected async waitForFulfillment(): Promise<void> {
@@ -324,7 +333,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     );
 
     try {
-      await Promise.race([fulfillmentPromise, expirationPromise]);
+      const timestamp = await Promise.race([fulfillmentPromise, expirationPromise]);
+      if (timestamp) {
+        this._requestFulfillment = new RequestFulfillment({ timestamp });
+      }
     } catch (exception: unknown) {
       if (exception instanceof RequestExpiredError) {
         this._expired = true;
@@ -393,6 +405,7 @@ export type TransferData = {
   approveInfiniteAmount?: boolean;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;
+  requestFulfillment?: RequestFulfillmentData;
   expired?: boolean;
   withdrawn?: boolean;
   claimCount?: number;
