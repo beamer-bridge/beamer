@@ -1,6 +1,6 @@
 import FillManagerDeployment from '@/assets/FillManager.json';
-import { fetchUntilFirstMatchingEvent } from '@/services/events/filter-utils';
 import {
+  getBlockTimestamp,
   getCurrentBlockNumber,
   getJsonRpcProvider,
   getReadOnlyContract,
@@ -8,13 +8,16 @@ import {
 } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
 import type { FillManager } from '@/types/ethers-contracts';
+import type { RequestFilledEvent } from '@/types/ethers-contracts/FillManager';
 
-export async function checkForPastFulfillmentEvent(
+import { fetchFirstMatchingEvent } from '../events/filter-utils';
+
+export async function fetchPastFulfillmentEvent(
   rpcUrl: string,
   fillManagerAddress: string,
   requestIdentifier: string,
   fromBlockNumber: number,
-): Promise<boolean> {
+): Promise<RequestFilledEvent | undefined> {
   const contract = getReadOnlyContract<FillManager>(
     fillManagerAddress,
     FillManagerDeployment.abi,
@@ -22,7 +25,12 @@ export async function checkForPastFulfillmentEvent(
   );
   const currentBlockNumber = await getCurrentBlockNumber(rpcUrl);
   const filter = contract.filters.RequestFilled(requestIdentifier);
-  return fetchUntilFirstMatchingEvent(contract, filter, fromBlockNumber, currentBlockNumber);
+  return fetchFirstMatchingEvent<RequestFilledEvent>(
+    contract,
+    filter,
+    fromBlockNumber,
+    currentBlockNumber,
+  );
 }
 
 export function waitForFulfillment(
@@ -30,31 +38,34 @@ export function waitForFulfillment(
   fillManagerAddress: string,
   requestIdentifier: string,
   fromBlockNumber: number,
-): Cancelable<void> {
+): Cancelable<number> {
   const contract = getReadOnlyContract<FillManager>(
     fillManagerAddress,
     FillManagerDeployment.abi,
     getJsonRpcProvider(rpcUrl),
   );
-  const promise = new Promise<void>((resolve) => {
-    const cleanUpAndResolve = () => {
+  const promise = new Promise<number>((resolve) => {
+    const cleanUpAndResolve = (result: number) => {
       contract.removeAllListeners();
-      resolve();
+      resolve(result);
+    };
+
+    const eventHandler = async (...args: Array<unknown>) => {
+      const event = args[args.length - 1] as RequestFilledEvent;
+      const timestamp = await getBlockTimestamp(rpcUrl, event.blockHash);
+      cleanUpAndResolve(timestamp);
     };
 
     const eventFilter = contract.filters.RequestFilled(requestIdentifier);
-    contract.on(eventFilter, getSafeEventHandler(cleanUpAndResolve, contract.provider));
+    contract.on(eventFilter, getSafeEventHandler(eventHandler, contract.provider));
 
-    checkForPastFulfillmentEvent(
-      rpcUrl,
-      fillManagerAddress,
-      requestIdentifier,
-      fromBlockNumber,
-    ).then((fulfilled) => {
-      if (fulfilled) {
-        cleanUpAndResolve();
-      }
-    });
+    fetchPastFulfillmentEvent(rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber).then(
+      (event) => {
+        if (event) {
+          eventHandler(event);
+        }
+      },
+    );
   });
 
   const cancel = () => contract.removeAllListeners();
