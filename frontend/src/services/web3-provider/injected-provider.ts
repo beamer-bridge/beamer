@@ -17,7 +17,7 @@ export async function createInjectedProvider(): Promise<InjectedProvider | undef
   return undefined;
 }
 
-export class InjectedProvider extends EthereumProvider implements ISigner {
+export class InjectedProvider extends EthereumProvider<Eip1193Provider> implements ISigner {
   constructor(_provider: Eip1193Provider) {
     super(_provider);
   }

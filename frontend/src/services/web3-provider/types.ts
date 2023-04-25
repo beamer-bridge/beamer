@@ -1,9 +1,4 @@
-import type {
-  Block,
-  ExternalProvider,
-  JsonRpcSigner,
-  Web3Provider,
-} from '@ethersproject/providers';
+import type { Block, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 
 import type { Chain, Token, TransactionHash } from '@/types/data';
@@ -26,6 +21,8 @@ export interface IEthereumProvider {
   ): Promise<TransactionHash>;
   disconnectable: boolean;
   isContractWallet: boolean;
+  disconnect(): Promise<void>;
+  closeExternalConnection(): Promise<void>;
 }
 
 export interface EventEmitter {
@@ -42,10 +39,26 @@ interface RequestArguments {
   readonly params?: readonly unknown[] | object;
 }
 
-export type Eip1193Provider = ExternalProvider & {
+export interface DisconnectableProvider {
+  disconnect(): Promise<void>;
+}
+
+export type ExternalProvider = Eip1193Provider & {
+  isMetaMask?: boolean;
+  sendAsync?: (
+    request: RequestArguments,
+    callback: (error: unknown, response: unknown) => void,
+  ) => void;
+  send?: (
+    request: RequestArguments,
+    callback: (error: unknown, response: unknown) => void,
+  ) => void;
+  request?: (request: RequestArguments) => Promise<unknown>;
+};
+
+export type Eip1193Provider = {
   request(args: RequestArguments): Promise<unknown>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(eventName: string, listener: (...args: any[]) => void): void;
+  on(eventName: string, listener: (...args: unknown[]) => void): void;
 };
 
 export type DetectedEthereumProvider =

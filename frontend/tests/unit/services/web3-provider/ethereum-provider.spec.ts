@@ -13,13 +13,13 @@ import { MockedTransactionReceipt } from '~/utils/mocks/ethers';
 vi.mock('@ethersproject/providers');
 vi.mock('ethers');
 
-class TestBasicEthereumProvider extends BasicEthereumProvider {
+class TestBasicEthereumProvider extends BasicEthereumProvider<Eip1193Provider> {
   constructor(_provider: Eip1193Provider = new MockedEip1193Provider()) {
     super(_provider);
   }
 }
 
-class TestEthereumProvider extends EthereumProvider {
+class TestEthereumProvider extends EthereumProvider<Eip1193Provider> {
   constructor(_provider: Eip1193Provider = new MockedEip1193Provider()) {
     super(_provider);
   }
