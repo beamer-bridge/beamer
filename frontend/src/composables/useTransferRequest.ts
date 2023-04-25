@@ -5,7 +5,7 @@ import { reactive } from 'vue';
 import { Transfer } from '@/actions/transfers';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { Eip1193Provider, EthereumProvider } from '@/services/web3-provider';
 import type { Chain, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -63,7 +63,10 @@ export function useTransferRequest() {
     await transfer.execute(signer.value, signerAddress.value);
   };
 
-  const withdraw = async (transfer: Transfer, provider: EthereumProvider): Promise<void> => {
+  const withdraw = async (
+    transfer: Transfer,
+    provider: EthereumProvider<Eip1193Provider>,
+  ): Promise<void> => {
     await transfer.withdraw(provider);
   };
 

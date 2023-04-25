@@ -18,6 +18,7 @@ export interface IEthereumProvider {
   switchChainSafely(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
   addToken(token: Token): Promise<boolean>;
+  disconnect(): Promise<void>;
 }
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;
@@ -30,6 +31,10 @@ export interface ISigner {
 interface RequestArguments {
   readonly method: string;
   readonly params?: readonly unknown[] | object;
+}
+
+export interface DisconnectableProvider {
+  disconnect(): Promise<void>;
 }
 
 export type Eip1193Provider = ExternalProvider & {

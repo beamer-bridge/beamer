@@ -77,7 +77,14 @@ export function useWallet(
   }
 
   async function disconnectWallet() {
+    const connectedWalletValue = connectedWallet.value;
+
     connectedWallet.value = undefined;
+
+    if (connectedWalletValue === WalletType.WalletConnect) {
+      await provider.value?.disconnect();
+    }
+
     provider.value = undefined;
   }
 

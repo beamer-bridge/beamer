@@ -74,6 +74,7 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   addToken = vi.fn();
   on = vi.fn();
   emit = vi.fn();
+  disconnect = vi.fn();
 }
 
 export class MockedMetaMaskProvider extends MockedEthereumProvider implements ISigner {
