@@ -3,7 +3,7 @@ import { hexValue } from 'ethers/lib/utils';
 import { InjectedProvider } from '@/services/web3-provider/injected-provider';
 import type {
   DetectedEthereumProvider,
-  Eip1193Provider,
+  ExternalProvider,
   ISigner,
 } from '@/services/web3-provider/types';
 import { detectEthereumProvider, MetaMaskOnboarding } from '@/services/web3-provider/util-export';
@@ -38,7 +38,7 @@ export async function createMetaMaskProvider(): Promise<MetaMaskProvider | undef
   }
 
   if (injectedMetamaskProvider) {
-    const metaMaskProvider = new MetaMaskProvider(injectedMetamaskProvider as Eip1193Provider);
+    const metaMaskProvider = new MetaMaskProvider(injectedMetamaskProvider as ExternalProvider);
     await metaMaskProvider.init();
     return metaMaskProvider;
   }
@@ -53,7 +53,7 @@ export async function onboardMetaMask() {
 }
 
 export class MetaMaskProvider extends InjectedProvider implements ISigner {
-  constructor(_provider: Eip1193Provider) {
+  constructor(_provider: ExternalProvider) {
     if (!_provider.isMetaMask) {
       throw new Error('Given provider is not MetaMask!');
     }

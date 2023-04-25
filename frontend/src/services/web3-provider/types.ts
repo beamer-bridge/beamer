@@ -33,7 +33,7 @@ export interface DisconnectableProvider {
   disconnect(): Promise<void>;
 }
 
-export type ExternalProvider = {
+export type ExternalProvider = Eip1193Provider & {
   isMetaMask?: boolean;
   sendAsync?: (
     request: RequestArguments,
@@ -46,7 +46,7 @@ export type ExternalProvider = {
   request?: (request: RequestArguments) => Promise<unknown>;
 };
 
-export type Eip1193Provider = ExternalProvider & {
+export type Eip1193Provider = {
   request(args: RequestArguments): Promise<unknown>;
   on(eventName: string, listener: (...args: unknown[]) => void): void;
 };
