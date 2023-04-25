@@ -19,6 +19,7 @@ export interface IEthereumProvider {
   getChainId(): Promise<number>;
   addToken(token: Token): Promise<boolean>;
   disconnect(): Promise<void>;
+  closeExternalConnection(): Promise<void>;
 }
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;

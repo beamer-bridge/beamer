@@ -1,6 +1,5 @@
 import { hexValue } from 'ethers/lib/utils';
 
-import type { DisconnectableProvider, Eip1193Provider } from '@/services/web3-provider';
 import { EthereumProvider } from '@/services/web3-provider';
 import { WalletConnect } from '@/services/web3-provider/util-export';
 
@@ -8,7 +7,7 @@ const BEAMER_PROJECT_ID = 'b0909ba73ce9e30c4decb50a963c9b2a';
 
 export async function createWalletConnectProvider(rpcList: {
   [chainId: string]: string;
-}): Promise<WalletConnectProvider<Eip1193Provider & DisconnectableProvider> | undefined> {
+}): Promise<WalletConnectProvider | undefined> {
   const chains = Object.keys(rpcList).map((chainId) => parseInt(chainId));
 
   const provider = await WalletConnect.init({
@@ -33,15 +32,12 @@ export async function createWalletConnectProvider(rpcList: {
   return undefined;
 }
 
-export class WalletConnectProvider<
-  T extends Eip1193Provider & DisconnectableProvider,
-> extends EthereumProvider<T> {
-  constructor(_provider: T) {
+export class WalletConnectProvider extends EthereumProvider<WalletConnect> {
+  constructor(_provider: WalletConnect) {
     super(_provider);
   }
 
-  async disconnect() {
-    await super.disconnect();
+  async closeExternalConnection() {
     await this.externalProvider.disconnect();
   }
 
