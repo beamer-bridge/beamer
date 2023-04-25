@@ -1,9 +1,4 @@
-import type {
-  Block,
-  ExternalProvider,
-  JsonRpcSigner,
-  Web3Provider,
-} from '@ethersproject/providers';
+import type { Block, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 
 import type { Chain, Token } from '@/types/data';
@@ -38,10 +33,22 @@ export interface DisconnectableProvider {
   disconnect(): Promise<void>;
 }
 
+export type ExternalProvider = {
+  isMetaMask?: boolean;
+  sendAsync?: (
+    request: RequestArguments,
+    callback: (error: unknown, response: unknown) => void,
+  ) => void;
+  send?: (
+    request: RequestArguments,
+    callback: (error: unknown, response: unknown) => void,
+  ) => void;
+  request?: (request: RequestArguments) => Promise<unknown>;
+};
+
 export type Eip1193Provider = ExternalProvider & {
   request(args: RequestArguments): Promise<unknown>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(eventName: string, listener: (...args: any[]) => void): void;
+  on(eventName: string, listener: (...args: unknown[]) => void): void;
 };
 
 export type DetectedEthereumProvider =
