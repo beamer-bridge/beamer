@@ -1,0 +1,14 @@
+{
+  "identifier": 84531,
+  "explorerUrl": "https://goerli.basescan.org",
+  "rpcUrl": "https://goerli.base.org",
+  "name": "Base Goerli Testnet",
+  "imageUrl": "/images/base.svg",
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Goerli Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "internalRpcUrl": "https://distinguished-lively-putty.base-goerli.discover.quiknode.pro/4fd50c9c005e40fa1eeb2a9fc1941170cd0bfa8f/"
+}
