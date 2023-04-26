@@ -46,7 +46,7 @@ describe('fill-manager', () => {
     });
   });
 
-  describe('checkForPastFulfillmentEvent()', () => {
+  describe('fetchPastFulfillmentEvent()', () => {
     it('calls fetchFirstMatchingEvent with the right parameters', async () => {
       const { rpcUrl, fillManagerAddress, requestIdentifier, fromBlockNumber } = createConfig({
         fromBlockNumber: 1,
@@ -114,6 +114,10 @@ describe('fill-manager', () => {
       Object.defineProperty(eventFiltersService, 'fetchFirstMatchingEvent', {
         value: vi.fn().mockResolvedValue(event),
       });
+      const timestamp = 100;
+      Object.defineProperty(transactionUtils, 'getBlockTimestamp', {
+        value: vi.fn().mockResolvedValue(timestamp),
+      });
 
       const { promise } = waitForFulfillment(
         rpcUrl,
@@ -122,7 +126,7 @@ describe('fill-manager', () => {
         fromBlockNumber,
       );
 
-      await expect(promise).resolves.toBeUndefined();
+      await expect(promise).resolves.toBe(timestamp);
       expect(contract.removeAllListeners).toHaveBeenCalled();
     });
 

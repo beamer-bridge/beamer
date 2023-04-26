@@ -42,3 +42,12 @@ export class MockedEvent {
     Object.assign(this, props);
   }
 }
+
+export class MockedBlock {
+  hash = '0x123';
+  timestamp = 100;
+
+  constructor(public props: Partial<MockedBlock> = {}) {
+    Object.assign(this, props);
+  }
+}

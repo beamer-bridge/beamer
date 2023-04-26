@@ -5,6 +5,7 @@ import { TokenMetadata } from 'config/tokens/token';
 import type { StepData } from '@/actions/steps';
 import type { RequestInformationData, TransferData } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
+import type { RequestFulfillmentData } from '@/actions/transfers/request-fulfillment';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
@@ -117,6 +118,15 @@ export function generateRequestInformationData(
     transactionHash: getRandomTransactionHash(),
     requestAccount: getRandomEthereumAddress(),
     ...partialRequestInformationData,
+  };
+}
+
+export function generateRequestFulfillmentData(
+  partialRequestFulfillmentData?: Partial<RequestFulfillmentData>,
+): RequestFulfillmentData {
+  return {
+    timestamp: getRandomNumber(),
+    ...partialRequestFulfillmentData,
   };
 }
 
