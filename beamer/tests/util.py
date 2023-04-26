@@ -1,4 +1,5 @@
 import contextlib
+import socket
 import threading
 import time
 from http import HTTPStatus
@@ -92,14 +93,20 @@ class HTTPProxy(HTTPServer):
         self.target_address = target_address
         assert callable(do_post)
         self.do_post = do_post
+        self.allow_reuse_address = True
 
     def start(self) -> None:
+        if self.socket._closed:
+            self.socket = socket.socket(self.address_family, self.socket_type)
+            self.server_bind()
+            self.server_activate()
         self._thread = threading.Thread(target=self.serve_forever)
         self._thread.start()
 
     def stop(self) -> None:
         self.shutdown()
         self._thread.join()
+        self.server_close()
 
     def url(self):
         host, port = self.server_address
