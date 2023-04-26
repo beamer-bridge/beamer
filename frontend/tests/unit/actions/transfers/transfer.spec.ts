@@ -86,7 +86,7 @@ describe('transfer', () => {
     Object.defineProperties(requestManager, {
       sendRequestTransaction: { value: vi.fn().mockResolvedValue('0xHash') },
       getRequestInformation: {
-        value: vi.fn().mockResolvedValue({ requestId: 1, timestamp: 100 }),
+        value: vi.fn().mockResolvedValue({ requestId: '0x123', timestamp: 100 }),
       },
       getRequestData: {
         value: vi.fn().mockResolvedValue({
@@ -306,6 +306,26 @@ describe('transfer', () => {
         '0xHash',
       );
     });
+
+    it('fetches & saves the identifier & timestamp of the transfer', async () => {
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData(),
+      });
+      const transfer = new TestTransfer(data);
+      const identifier = '0x123';
+      const timestamp = 100;
+
+      define(
+        requestManager,
+        'getRequestInformation',
+        vi.fn().mockResolvedValue({ requestId: identifier, timestamp }),
+      );
+
+      await transfer.waitForRequestEvent();
+
+      expect(transfer.requestInformation?.identifier).toBe(identifier);
+      expect(transfer.requestInformation?.timestamp).toBe(timestamp);
+    });
   });
 
   describe('waitForFulfillment()', () => {
@@ -416,6 +436,26 @@ describe('transfer', () => {
 
       expect(transfer.expired).toBeTruthy();
       expect(transfer.checkAndUpdateState).toHaveBeenCalledOnce();
+    });
+
+    it('saves the fulfillment timestamp if transfer has been filled', async () => {
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({
+          identifier: '0x123',
+        }),
+      });
+      const transfer = new TestTransfer(data);
+      const fulfillmentTimestamp = 100;
+
+      define(
+        fillManager,
+        'waitForFulfillment',
+        createTestCancelable({ result: fulfillmentTimestamp }),
+      );
+
+      await transfer.waitForFulfillment();
+
+      expect(transfer.requestFulfillment?.timestamp).toBe(fulfillmentTimestamp);
     });
   });
 

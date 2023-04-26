@@ -3,6 +3,7 @@ import * as ethers from 'ethers';
 
 import {
   CONFIRMATION_TIME_BLOCKS,
+  getBlockTimestamp,
   getCurrentBlockNumber,
   getJsonRpcProvider,
   getLatestBlock,
@@ -11,7 +12,7 @@ import {
   getSafeEventHandler,
 } from '@/services/transactions/utils';
 import { getRandomEthereumAddress, getRandomUrl } from '~/utils/data_generators';
-import { MockedEvent, MockedTransactionReceipt } from '~/utils/mocks/ethers';
+import { MockedBlock, MockedEvent, MockedTransactionReceipt } from '~/utils/mocks/ethers';
 
 vi.mock('@ethersproject/providers');
 vi.mock('ethers');
@@ -117,6 +118,22 @@ describe('utils', () => {
       });
 
       await expect(getCurrentBlockNumber(rpcUrl)).resolves.toBe(100);
+    });
+  });
+
+  describe('getBlockTimestamp()', () => {
+    it('fetches & returns the timestamp for the provided blockHash', async () => {
+      const rpcUrl = getRandomUrl('rpc');
+      const blockHash = '0x123';
+      const blockTimestamp = 100;
+
+      Object.defineProperty(providers, 'JsonRpcProvider', {
+        value: vi.fn().mockReturnValue({
+          getBlock: vi.fn().mockReturnValue(new MockedBlock({ timestamp: blockTimestamp })),
+        }),
+      });
+
+      await expect(getBlockTimestamp(rpcUrl, blockHash)).resolves.toBe(100);
     });
   });
 
