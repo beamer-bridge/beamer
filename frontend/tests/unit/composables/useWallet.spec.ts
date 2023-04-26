@@ -254,9 +254,35 @@ describe('useWallets', () => {
       expect(provider.value).toBeInstanceOf(MockedMetaMaskProvider);
       expect(connectedWallet.value).toBe('metamask');
 
-      disconnectWallet();
+      await disconnectWallet();
       expect(provider.value).toBeUndefined();
       expect(connectedWallet.value).toBeUndefined();
+    });
+
+    it("triggers a disconnect on the external provider in order to clean it's state", async () => {
+      const provider = ref(undefined);
+      const connectedWallet = ref(undefined);
+      const { connectWalletConnect, disconnectWallet } = useWallet(
+        provider,
+        connectedWallet,
+        ref({}),
+      );
+
+      const mockedProvider = new MockedWalletConnectProvider();
+      Object.defineProperties(web3ProviderService, {
+        createWalletConnectProvider: {
+          value: vi.fn().mockResolvedValue(mockedProvider),
+        },
+      });
+
+      await connectWalletConnect();
+
+      expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
+      expect(connectedWallet.value).toBe('wallet_connect');
+
+      await disconnectWallet();
+
+      expect(mockedProvider.closeExternalConnection).toHaveBeenCalled();
     });
   });
 });
