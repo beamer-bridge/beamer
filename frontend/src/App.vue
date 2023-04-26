@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Feedback from '@/components/Feedback.vue';
@@ -76,9 +76,10 @@ const { setConfiguration } = useConfiguration();
 const { loadConfiguration, configurationLoaded, configurationError } =
   useLoadConfiguration(setConfiguration);
 
-const { isBlacklistedWallet } = storeToRefs(useEthereumProvider());
+const { provider, isBlacklistedWallet } = storeToRefs(useEthereumProvider());
 
-const { transfers, loaded } = storeToRefs(useTransferHistory());
+const { transfers, loaded: transferHistoryLoaded } = storeToRefs(useTransferHistory());
+const loaded = computed(() => !!transferHistoryLoaded.value && !!provider.value);
 useTransferNotifications(transfers as Ref<Array<Transfer>>);
 useContinueInterruptedTransfers(transfers as Ref<Array<Transfer>>, loaded);
 useClaimCountListeners(transfers as Ref<Array<Transfer>>);
