@@ -8,6 +8,27 @@ import {
 } from '~/utils/data_generators';
 
 describe('RequestInformation', () => {
+  describe('setTimestamp()', () => {
+    it('is possible when timestamp is not already defined', () => {
+      const data = generateRequestInformationData({ timestamp: undefined });
+      const information = new RequestInformation(data);
+      const timestamp = getRandomNumber();
+      information.setTimestamp(timestamp);
+
+      expect(information.timestamp).toEqual(timestamp);
+    });
+
+    it('fails if timestamp is alrady defined', () => {
+      const timestamp = getRandomNumber();
+      const data = generateRequestInformationData({ timestamp });
+      const information = new RequestInformation(data);
+
+      return expect(() => information.setTimestamp(timestamp)).toThrow(
+        'Attempt to overwrite already set timestamp of a request!',
+      );
+    });
+  });
+
   describe('setIdentifier()', () => {
     it('is possible when identifier is not already defined', () => {
       const data = generateRequestInformationData({ identifier: undefined });

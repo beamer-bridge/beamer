@@ -16,7 +16,7 @@ describe('filter-utils', () => {
     vi.useRealTimers();
   });
 
-  describe('fetchUntilFirstMatchingEvent()', () => {
+  describe('fetchFirstMatchingEvent()', () => {
     it('does nothing if block range is negative and returns undefined', async () => {
       const contract = { queryFilter: vi.fn() };
 

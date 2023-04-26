@@ -247,4 +247,25 @@ describe('MultiStepAction', () => {
       flushPromises();
     });
   });
+  describe('emitter', () => {
+    it('emits `completed` event when step execution succesfully completed', async () => {
+      const action = new TestMultiStepAction([
+        new Step(generateStepData({ identifier: 'one' })),
+        new Step(generateStepData({ identifier: 'two' })),
+      ]);
+      const one = vi.fn();
+      const two = vi.fn();
+      const methods = { one, two };
+      const emitMock = vi.fn();
+      action.emit = emitMock;
+
+      try {
+        await action.executeSteps(methods);
+      } catch {
+        /* ignore */
+      }
+
+      expect(emitMock).toHaveBeenCalledWith('completed');
+    });
+  });
 });
