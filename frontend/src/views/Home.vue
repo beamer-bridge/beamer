@@ -103,9 +103,9 @@ watch(
 const { provider } = storeToRefs(ethereumProvider);
 const { rpcUrls } = storeToRefs(configuration);
 const { connectedWallet } = storeToRefs(useSettings());
-const { reconnectToWallet } = useWallet(provider, connectedWallet, rpcUrls);
+const { autoconnectToWallet } = useWallet(provider, connectedWallet, rpcUrls);
 
-onMounted(reconnectToWallet);
+onMounted(autoconnectToWallet);
 </script>
 
 <style>

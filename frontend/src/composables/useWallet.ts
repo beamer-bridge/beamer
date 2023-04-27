@@ -6,6 +6,7 @@ import {
   createCoinbaseProvider,
   createInjectedProvider,
   createMetaMaskProvider,
+  createSafeProvider,
   createWalletConnectProvider,
   onboardMetaMask,
 } from '@/services/web3-provider';
@@ -60,6 +61,16 @@ export function useWallet(
     }
   }
 
+  async function connectSafe() {
+    const safeProvider = await createSafeProvider();
+
+    if (safeProvider) {
+      provider.value = safeProvider;
+      connectedWallet.value = WalletType.Safe;
+      safeProvider.on('disconnect', disconnectWallet);
+    }
+  }
+
   async function reconnectToWallet(): Promise<void> {
     switch (connectedWallet.value) {
       case WalletType.MetaMask:
@@ -73,6 +84,13 @@ export function useWallet(
 
       case WalletType.Injected:
         return connectInjected();
+    }
+  }
+
+  async function autoconnectToWallet(): Promise<void> {
+    await connectSafe();
+    if (connectedWallet.value !== WalletType.Safe) {
+      await reconnectToWallet();
     }
   }
 
@@ -95,7 +113,9 @@ export function useWallet(
     connectingCoinbase: coinbaseTask.active,
     connectInjected: injectedTask.run,
     connectingInjected: injectedTask.active,
+    connectSafe,
     reconnectToWallet,
+    autoconnectToWallet,
     disconnectWallet,
   };
 }

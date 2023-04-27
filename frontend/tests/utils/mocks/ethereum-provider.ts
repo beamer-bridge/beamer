@@ -53,6 +53,14 @@ export class MockedCoinbaseWalletSDK {
   setAppInfo = vi.fn();
 }
 
+export class MockedSafeAppsSDK {
+  safe: { getInfo: SpyInstanceFn | Promise<unknown> } = {
+    getInfo: vi.fn().mockResolvedValue(vi.fn()),
+  };
+}
+
+export class MockedSafeAppProvider extends MockedEip1193Provider {}
+
 export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
@@ -67,10 +75,9 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   init = vi.fn();
   getLatestBlock = vi.fn();
   getProvider = vi.fn();
-  connectContract = vi.fn();
   switchChainSafely: SpyInstanceFn | undefined = vi.fn();
-  switchChain = vi.fn();
-  addChain = vi.fn();
+  switchChain: SpyInstanceFn | undefined = vi.fn();
+  addChain: SpyInstanceFn | undefined = vi.fn();
   getChainId = vi.fn(async () => this.chainId.value);
   addToken: SpyInstanceFn | undefined = vi.fn();
   on = vi.fn();
@@ -102,4 +109,15 @@ export class MockedInjectedProvider extends MockedEthereumProvider {
   }
 
   requestSigner = vi.fn();
+}
+
+export class MockedSafeProvider extends MockedEthereumProvider {
+  constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
+    super(options);
+  }
+
+  switchChainSafely = undefined;
+  switchChain = undefined;
+  addChain = undefined;
+  addToken = undefined;
 }
