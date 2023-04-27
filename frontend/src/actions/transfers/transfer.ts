@@ -1,5 +1,3 @@
-import type { JsonRpcSigner } from '@ethersproject/providers';
-
 import type { StepData } from '@/actions/steps';
 import { MultiStepAction, Step } from '@/actions/steps';
 import { waitForFulfillment } from '@/services/transactions/fill-manager';
@@ -176,21 +174,18 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return this._requestFulfillment.timestamp - this._requestInformation.timestamp;
   }
 
-  protected getStepMethods(
-    signer?: JsonRpcSigner,
-    signerAddress?: EthereumAddress,
-  ): Record<string, CallableFunction> {
+  protected getStepMethods(provider?: IEthereumProvider): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
-      ensureTokenAllowance: () => this.ensureTokenAllowance(signer),
-      sendRequestTransaction: () => this.sendRequestTransaction(signer, signerAddress),
+      ensureTokenAllowance: () => this.ensureTokenAllowance(provider),
+      sendRequestTransaction: () => this.sendRequestTransaction(provider),
       waitForRequestEvent: () => this.waitForRequestEvent(),
       waitForFulfillment: () => this.waitForFulfillment(),
     };
   }
 
-  public async execute(signer?: JsonRpcSigner, signerAddress?: EthereumAddress): Promise<void> {
-    const methods = this.getStepMethods(signer, signerAddress);
+  public async execute(provider?: IEthereumProvider): Promise<void> {
+    const methods = this.getStepMethods(provider);
     return super.executeSteps(methods);
   }
 
@@ -240,7 +235,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     await withdrawRequest(
-      provider.signer.value,
+      provider,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.identifier,
     );
@@ -268,8 +263,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  protected async ensureTokenAllowance(signer?: JsonRpcSigner): Promise<void> {
-    if (signer === undefined) {
+  protected async ensureTokenAllowance(provider?: IEthereumProvider): Promise<void> {
+    if (provider === undefined) {
       throw new Error('Missing wallet connection!');
     }
 
@@ -281,25 +276,23 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     await ensureTokenAllowance(
-      signer,
+      provider,
       this.sourceAmount.token.address,
       this.sourceChain.requestManagerAddress,
       amount,
     );
   }
 
-  protected async sendRequestTransaction(
-    signer?: JsonRpcSigner,
-    signerAddress?: EthereumAddress,
-  ): Promise<void> {
-    if (signer === undefined || signerAddress === undefined) {
+  protected async sendRequestTransaction(provider?: IEthereumProvider): Promise<void> {
+    const signerAddress = provider?.signerAddress.value;
+    if (provider === undefined || signerAddress === undefined) {
       throw new Error('Missing wallet connection!');
     }
 
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
     const transactionHash = await sendRequestTransaction(
-      signer,
+      provider,
       this.sourceAmount.uint256,
       this.targetChain.identifier,
       this.sourceChain.requestManagerAddress,

@@ -1,11 +1,9 @@
-import type { JsonRpcSigner } from '@ethersproject/providers';
-import type { Ref } from 'vue';
 import { reactive } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
-import type { EthereumProvider } from '@/services/web3-provider';
+import type { EthereumProvider, IEthereumProvider } from '@/services/web3-provider';
 import type { Chain, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -52,15 +50,11 @@ export function useTransferRequest() {
     return transfer;
   };
 
-  const execute = async (
-    signer: Ref<JsonRpcSigner | undefined>,
-    signerAddress: Ref<string>,
-    transfer: Transfer,
-  ): Promise<void> => {
-    if (!signer.value) {
+  const execute = async (provider: IEthereumProvider, transfer: Transfer): Promise<void> => {
+    if (!provider?.signer.value) {
       throw new Error('No signer available!');
     }
-    await transfer.execute(signer.value, signerAddress.value);
+    await transfer.execute(provider);
   };
 
   const withdraw = async (transfer: Transfer, provider: EthereumProvider): Promise<void> => {

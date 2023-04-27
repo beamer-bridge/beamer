@@ -19,6 +19,7 @@ vi.mock('@ethersproject/providers');
 
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
+const ETHEREUM_PROVIDER = new MockedEthereumProvider({ signer: SIGNER });
 
 describe('token', () => {
   beforeEach(() => {
@@ -39,7 +40,7 @@ describe('token', () => {
         const mockedTokenContract = mockGetERC20Contract();
         mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
 
-        await ensureTokenAllowance(SIGNER, tokenAddress, spender, approvalAmount);
+        await ensureTokenAllowance(ETHEREUM_PROVIDER, tokenAddress, spender, approvalAmount);
 
         expect(mockedTokenContract.approve).toHaveBeenCalledWith(
           spender,
@@ -58,7 +59,7 @@ describe('token', () => {
         const mockedTokenContract = mockGetERC20Contract();
         mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
 
-        await ensureTokenAllowance(SIGNER, tokenAddress, spender, approvalAmount);
+        await ensureTokenAllowance(ETHEREUM_PROVIDER, tokenAddress, spender, approvalAmount);
 
         expect(mockedTokenContract.approve).not.toHaveBeenCalled();
       });

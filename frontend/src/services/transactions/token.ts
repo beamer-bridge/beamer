@@ -1,4 +1,4 @@
-import type { JsonRpcSigner, Listener } from '@ethersproject/providers';
+import type { Listener } from '@ethersproject/providers';
 import type { Contract } from 'ethers';
 
 import StandardTokenDeployment from '@/assets/StandardToken.json';
@@ -15,11 +15,15 @@ import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export async function ensureTokenAllowance(
-  signer: JsonRpcSigner,
+  provider: IEthereumProvider,
   tokenAddress: string,
   allowedSpender: string,
   minimumRequiredAmount: UInt256,
 ): Promise<void> {
+  const signer = provider.signer.value;
+  if (signer === undefined) {
+    throw new Error('Missing signer!');
+  }
   const tokenContract = getReadWriteContract<StandardToken>(
     tokenAddress,
     StandardTokenDeployment.abi,

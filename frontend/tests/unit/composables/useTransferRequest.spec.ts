@@ -1,5 +1,4 @@
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
-import { ref } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
 import { useTransferRequest } from '@/composables/useTransferRequest';
@@ -13,12 +12,14 @@ import {
   generateUInt256Data,
   getRandomEthereumAddress,
 } from '~/utils/data_generators';
+import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 vi.mock('@/services/transactions/request-manager');
 
 const SIGNER = new JsonRpcSigner(undefined, new JsonRpcProvider());
 const SIGNER_ADDRESS = '0xSigner';
+const PROVIDER = new MockedEthereumProvider({ signer: SIGNER, signerAddress: SIGNER_ADDRESS });
 
 describe('useTransferRequest', () => {
   let generatedFee: UInt256;
@@ -78,18 +79,14 @@ describe('useTransferRequest', () => {
       const { execute } = useTransferRequest();
       const transfer = generateTransfer();
       transfer.execute = vi.fn();
-      const signerRef = ref(SIGNER);
-      const signerAddressRef = ref(SIGNER_ADDRESS);
-      execute(signerRef, signerAddressRef, transfer);
-      expect(transfer.execute).toHaveBeenCalledWith(signerRef.value, signerAddressRef.value);
+      execute(PROVIDER, transfer);
+      expect(transfer.execute).toHaveBeenCalledWith(PROVIDER);
     });
 
     it('throws an error when provided signer is undefined', async () => {
       const { execute, executeError } = useTransferRequest();
       const transfer = generateTransfer();
-      const signerRef = ref(undefined);
-      const signerAddressRef = ref(undefined);
-      await execute(signerRef, signerAddressRef, transfer);
+      await execute(undefined, transfer);
       // Has to be tested this way since we are using useAsynchronousTask composable
       expect(executeError.value?.message).toEqual('No signer available!');
     });
