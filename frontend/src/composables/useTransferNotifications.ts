@@ -3,6 +3,7 @@ import { computed, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 
 import type { Transfer } from '@/actions/transfers';
+import TransferComplete from '@/components/notifications/TransferComplete.vue';
 
 export function useTransferNotifications(transfers: Ref<Array<Transfer>>) {
   const toast = useToast();
