@@ -1,14 +1,20 @@
 <template>
-  <button class="inline w-fit text-xs underline" data-test="trigger" @click="disconnect">
+  <button
+    v-if="showDisconnect"
+    class="inline w-fit text-xs underline"
+    data-test="trigger"
+    @click="disconnect"
+  >
     Disconnect Wallet
   </button>
 </template>
 
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
+import { SafeProvider } from '@/services/web3-provider';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
 
@@ -16,5 +22,6 @@ const ethereumProvider = useEthereumProvider();
 const { provider } = storeToRefs(ethereumProvider);
 const { connectedWallet } = storeToRefs(useSettings());
 
+const showDisconnect = computed(() => !(provider.value instanceof SafeProvider));
 const { disconnectWallet: disconnect } = useWallet(provider, connectedWallet, ref());
 </script>
