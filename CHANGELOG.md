@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.1.0 (2023-04-27)
+
+* agent: only continue challenge after message is finalized
+* agent: call relayer through process_claims and remove InitiateL1Resolution event
+* agent: halt event processor if connection error occurs on RPC
+* frontend: temporarily disabled chat feedback
+* frontend: minor bug fixes
+* docs: update fee section
+
 ## v2.0.0 (2023-04-12)
 
 * change directory structure and add multiple sub commands to the beamer command (i.e. beamer agent ...)
