@@ -174,7 +174,7 @@ const submitForm = async () => {
   await nextTick();
   resetFormValidation();
 
-  await executeTransfer(signer, signerAddress, transfer);
+  await executeTransfer(provider.value, transfer);
 };
 
 function resetForm() {

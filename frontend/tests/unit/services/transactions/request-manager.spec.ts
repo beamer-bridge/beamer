@@ -29,6 +29,7 @@ import {
   getRandomUrl,
 } from '~/utils/data_generators';
 import { MockedRequest, MockedToken } from '~/utils/mocks/beamer';
+import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 import {
   MockedBigNumber,
   MockedTransaction,
@@ -49,6 +50,7 @@ const RPC_URL = getRandomUrl('rpc');
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const DEFAULT_REQUEST_IDENTIFIER = '1';
+const ETHEREUM_PROVIDER = new MockedEthereumProvider({ signer: SIGNER });
 
 describe('request-manager', () => {
   beforeEach(() => {
@@ -157,7 +159,7 @@ describe('request-manager', () => {
       contract.estimateGas.createRequest = vi.fn().mockReturnValue(estimatedGas);
 
       await sendRequestTransaction(
-        SIGNER,
+        ETHEREUM_PROVIDER,
         amount,
         targetChainId,
         REQUEST_MANAGER_ADDRESS,
@@ -187,7 +189,7 @@ describe('request-manager', () => {
 
       await expect(
         sendRequestTransaction(
-          SIGNER,
+          ETHEREUM_PROVIDER,
           amount,
           targetChainId,
           REQUEST_MANAGER_ADDRESS,
@@ -660,7 +662,7 @@ describe('request-manager', () => {
 
       SIGNER.getChainId = vi.fn().mockReturnValue(1);
 
-      await withdrawRequest(SIGNER, REQUEST_MANAGER_ADDRESS, requestIdentifier);
+      await withdrawRequest(ETHEREUM_PROVIDER, REQUEST_MANAGER_ADDRESS, requestIdentifier);
 
       expect(contract.estimateGas.withdrawExpiredRequest).toHaveBeenCalledWith(requestIdentifier);
       expect(contract.withdrawExpiredRequest).toHaveBeenCalledWith(requestIdentifier, {
@@ -677,7 +679,7 @@ describe('request-manager', () => {
       });
 
       await expect(
-        withdrawRequest(SIGNER, REQUEST_MANAGER_ADDRESS, requestIdentifier),
+        withdrawRequest(ETHEREUM_PROVIDER, REQUEST_MANAGER_ADDRESS, requestIdentifier),
       ).rejects.toThrow('transaction failed');
     });
   });

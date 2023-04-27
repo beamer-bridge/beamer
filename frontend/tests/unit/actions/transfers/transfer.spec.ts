@@ -8,8 +8,8 @@ import { RequestExpiredError } from '@/services/transactions/request-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
 import * as transactionUtils from '@/services/transactions/utils';
+import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Cancelable } from '@/types/async';
-import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 import {
   generateChain,
@@ -31,16 +31,16 @@ vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestTransfer extends Transfer {
-  public getStepMethods(signer?: JsonRpcSigner, signerAddress?: EthereumAddress) {
-    return super.getStepMethods(signer, signerAddress);
+  public getStepMethods(provider?: IEthereumProvider) {
+    return super.getStepMethods(provider);
   }
 
-  public ensureTokenAllowance(signer?: JsonRpcSigner) {
-    return super.ensureTokenAllowance(signer);
+  public ensureTokenAllowance(provider?: IEthereumProvider) {
+    return super.ensureTokenAllowance(provider);
   }
 
-  public sendRequestTransaction(signer?: JsonRpcSigner, signerAddress?: EthereumAddress) {
-    return super.sendRequestTransaction(signer, signerAddress);
+  public sendRequestTransaction(provider?: IEthereumProvider) {
+    return super.sendRequestTransaction(provider);
   }
 
   public waitForRequestEvent() {
@@ -57,6 +57,10 @@ const RPC_PROVIDER = new JsonRpcProvider();
 const PROVIDER = new MockedEthereumProvider();
 const SIGNER = new JsonRpcSigner(undefined, RPC_PROVIDER);
 const SIGNER_ADDRESS = '0xSigner';
+const PROVIDER_WITH_SIGNER = new MockedEthereumProvider({
+  signer: SIGNER,
+  signerAddress: SIGNER_ADDRESS,
+});
 
 function createTestCancelable<T>(options?: {
   result?: T;
@@ -127,7 +131,7 @@ describe('transfer', () => {
   it('defines a method for every step', () => {
     const transfer = new TestTransfer(TRANSFER_DATA);
 
-    const methods = transfer.getStepMethods(SIGNER, SIGNER_ADDRESS);
+    const methods = transfer.getStepMethods(PROVIDER_WITH_SIGNER);
 
     for (const step of transfer.steps) {
       expect(methods[step.identifier]).toBeDefined();
@@ -138,7 +142,7 @@ describe('transfer', () => {
     it('triggers all protocol relevant functions', async () => {
       const transfer = new TestTransfer(TRANSFER_DATA);
 
-      await transfer.execute(SIGNER, SIGNER_ADDRESS);
+      await transfer.execute(PROVIDER_WITH_SIGNER);
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
@@ -167,12 +171,16 @@ describe('transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const provider = new MockedEthereumProvider({
+        signer: signer,
+        signerAddress: SIGNER_ADDRESS,
+      });
 
-      await transfer.ensureTokenAllowance(signer);
+      await transfer.ensureTokenAllowance(provider);
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenLastCalledWith(
-        signer,
+        provider,
         '0xSourceToken',
         '0xRequestManager',
         new UInt256('3'),
@@ -191,12 +199,16 @@ describe('transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const provider = new MockedEthereumProvider({
+        signer: signer,
+        signerAddress: SIGNER_ADDRESS,
+      });
 
-      await transfer.ensureTokenAllowance(signer);
+      await transfer.ensureTokenAllowance(provider);
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenLastCalledWith(
-        signer,
+        provider,
         '0xSourceToken',
         '0xRequestManager',
         UInt256.max(),
@@ -209,7 +221,7 @@ describe('transfer', () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
 
-      await expect(transfer.sendRequestTransaction(undefined, SIGNER_ADDRESS)).rejects.toThrow(
+      await expect(transfer.sendRequestTransaction(undefined)).rejects.toThrow(
         'Missing wallet connection!',
       );
     });
@@ -217,8 +229,9 @@ describe('transfer', () => {
     it('fails if given signer address is undefined', async () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider({ signer: SIGNER, signerAddress: undefined });
 
-      await expect(transfer.sendRequestTransaction(SIGNER, undefined)).rejects.toThrow(
+      await expect(transfer.sendRequestTransaction(provider)).rejects.toThrow(
         'Missing wallet connection!',
       );
     });
@@ -241,12 +254,16 @@ describe('transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, RPC_PROVIDER);
+      const provider = new MockedEthereumProvider({
+        signer: signer,
+        signerAddress: SIGNER_ADDRESS,
+      });
 
-      await transfer.sendRequestTransaction(signer, SIGNER_ADDRESS);
+      await transfer.sendRequestTransaction(provider);
 
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenLastCalledWith(
-        signer,
+        provider,
         new UInt256('1'),
         2,
         '0xRequestManager',
@@ -264,8 +281,9 @@ describe('transfer', () => {
 
       expect(transfer.requestInformation?.requestAccount).toBeUndefined();
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
+      const provider = new MockedEthereumProvider({ signer: SIGNER, signerAddress: '0xSigner' });
 
-      await transfer.sendRequestTransaction(SIGNER, '0xSigner');
+      await transfer.sendRequestTransaction(provider);
 
       expect(transfer.requestInformation?.requestAccount).toBe('0xSigner');
       expect(transfer.requestInformation?.transactionHash).toBe('0xHash');
@@ -586,7 +604,7 @@ describe('transfer', () => {
 
       expect(requestManager.withdrawRequest).toHaveBeenCalledOnce();
       expect(requestManager.withdrawRequest).toHaveBeenLastCalledWith(
-        signer,
+        provider,
         '0xRequestManager',
         identifier,
       );

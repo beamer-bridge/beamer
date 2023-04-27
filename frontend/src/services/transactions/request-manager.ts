@@ -1,4 +1,4 @@
-import type { JsonRpcSigner, Listener, TransactionResponse } from '@ethersproject/providers';
+import type { Listener, TransactionResponse } from '@ethersproject/providers';
 
 import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
@@ -7,6 +7,7 @@ import type { RequestManager } from '@/types/ethers-contracts';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
+import type { IEthereumProvider } from '../web3-provider';
 import {
   getBlockTimestamp,
   getConfirmationTimeBlocksForChain,
@@ -100,7 +101,7 @@ export async function getRequestFee(
 }
 
 export async function sendRequestTransaction(
-  signer: JsonRpcSigner,
+  provider: IEthereumProvider,
   amount: UInt256,
   targetChainIdentifier: number,
   requestManagerAddress: EthereumAddress,
@@ -109,6 +110,10 @@ export async function sendRequestTransaction(
   targetAccount: EthereumAddress,
   validityPeriod: UInt256,
 ): Promise<string> {
+  const signer = provider.signer.value;
+  if (signer === undefined) {
+    throw new Error('Missing signer!');
+  }
   const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
     RequestManagerDeployment.abi,
@@ -375,10 +380,14 @@ export class RequestExpiredError extends Error {
 }
 
 export async function withdrawRequest(
-  signer: JsonRpcSigner,
+  provider: IEthereumProvider,
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
 ): Promise<void> {
+  const signer = provider.signer.value;
+  if (signer === undefined) {
+    throw new Error('Missing signer!');
+  }
   const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
     RequestManagerDeployment.abi,
