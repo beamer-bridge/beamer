@@ -156,7 +156,10 @@ describe('request-manager', () => {
     it('attempts to create a transfer request transaction', async () => {
       const contract = mockGetRequestManagerContract();
       const estimatedGas = '100';
-      contract.estimateGas.createRequest = vi.fn().mockReturnValue(estimatedGas);
+      contract.estimateGas.createRequest = vi.fn().mockResolvedValue(estimatedGas);
+      const transactionMock = new MockedTransaction();
+      transactionMock.wait.mockResolvedValue({ transactionHash: '0xtxHash' });
+      contract.createRequest = vi.fn().mockResolvedValue(transactionMock);
 
       await sendRequestTransaction(
         ETHEREUM_PROVIDER,

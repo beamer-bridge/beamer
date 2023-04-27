@@ -135,14 +135,16 @@ export async function sendRequestTransaction(
       ...requestParameter,
     );
 
-    const transaction: TransactionResponse = await requestManagerContract.createRequest(
-      ...requestParameter,
-      { gasLimit: estimatedGasLimit },
-    );
+    const transaction = await requestManagerContract.createRequest(...requestParameter, {
+      gasLimit: estimatedGasLimit,
+    });
 
-    await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
-
-    return transaction.hash;
+    const transactionReceipt = await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
+    let transactionHash = transactionReceipt.transactionHash;
+    if (provider.getActualTransactionHash) {
+      transactionHash = await provider.getActualTransactionHash(transactionHash);
+    }
+    return transactionHash;
   } catch (error: unknown) {
     console.error(error);
     const parseErrorMessage = getTransactionErrorMessage(error);

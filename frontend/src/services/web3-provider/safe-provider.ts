@@ -24,7 +24,16 @@ export async function createSafeProvider(): Promise<SafeProvider | undefined> {
 }
 
 export class SafeProvider extends BasicEthereumProvider {
-  constructor(safe: SafeInfo, sdk: SafeAppsSDK) {
+  constructor(safe: SafeInfo, private sdk: SafeAppsSDK) {
     super(new SafeAppProvider(safe, sdk));
+  }
+
+  async getActualTransactionHash(internalTransactionHash: string): Promise<string> {
+    const transactionDetails = await this.sdk.txs.getBySafeTxHash(internalTransactionHash);
+    const transactionHash = transactionDetails.txHash;
+    if (transactionHash === undefined) {
+      throw new Error('Transaction might not have been executed yet!');
+    }
+    return transactionHash;
   }
 }

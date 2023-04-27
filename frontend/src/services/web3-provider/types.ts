@@ -18,11 +18,14 @@ export interface IEthereumProvider {
   switchChainSafely?(newChain: Chain): Promise<boolean>;
   getChainId(): Promise<number>;
   addToken?(token: Token): Promise<boolean>;
+  getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
 }
+
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;
   emit(eventName: string): void;
 }
+
 export interface ISigner {
   requestSigner(): Promise<void>;
 }
