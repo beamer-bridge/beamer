@@ -14,6 +14,6 @@
 
 <style>
 .tf-v1-popover-button {
-  @apply drop-shadow-xl hover:scale-110 transition-all;
+  @apply drop-shadow-xl transition-all hover:scale-110;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-3">
-      <span class="text-xl pl-2">To</span>
+      <span class="pl-2 text-xl">To</span>
       <Selector
         v-model="selectedTargetChain"
         label="To"
@@ -14,7 +14,7 @@
       />
     </div>
     <div class="flex flex-row gap-5">
-      <div class="flex-[9_9_0%] flex flex-col items-end">
+      <div class="flex flex-[9_9_0%] flex-col items-end">
         <BasicInput :model-value="props.amount" placeholder="0.00" type="text" disabled />
       </div>
       <div class="flex-[7_7_0%]">
@@ -48,7 +48,7 @@
         <Transition>
           <div
             v-if="selectedTargetAddress && !v$.selectedTargetAddress.$error"
-            class="checkmark after:content-['\2713'] absolute -right-5 -top-0 text-[22px] text-green"
+            class="checkmark absolute -right-5 -top-0 text-[22px] text-green after:content-['\2713']"
           ></div>
         </Transition>
       </div>

@@ -5,7 +5,7 @@
       <img src="@/assets/images/copy.svg" class="inline pl-1" />
     </span>
     <template #hint>
-      <div class="w-[5rem] relative">
+      <div class="relative w-[5rem]">
         <span v-show="!showCopytoolTipOn">Copy </span>
         <span v-if="showCopytoolTipOn"> Copied! </span>
       </div>

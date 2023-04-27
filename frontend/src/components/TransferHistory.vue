@@ -1,9 +1,9 @@
 <template>
-  <div class="relative w-full h-full pt-6 rounded-b-lg overflow-hidden pb-5" v-bind="$attrs">
-    <div ref="listElement" class="w-full h-full overflow-y-auto overflow-hidden no-scrollbar">
+  <div class="relative h-full w-full overflow-hidden rounded-b-lg pt-6 pb-5" v-bind="$attrs">
+    <div ref="listElement" class="no-scrollbar h-full w-full overflow-hidden overflow-y-auto">
       <div
         v-if="transfers.length === 0 && signer"
-        class="text-xl w-full h-full flex justify-center items-center text-sea-green/40"
+        class="flex h-full w-full items-center justify-center text-xl text-sea-green/40"
       >
         <span>Nothing here yet.</span>
       </div>
@@ -15,7 +15,7 @@
             :root-element="listElement"
             :threshold="0.0"
           >
-            <div v-if="group.transfers.length > 0" class="text-xl text-center">
+            <div v-if="group.transfers.length > 0" class="text-center text-xl">
               {{ group.label }}
             </div>
           </LazyWrapper>
@@ -35,7 +35,7 @@
           <div v-if="group.transfers.length > 0" class="h-12"></div>
         </template>
       </div>
-      <div v-else class="text-xl w-full h-full flex justify-center items-center text-sea-green/40">
+      <div v-else class="flex h-full w-full items-center justify-center text-xl text-sea-green/40">
         Connect wallet to view activity.
       </div>
     </div>

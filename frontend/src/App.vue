@@ -1,6 +1,6 @@
 <template>
   <div
-    class="app-content flex flex-col min-h-screen w-full font-sans antialiased text-white bg-gradient-to-b from-black to-teal"
+    class="app-content flex min-h-screen w-full flex-col bg-gradient-to-b from-black to-teal font-sans text-white antialiased"
   >
     <div
       class="flex h-16 w-full flex-col justify-center bg-fire text-center text-xl font-semibold text-rosa lg:text-2xl"
@@ -9,7 +9,7 @@
     </div>
     <div class="container mx-auto max-w-5xl">
       <a href="https://beamerbridge.com" target="_blank">
-        <img class="w-[10rem] md:w-[15rem] mt-6 ml-6" src="@/assets/images/logo.svg" alt="logo"
+        <img class="mt-6 ml-6 w-[10rem] md:w-[15rem]" src="@/assets/images/logo.svg" alt="logo"
       /></a>
     </div>
     <div class="pt-2 md:pt-2">
@@ -17,14 +17,14 @@
         <router-view v-if="!isBlacklistedWallet" class="z-10" />
         <div
           v-else
-          class="text-red h-[90vh] w-full flex justify-center items-center text-4xl text-center px-4"
+          class="flex h-[90vh] w-full items-center justify-center px-4 text-center text-4xl text-red"
         >
           Your address is on the blocked list.
         </div>
       </div>
       <div
         v-else-if="configurationError"
-        class="text-red h-[90vh] w-full flex flex-col justify-center items-center text-4xl text-center px-4"
+        class="flex h-[90vh] w-full flex-col items-center justify-center px-4 text-center text-4xl text-red"
       >
         <span> Failed loading configuration. </span>
         <br />
@@ -33,13 +33,13 @@
           <a
             href="https://discord.com/invite/YWdStZkz9z"
             target="_blank"
-            class="underline inline-block"
+            class="inline-block underline"
             >discord channel.</a
           >
         </span>
       </div>
       <div v-else class="flex flex-grow items-center justify-center">
-        <div class="w-48 h-48">
+        <div class="h-48 w-48">
           <spinner size-classes="w-48 h-48"></spinner>
         </div>
       </div>

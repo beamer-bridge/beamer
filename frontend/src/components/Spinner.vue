@@ -1,7 +1,7 @@
 <template>
   <div
     :class="classes"
-    class="bg-transparent rounded-50 border-solid border-transparent border-t-solid border-t-sea-green animate-spin"
+    class="border-t-solid animate-spin rounded-50 border-solid border-transparent border-t-sea-green bg-transparent"
   />
 </template>
 <script lang="ts" setup>

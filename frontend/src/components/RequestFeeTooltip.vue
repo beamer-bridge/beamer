@@ -1,6 +1,6 @@
 <template>
   <Tooltip>
-    <div class="h-full flex flex-col justify-center" data-test="tooltip-trigger">
+    <div class="flex h-full flex-col justify-center" data-test="tooltip-trigger">
       <img class="h-5 w-5 cursor-help" src="@/assets/images/help.svg" />
     </div>
     <template #hint>

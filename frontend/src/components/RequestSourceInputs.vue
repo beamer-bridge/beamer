@@ -2,9 +2,9 @@
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-3">
       <div class="flex flex-row justify-between">
-        <span class="text-xl pl-2">From</span>
+        <span class="pl-2 text-xl">From</span>
 
-        <Tooltip v-if="faucetEnabled" class="self-end -mr-3">
+        <Tooltip v-if="faucetEnabled" class="-mr-3 self-end">
           <SimpleTextButton :disabled="!faucetAvailable" @click="runFaucetRequest">
             <spinner v-if="faucetRequestActive" size-classes="w-3 h-3" border="2"></spinner>
             <template v-else>Get Test Tokens</template>
@@ -31,8 +31,8 @@
       </InputValidationMessage>
     </div>
     <div class="flex flex-col justify-between">
-      <div class="flex flex-row gap-3 h-20">
-        <div class="flex-[9_9_0%] flex flex-col items-start">
+      <div class="flex h-20 flex-row gap-3">
+        <div class="flex flex-[9_9_0%] flex-col items-start">
           <NumericInput
             v-model="selectedAmount"
             name="amount"
@@ -76,7 +76,7 @@
             </div>
           </div>
         </div>
-        <div class="flex-[7_7_0%] flex flex-col">
+        <div class="flex flex-[7_7_0%] flex-col">
           <Selector
             id="token"
             v-model="selectedToken"
@@ -88,7 +88,7 @@
             @opened="hideActionButton"
             @closed="showActionButton"
           />
-          <Tooltip class="self-end -mr-3">
+          <Tooltip class="-mr-3 self-end">
             <SimpleTextButton :disabled="!addTokenAvailable" @click="handleAddTokenClick">
               Add to Wallet
             </SimpleTextButton>
@@ -97,7 +97,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col text-base px-2">
+      <div class="flex flex-col px-2 text-base">
         <div class="flex flex-row justify-between">
           <div class="flex flex-row gap-3">
             <span>Fees</span>

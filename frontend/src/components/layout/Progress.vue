@@ -54,20 +54,20 @@ li::before {
   width: $ballWidth;
   height: $ballHeight;
   border: $ballBorderWidth solid;
-  @apply absolute left-0 rounded-full text-center border-teal top-1;
+  @apply absolute left-0 top-1 rounded-full border-teal text-center;
 }
 
 li.completed::before {
-  @apply bg-green border-sea-green-35;
+  @apply border-sea-green-35 bg-green;
 }
 
 li.failed::before {
-  @apply bg-red border-sea-green-35;
+  @apply border-sea-green-35 bg-red;
 }
 
 li:not(:last-of-type)::after {
   content: '';
-  @apply absolute left-[5px] border-teal border top-[1rem] h-full;
+  @apply absolute left-[5px] top-[1rem] h-full border border-teal;
 }
 
 li.hasError::after {

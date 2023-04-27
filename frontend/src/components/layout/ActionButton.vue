@@ -1,6 +1,6 @@
 <template>
   <button
-    class="min-w-[17rem] h-12 px-8 flex justify-center items-center rounded-full bg-green text-teal text-xl shadow hover:opacity-90 disabled:opacity-60"
+    class="flex h-12 min-w-[17rem] items-center justify-center rounded-full bg-green px-8 text-xl text-teal shadow hover:opacity-90 disabled:opacity-60"
     :disabled="disabled"
   >
     <slot />

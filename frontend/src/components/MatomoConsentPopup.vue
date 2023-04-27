@@ -1,10 +1,10 @@
 <template>
   <div
     v-if="displayed"
-    class="fixed w-full h-full flex justify-center items-center z-50 backdrop-blur"
+    class="fixed z-50 flex h-full w-full items-center justify-center backdrop-blur"
     data-test="consent-popup"
   >
-    <div class="max-w-lg py-6 px-6 bg-teal-dark rounded-md">
+    <div class="max-w-lg rounded-md bg-teal-dark py-6 px-6">
       This site uses Matomo to analyze traffic and help us to improve your user experience. We
       process your IP address and cookies are stored on your browser for 13 months. This data is
       only processed by us and our web hosting platform. Please read our
@@ -15,7 +15,7 @@
         >Privacy Policy</a
       >
       to learn more.
-      <div class="flex flex-row justify-evenly mt-6">
+      <div class="mt-6 flex flex-row justify-evenly">
         <SimpleTextButton class="!text-base" data-test="accept-consent" @click="allowConsent"
           >Accept</SimpleTextButton
         >

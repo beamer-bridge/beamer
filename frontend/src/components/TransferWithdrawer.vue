@@ -18,7 +18,7 @@
         </Tooltip>
         <button
           v-else
-          class="underline text-red hover:opacity-90"
+          class="text-red underline hover:opacity-90"
           data-test="recover-tokens-button"
           @click="emitWithdraw"
         >
