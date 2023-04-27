@@ -1,25 +1,21 @@
 <template>
   <div>
-    Transfer completed <span v-if="completedInSeconds">in {{ completedInSeconds }}s</span>.
+    <span data-test="message">
+      <span v-if="transfer?.transferTime !== undefined"
+        >Transfer completed in {{ transfer?.transferTime }}s.</span
+      >
+      <span v-else> Transfer completed. </span>
+    </span>
+    <br />
+    <ShareTweet :transfer="transfer"></ShareTweet>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-
 import { Transfer } from '@/actions/transfers';
+import ShareTweet from '@/components/ShareTweet.vue';
 
-const props = defineProps({
+defineProps({
   transfer: Transfer,
-});
-
-const completedInSeconds = computed(() => {
-  const createdTimestamp = props.transfer?.requestInformation?.timestamp;
-  const filledTimestamp = props.transfer?.requestFulfillment?.timestamp;
-
-  if (createdTimestamp && filledTimestamp) {
-    return filledTimestamp - createdTimestamp;
-  }
-  return undefined;
 });
 </script>
