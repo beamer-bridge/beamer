@@ -1,6 +1,6 @@
 <template>
-  <div class="w-full h-full flex flex-col rounded-lg">
-    <div class="tab-header w-full flex bg-teal relative rounded-t-lg">
+  <div class="flex h-full w-full flex-col rounded-lg">
+    <div class="tab-header relative flex w-full rounded-t-lg bg-teal">
       <div
         v-for="header of headers"
         :key="header.label"

@@ -7,7 +7,7 @@
       <span>{{ modelValue.label }}</span>
     </template>
 
-    <img src="@/assets/images/caret-down.svg" class="h-[1rem] w-[1rem] ml-2" />
+    <img src="@/assets/images/caret-down.svg" class="ml-2 h-[1rem] w-[1rem]" />
   </div>
 
   <Transition>
@@ -17,7 +17,7 @@
       data-test="option-list"
       @keyup.esc="closeSelector"
     >
-      <span class="text-xl pl-2">{{ label }}</span>
+      <span class="pl-2 text-xl">{{ label }}</span>
       <BasicInput
         v-model="searchFilter"
         name="searchFilter"
@@ -27,7 +27,7 @@
         data-test="search-field"
       />
       <div
-        class="flex flex-col gap-2 w-full h-full overflow-y-scroll overflow-x-hidden no-scrollbar"
+        class="no-scrollbar flex h-full w-full flex-col gap-2 overflow-x-hidden overflow-y-scroll"
       >
         <div
           v-for="option in filteredOptions"
@@ -45,7 +45,7 @@
       </div>
       <div class="items-end">
         <div
-          class="text-3xl cursor-pointer text-sea-green"
+          class="cursor-pointer text-3xl text-sea-green"
           data-test="close-trigger"
           @click="closeSelector"
         >

@@ -1,11 +1,11 @@
 <template>
   <div class="home flex justify-center">
     <div
-      class="w-[22rem] sm:w-[25rem] md:w-[27rem] lg:w-[27rem] flex flex-col xl:justify-center xl:items-center"
+      class="flex w-[22rem] flex-col sm:w-[25rem] md:w-[27rem] lg:w-[27rem] xl:items-center xl:justify-center"
     >
       <WalletConnectionDetails></WalletConnectionDetails>
 
-      <div class="relative mb-7 mt-3 w-full h-[37.3rem] md:h-[40.2rem]">
+      <div class="relative mb-7 mt-3 h-[37.3rem] w-full md:h-[40.2rem]">
         <WalletMenu v-if="walletMenuIsOpen" class="absolute z-10" @close="closeWalletMenu" />
         <Tabs
           class="tooltip-reference-element"

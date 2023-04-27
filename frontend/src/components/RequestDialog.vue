@@ -1,5 +1,5 @@
 <template>
-  <div class="relative bg-transparent flex flex-col justify-between">
+  <div class="relative flex flex-col justify-between bg-transparent">
     <RequestSourceInputs
       ref="requestSourceInputsRef"
       v-model="requestSource"
@@ -7,7 +7,7 @@
       class="rounded-br-lg bg-teal px-4 py-4 md:px-8 md:py-6"
     />
     <div class="relative">
-      <div class="absolute -top-4 flex flex-row w-full justify-center">
+      <div class="absolute -top-4 flex w-full flex-row justify-center">
         <img class="h-20 w-20" src="@/assets/images/Signet.svg" />
       </div>
     </div>
@@ -17,7 +17,7 @@
       :amount="requestSource.amount"
       :source-chain="requestSource.sourceChain"
       :token="requestSource.token"
-      class="rounded-tl-lg rounded-b-lg bg-teal px-6 py-4 mt-10 md:px-8 md:py-8"
+      class="mt-10 rounded-b-lg rounded-tl-lg bg-teal px-6 py-4 md:px-8 md:py-8"
     />
   </div>
 
@@ -25,23 +25,23 @@
     <div v-if="transferFundsButtonVisible" class="flex flex-col items-center">
       <div
         v-if="hasPendingTransactions"
-        class="text-center rounded-lg bg-teal px-6 py-4 mb-7 md:px-8 md:py-8 text-sm"
+        class="mb-7 rounded-lg bg-teal px-6 py-4 text-center text-sm md:px-8 md:py-8"
       >
         You have a pending transaction, that needs to complete before being able to make a new
         transfer.
       </div>
       <div
         v-if="showInfiniteApprovalCheckbox"
-        class="flex flex-row gap-2 pl-2 items-center justify-center mb-7"
+        class="mb-7 flex flex-row items-center justify-center gap-2 pl-2"
       >
         <input
           v-model="approveInfiniteAmount"
           type="checkbox"
-          class="appearance-none h-5 w-5 bg-sea-green shadow-inner rounded-md hover:opacity-90 checked:after:text-teal checked:after:text-2xl checked:after:leading-6 checked:after:content-['\2713']"
+          class="h-5 w-5 appearance-none rounded-md bg-sea-green shadow-inner checked:after:text-2xl checked:after:leading-6 checked:after:text-teal checked:after:content-['\2713'] hover:opacity-90"
         />
         <span class="text-sm">Approve maximum token allowance</span>
         <Tooltip>
-          <div class="h-full flex flex-col justify-center">
+          <div class="flex h-full flex-col justify-center">
             <img class="h-5 w-5 cursor-help" src="@/assets/images/help.svg" />
           </div>
           <template #hint>

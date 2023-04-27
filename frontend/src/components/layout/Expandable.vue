@@ -1,11 +1,11 @@
 <template>
   <div ref="element" class="flex flex-col">
     <div
-      class="cursor-pointer flex justify-between"
+      class="flex cursor-pointer justify-between"
       data-test="header"
       @click="toggleBodyVisibility"
     >
-      <div class="w-5 flex items-center">
+      <div class="flex w-5 items-center">
         <img :src="CaretRight" class="top-4 left-4 h-[1rem] w-[1rem]" :class="caretClasses" />
       </div>
 
