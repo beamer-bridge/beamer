@@ -173,24 +173,25 @@ export async function getRequestInformation(
     getConfirmationTimeBlocksForChain(chainId),
   );
 
-  if (receipt) {
-    if (receipt.status === 1) {
-      try {
-        const event = contract.interface.parseLog(receipt.logs[0]);
-
-        if (event) {
-          const timestamp = await getBlockTimestamp(rpcUrl, receipt.blockHash);
-          return { requestId: event.args.requestId, timestamp };
-        }
-      } catch (e) {
-        throw new Error("Request Failed. Couldn't retrieve Request ID.");
-      }
-    } else {
-      throw new Error('Transaction reverted on chain.');
+  if (!receipt) {
+    throw new Error('Transaction not found.');
+  }
+  if (receipt.status !== 1) {
+    throw new Error('Transaction reverted on chain.');
+  }
+  for (const log of receipt.logs) {
+    let event;
+    try {
+      event = contract.interface.parseLog(log);
+    } catch (e) {
+      continue;
+    }
+    if (event && event.args.requestId) {
+      const timestamp = await getBlockTimestamp(rpcUrl, receipt.blockHash);
+      return { requestId: event.args.requestId, timestamp };
     }
   }
-
-  throw new Error('Transaction not found.');
+  throw new Error("Request Failed. Couldn't retrieve Request ID.");
 }
 
 export type RequestData = {
