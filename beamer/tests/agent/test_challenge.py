@@ -575,7 +575,7 @@ def test_invalidation(
 
     ape.chain.mine(timestamp=claim.termination + 100)
     with Sleeper(5) as sleeper:
-        while not claim.invalidated_l1_resolved.is_active:
+        while not claim.withdrawn.is_active:
             sleeper.sleep(0.1)
 
 

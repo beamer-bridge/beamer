@@ -62,6 +62,7 @@ class Claim(StateMachine):
         started.to(withdrawn)
         | claimer_winning.to(withdrawn)
         | challenger_winning.to(withdrawn)
+        | invalidated_l1_resolved.to(withdrawn)
         | ignored.to(withdrawn)
         | withdrawn.to(withdrawn)
     )
