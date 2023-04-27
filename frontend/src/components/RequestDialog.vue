@@ -77,6 +77,7 @@ import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTokenAllowance } from '@/composables/useTokenAllowance';
 import { useTransferRequest } from '@/composables/useTransferRequest';
 import { switchToActivities } from '@/router/navigation';
+import { SafeProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useTransferHistory } from '@/stores/transfer-history';
@@ -195,6 +196,10 @@ function resetFormValidation() {
 }
 
 watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
+  if (provider.value instanceof SafeProvider) {
+    return;
+  }
+
   const toAddress = requestTarget.value.toAddress;
 
   if (!toAddress || toAddress === prevSignerAddress) {
