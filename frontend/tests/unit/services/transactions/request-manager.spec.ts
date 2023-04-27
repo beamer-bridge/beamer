@@ -214,7 +214,9 @@ describe('request-manager', () => {
       contract.interface.parseLog = vi.fn().mockReturnValue({ args: { requestId: '1' } });
 
       const provider = mockGetProvider();
-      provider.waitForTransaction = vi.fn().mockReturnValue(new MockedTransactionReceipt());
+      provider.waitForTransaction = vi
+        .fn()
+        .mockReturnValue(new MockedTransactionReceipt({ logs: ['log'] }));
 
       Object.defineProperties(transactionUtils, {
         getConfirmationTimeBlocksForChain: {
@@ -275,7 +277,7 @@ describe('request-manager', () => {
       const provider = mockGetProvider();
       provider.waitForTransaction = vi
         .fn()
-        .mockReturnValue(new MockedTransactionReceipt({ status: 1, logs: undefined }));
+        .mockReturnValue(new MockedTransactionReceipt({ status: 1 }));
 
       await expect(
         getRequestInformation(RPC_URL, REQUEST_MANAGER_ADDRESS, transactionHash),

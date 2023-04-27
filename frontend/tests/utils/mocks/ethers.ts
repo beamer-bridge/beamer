@@ -13,7 +13,7 @@ export class MockedTransaction {
 }
 
 export class MockedTransactionReceipt {
-  logs = [];
+  logs: string[] = [];
   status = 1;
   blockHash = '0x123';
 
