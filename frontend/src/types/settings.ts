@@ -4,4 +4,5 @@ export enum WalletType {
   WalletConnect = 'wallet_connect',
   Coinbase = 'coinbase',
   Injected = 'injected',
+  Safe = 'safe',
 }

@@ -5,8 +5,17 @@
 import { CoinbaseWalletSDK } from '@coinbase/wallet-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
+import { SafeAppProvider } from '@safe-global/safe-apps-provider';
+import SafeAppsSDK from '@safe-global/safe-apps-sdk';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore TODO: Install & use type declarations once we migrate to WalletConnect v2
 import WalletConnect from '@walletconnect/web3-provider/dist/umd/index.min.js';
 
-export { CoinbaseWalletSDK, detectEthereumProvider, MetaMaskOnboarding, WalletConnect };
+export {
+  CoinbaseWalletSDK,
+  detectEthereumProvider,
+  MetaMaskOnboarding,
+  SafeAppProvider,
+  SafeAppsSDK,
+  WalletConnect,
+};

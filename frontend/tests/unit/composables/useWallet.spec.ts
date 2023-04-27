@@ -7,6 +7,7 @@ import {
   MockedCoinbaseProvider,
   MockedInjectedProvider,
   MockedMetaMaskProvider,
+  MockedSafeProvider,
   MockedWalletConnectProvider,
 } from '~/utils/mocks/ethereum-provider';
 
@@ -26,6 +27,9 @@ describe('useWallets', () => {
       },
       createInjectedProvider: {
         value: vi.fn().mockResolvedValue(new MockedInjectedProvider()),
+      },
+      createSafeProvider: {
+        value: vi.fn().mockResolvedValue(new MockedSafeProvider()),
       },
     });
   });
@@ -205,6 +209,44 @@ describe('useWallets', () => {
     });
   });
 
+  describe('connectSafe()', () => {
+    it('creates Safe provider instance', async () => {
+      const wallet = new MockedSafeProvider();
+      Object.defineProperty(web3ProviderService, 'createSafeProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+
+      const provider = shallowRef(undefined);
+      const { connectSafe } = useWallet(provider, ref(undefined), ref({}));
+
+      await connectSafe();
+
+      expect(web3ProviderService.createSafeProvider).toHaveBeenCalledOnce();
+      expect(provider.value).toBe(wallet);
+    });
+
+    it('sets the connected wallet type', async () => {
+      const connectedWallet = ref(undefined);
+      const { connectSafe } = useWallet(ref(undefined), connectedWallet, ref({}));
+
+      await connectSafe();
+
+      expect(connectedWallet.value).toBe('safe');
+    });
+
+    it('listens on wallet provider disconnect events', async () => {
+      const wallet = new MockedSafeProvider();
+      Object.defineProperty(web3ProviderService, 'createSafeProvider', {
+        value: vi.fn().mockResolvedValue(wallet),
+      });
+      const { connectSafe, disconnectWallet } = useWallet(ref(undefined), ref(undefined), ref({}));
+
+      await connectSafe();
+
+      expect(wallet.on).toHaveBeenCalledWith('disconnect', disconnectWallet);
+    });
+  });
+
   describe('reconnectToWallet()', () => {
     it('can reconnect to MetaMask', async () => {
       const provider = ref(undefined);
@@ -240,6 +282,41 @@ describe('useWallets', () => {
       await reconnectToWallet();
 
       expect(provider.value).toBeInstanceOf(MockedInjectedProvider);
+    });
+
+    it('cannot reconnect to a Safe provider', async () => {
+      const provider = ref(undefined);
+      const { reconnectToWallet } = useWallet(provider, ref(WalletType.Safe), ref({}));
+
+      await reconnectToWallet();
+
+      expect(provider.value).toBeUndefined();
+    });
+  });
+
+  describe('autoconnectToWallet()', () => {
+    it('can autoconnect to a Safe', async () => {
+      Object.defineProperty(web3ProviderService, 'createSafeProvider', {
+        value: vi.fn().mockResolvedValue(new MockedSafeProvider()),
+      });
+      const provider = ref(undefined);
+      const { autoconnectToWallet } = useWallet(provider, ref(undefined), ref({}));
+
+      await autoconnectToWallet();
+
+      expect(provider.value).toBeInstanceOf(MockedSafeProvider);
+    });
+
+    it('can reconnect to stored wallet type', async () => {
+      Object.defineProperty(web3ProviderService, 'createSafeProvider', {
+        value: vi.fn().mockResolvedValue(undefined),
+      });
+      const provider = ref(undefined);
+      const { autoconnectToWallet } = useWallet(provider, ref(WalletType.WalletConnect), ref({}));
+
+      await autoconnectToWallet();
+
+      expect(provider.value).toBeInstanceOf(MockedWalletConnectProvider);
     });
   });
 
