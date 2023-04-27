@@ -14,6 +14,7 @@ import psutil
 import yaml
 from eth_utils import to_canonical_address
 from yaml.loader import SafeLoader
+import subprocess
 
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
@@ -70,8 +71,10 @@ def _configure_ganache_port(port: int):
     with open(_CONFIG_PATH, "w") as f:
         yaml.dump(current_config, f, sort_keys=False, default_flow_style=False)
     try:
+        print("change ganache port 1")
         yield
     finally:
+        print("change ganache port 2")
         os.rename(backup_path, _CONFIG_PATH)
 
 
@@ -91,13 +94,15 @@ def _start_slave_test(first_chain_id: ChainId, port: int, request_count: int) ->
 
 
 @contextlib.contextmanager
-def _new_networks(chain_port_map: dict[ChainId, _ChainInfo]):
+def _new_networks(chain_port_map: dict[ChainId, _ChainInfo]) -> dict[ChainId, psutil.Popen]:
     processes = {}
     try:
+        print("new networks 1")
         for chain_id, chain_info in chain_port_map.items():
             processes[chain_id] = _start_ganache(chain_id, chain_info.port, chain_info.is_legacy)
-        yield
+        yield processes
     finally:
+        print("new networks 2")
         for process in processes.values():
             os.kill(process.pid, signal.SIGKILL)
             process.wait()
@@ -178,9 +183,12 @@ def _start_agent_test(config: Config):
         agent.stop()
 
 
-def _get_slave_contract_addresses(proc: psutil.Popen) -> dict[str, str]:
+def _get_slave_contract_addresses(proc: psutil.Popen, ganache_proc: psutil.Popen, port: int) -> dict[str, str]:
     stdout = ""
+    print(subprocess.call(f"lsof -i tcp:{port}", shell=True))
     while proc.status() == "running":
+        print("slave", proc.status())
+        print("ganache", ganache_proc.status())
         line = proc.stdout.readline().decode()
         stdout += line
         if "Chain is ready\n" == line:
@@ -231,13 +239,13 @@ def _mint_agent_tokens(
 
 def test_multiple_event_processors(contracts: Contracts, token: ape.project.MintableToken):
     chain_map = _get_chain_map()
-    with _new_networks(chain_map):
+    with _new_networks(chain_map) as ganache_procs:
         slave_test_procs = []
         slave_contract_addresses: dict[ChainId, dict[str, str]] = {}
         for chain_id, chain_info in chain_map.items():
             with _configure_ganache_port(chain_info.port):
                 slave = _start_slave_test(min(chain_map.keys()), chain_info.port, len(chain_map))
-                contract_addresses = _get_slave_contract_addresses(slave)
+                contract_addresses = _get_slave_contract_addresses(slave, ganache_procs[chain_id], chain_info.port)
                 slave_contract_addresses[chain_id] = contract_addresses
                 slave_test_procs.append(slave)
         config = _get_config(chain_map, contracts, slave_contract_addresses)
@@ -275,13 +283,13 @@ def _start_agent_fee_test(config: Config):
 
 def test_l1_base_fees(contracts: Contracts, token: ape.project.MintableToken):
     chain_map = {ChainId(1): _ChainInfo(8546, False), ChainId(2): _ChainInfo(8547, True)}
-    with _new_networks(chain_map):
+    with _new_networks(chain_map) as ganache_procs:
         slave_test_procs = []
         slave_contract_addresses: dict[ChainId, dict[str, str]] = {}
         for chain_id, chain_info in chain_map.items():
             with _configure_ganache_port(chain_info.port):
                 slave = _start_slave_test(min(chain_map.keys()), chain_info.port, len(chain_map))
-                contract_addresses = _get_slave_contract_addresses(slave)
+                contract_addresses = _get_slave_contract_addresses(slave, ganache_procs[chain_id], chain_info.port)
                 slave_contract_addresses[chain_id] = contract_addresses
                 slave_test_procs.append(slave)
         config = _get_config(chain_map, contracts, slave_contract_addresses)
