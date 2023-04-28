@@ -12,11 +12,11 @@ from web3.middleware import latest_block_based_cache_middleware
 import beamer.agent.metrics
 from beamer.agent.chain import EventMonitor, EventProcessor
 from beamer.agent.config import Config
-from beamer.agent.contracts import ContractInfo, make_contracts
 from beamer.agent.state_machine import Context
 from beamer.agent.tracker import Tracker
-from beamer.agent.typing import URL, ChainId, TransferDirection
-from beamer.agent.util import make_web3
+from beamer.contracts import ContractInfo, make_contracts
+from beamer.typing import URL, ChainId, TransferDirection
+from beamer.util import make_web3
 
 log = structlog.get_logger(__name__)
 

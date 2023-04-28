@@ -8,10 +8,10 @@ import click
 import structlog
 
 import beamer.agent.config
-import beamer.agent.contracts
-import beamer.agent.util
+import beamer.contracts
+import beamer.util
 from beamer.agent.agent import Agent
-from beamer.agent.l1_resolution import get_relayer_executable
+from beamer.agent.relayer import get_relayer_executable
 
 log = structlog.get_logger(__name__)
 
@@ -144,7 +144,7 @@ def agent(
 
     config = beamer.agent.config.load(config_path, options)
 
-    beamer.agent.util.setup_logging(log_level=config.log_level.upper(), log_json=False)
+    beamer.util.setup_logging(log_level=config.log_level.upper(), log_json=False)
     log.info("Running beamer bridge agent", version=version("beamer"))
     log.info(f"Using account {config.account.address}")
 
