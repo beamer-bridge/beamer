@@ -2,8 +2,8 @@ from pathlib import Path
 
 import click
 
-from beamer.agent.util import setup_logging
 from beamer.health.check import main
+from beamer.util import setup_logging
 
 
 @click.command("health-check", help="Analyzes the beamer protocol and agent activity.")

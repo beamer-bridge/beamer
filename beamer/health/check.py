@@ -14,13 +14,13 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 
 import beamer.agent.chain
-import beamer.agent.contracts
-import beamer.agent.events
+import beamer.contracts
+import beamer.events
 from beamer.agent.config import _merge_dicts
-from beamer.agent.events import ClaimMade, DepositWithdrawn, RequestCreated, RequestFilled
-from beamer.agent.typing import ChainId
+from beamer.events import ClaimMade, DepositWithdrawn, RequestCreated, RequestFilled
 from beamer.health.notify import Message, NotificationConfig, NotificationState, Notify
-from beamer.health.util import (
+from beamer.typing import URL, ChainId
+from beamer.util import (
     TokenDetails,
     get_token_amount_in_decimals,
     get_token_balance,
@@ -61,7 +61,7 @@ class Transfer(TypedDict):
 
 TransferMap = DefaultDict[str, Transfer]
 
-ChainEventMap = dict[ChainId, list[beamer.agent.events.Event]]
+ChainEventMap = dict[ChainId, list[beamer.events.Event]]
 
 TokenVolume = dict[str, int]
 
@@ -197,17 +197,17 @@ def cleanup_transfers(transfers: TransferMap) -> None:
 
 
 def fetch_events() -> ChainEventMap:
-    deployment_info = beamer.agent.contracts.load_deployment_info(get_config()["deployment_dir"])
+    deployment_info = beamer.contracts.load_deployment_info(get_config()["deployment_dir"])
     events = {}
 
     for chain_id, (rpc) in get_config()["rpcs"].items():
-        web3 = make_web3(rpc)
+        web3 = make_web3(URL(rpc))
         assert chain_id == ChainId(web3.eth.chain_id)
 
         info = deployment_info[ChainId(chain_id)]
-        contracts = beamer.agent.contracts.make_contracts(web3, info)
+        contracts = beamer.contracts.make_contracts(web3, info)
 
-        ef = beamer.agent.events.EventFetcher(
+        ef = beamer.events.EventFetcher(
             web3,
             (contracts["RequestManager"], contracts["FillManager"]),
             BlockNumber(info["RequestManager"].deployment_block),
@@ -283,13 +283,13 @@ def create_transfers_object(events_grouped_by_chain_id: ChainEventMap) -> Transf
 
     for events in events_grouped_by_chain_id.values():
         for x in events:
-            if isinstance(x, beamer.agent.events.RequestCreated):
+            if isinstance(x, beamer.events.RequestCreated):
                 transfers[x.request_id.hex()]["created"] = x
-            elif isinstance(x, beamer.agent.events.RequestFilled):
+            elif isinstance(x, beamer.events.RequestFilled):
                 transfers[x.request_id.hex()]["filled"] = x
-            elif isinstance(x, beamer.agent.events.DepositWithdrawn):
+            elif isinstance(x, beamer.events.DepositWithdrawn):
                 transfers[x.request_id.hex()]["withdrawn"] = x
-            elif isinstance(x, beamer.agent.events.ClaimMade):
+            elif isinstance(x, beamer.events.ClaimMade):
                 claims = transfers[x.request_id.hex()].get("claimed", {})
 
                 if x.claim_id not in claims:
