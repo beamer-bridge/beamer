@@ -14,7 +14,7 @@ from web3.contract import Contract
 from web3.contract.contract import get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
 
-from beamer.agent.typing import (
+from beamer.typing import (
     BlockNumber,
     ChainId,
     ClaimId,

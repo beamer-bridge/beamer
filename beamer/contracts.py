@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import cast
 
 import web3
+from web3 import Web3
 from web3.contract import Contract
 
-from beamer.agent.typing import Address, BlockNumber, ChainId
+from beamer.typing import Address, BlockNumber, ChainId
 
 
 @dataclass
@@ -51,3 +52,9 @@ def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
             )
         deployment_info[ChainId(int(chain_id))] = infos
     return deployment_info
+
+
+def contracts_for_web3(web3: Web3, deployment_dir: Path) -> dict[str, Contract]:
+    deployment_info = load_deployment_info(deployment_dir)
+    chain_id = ChainId(web3.eth.chain_id)
+    return make_contracts(web3, deployment_info[chain_id])
