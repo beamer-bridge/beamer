@@ -11,11 +11,11 @@ import beamer.agent.chain
 import beamer.agent.metrics
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
-from beamer.agent.contracts import ContractInfo, DeploymentInfo
-from beamer.agent.l1_resolution import get_relayer_executable
-from beamer.agent.typing import URL, BlockNumber, ChainId, TransferDirection
+from beamer.agent.relayer import get_relayer_executable
 from beamer.agent.util import TokenChecker
+from beamer.contracts import ContractInfo, DeploymentInfo
 from beamer.tests.util import alloc_accounts
+from beamer.typing import URL, BlockNumber, ChainId, TransferDirection
 
 
 @dataclass(frozen=True)

@@ -9,24 +9,15 @@ from web3.constants import ADDRESS_ZERO
 from web3.types import BlockData, Timestamp, Wei
 
 from beamer.agent.config import Config
-from beamer.agent.events import ClaimMade
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.state_machine import Context
 from beamer.agent.tracker import Tracker
-from beamer.agent.typing import (
-    URL,
-    ChainId,
-    ClaimId,
-    FillId,
-    Nonce,
-    RequestId,
-    Termination,
-    TokenAmount,
-)
 from beamer.agent.util import TokenChecker
+from beamer.events import ClaimMade
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
+from beamer.typing import URL, ChainId, ClaimId, FillId, Nonce, RequestId, Termination, TokenAmount
 
 SOURCE_CHAIN_ID = ChainId(2)
 TARGET_CHAIN_ID = ChainId(3)

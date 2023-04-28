@@ -17,11 +17,12 @@ from yaml.loader import SafeLoader
 
 from beamer.agent.agent import Agent
 from beamer.agent.config import Config
-from beamer.agent.contracts import ContractInfo
-from beamer.agent.typing import URL, BlockNumber, ChainId
-from beamer.agent.util import TokenChecker, make_web3, transact
+from beamer.agent.util import TokenChecker
+from beamer.contracts import ContractInfo
 from beamer.tests.conftest import Contracts
 from beamer.tests.util import Sleeper
+from beamer.typing import URL, BlockNumber, ChainId
+from beamer.util import make_web3, transact
 
 _SLAVE_TEST_PATH = Path(__file__).parent / "_test_slave.py"
 _CONFIG_PATH = ape.project.local_project.path / ape.project.local_project.config_file_name

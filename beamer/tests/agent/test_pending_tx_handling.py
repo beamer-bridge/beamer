@@ -5,8 +5,8 @@ import structlog.testing
 from web3.exceptions import TimeExhausted
 
 from beamer.agent.agent import Agent
-from beamer.agent.util import transact
 from beamer.tests.util import HTTPProxy, alloc_accounts, make_request
+from beamer.util import transact
 
 _DELAY_COUNT = 0
 

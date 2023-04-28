@@ -2,7 +2,6 @@ import pytest
 from web3.types import Wei
 
 from beamer.agent.chain import process_claims
-from beamer.agent.typing import FillId, Termination
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIMER_STAKE,
@@ -14,6 +13,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
+from beamer.typing import FillId, Termination
 
 
 @pytest.mark.parametrize("fill_id", [FILL_ID, FillId(b"cafebabe")])

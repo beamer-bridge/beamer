@@ -8,10 +8,8 @@ from web3.datastructures import AttributeDict
 from web3.types import ChecksumAddress, TxReceipt, Wei
 
 from beamer.agent.chain import claim_request, fill_request, process_claims, process_requests
-from beamer.agent.events import RequestResolved
 from beamer.agent.state_machine import process_event
-from beamer.agent.typing import FillId, Termination
-from beamer.agent.util import load_ERC20_abi
+from beamer.events import RequestResolved
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
@@ -25,8 +23,8 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-
-ERC2O_ABI = load_ERC20_abi()
+from beamer.typing import FillId, Termination
+from beamer.util import get_ERC20_abi
 
 
 def get_tx_receipt(status, tx_hash) -> TxReceipt:
@@ -82,7 +80,8 @@ def test_fill_request_transaction_status():
     context.requests.add(request.id, request)
     assert request.pending
     w3 = context.fill_manager.w3
-    token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
+    token_abi = get_ERC20_abi()
+    token = w3.eth.contract(abi=token_abi, address=request.target_token_address)
     token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
     func = context.fill_manager.functions.fillRequest(
         sourceChainId=request.source_chain_id,
@@ -102,7 +101,7 @@ def test_fill_request_transaction_status():
 
     context.requests.add(request.id, request)
     w3 = context.fill_manager.w3
-    token = w3.eth.contract(abi=ERC2O_ABI, address=request.target_token_address)
+    token = w3.eth.contract(abi=token_abi, address=request.target_token_address)
     token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
     func = context.fill_manager.functions.fillRequest(
         sourceChainId=request.source_chain_id,

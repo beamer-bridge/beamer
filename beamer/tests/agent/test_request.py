@@ -10,10 +10,12 @@ from web3.types import Timestamp, Wei
 
 from beamer.agent.agent import Agent
 from beamer.agent.chain import maybe_challenge
-from beamer.agent.events import ClaimMade, RequestFilled
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
-from beamer.agent.typing import (
+from beamer.events import ClaimMade, RequestFilled
+from beamer.tests.agent.unit.utils import BLOCK_NUMBER
+from beamer.tests.util import Sleeper, Timeout, alloc_accounts, make_request
+from beamer.typing import (
     BlockNumber,
     ChainId,
     ClaimId,
@@ -23,8 +25,6 @@ from beamer.agent.typing import (
     Termination,
     TokenAmount,
 )
-from beamer.tests.agent.unit.utils import BLOCK_NUMBER
-from beamer.tests.util import Sleeper, Timeout, alloc_accounts, make_request
 
 
 def test_challenge_own_claim(config, request_manager, token, direction):

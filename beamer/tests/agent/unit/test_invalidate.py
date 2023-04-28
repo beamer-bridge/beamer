@@ -5,9 +5,8 @@ import pytest
 from hexbytes import HexBytes
 
 from beamer.agent.chain import process_claims
-from beamer.agent.events import FillInvalidated, FillInvalidatedResolved
 from beamer.agent.state_machine import process_event
-from beamer.agent.typing import ClaimId, FillId, Termination
+from beamer.events import FillInvalidated, FillInvalidatedResolved
 from beamer.tests.agent.unit.utils import (
     ACCOUNT,
     ADDRESS1,
@@ -20,6 +19,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address, make_tx_hash
 from beamer.tests.constants import FILL_ID
+from beamer.typing import ClaimId, FillId, Termination
 
 
 def test_handle_fill_invalidated_resolved():
