@@ -14,7 +14,7 @@ from web3.contract.contract import ContractFunction
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.types import TxParams, Wei
 
-from beamer.agent.util import account_from_keyfile, make_web3, transact
+from beamer.util import account_from_keyfile, make_web3, transact
 
 GANACHE_CHAIN_ID = 1337
 

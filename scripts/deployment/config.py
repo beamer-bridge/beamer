@@ -7,7 +7,7 @@ from apischema.metadata import validators
 from eth_typing import ChecksumAddress
 from eth_utils import is_checksum_address
 
-from beamer.agent.typing import ChainId
+from beamer.typing import ChainId
 
 
 def _validate_token_address(address: str) -> None:
