@@ -5,7 +5,7 @@ from pathlib import Path
 import eth_utils
 from web3 import HTTPProvider, Web3
 
-from scripts._util import contracts_for_web3
+from beamer.contracts import contracts_for_web3
 
 
 def main() -> None:

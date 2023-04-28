@@ -9,9 +9,10 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 
-from beamer.agent.typing import URL, Address, ChainId, TokenAmount
-from beamer.agent.util import account_from_keyfile, make_web3, setup_logging, transact
-from scripts._util import contracts_for_web3, validate_address, validate_bytes
+from beamer.contracts import contracts_for_web3
+from beamer.typing import URL, Address, ChainId, TokenAmount
+from beamer.util import account_from_keyfile, make_web3, setup_logging, transact
+from scripts._util import validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
 

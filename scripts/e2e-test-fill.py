@@ -2,10 +2,10 @@ import random
 import sys
 from pathlib import Path
 
-from beamer.agent.typing import URL, ChainId
-from beamer.agent.util import account_from_keyfile, make_web3
+from beamer.contracts import contracts_for_web3
 from beamer.tests.util import create_request_id
-from scripts._util import contracts_for_web3
+from beamer.typing import URL, ChainId
+from beamer.util import account_from_keyfile, make_web3
 
 
 def main() -> None:
