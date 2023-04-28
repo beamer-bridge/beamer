@@ -16,7 +16,11 @@ from web3.types import BlockData
 
 import beamer.agent.metrics
 from beamer.agent.config import Config
-from beamer.agent.events import (
+from beamer.agent.models.claim import Claim
+from beamer.agent.models.request import Request
+from beamer.agent.tracker import Tracker
+from beamer.agent.util import TokenChecker
+from beamer.events import (
     ChainUpdated,
     ClaimMade,
     ClaimStakeWithdrawn,
@@ -31,11 +35,7 @@ from beamer.agent.events import (
     SourceChainEvent,
     TargetChainEvent,
 )
-from beamer.agent.models.claim import Claim
-from beamer.agent.models.request import Request
-from beamer.agent.tracker import Tracker
-from beamer.agent.typing import URL, ChainId, ClaimId, FillId, RequestId
-from beamer.agent.util import TokenChecker
+from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
 
 log = structlog.get_logger(__name__)
 

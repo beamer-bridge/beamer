@@ -12,15 +12,14 @@ from web3 import HTTPProvider, Web3
 from web3.contract import Contract
 from web3.types import Timestamp, Wei
 
-from beamer.agent.events import Event, EventFetcher
-from beamer.agent.l1_resolution import run_relayer_for_tx
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
+from beamer.agent.relayer import run_relayer_for_tx
 from beamer.agent.state_machine import Context, process_event
-from beamer.agent.typing import BlockNumber, ChainId
-from beamer.agent.util import TransactionFailed, load_ERC20_abi, transact
+from beamer.events import Event, EventFetcher
+from beamer.typing import BlockNumber, ChainId
+from beamer.util import TransactionFailed, get_ERC20_abi, transact
 
-_ERC20_ABI = load_ERC20_abi()
 
 # The time we're waiting for our thread in stop(), in seconds.
 # This is also the maximum time a call to stop() would block.
@@ -348,7 +347,7 @@ def fill_request(request: Request, context: Context) -> None:
         request.ignore()
         return
     w3 = context.fill_manager.w3
-    token = w3.eth.contract(abi=_ERC20_ABI, address=request.target_token_address)
+    token = w3.eth.contract(abi=get_ERC20_abi(), address=request.target_token_address)
     address = w3.eth.default_account
     balance = token.functions.balanceOf(address).call()
     if balance < request.amount:
