@@ -5,7 +5,7 @@ from pathlib import Path
 import structlog
 from hexbytes import HexBytes
 
-from beamer.agent.typing import URL
+from beamer.typing import URL
 
 
 log = structlog.get_logger(__name__)
@@ -19,8 +19,7 @@ def get_relayer_executable() -> Path:
     name = _RELAYER_NAMES.get(sys.platform)
     if name is None:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
-
-    path = Path(__file__).parent.joinpath(f"data/relayers/{name}")
+    path = Path(__file__).parent.parent.joinpath(f"data/relayers/{name}")
     return path.resolve()
 
 
