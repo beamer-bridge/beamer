@@ -1,0 +1,31 @@
+{
+    "name": "Arbitrum Goerli",
+    "chain_id": 421613,
+    "l1_messenger": [
+        "ArbitrumL1Messenger",
+        "0xaf4159A80B6Cc41ED517DB1c453d1Ef5C2e4dB72",
+        "0x6BEbC4925716945D46F0Ec336D5C2564F419682C"
+    ],
+    "l2_messenger": "ArbitrumL2Messenger",
+    "finality_period": 18000,
+    "transfer_cost": 1000000000000000,
+    "target_weight_ppm": 500000,
+    "request_manager_arguments": {
+        "claim_stake": 0.00047,
+        "claim_request_extension": 900,
+        "claim_period": 900,
+        "challenge_period_extension": 900
+    },
+    "fees": {
+        "min_fee_ppm": 300000,
+        "lp_fee_ppm": 3000,
+        "protocol_fee_ppm": 0
+    },
+    "tokens": [
+        {
+            "token_address": "mintable_token",
+            "transfer_limit": 10000,
+            "eth_in_token": 1000
+        }
+    ]
+}
