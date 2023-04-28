@@ -14,6 +14,11 @@
     fill: white !important;
   }
 
+  body[data-theme="dark"] .mermaid .loopText tspan{
+    stroke: none;
+    fill: white !important;
+  }
+
   body[data-theme="dark"] .mermaid #arrowhead path {
     stroke: white !important;
     fill: white !important;
@@ -33,6 +38,12 @@
     stroke: none;
     fill: white !important;
   }
+
+  body:not([data-theme="light"]) .mermaid .loopText tspan{
+    stroke: none;
+    fill: white !important;
+  }
+
   body:not([data-theme="light"]) .mermaid #arrowhead path {
     stroke: white !important;
     fill: white !important;
