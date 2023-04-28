@@ -11,7 +11,7 @@ import requests.exceptions
 import structlog
 from web3 import HTTPProvider, Web3
 from web3.types import Middleware, RPCEndpoint, RPCResponse
-from beamer.agent.typing import ChainId
+from beamer.typing import ChainId
 
 
 log = structlog.get_logger(__name__)
