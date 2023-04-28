@@ -17,7 +17,7 @@ from eth_utils import keccak, to_canonical_address
 from freezegun import freeze_time
 from web3.types import FilterParams
 
-from beamer.agent.typing import RequestId
+from beamer.typing import RequestId
 
 FUNDER = ape.accounts.test_accounts[0]
 

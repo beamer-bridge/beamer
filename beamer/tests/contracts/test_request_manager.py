@@ -3,10 +3,10 @@ import pytest
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 
-from beamer.agent.typing import ClaimId, FillId, Termination
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, earnings, make_request
+from beamer.typing import ClaimId, FillId, Termination
 
 
 def test_request_invalid_target_chain(request_manager, token):

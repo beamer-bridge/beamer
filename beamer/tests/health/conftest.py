@@ -1,15 +1,14 @@
 from typing import cast
+
 import pytest
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 from web3.types import Wei
 
-from beamer.agent.events import ClaimMade, RequestCreated, RequestFilled
-from beamer.agent.typing import ChainId, FillId, Nonce, Termination, TokenAmount
+from beamer.events import ClaimMade, RequestCreated, RequestFilled
 from beamer.health.check import Context, TokenMap
 from beamer.health.notify import NotificationState
-from beamer.health.util import TokenDetails
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     BLOCK_NUMBER,
@@ -18,6 +17,8 @@ from beamer.tests.agent.unit.utils import (
     REQUEST_ID,
 )
 from beamer.tests.agent.utils import make_address
+from beamer.typing import ChainId, FillId, Nonce, Termination, TokenAmount
+from beamer.util import TokenDetails
 
 TARGET_CHAIN_ID = ChainId(42161)
 SOURCE_CHAIN_ID = ChainId(10)

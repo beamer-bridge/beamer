@@ -4,7 +4,6 @@ import time
 
 from web3.types import Wei
 
-from beamer.agent.typing import Termination
 from beamer.health.check import (
     ChainEventMap,
     Context,
@@ -16,6 +15,7 @@ from beamer.health.check import (
 from beamer.tests.agent.unit.utils import CLAIM_ID, REQUEST_ID
 from beamer.tests.agent.utils import make_address
 from beamer.tests.health.conftest import SOURCE_CHAIN_ID, TARGET_CHAIN_ID
+from beamer.typing import Termination
 
 
 def test_create_transfers_object(transfer_request, transfer_claim, transfer_fill):

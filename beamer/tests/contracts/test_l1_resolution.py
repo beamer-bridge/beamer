@@ -3,10 +3,10 @@ import pytest
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 
-from beamer.agent.typing import RequestId
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID, FILL_ID_EMPTY
 from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
+from beamer.typing import RequestId
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
