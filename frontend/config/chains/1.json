@@ -1,7 +1,7 @@
 {
   "identifier": 1,
   "explorerUrl": "https://etherscan.io/",
-  "rpcUrl": "https://eth.llamarpc.com",
+  "rpcUrl": "https://rpc.flashbots.net",
   "name": "Ethereum Mainnet",
   "imageUrl": "/images/ethereum.svg",
   "tokenSymbols": ["USDC", "DAI"],
