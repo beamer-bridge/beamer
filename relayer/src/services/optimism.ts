@@ -1,9 +1,13 @@
+import type { DeepPartial, OEContractsLike } from "@eth-optimism/sdk";
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
+import { readFileSync } from "fs";
 
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
 export class OptimismRelayerService extends BaseRelayerService {
+  customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
+
   async prepare(): Promise<boolean> {
     return true;
   }
@@ -16,6 +20,7 @@ export class OptimismRelayerService extends BaseRelayerService {
       l2SignerOrProvider: this.l2RpcProvider,
       l1ChainId: await this.getL1ChainId(),
       l2ChainId: await this.getL2ChainId(),
+      contracts: this.customNetworkContracts ?? {},
     });
 
     const messages = await messenger.getMessagesByTransaction(l2TransactionHash);
@@ -68,4 +73,36 @@ export class OptimismRelayerService extends BaseRelayerService {
   async finalize(): Promise<void> {
     return;
   }
+
+  async addCustomNetwork(filePath: string) {
+    const configFileContent = await readFileSync(filePath, "utf-8");
+    const config: CustomNetworkConfigFile = JSON.parse(configFileContent);
+
+    this.customNetworkContracts = {
+      l1: {
+        AddressManager: config.AddressManager,
+        BondManager: config.BondManager,
+        CanonicalTransactionChain: config.CanonicalTransactionChain,
+        L1CrossDomainMessenger: config.Proxy__OVM_L1CrossDomainMessenger,
+        L1StandardBridge: config.Proxy__OVM_L1StandardBridge,
+        StateCommitmentChain: config.StateCommitmentChain,
+      },
+    };
+  }
 }
+
+type CustomNetworkConfigFile = {
+  BondManager: string;
+  Proxy__OVM_L1CrossDomainMessenger: string;
+  Lib_AddressManager: string;
+  L1StandardBridge_for_verification_only: string;
+  OVM_L1CrossDomainMessenger: string;
+  ChugSplashDictator: string;
+  AddressDictator: string;
+  CanonicalTransactionChain: string;
+  Proxy__OVM_L1StandardBridge: string;
+  StateCommitmentChain: string;
+  "ChainStorageContainer-SCC-batches": string;
+  "ChainStorageContainer-CTC-batches": string;
+  AddressManager: string;
+};

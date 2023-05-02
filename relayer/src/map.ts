@@ -14,6 +14,7 @@ export const SERVICES: Record<number, ExtendedRelayerService> = {
   288: BobaRelayerService,
   10: OptimismRelayerService,
   420: OptimismRelayerService,
+  17: OptimismRelayerService,
   1: EthereumRelayerService,
   5: EthereumRelayerService,
   1337: EthereumRelayerService,
