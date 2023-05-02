@@ -26,7 +26,7 @@ up() {
     docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
     # FIXME: Need removal after: https://github.com/beamer-bridge/beamer/issues/1242
     export DOCKER_TAG_MESSAGE_RELAYER=0.5.25
-    docker compose ${docker_compose_file} up -d
+    docker compose ${docker_compose_file} up --scale relayer=0 -d
 
     echo "Wait to make sure all services are up and running"
     # The current wait-for-sequencer.sh script in the optimism repo
@@ -36,11 +36,6 @@ up() {
     sed "s#docker-compose#docker-compose ${docker_compose_file}#" \
             "${OPTIMISM}/ops/scripts/wait-for-sequencer.sh" > ${WAIT_FOR_SEQUENCER_SCRIPT}
     sh ${WAIT_FOR_SEQUENCER_SCRIPT}
-
-    # For some reason the relayer dies (presumably while not being able to
-    # connect to l2geth). So here we just run `docker compose` again to make
-    # sure the relayer is running.
-    docker compose ${docker_compose_file} up --scale relayer=1 -d
 }
 
 create_deployment_config_file() {
@@ -53,7 +48,19 @@ create_deployment_config_file() {
 e2e_test() {
     l2_rpc=http://localhost:8545
     password=""
+    relayer=${ROOT}/relayer/relayer-node18-linux-x64
+    contract_addresses="${CACHE_DIR}/addresses.json"
+    echo Copying contract addresses to $contract_addresses
+    docker exec ops-deployer-1 cat genesis/addresses.json > $contract_addresses
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    echo Starting relayer
+    ${relayer} --l1-rpc-url http://localhost:9545 \
+               --l2-relay-to-rpc-url $l2_rpc \
+               --l2-relay-from-rpc-url $l2_rpc \
+               --network-to $contract_addresses \
+               --network-from $contract_addresses \
+               --wallet-private-key $PRIVKEY \
+               --l2-transaction-hash $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
