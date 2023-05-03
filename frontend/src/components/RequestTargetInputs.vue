@@ -43,6 +43,9 @@
           <div v-if="v$.selectedTargetAddress.$errors.length">
             {{ v$.selectedTargetAddress.$errors[0].$message }}
           </div>
+          <div v-else-if="showSafeSameTargetWarning" class="text-orange">
+            Make sure you own a Safe with this address on the destination chain.
+          </div>
           <div v-else>&nbsp;</div>
         </InputValidationMessage>
         <Transition>
@@ -66,7 +69,9 @@ import Selector from '@/components/inputs/Selector.vue';
 import InputValidationMessage from '@/components/layout/InputValidationMessage.vue';
 import { useChainSelection } from '@/composables/useChainSelection';
 import { useRequestTargetInputValidations } from '@/composables/useRequestTargetInputValidations';
+import { SafeProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
+import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { usePortals } from '@/stores/portals';
 import type { Chain, Token } from '@/types/data';
 import type { RequestTarget, SelectorOption } from '@/types/form';
@@ -86,8 +91,10 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
+const ethereumProvider = useEthereumProvider();
 const { hideActionButton, showActionButton } = usePortals();
 
+const { provider, signerAddress } = storeToRefs(ethereumProvider);
 const { chains } = storeToRefs(configuration);
 
 const selectedTargetChain = ref<SelectorOption<Chain> | null>(props.modelValue.targetChain);
@@ -97,6 +104,11 @@ const ignoreChains = computed(() =>
   process.env.NODE_ENV === 'development' || !props.sourceChain ? [] : [props.sourceChain.value],
 );
 const { chainOptions } = useChainSelection(chains, ignoreChains);
+
+const showSafeSameTargetWarning = computed(
+  () =>
+    provider.value instanceof SafeProvider && signerAddress.value === selectedTargetAddress.value,
+);
 
 watch(
   () => props.sourceChain,
