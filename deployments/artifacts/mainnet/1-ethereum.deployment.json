@@ -1,7 +1,7 @@
 {
     "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
     "RequestManager": {
-        "beamer_commit": "0cf1c048c53e48ab87eb9136543202fad6ae74e7",
+        "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
         "tx_hash": "0xb5608f230d268ebd746af88ec1f12496778afb963aab56c17ec91393c0804306",
         "address": "0x7faEa6562a6cE991149F0167baF283E9aAc7Dc50",
         "deployment_block": 16946579,
@@ -13,7 +13,7 @@
         ]
     },
     "FillManager": {
-        "beamer_commit": "0cf1c048c53e48ab87eb9136543202fad6ae74e7",
+        "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
         "tx_hash": "0xc92cf0dafab86dcb97f71848ccbf88f9b3115ed183eee694674ad5dd20c4265f",
         "address": "0xD5EF34B499b6d64817CC70C3b0B8D9f807F06C29",
         "deployment_block": 16946583,
@@ -22,7 +22,7 @@
         ]
     },
     "EthereumL2Messenger": {
-        "beamer_commit": "0cf1c048c53e48ab87eb9136543202fad6ae74e7",
+        "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
         "tx_hash": "0x35664f1603a2738dde28e09a13c2db79f7091f8b4a3f2a1f13f676d2b793dc93",
         "address": "0x3222C9a1e5d7856FCBc551A30a63634e7Fd634Da",
         "deployment_block": 16946578,
