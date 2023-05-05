@@ -181,7 +181,12 @@ def _start_agent_test(config: Config):
 
 def _get_slave_contract_addresses(proc: psutil.Popen) -> dict[str, str]:
     stdout = ""
-    while proc.status() == "running":
+    while proc.status() in [
+        psutil.STATUS_RUNNING,
+        psutil.STATUS_IDLE,
+        psutil.STATUS_SLEEPING,
+        psutil.STATUS_DISK_SLEEP,
+    ]:
         line = proc.stdout.readline().decode()
         stdout += line
         if "Chain is ready\n" == line:
@@ -190,7 +195,6 @@ def _get_slave_contract_addresses(proc: psutil.Popen) -> dict[str, str]:
             line = proc.stdout.readline().decode()
             contract_addresses = json.loads(line)
             return contract_addresses
-
     sys.stderr.write("Slave process exited before detecting contract addresses!\n")
     sys.stderr.write(stdout)
     sys.stderr.flush()
@@ -275,7 +279,7 @@ def _start_agent_fee_test(config: Config):
 
 
 def test_l1_base_fees(contracts: Contracts, token: ape.project.MintableToken):
-    chain_map = {ChainId(1): _ChainInfo(8546, False), ChainId(2): _ChainInfo(8547, True)}
+    chain_map = {ChainId(1): _ChainInfo(9545, False), ChainId(2): _ChainInfo(9546, True)}
     with _new_networks(chain_map):
         slave_test_procs = []
         slave_contract_addresses: dict[ChainId, dict[str, str]] = {}
