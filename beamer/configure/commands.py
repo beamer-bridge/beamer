@@ -89,7 +89,7 @@ def _execute_command(chain: _Chain, command: Command) -> None:
         input_names = _get_inputs_for_field(request_manager.abi, command.name)[1:]
         write_params = _merge_values(input_names, current_values, param.values)
 
-        if write_params == _merge_values(input_names, current_values, {}):
+        if write_params == current_values:
             print("Values already configured. Not executing!")
             return
 
