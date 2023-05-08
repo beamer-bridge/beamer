@@ -24,6 +24,9 @@ export async function createSafeProvider(): Promise<SafeProvider | undefined> {
 }
 
 export class SafeProvider extends BasicEthereumProvider {
+  disconnectable = false;
+  isContractWallet = true;
+
   constructor(safe: SafeInfo, private sdk: SafeAppsSDK) {
     super(new SafeAppProvider(safe, sdk));
   }

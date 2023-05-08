@@ -65,6 +65,8 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
   readonly chainId: Ref<number>;
+  disconnectable = true;
+  isContractWallet = false;
 
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     this.signer = shallowRef(options?.signer);

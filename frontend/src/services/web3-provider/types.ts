@@ -19,6 +19,8 @@ export interface IEthereumProvider {
   getChainId(): Promise<number>;
   addToken?(token: Token): Promise<boolean>;
   getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
+  disconnectable: boolean;
+  isContractWallet: boolean;
 }
 
 export interface EventEmitter {

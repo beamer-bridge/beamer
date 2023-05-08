@@ -12,6 +12,8 @@ export abstract class BasicEthereumProvider extends EventEmitter implements IEth
   signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
   signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
+  disconnectable = true;
+  isContractWallet = false;
 
   protected web3Provider: Web3Provider;
   protected externalProvider: Eip1193Provider;
