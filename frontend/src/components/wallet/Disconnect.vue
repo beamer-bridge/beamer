@@ -14,7 +14,6 @@ import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
-import { SafeProvider } from '@/services/web3-provider';
 import { useEthereumProvider } from '@/stores/ethereum-provider';
 import { useSettings } from '@/stores/settings';
 
@@ -22,6 +21,6 @@ const ethereumProvider = useEthereumProvider();
 const { provider } = storeToRefs(ethereumProvider);
 const { connectedWallet } = storeToRefs(useSettings());
 
-const showDisconnect = computed(() => !(provider.value instanceof SafeProvider));
+const showDisconnect = computed(() => !!provider.value?.disconnectable);
 const { disconnectWallet: disconnect } = useWallet(provider, connectedWallet, ref());
 </script>
