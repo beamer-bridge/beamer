@@ -5,6 +5,7 @@ CONTRACTS = "contracts/**/*.sol"
 DIFFLINT_PY_RE = "( M|A ) (beamer/|scripts/)"
 DIFFLINT_SOL_RE = "( M|A ) contracts/.*sol"
 IMAGE_NAME := beamer
+ARCH := $(shell uname -m)
 
 all: lint
 
@@ -82,3 +83,13 @@ clean:
 	rm -rf deployments/dist
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type d -name .mypy_cache -exec rm -rf {} +
+
+install:
+	yarn install
+	poetry install
+ifeq ($(ARCH),arm64)
+	$(eval ATOMICS := $(shell poetry export | grep -E 'atomics==' | awk '{print $$1}'))
+	$(eval VENV := $(shell poetry run poetry env info -p))
+	poetry run pip uninstall atomics -y
+	poetry run pip install $(ATOMICS) --platform=universal2 --no-deps --target $(VENV)/lib/python*/site-packages
+endif
