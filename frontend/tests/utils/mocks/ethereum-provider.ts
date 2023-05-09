@@ -1,5 +1,5 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
-import type { SpyInstanceFn } from 'vitest';
+import type { Mock } from 'vitest';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
@@ -54,7 +54,7 @@ export class MockedCoinbaseWalletSDK {
 }
 
 export class MockedSafeAppsSDK {
-  safe: { getInfo: SpyInstanceFn | Promise<unknown> } = {
+  safe: { getInfo: Mock | Promise<unknown> } = {
     getInfo: vi.fn().mockResolvedValue(vi.fn()),
   };
 }
@@ -77,11 +77,11 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   init = vi.fn();
   getLatestBlock = vi.fn();
   getProvider = vi.fn();
-  switchChainSafely: SpyInstanceFn | undefined = vi.fn();
-  switchChain: SpyInstanceFn | undefined = vi.fn();
-  addChain: SpyInstanceFn | undefined = vi.fn();
+  switchChainSafely: Mock | undefined = vi.fn();
+  switchChain: Mock | undefined = vi.fn();
+  addChain: Mock | undefined = vi.fn();
   getChainId = vi.fn(async () => this.chainId.value);
-  addToken: SpyInstanceFn | undefined = vi.fn();
+  addToken: Mock | undefined = vi.fn();
   on = vi.fn();
   emit = vi.fn();
 }

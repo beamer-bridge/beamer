@@ -1,5 +1,5 @@
 import * as providers from '@ethersproject/providers';
-import type { SpyInstanceFn } from 'vitest';
+import type { Mock } from 'vitest';
 
 import type { Eip1193Provider } from '@/services/web3-provider';
 import {
@@ -194,7 +194,7 @@ describe('BasicEthereumProvider', () => {
       ethereumProvider.listenToEvents();
 
       let networkEventCallback;
-      const listenerCalls = (ethereumProvider['web3Provider'].on as SpyInstanceFn).mock.calls;
+      const listenerCalls = (ethereumProvider['web3Provider'].on as Mock).mock.calls;
       for (const call of listenerCalls) {
         if (call[0] === 'network') {
           networkEventCallback = call[1];

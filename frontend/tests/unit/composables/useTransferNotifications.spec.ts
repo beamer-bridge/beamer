@@ -1,4 +1,4 @@
-import type { SpyInstanceFn } from 'vitest';
+import type { Mock } from 'vitest';
 import type { Ref } from 'vue';
 import { ref } from 'vue';
 import * as vueToastification from 'vue-toastification';
@@ -7,7 +7,7 @@ import type { Transfer } from '@/actions/transfers';
 import { useTransferNotifications } from '@/composables/useTransferNotifications';
 import { generateTransfer } from '~/utils/data_generators';
 
-function getUseToastComposableMock(successFn?: SpyInstanceFn) {
+function getUseToastComposableMock(successFn?: Mock) {
   return {
     success: successFn ?? vi.fn(),
   };
