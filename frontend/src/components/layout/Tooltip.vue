@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Popper from 'vue3-popper';
+import Popper from 'vue3-popper/dist/popper.esm.js';
 
 const theme = ref('tooltip-beamer');
 </script>
