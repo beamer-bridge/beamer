@@ -1,6 +1,6 @@
 import type { SafeInfo } from '@safe-global/safe-apps-sdk';
 
-import { BasicEthereumProvider } from '@/services/web3-provider';
+import { BasicEthereumProvider } from '@/services/web3-provider/ethereum-provider';
 import { SafeAppProvider, SafeAppsSDK } from '@/services/web3-provider/util-export';
 
 export async function createSafeProvider(): Promise<SafeProvider | undefined> {
