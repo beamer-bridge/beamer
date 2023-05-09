@@ -42,7 +42,7 @@ let originalParent: Window;
 describe('safe-provider', () => {
   beforeAll(() => {
     originalParent = global.parent;
-    
+
     // The createSafe has a check for window.parent and returns undefined
     // if it matches the window.
     // https://github.com/vitest-dev/vitest/blob/fde628ad3dbcd4f6687072dc4dd60879cd245e59/packages/vitest/src/integrations/env/utils.ts#L70
