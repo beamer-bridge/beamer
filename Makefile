@@ -1,7 +1,9 @@
-.PHONY: dist-exe container-image relayers all lint black format docs clean
+.PHONY: dist-exe container-image relayers all lint black format docs clean difflint pydifflint soldifflint
 
 CODE_DIRS = beamer/ scripts/
 CONTRACTS = "contracts/**/*.sol"
+DIFFLINT_PY_RE = "( M|A ) (beamer/|scripts/)"
+DIFFLINT_SOL_RE = "( M|A ) contracts/.*sol"
 IMAGE_NAME := beamer
 
 all: lint
@@ -21,6 +23,25 @@ black:
 format: black
 	isort $(CODE_DIRS)
 	npx prettier --write $(CONTRACTS)
+
+difflint: pydifflint soldifflint
+
+pydifflint:
+	$(eval FILES := $(shell git status --porcelain | grep --color=never -E $(DIFFLINT_PY_RE) | awk '{print $$NF}'))
+	@if [ "$(FILES)" != "" ]; then \
+		mypy $(FILES) && \
+		black --check --diff $(FILES) && \
+		flake8 $(FILES) && \
+		isort $(FILES) --diff --check-only && \
+		pylint $(FILES); \
+	fi
+
+soldifflint:
+	$(eval FILES := $(shell git status --porcelain | grep --color=never -E $(DIFFLINT_SOL_RE) | awk '{print $$NF}'))
+	@if [ "$(FILES)" != "" ]; then \
+		npx solhint $(FILES) && \
+		npx prettier --list-different $(FILES); \
+	fi
 
 dist-exe:
 	mkdir -p dist
