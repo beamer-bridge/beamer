@@ -65,6 +65,13 @@ parameters:
   relayer-updated:
     type: boolean
     default: false
+  deployment-artifacts-updated:
+    type: boolean
+    default: false
+  deployment-package-json-updated:
+    type: boolean
+    default: false  
+
 
 executors:
   vm:
@@ -298,6 +305,50 @@ jobs:
           name: Unit tests
           command: yarn test:unit
 
+  build-and-release-deployment-artifacts-and-abis-to-npm:
+    executor: vm
+    steps:
+      - initialize-environment
+      - node/install-packages:
+          pkg-manager: yarn
+          app-dir: ~/beamer/deployments
+      - run:
+          name: Log in to npm
+          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+      - when:
+          condition:
+            and:
+              - equal: [ main, <<pipeline.git.branch>> ]
+              - equal: [ true, <<pipeline.parameters.deployment-package-json-updated>> ]
+          steps:
+            - run:
+                name: Build
+                command: make npm-package
+                working_directory: ~/beamer
+            - run:
+                name: Publish to npm
+                command: yarn publish dist/beamer-bridge-deployments.tgz
+                working_directory: ~/beamer/deployments
+      - when:
+          condition:
+            and: 
+              - not:
+                  equal: [ main, <<pipeline.git.branch>> ]
+              - equal: [ true, <<pipeline.parameters.deployment-artifacts-updated>> ]
+          steps:
+            - run:
+                name: Update to prerelease version
+                command: yarn version --prerelease --no-git-tag-version --preid $(date +%s)  
+                working_directory: ~/beamer/deployments
+            - run:
+                name: Build
+                command: make npm-package
+                working_directory: ~/beamer    
+            - run:
+                name: Publish to npm
+                command: yarn publish dist/beamer-bridge-deployments.tgz
+                working_directory: ~/beamer/deployments
+
   test-relayer:
     executor: node/default
     working_directory: ~/beamer/relayer
@@ -339,8 +390,28 @@ jobs:
             - run:
                 name: Push the image to github container registry
                 command: docker push -a ${IMAGE_NAME}
+                                             
 
 workflows:
+  npm-release:
+    when: 
+     condition: 
+      or: 
+        - <<pipeline.parameters.deployment-artifacts-updated>>
+        - <<pipeline.parameters.deployment-package-json-updated>>
+    jobs:
+      - checkout
+      - install-npm-packages:
+          requires:
+            - checkout
+      - install-python:
+          requires:
+            - checkout
+      - build-and-release-deployment-artifacts-and-abis-to-npm:
+          requires:
+            - install-npm-packages
+            - install-python
+
   backend:
     when: <<pipeline.parameters.backend-updated>>
     jobs:
