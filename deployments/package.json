@@ -1,0 +1,27 @@
+{
+  "name": "@beamer-bridge/deployments",
+  "version": "2.0.0",
+  "description": "The beamer-bridge contract deployments & ABIs",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "create-package": "yarn exec ./scripts/create-package.sh && yarn pack -f dist/beamer-bridge-deployments.tgz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beamer-bridge/beamer.git"
+  },
+  "author": "Daniel Dimitrov <daniel@brainbot.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/beamer-bridge/beamer/issues"
+  },
+  "homepage": "https://github.com/beamer-bridge/beamer#readme",
+  "devDependencies": {},
+  "dependencies": {}
+}

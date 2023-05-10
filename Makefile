@@ -47,6 +47,9 @@ docs:
 														   > docs/source/contracts-addresses.rst
 	make -C docs html
 
+npm-package:
+	yarn --cwd deployments create-package
+
 clean:
 	make -C docs clean
 	rm -f docs/source/contracts-addresses.rst
@@ -54,5 +57,6 @@ clean:
 	rm -rf contracts/.build
 	rm -rf contracts/contracts/.cache
 	rm -rf .pytest_cache
+	rm -rf deployments/dist
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type d -name .mypy_cache -exec rm -rf {} +
