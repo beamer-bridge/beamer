@@ -28,6 +28,8 @@ workflows:
             relayer/.* relayer-updated true
             docs/.* docs-updated true
             deployments/mainnet/deployment.json docs-updated true
+            deployments/artifacts/.* deployment-artifacts-updated true
+            deployments/package.json deployment-package-json-updated true
             frontend/.* frontend-updated true
             subgraph/.* subgraph-updated true
             .circleci/.* frontend-updated true             
