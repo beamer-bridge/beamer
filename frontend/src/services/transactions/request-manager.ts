@@ -9,7 +9,6 @@ import { UInt256 } from '@/types/uint-256';
 
 import type { IEthereumProvider } from '../web3-provider';
 import {
-  getBlockTimestamp,
   getConfirmationTimeBlocksForChain,
   getJsonRpcProvider,
   getLatestBlock,
@@ -156,10 +155,7 @@ export async function getRequestInformation(
   rpcUrl: string,
   requestManagerAddress: EthereumAddress,
   transactionHash: string,
-): Promise<{
-  requestId: string;
-  timestamp: number;
-}> {
+): Promise<string> {
   const provider = getJsonRpcProvider(rpcUrl);
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
@@ -187,8 +183,7 @@ export async function getRequestInformation(
       continue;
     }
     if (event && event.args.requestId) {
-      const timestamp = await getBlockTimestamp(rpcUrl, receipt.blockHash);
-      return { requestId: event.args.requestId, timestamp };
+      return event.args.requestId;
     }
   }
   throw new Error("Request Failed. Couldn't retrieve Request ID.");

@@ -167,11 +167,15 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return this.listenerCleanupCallback !== undefined;
   }
 
-  get transferTime(): number | undefined {
+  get transferTimeSeconds(): number | undefined {
     if (!this._requestInformation?.timestamp || !this._requestFulfillment?.timestamp) {
       return undefined;
     }
-    return this._requestFulfillment.timestamp - this._requestInformation.timestamp;
+
+    const seconds =
+      (this._requestFulfillment.timestamp - this._requestInformation.timestamp) / 1000;
+
+    return Number(seconds.toFixed(1));
   }
 
   protected getStepMethods(provider?: IEthereumProvider): Record<string, CallableFunction> {
@@ -314,14 +318,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Attempt to get request event before sending transaction!');
     }
 
-    const { requestId, timestamp } = await getRequestInformation(
+    const requestId = await getRequestInformation(
       this.sourceChain.internalRpcUrl,
       this.sourceChain.requestManagerAddress,
       this._requestInformation.transactionHash,
     );
 
     this._requestInformation.setIdentifier(requestId);
-    this._requestInformation.setTimestamp(timestamp);
+    this._requestInformation.setTimestamp(Date.now());
   }
 
   protected async waitForFulfillment(): Promise<void> {
@@ -342,11 +346,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this._requestInformation.identifier,
     );
 
+    fulfillmentPromise.then(
+      () => (this._requestFulfillment = new RequestFulfillment({ timestamp: Date.now() })),
+    );
+
     try {
-      const timestamp = await Promise.race([fulfillmentPromise, expirationPromise]);
-      if (timestamp) {
-        this._requestFulfillment = new RequestFulfillment({ timestamp });
-      }
+      await Promise.race([fulfillmentPromise, expirationPromise]);
     } catch (exception: unknown) {
       if (exception instanceof RequestExpiredError) {
         this._expired = true;
