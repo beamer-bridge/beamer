@@ -346,7 +346,7 @@ jobs:
                 working_directory: ~/beamer    
             - run:
                 name: Publish to npm
-                command: yarn publish dist/beamer-bridge-deployments.tgz
+                command: yarn publish dist/beamer-bridge-deployments.tgz --tag dev
                 working_directory: ~/beamer/deployments
 
   test-relayer:
