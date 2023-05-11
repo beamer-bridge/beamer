@@ -83,6 +83,8 @@ function define(object: unknown, property: string, value: unknown): void {
 
 describe('transfer', () => {
   beforeEach(() => {
+    global.Date.now = vi.fn();
+
     Object.defineProperties(tokenUtils, {
       ensureTokenAllowance: { value: vi.fn().mockResolvedValue(undefined) },
     });
@@ -332,12 +334,9 @@ describe('transfer', () => {
       const transfer = new TestTransfer(data);
       const identifier = '0x123';
       const timestamp = 100;
+      global.Date.now = vi.fn().mockReturnValue(timestamp);
 
-      define(
-        requestManager,
-        'getRequestInformation',
-        vi.fn().mockResolvedValue({ requestId: identifier, timestamp }),
-      );
+      define(requestManager, 'getRequestInformation', vi.fn().mockResolvedValue(identifier));
 
       await transfer.waitForRequestEvent();
 
@@ -465,11 +464,8 @@ describe('transfer', () => {
       const transfer = new TestTransfer(data);
       const fulfillmentTimestamp = 100;
 
-      define(
-        fillManager,
-        'waitForFulfillment',
-        createTestCancelable({ result: fulfillmentTimestamp }),
-      );
+      global.Date.now = vi.fn().mockReturnValue(fulfillmentTimestamp);
+      define(fillManager, 'waitForFulfillment', createTestCancelable({ result: true }));
 
       await transfer.waitForFulfillment();
 

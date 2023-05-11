@@ -208,7 +208,6 @@ describe('request-manager', () => {
   describe('getRequestInformation()', async () => {
     it('queries and returns the request information for a given transaction hash', async () => {
       const transactionHash = getRandomString();
-      const transactionMinedTimestamp = 100;
 
       const contract = mockGetRequestManagerContract();
       contract.interface.parseLog = vi.fn().mockReturnValue({ args: { requestId: '1' } });
@@ -222,20 +221,16 @@ describe('request-manager', () => {
         getConfirmationTimeBlocksForChain: {
           value: vi.fn().mockReturnValue(1),
         },
-        getBlockTimestamp: {
-          value: vi.fn().mockReturnValue(transactionMinedTimestamp),
-        },
       });
 
-      const requestInformation = await getRequestInformation(
+      const identifier = await getRequestInformation(
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         transactionHash,
       );
 
       expect(provider.waitForTransaction).toHaveBeenCalledWith(transactionHash, expect.anything());
-      expect(requestInformation.requestId).toBe('1');
-      expect(requestInformation.timestamp).toBe(transactionMinedTimestamp);
+      expect(identifier).toBe('1');
     });
 
     it('throws an error if the transaction has reverted', async () => {

@@ -21,7 +21,7 @@ describe('TransferComplete.vue', () => {
       },
     });
     const message = wrapper.find('[data-test="message"]');
-    expect(message.text()).toBe(`Transfer completed in ${transfer.transferTime}s.`);
+    expect(message.text()).toBe(`Transfer completed in ${transfer.transferTimeSeconds}s.`);
   });
 
   it('shows a general completion message when transfer time is not defined', () => {

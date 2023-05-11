@@ -114,10 +114,6 @@ describe('fill-manager', () => {
       Object.defineProperty(eventFiltersService, 'fetchFirstMatchingEvent', {
         value: vi.fn().mockResolvedValue(event),
       });
-      const timestamp = 100;
-      Object.defineProperty(transactionUtils, 'getBlockTimestamp', {
-        value: vi.fn().mockResolvedValue(timestamp),
-      });
 
       const { promise } = waitForFulfillment(
         rpcUrl,
@@ -126,7 +122,7 @@ describe('fill-manager', () => {
         fromBlockNumber,
       );
 
-      await expect(promise).resolves.toBe(timestamp);
+      await expect(promise).resolves.toBeUndefined();
       expect(contract.removeAllListeners).toHaveBeenCalled();
     });
 
