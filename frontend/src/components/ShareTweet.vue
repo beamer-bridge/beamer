@@ -20,7 +20,7 @@ const isShareable = computed(() => {
     !!transfer.value.sourceAmount.token &&
     !!transfer.value.sourceChain &&
     !!transfer.value.targetChain &&
-    !!transfer.value.transferTime
+    !!transfer.value.transferTimeSeconds
   );
 });
 
@@ -28,7 +28,7 @@ const tweetText = computed(() => {
   const sourceToken = transfer.value?.sourceAmount.token;
   const sourceChain = transfer.value?.sourceChain;
   const targetChain = transfer.value?.targetChain;
-  const transferTime = transfer.value?.transferTime;
+  const transferTime = transfer.value?.transferTimeSeconds;
 
   return `I just used @beamerbridge to seamlessly and securely transfer #${sourceToken?.symbol} from ${sourceChain?.name} to ${targetChain?.name} in ${transferTime} seconds! 🔥
 
