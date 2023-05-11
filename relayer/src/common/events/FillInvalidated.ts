@@ -1,7 +1,7 @@
 import type { Log } from "@ethersproject/providers";
 import { Interface } from "ethers/lib/utils";
 
-import FillManagerABI from "../../assets/abi/FillManager.json";
+import { abis } from "../../deployments";
 import { isUndefined } from "../util";
 
 interface Result extends ReadonlyArray<unknown> {
@@ -21,7 +21,7 @@ export const isValidFillInvalidatedEvent = (data: Result): data is FillInvalidat
 };
 
 export const parseFillInvalidatedEvent = (logs: Log[]): FillInvalidatedEventData | null => {
-  const iface = new Interface(FillManagerABI);
+  const iface = new Interface(abis.FillManager);
 
   for (const log of logs) {
     try {

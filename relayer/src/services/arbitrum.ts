@@ -12,15 +12,16 @@ import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 
 import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts";
+import { addresses } from "../deployments";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
 const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   42161: {
-    ARBITRUM_L1_MESSENGER: "0x5911621aF8826d1AAA5B8B28d63c1e0096f7c0e3",
+    ARBITRUM_L1_MESSENGER: addresses.mainnet.ArbitrumL1Messenger,
   },
   421613: {
-    ARBITRUM_L1_MESSENGER: "0x3C14BBAaC9a90b1820552Aca33Ab23724F0Da025",
+    ARBITRUM_L1_MESSENGER: addresses.goerli.ArbitrumL1Messenger,
   },
   412346: {
     ARBITRUM_L1_MESSENGER: process.env.ARBITRUM_L1_MESSENGER || "",
