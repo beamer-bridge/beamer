@@ -338,7 +338,7 @@ jobs:
           steps:
             - run:
                 name: Update to prerelease version
-                command: yarn version --prerelease --no-git-tag-version --preid $(date +%s)  
+                command: yarn version --prerelease --no-git-tag-version --preid $(git rev-parse --short HEAD)-$(date +%s)
                 working_directory: ~/beamer/deployments
             - run:
                 name: Build
