@@ -5,7 +5,7 @@ Requirements
 ------------
 
 - `Python <https://www.python.org>`_ 3.10
-- `poetry <https://python-poetry.org>`_
+- `poetry <https://python-poetry.org>`_ 1.4
 - `ganache <https://trufflesuite.com/ganache>`_ 7
 - `jq <https://stedolan.github.io/jq/>`_
 - `coreutils <https://formulae.brew.sh/formula/coreutils>`_
@@ -27,13 +27,9 @@ If you already have a repository, make sure the submodules are up to date::
 Testing
 -------
 
-First make sure that the node dependencies are installed::
+First install node and python dependencies::
 
-    yarn install
-
-Then, install python dependencies::
-
-    poetry install
+    make install
 
 Then enter the virtual environment::
 
@@ -49,7 +45,7 @@ Build the relayers::
 
 Start ganache::
 
-    ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
+    npx ganache --wallet.totalAccounts 10 --chain.hardfork london --miner.blockGasLimit 12000000 \
             --wallet.mnemonic brownie --server.port 8545 --chain.chainId 1337
 
 Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache::
