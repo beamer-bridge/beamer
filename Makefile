@@ -12,6 +12,7 @@ lint:
 	flake8 $(CODE_DIRS)
 	isort $(CODE_DIRS) --diff --check-only
 	pylint $(CODE_DIRS)
+	ruff $(CODE_DIRS)
 	npx solhint $(CONTRACTS)
 	npx prettier --list-different $(CONTRACTS)
 
