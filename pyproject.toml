@@ -70,7 +70,6 @@ extend-exclude = '''
 /(
     \.git
   | \.mypy_cache
-  | build
   | dist
 )/
 '''
