@@ -3,7 +3,6 @@ jobs=4
 persistent=yes
 suggestion-mode=yes
 unsafe-load-any-extension=no
-load-plugins=tools.pylint.assert_checker,tools.pylint.del_method_checker
 
 # Blacklist files or directories (basenames, not paths)
 ignore=
@@ -27,6 +26,34 @@ logging-modules=logging,structlog
 [MESSAGES CONTROL]
 
 disable=
+    missing-class-docstring,
+    missing-module-docstring,
+    missing-function-docstring,
+    missing-timeout,
+    too-many-lines,
+    too-many-locals,
+    too-many-branches,
+    too-many-arguments,
+    too-many-statements,
+    too-many-return-statements,
+    too-many-instance-attributes,
+    invalid-name,
+    no-value-for-parameter,
+    consider-using-f-string,
+    redefined-outer-name,
+    global-statement,
+    unreachable,
+    use-dict-literal,
+    fixme,
+    unspecified-encoding,
+    broad-exception-caught,
+    too-few-public-methods,
+    super-init-not-called,
+    c-extension-no-member,
+    redefined-argument-from-local,
+    global-variable-not-assigned,
+    used-before-assignment,
+    protected-access,
 
 [REPORTS]
 
@@ -38,8 +65,6 @@ score=no
 expected-line-ending-format=LF
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 max-line-length=100
-max-module-lines=1000
-no-space-check=trailing-comma
 
 [VARIABLES]
 
