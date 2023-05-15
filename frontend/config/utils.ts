@@ -43,15 +43,12 @@ export const readDeploymentFolder = (
   rootFolderPath: string,
   ignoreFolders: string[] = [],
 ): DeploymentInfo[] => {
-  const deploymentFilePaths = fs
+  const deploymentFolderPaths = fs
     .readdirSync(rootFolderPath)
     .filter((folderName) => !ignoreFolders.includes(folderName))
-    .filter((folderName) =>
-      fs.existsSync(path.join(rootFolderPath, folderName, 'deployment.json')),
-    )
-    .map((folderName) => path.join(rootFolderPath, folderName, 'deployment.json'));
+    .map((folderName) => path.join(rootFolderPath, folderName));
 
-  return deploymentFilePaths.map((filePath) => DeploymentInfo.readFromFile(filePath));
+  return deploymentFolderPaths.map((folderPath) => DeploymentInfo.readFromDirectory(folderPath));
 };
 
 export const getEnvironmentForFolder = (folderName: string): Environment => {

@@ -1,4 +1,5 @@
 import { ChainMetadata } from 'config/chains/chain';
+import type { ChainDeploymentInfo, DeploymentInfoData } from 'config/deployment';
 import { DeploymentInfo } from 'config/deployment';
 import { TokenMetadata } from 'config/tokens/token';
 
@@ -238,26 +239,32 @@ export function getDeploymentFolderName() {
   return folderNames[Math.floor(Math.random() * folderNames.length)];
 }
 
-export function generateDeploymentInfo(
-  partialDeploymentInfo?: Partial<DeploymentInfo>,
-): DeploymentInfo {
-  return new DeploymentInfo({
-    beamer_commit: getRandomString(ALPHABET_CHARACTERS, 40),
-    deployer: getRandomEthereumAddress(),
-    base_chain: {
-      [getRandomString(ALPHABET_CHARACTERS, 10)]: {
-        address: getRandomEthereumAddress(),
-      },
+export function generateChainDeploymentInfo(
+  partialChainDeploymentInfo?: Partial<ChainDeploymentInfo>,
+): ChainDeploymentInfo {
+  return {
+    RequestManager: {
+      address: getRandomEthereumAddress(),
     },
+    FillManager: {
+      address: getRandomEthereumAddress(),
+    },
+    ...partialChainDeploymentInfo,
+  };
+}
+
+export function generateDeploymentInfo(
+  partialDeploymentInfoData?: Partial<DeploymentInfoData>,
+): DeploymentInfo {
+  const chain_id = getRandomNumber().toString();
+  return new DeploymentInfo({
     chains: {
-      [getRandomNumber()]: {
-        [getRandomString(ALPHABET_CHARACTERS, 10)]: {
-          address: getRandomEthereumAddress(),
-        },
+      [chain_id]: {
+        chain: generateChainDeploymentInfo(),
       },
     },
     folderName: getDeploymentFolderName(),
-    ...partialDeploymentInfo,
+    ...partialDeploymentInfoData,
   });
 }
 

@@ -19,7 +19,10 @@ import {
 
 const CHAINS_DIR = path.join(__dirname, 'chains');
 const TOKENS_DIR = path.join(__dirname, 'tokens');
-const DEPLOYMENT_DIR = path.join(__dirname, '../../deployments');
+const DEPLOYMENT_DIR = path.join(
+  __dirname,
+  '../node_modules/@beamer-bridge/deployments/dist/artifacts',
+);
 const OUTPUT_DIR = path.join(__dirname, '../public');
 
 const ajv = new Ajv();

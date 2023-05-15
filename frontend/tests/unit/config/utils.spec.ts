@@ -92,24 +92,29 @@ describe('utils', () => {
     });
 
     it('reads & parses files from deployment folders to deployment info instances', () => {
-      const dirFiles = ['mainnet', 'goerli'];
+      const dirs = ['mainnet', 'goerli'];
       const deploymentInfo = generateDeploymentInfo();
-
-      DeploymentInfo.readFromFile = vi.fn().mockReturnValue(deploymentInfo);
-      fs.readdirSync = vi.fn().mockReturnValue(dirFiles);
+      DeploymentInfo.readFromDirectory = vi.fn().mockReturnValue(deploymentInfo);
+      fs.readdirSync = vi.fn().mockReturnValue(dirs);
 
       const result = readDeploymentFolder('deployments');
+
+      expect(DeploymentInfo.readFromDirectory).toHaveBeenCalledTimes(2);
+      expect(DeploymentInfo.readFromDirectory).toHaveBeenCalledWith('deployments/mainnet');
+      expect(DeploymentInfo.readFromDirectory).toHaveBeenCalledWith('deployments/goerli');
       expect(result).toEqual([deploymentInfo, deploymentInfo]);
     });
     it('allows reading while ignoring certain deployment folders', () => {
-      const dirFiles = ['mainnet', 'goerli'];
+      const dirs = ['mainnet', 'goerli'];
       const ignoreDirectories = ['mainnet'];
       const deploymentInfo = generateDeploymentInfo();
-
-      DeploymentInfo.readFromFile = vi.fn().mockReturnValue(deploymentInfo);
-      fs.readdirSync = vi.fn().mockReturnValue(dirFiles);
+      DeploymentInfo.readFromDirectory = vi.fn().mockReturnValue(deploymentInfo);
+      fs.readdirSync = vi.fn().mockReturnValue(dirs);
 
       const result = readDeploymentFolder('deployments', ignoreDirectories);
+
+      expect(DeploymentInfo.readFromDirectory).toHaveBeenCalledOnce();
+      expect(DeploymentInfo.readFromDirectory).toHaveBeenCalledWith('deployments/goerli');
       expect(result).toEqual([deploymentInfo]);
     });
   });

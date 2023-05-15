@@ -1,7 +1,14 @@
 import { DeploymentInfo } from 'config/deployment';
 import * as utils from 'config/utils';
+import fs from 'fs';
 
-import { generateDeploymentInfo, getRandomEthereumAddress } from '~/utils/data_generators';
+import {
+  generateChainDeploymentInfo,
+  generateDeploymentInfo,
+  getRandomEthereumAddress,
+} from '~/utils/data_generators';
+
+vi.mock('fs');
 
 describe('DeploymentInfo', () => {
   describe('getMintableTokenAddresses()', () => {
@@ -11,14 +18,18 @@ describe('DeploymentInfo', () => {
       const deploymentInfo = generateDeploymentInfo({
         chains: {
           '1': {
-            MintableToken: {
-              address: contractAddress1,
-            },
+            chain: generateChainDeploymentInfo({
+              MintableToken: {
+                address: contractAddress1,
+              },
+            }),
           },
           '2': {
-            MintableToken: {
-              address: contractAddress2,
-            },
+            chain: generateChainDeploymentInfo({
+              MintableToken: {
+                address: contractAddress2,
+              },
+            }),
           },
         },
       });
@@ -28,15 +39,11 @@ describe('DeploymentInfo', () => {
         '2': contractAddress2,
       });
     });
+
     it('retrieves empty object when there are no mintable token addresses', () => {
       const deploymentInfo = generateDeploymentInfo({
         chains: {
-          '1': {},
-          '2': {
-            TestContract: {
-              address: getRandomEthereumAddress(),
-            },
-          },
+          '1': { chain: generateChainDeploymentInfo({ MintableToken: undefined }) },
         },
       });
 
@@ -48,8 +55,8 @@ describe('DeploymentInfo', () => {
     it('retrieves all chains for which there was a deployment', () => {
       const deploymentInfo = generateDeploymentInfo({
         chains: {
-          '1': {},
-          '2': {},
+          '1': { chain: generateChainDeploymentInfo() },
+          '2': { chain: generateChainDeploymentInfo() },
         },
       });
       expect(deploymentInfo.supportedChains).toEqual(['1', '2']);
@@ -64,11 +71,13 @@ describe('DeploymentInfo', () => {
         const deploymentInfo = generateDeploymentInfo({
           chains: {
             '1': {
-              RequestManager: {
-                address: requestManagerAddress,
-              },
-              FillManager: {
-                address: fillManagerAddress,
+              chain: {
+                RequestManager: {
+                  address: requestManagerAddress,
+                },
+                FillManager: {
+                  address: fillManagerAddress,
+                },
               },
             },
           },
@@ -83,20 +92,35 @@ describe('DeploymentInfo', () => {
     // TODO: test other cases
   });
 
-  describe('readFromFile()', () => {
-    it("fails to read if file doesn't exist", () => {
-      expect(() => DeploymentInfo.readFromFile('test.json')).toThrow();
+  describe('readFromDirectory()', () => {
+    beforeEach(() => {
+      fs.readdirSync = vi.fn().mockReturnValue([]);
     });
+
+    it('throws an exception if the folder path is invalid', () => {
+      fs.readdirSync = vi.fn().mockImplementation(() => {
+        throw new Error('Folder does not exist');
+      });
+      expect(() => DeploymentInfo.readFromDirectory('testnet/')).toThrow();
+    });
+
     it('instantiates an object from a local file', () => {
-      const filePath = `testnet/test.json`;
+      const folderPath = 'testnet';
+      const fileNames = ['1-test.deployment.json'];
+      fs.readdirSync = vi.fn().mockReturnValue(fileNames);
+      const deploymentInfoFile = {
+        chain: generateChainDeploymentInfo(),
+      };
       const mockDeploymentInfo = generateDeploymentInfo({
-        folderName: 'testnet',
+        chains: { '1': deploymentInfoFile },
+        folderName: folderPath,
       });
       Object.defineProperty(utils, 'readFileJsonContent', {
-        value: vi.fn().mockReturnValue(mockDeploymentInfo),
+        value: vi.fn().mockReturnValue(deploymentInfoFile),
       });
 
-      const deploymentInfo = DeploymentInfo.readFromFile(filePath);
+      const deploymentInfo = DeploymentInfo.readFromDirectory(folderPath);
+
       expect(Object.keys(deploymentInfo)).toEqual(Object.keys(mockDeploymentInfo));
       expect(Object.values(deploymentInfo)).toEqual(Object.values(mockDeploymentInfo));
     });
