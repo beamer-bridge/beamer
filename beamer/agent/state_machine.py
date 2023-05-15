@@ -77,43 +77,44 @@ HandlerResult = tuple[bool, Optional[list[Event]]]
 
 
 def process_event(event: Event, context: Context) -> HandlerResult:
-    if isinstance(event, SourceChainEvent) and event.event_chain_id != context.source_chain_id:
-        return True, None
-    if isinstance(event, TargetChainEvent) and event.event_chain_id != context.target_chain_id:
-        return True, None
+    match event:
+        case SourceChainEvent() if event.event_chain_id != context.source_chain_id:
+            return True, None
 
-    if isinstance(event, LatestBlockUpdatedEvent):
-        return _handle_latest_block_updated(event, context)
+        case TargetChainEvent() if event.event_chain_id != context.target_chain_id:
+            return True, None
 
-    elif isinstance(event, RequestCreated):
-        return _handle_request_created(event, context)
+        case LatestBlockUpdatedEvent():
+            return _handle_latest_block_updated(event, context)
 
-    elif isinstance(event, RequestFilled):
-        return _handle_request_filled(event, context)
+        case RequestCreated():
+            return _handle_request_created(event, context)
 
-    elif isinstance(event, DepositWithdrawn):
-        return _handle_deposit_withdrawn(event, context)
+        case RequestFilled():
+            return _handle_request_filled(event, context)
 
-    elif isinstance(event, ClaimMade):
-        return _handle_claim_made(event, context)
+        case DepositWithdrawn():
+            return _handle_deposit_withdrawn(event, context)
 
-    elif isinstance(event, ClaimStakeWithdrawn):
-        return _handle_claim_stake_withdrawn(event, context)
+        case ClaimMade():
+            return _handle_claim_made(event, context)
 
-    elif isinstance(event, RequestResolved):
-        return _handle_request_resolved(event, context)
+        case ClaimStakeWithdrawn():
+            return _handle_claim_stake_withdrawn(event, context)
 
-    elif isinstance(event, FillInvalidated):
-        return _handle_fill_invalidated(event, context)
+        case RequestResolved():
+            return _handle_request_resolved(event, context)
 
-    elif isinstance(event, FillInvalidatedResolved):
-        return _handle_fill_invalidated_resolved(event, context)
+        case FillInvalidated():
+            return _handle_fill_invalidated(event, context)
 
-    elif isinstance(event, ChainUpdated):
-        return _handle_chain_updated(event, context)
+        case FillInvalidatedResolved():
+            return _handle_fill_invalidated_resolved(event, context)
 
-    else:
-        raise RuntimeError("Unrecognized event type")
+        case ChainUpdated():
+            return _handle_chain_updated(event, context)
+
+    raise RuntimeError("Unrecognized event type")
 
 
 def _find_claims(context: Context, request_id: RequestId, fill_id: FillId) -> list[Claim]:

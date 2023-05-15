@@ -202,8 +202,7 @@ def _try_make_request(
         if exc.response.status_code == 429:
             return True, None
         raise exc
-    else:
-        return False, response
+    return False, response
 
 
 def _rate_limiter_inner(
@@ -226,50 +225,48 @@ def _rate_limiter_inner(
                 # Even after _RATE_LIMIT_PERIOD, we are still being rate-limited by
                 # the RPC provider so there is nothing we can really do.
                 raise RuntimeError("rate limit period exceeded: %s" % rpc)
-            else:
-                assert response is not None
-                if time.time() > state.rate_limit_end:
-                    # Rate limit period ended so we now enter the tapering period,
-                    num_waiting_on_lock = state.num_waiting_on_lock.load()
-                    log.debug(
-                        "Exiting rate limiting mode",
-                        thread=threading.current_thread().name,
-                        rpc=rpc,
-                    )
-                    state.rate_limit_end = None
-                    state.taper_counter = 0
-                    state.taper_counter_max = num_waiting_on_lock
 
-                return response
-        else:
-            if state.taper_counter_max > 0:
-                # We are in tapering period.
-                request_delay = _RATE_LIMIT_REQUEST_DELAY / 2**state.taper_counter
-                state.taper_counter += 1
-                if state.taper_counter == state.taper_counter_max:
-                    # We have reached the end of tapering period.
-                    state.taper_counter = 0
-                    state.taper_counter_max = 0
-                    log.debug(
-                        "Exiting tapering mode", thread=threading.current_thread().name, rpc=rpc
-                    )
+            assert response is not None
 
-                time.sleep(request_delay)
-
-            # If we get rate limited by the RPC, start a new rate limiting
-            # period by setting state.rate_limit_end and try sending the
-            # request again after _RATE_LIMIT_REQUEST_DELAY. Otherwise,
-            # simply return the response.
-            rate_limited, response = _try_make_request(make_request, method, params)
-            if rate_limited:
+            if time.time() > state.rate_limit_end:
+                # Rate limit period ended so we now enter the tapering period,
+                num_waiting_on_lock = state.num_waiting_on_lock.load()
                 log.debug(
-                    "Entering rate limiting mode", thread=threading.current_thread().name, rpc=rpc
+                    "Exiting rate limiting mode", thread=threading.current_thread().name, rpc=rpc
                 )
-                state.rate_limit_end = time.time() + _RATE_LIMIT_PERIOD
-                time.sleep(_RATE_LIMIT_REQUEST_DELAY)
-            else:
-                assert response is not None
-                return response
+                state.rate_limit_end = None
+                state.taper_counter = 0
+                state.taper_counter_max = num_waiting_on_lock
+
+            return response
+
+        # We are not in rate limiting period.
+        if state.taper_counter_max > 0:
+            # We are in tapering period.
+            request_delay = _RATE_LIMIT_REQUEST_DELAY / 2**state.taper_counter
+            state.taper_counter += 1
+            if state.taper_counter == state.taper_counter_max:
+                # We have reached the end of tapering period.
+                state.taper_counter = 0
+                state.taper_counter_max = 0
+                log.debug("Exiting tapering mode", thread=threading.current_thread().name, rpc=rpc)
+
+            time.sleep(request_delay)
+
+        # If we get rate limited by the RPC, start a new rate limiting
+        # period by setting state.rate_limit_end and try sending the
+        # request again after _RATE_LIMIT_REQUEST_DELAY. Otherwise,
+        # simply return the response.
+        rate_limited, response = _try_make_request(make_request, method, params)
+        if rate_limited:
+            log.debug(
+                "Entering rate limiting mode", thread=threading.current_thread().name, rpc=rpc
+            )
+            state.rate_limit_end = time.time() + _RATE_LIMIT_PERIOD
+            time.sleep(_RATE_LIMIT_REQUEST_DELAY)
+        else:
+            assert response is not None
+            return response
 
 
 def _rate_limiter(

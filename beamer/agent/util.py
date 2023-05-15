@@ -35,7 +35,7 @@ class TokenChecker:
                     case [_, _, _allowance]:
                         allowance = int(_allowance)
                     case _:
-                        raise ValueError("unexpected token data: %r", token)
+                        raise ValueError("unexpected token data: %r" % token)
 
                 assert is_checksum_address(token[1])
                 self._tokens[(chain_id, token_address)] = _TokenData(equiv_class, allowance)

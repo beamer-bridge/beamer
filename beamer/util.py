@@ -60,7 +60,7 @@ def transact(
                     time.sleep(period)
                 else:
                     log.error("transact failed, giving up", exc=exc)
-                    raise TransactionFailed("too many failed attempts")
+                    raise TransactionFailed("too many failed attempts") from exc
             else:
                 break
     except (ContractLogicError, requests.exceptions.RequestException) as exc:

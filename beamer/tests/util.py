@@ -50,7 +50,7 @@ class Sleeper:
         self.timeout = timeout
 
     def __enter__(self):
-        self._end = time.time() + self.timeout
+        self._end = time.time() + self.timeout  # pylint: disable=attribute-defined-outside-init
         return self
 
     def __exit__(self, type_, value, traceback):
@@ -102,7 +102,10 @@ class HTTPProxy(HTTPServer):
             self.socket = socket.socket(self.address_family, self.socket_type)
             self.server_bind()
             self.server_activate()
-        self._thread = threading.Thread(target=self.serve_forever)
+
+        self._thread = threading.Thread(  # pylint: disable=attribute-defined-outside-init
+            target=self.serve_forever
+        )
         self._thread.start()
 
     def stop(self) -> None:

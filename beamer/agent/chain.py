@@ -73,7 +73,7 @@ class EventMonitor:
             assert self._chain_id == contract.w3.eth.chain_id, f"Chain id mismatch for {contract}"
 
     def start(self) -> None:
-        self._thread = threading.Thread(
+        self._thread = threading.Thread(  # pylint: disable=attribute-defined-outside-init
             name=f"EventMonitor[cid={self._chain_id}]", target=_wrap_thread_func(self._thread_func)
         )
         self._thread.start()
@@ -177,7 +177,7 @@ class EventProcessor:
             self._num_syncs_done += 1
 
     def start(self) -> None:
-        self._thread = threading.Thread(
+        self._thread = threading.Thread(  # pylint: disable=attribute-defined-outside-init
             name="EventProcessor", target=_wrap_thread_func(self._thread_func)
         )
         self._thread.start()

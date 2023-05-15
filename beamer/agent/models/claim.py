@@ -128,8 +128,8 @@ class Claim(StateMachine):
 
         if challenger_stake > claimer_stake:
             return Wei(challenger_stake - claimer_stake + initial_claim_stake)
-        else:
-            return Wei(claimer_stake - challenger_stake + 1)
+
+        return Wei(claimer_stake - challenger_stake + 1)
 
     def on_start_challenge(
         self,

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Sequence, Union, cast
 
 import click
-from config import Chain, Config, ConfigValidationError
+from config import Chain, Config, ConfigValidationError  # pylint: disable=import-error
 from eth_account.signers.local import LocalAccount
 from eth_utils import encode_hex, to_wei
 from web3 import Web3
@@ -263,7 +263,7 @@ def main(
         config = Config.from_file(config_file)
     except ConfigValidationError as exc:
         print(exc)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
 
     account = account_from_keyfile(keystore_file, password)
     print("Deployer:", account.address)
