@@ -26,28 +26,7 @@ logging-modules=logging,structlog
 
 [MESSAGES CONTROL]
 
-disable=all
-enable=
-    assert-message,
-    bad-except-order,
-    del-method-used,
-    exception-in-del,
-    expression-not-assigned,
-    import-self,
-    inconsistent-return-statements,
-    no-member,
-    no-self-use,
-    pointless-statement,
-    redefined-builtin,
-    reimported,
-    too-many-format-args,
-    too-many-function-args,
-    unexpected-keyword-arg,
-    unused-argument,
-    unused-import,
-    unused-variable,
-    useless-object-inheritance,
-    singleton-comparison,
+disable=
 
 [REPORTS]
 
