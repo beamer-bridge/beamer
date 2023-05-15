@@ -10,7 +10,10 @@
     "dist/*"
   ],
   "scripts": {
-    "create-package": "yarn exec ./scripts/create-package.sh && yarn pack -f dist/beamer-bridge-deployments.tgz"
+    "create-dist-folder": "yarn exec ./scripts/create-package.sh",
+    "create-package": "yarn create-dist-folder && yarn pack -f dist/beamer-bridge-deployments.tgz",
+    "test:package": "jest",
+    "lint": "prettier --check ."
   },
   "repository": {
     "type": "git",
@@ -22,6 +25,13 @@
     "url": "https://github.com/beamer-bridge/beamer/issues"
   },
   "homepage": "https://github.com/beamer-bridge/beamer#readme",
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "jest": "^29.5.0",
+    "prettier": "^2.8.8",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
   "dependencies": {}
 }

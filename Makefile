@@ -71,7 +71,8 @@ docs:
 	make -C docs html
 
 npm-package:
-	yarn --cwd deployments create-package
+	yarn --cwd deployments-npm-package create-package
+	yarn --cwd deployments-npm-package test:package
 
 clean:
 	make -C docs clean
