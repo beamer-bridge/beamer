@@ -43,7 +43,6 @@
           <spinner size-classes="w-48 h-48"></spinner>
         </div>
       </div>
-      <feedback v-if="enableFeedback"></feedback>
     </div>
     <div class="flex-auto"></div>
     <Footer />
@@ -57,7 +56,6 @@ import type { Ref } from 'vue';
 import { computed, onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
-import Feedback from '@/components/Feedback.vue';
 import Footer from '@/components/Footer.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
@@ -69,8 +67,6 @@ import { useTransferHistory } from '@/stores/transfer-history';
 import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
 import { useClaimCountListeners } from './composables/useClaimCountListeners';
 import { useTransferNotifications } from './composables/useTransferNotifications';
-
-const enableFeedback = process.env.NODE_ENV === 'production' && false;
 
 const { setConfiguration } = useConfiguration();
 const { loadConfiguration, configurationLoaded, configurationError } =
