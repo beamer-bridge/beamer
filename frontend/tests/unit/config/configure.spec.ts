@@ -3,6 +3,7 @@ import { generateAppConfig, generateTestToken } from 'config/configure';
 import * as utils from 'config/utils';
 
 import {
+  generateChainDeploymentInfo,
   generateChainMetadata,
   generateDeploymentInfo,
   generateTokenMetadata,
@@ -13,11 +14,14 @@ import {
 function generateDeploymentInfoForFolder(folderName?: string) {
   return generateDeploymentInfo({
     chains: {
-      [getRandomNumber()]: generateMintableTokenDeploymentInfo(),
+      [getRandomNumber()]: {
+        chain: generateChainDeploymentInfo({ ...generateMintableTokenDeploymentInfo() }),
+      },
     },
     folderName,
   });
 }
+
 function generateMintableTokenDeploymentInfo() {
   return {
     MintableToken: {
@@ -89,14 +93,7 @@ describe('configure', () => {
       ];
       const deploymentInfo = generateDeploymentInfo({
         chains: {
-          1337: {
-            RequestManager: {
-              address: getRandomEthereumAddress(),
-            },
-            FillManager: {
-              address: getRandomEthereumAddress(),
-            },
-          },
+          1337: { chain: generateChainDeploymentInfo() },
         },
       });
 
