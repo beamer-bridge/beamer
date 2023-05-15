@@ -1,9 +1,11 @@
 import json
 import tempfile
 from pathlib import Path
-
+from typing import Generator
 import click
 from psutil import Popen
+from beamer.deploy.artifacts import Deployment
+
 
 _COMPILE_COMMAND = """
 git clone --no-checkout git@github.com:beamer-bridge/beamer.git {beamer_path} &&
@@ -13,16 +15,23 @@ ape compile
 """
 
 
-def _get_contract_commit_ids(deployment_path: Path) -> dict[str, set[str]]:
+def _iter_contracts_commits(deployment: Deployment) -> Generator[tuple[str, str], None, None]:
+    for name, info in deployment.base.contracts.items():
+        yield name, info.beamer_commit
+
+    if deployment.chain is not None:
+        for name, info in deployment.chain.contracts.items():
+            yield name, info.beamer_commit
+
+
+def _get_contract_commit_ids(artifacts_dir: Path) -> dict[str, set[str]]:
     contract_commits: dict[str, set[str]] = {}
-    for file_path in deployment_path.glob("*.deployment.json"):
-        with open(file_path, "r") as fp:
-            data = json.load(fp)
-        data.pop("deployer")
-        for contract_name, contract_info in data.items():
+    for path in artifacts_dir.glob("*.deployment.json"):
+        deployment = Deployment.from_file(path)
+        for contract_name, commit in _iter_contracts_commits(deployment):
             if contract_name not in contract_commits:
                 contract_commits[contract_name] = set()
-            contract_commits[contract_name].add(contract_info["beamer_commit"])
+            contract_commits[contract_name].add(commit)
     return contract_commits
 
 
