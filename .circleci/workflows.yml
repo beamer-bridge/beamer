@@ -311,7 +311,11 @@ jobs:
       - initialize-environment
       - node/install-packages:
           pkg-manager: yarn
-          app-dir: ~/beamer/deployments
+          app-dir: ~/beamer/deployments-npm-package
+      - run:
+          name: Test npm package generation
+          command: yarn test:package
+          working_directory: ~/beamer/deployments-npm-package
       - run:
           name: Log in to npm
           command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
@@ -328,7 +332,7 @@ jobs:
             - run:
                 name: Publish to npm
                 command: yarn publish dist/beamer-bridge-deployments.tgz
-                working_directory: ~/beamer/deployments
+                working_directory: ~/beamer/deployments-npm-package
       - when:
           condition:
             and: 
@@ -339,7 +343,7 @@ jobs:
             - run:
                 name: Update to prerelease version
                 command: yarn version --prerelease --no-git-tag-version --preid $(date +%s)  
-                working_directory: ~/beamer/deployments
+                working_directory: ~/beamer/deployments-npm-package
             - run:
                 name: Build
                 command: make npm-package
@@ -347,7 +351,7 @@ jobs:
             - run:
                 name: Publish to npm
                 command: yarn publish dist/beamer-bridge-deployments.tgz --tag dev
-                working_directory: ~/beamer/deployments
+                working_directory: ~/beamer/deployments-npm-package
 
   test-relayer:
     executor: node/default
