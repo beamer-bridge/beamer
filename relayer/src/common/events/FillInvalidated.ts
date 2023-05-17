@@ -2,6 +2,7 @@ import type { Log } from "@ethersproject/providers";
 import { Interface } from "ethers/lib/utils";
 
 import FillManagerABI from "../../assets/abi/FillManager.json";
+import { isUndefined } from "../util";
 
 interface Result extends ReadonlyArray<unknown> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,7 +17,7 @@ export interface FillInvalidatedEventData extends Result {
 export const isValidFillInvalidatedEvent = (data: Result): data is FillInvalidatedEventData => {
   const eventData = data as FillInvalidatedEventData;
 
-  return !!eventData.requestId && !!eventData.fillId;
+  return !isUndefined(eventData.requestId) && !isUndefined(eventData.fillId);
 };
 
 export const parseFillInvalidatedEvent = (logs: Log[]): FillInvalidatedEventData | null => {

@@ -3,6 +3,7 @@ import type { BigNumber } from "ethers";
 import { Interface } from "ethers/lib/utils";
 
 import FillManagerABI from "../../assets/abi/FillManager.json";
+import { isUndefined } from "../util";
 
 interface Result extends ReadonlyArray<unknown> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,12 +23,12 @@ export const isValidRequestFilledEventData = (data: Result): data is RequestFill
   const eventData = data as RequestFilledEventData;
 
   return (
-    !!eventData.requestId &&
-    !!eventData.fillId &&
-    !!eventData.sourceChainId &&
-    !!eventData.targetTokenAddress &&
-    !!eventData.filler &&
-    !!eventData.amount
+    !isUndefined(eventData.requestId) &&
+    !isUndefined(eventData.fillId) &&
+    !isUndefined(eventData.sourceChainId) &&
+    !isUndefined(eventData.targetTokenAddress) &&
+    !isUndefined(eventData.filler) &&
+    !isUndefined(eventData.amount)
   );
 };
 
