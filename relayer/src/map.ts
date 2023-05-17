@@ -4,6 +4,7 @@ import {
   EthereumRelayerService,
   OptimismRelayerService,
 } from "./services";
+import { PolygonZKEvmRelayerService } from "./services/polygon-zkevm";
 import type { BaseRelayerService, ExtendedRelayerService } from "./services/types";
 
 export const SERVICES: Record<number, ExtendedRelayerService> = {
@@ -18,6 +19,9 @@ export const SERVICES: Record<number, ExtendedRelayerService> = {
   1: EthereumRelayerService,
   5: EthereumRelayerService,
   1337: EthereumRelayerService,
+  1101: PolygonZKEvmRelayerService,
+  1442: PolygonZKEvmRelayerService,
+  1001: PolygonZKEvmRelayerService,
 };
 
 export function createRelayer(
