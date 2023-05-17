@@ -245,6 +245,17 @@ jobs:
       - run: bash $ARBITRUM/arbitrum.sh e2e-test
       - run: bash $ARBITRUM/arbitrum.sh down
 
+  e2e-test-polygon-zkevm:
+    executor: vm
+    environment: 
+      POLYGON_ZKEVM: "docker/polygon_zkevm"
+    steps:
+      - initialize-environment
+      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh up
+      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh deploy-beamer
+      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh e2e-test
+      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh down
+
   build-docs:
     executor: vm
     steps:
@@ -456,6 +467,10 @@ workflows:
           requires:
             - compile-contracts
             - create-relayers
+      - e2e-test-polygon-zkevm:
+          requires:
+            - compile-contracts
+            - create-relayers
       - build-and-publish-container-image:
           requires:
             - test-contracts
@@ -463,6 +478,7 @@ workflows:
             - e2e-test-ethereum
             - e2e-test-optimism
             - e2e-test-arbitrum
+            - e2e-test-polygon-zkevm
 
   docs:
     when: <<pipeline.parameters.docs-updated>>
