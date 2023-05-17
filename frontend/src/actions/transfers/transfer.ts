@@ -178,7 +178,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return Number(seconds.toFixed(1));
   }
 
-  protected getStepMethods(provider?: IEthereumProvider): Record<string, CallableFunction> {
+  protected getStepMethods(provider: IEthereumProvider): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
       ensureTokenAllowance: () => this.ensureTokenAllowance(provider),
@@ -188,7 +188,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  public async execute(provider?: IEthereumProvider): Promise<void> {
+  public async execute(provider: IEthereumProvider): Promise<void> {
     const methods = this.getStepMethods(provider);
     return super.executeSteps(methods);
   }
@@ -267,11 +267,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  protected async ensureTokenAllowance(provider?: IEthereumProvider): Promise<void> {
-    if (provider === undefined) {
-      throw new Error('Missing wallet connection!');
-    }
-
+  protected async ensureTokenAllowance(provider: IEthereumProvider): Promise<void> {
     let amount: UInt256;
     if (this.approveInfiniteAmount) {
       amount = UInt256.max();
@@ -287,10 +283,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     );
   }
 
-  protected async sendRequestTransaction(provider?: IEthereumProvider): Promise<void> {
+  protected async sendRequestTransaction(provider: IEthereumProvider): Promise<void> {
     const signerAddress = provider?.signerAddress.value;
-    if (provider === undefined || signerAddress === undefined) {
-      throw new Error('Missing wallet connection!');
+    if (signerAddress === undefined) {
+      throw new Error('Missing signer!');
     }
 
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
