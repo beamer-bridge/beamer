@@ -145,6 +145,9 @@ const submitForm = async () => {
   if (submitDisabled.value) {
     throw new Error('Form not valid!');
   }
+  if (!provider.value?.signerAddress.value) {
+    throw new Error('Cannot create transfer without signer!');
+  }
 
   const validRequestSource = requestSource as Ref<ValidRequestSource>;
   const validRequestTarget = requestTarget as Ref<ValidRequestTarget>;
@@ -165,6 +168,7 @@ const submitForm = async () => {
     sourceToken: validRequestSource.value.token.value,
     targetToken,
     approveInfiniteAmount: approveInfiniteAmount.value,
+    requestCreatorAddress: provider.value?.signerAddress.value,
   });
 
   transferHistory.addTransfer(transfer);

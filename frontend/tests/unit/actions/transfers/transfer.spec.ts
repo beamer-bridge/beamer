@@ -22,6 +22,7 @@ import {
   getRandomEthereumAddress,
   getRandomNumber,
   getRandomString,
+  getRandomTransactionHash,
 } from '~/utils/data_generators';
 import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 
@@ -52,7 +53,6 @@ class TestTransfer extends Transfer {
   }
 }
 
-const TRANSFER_DATA = generateTransferData();
 const RPC_PROVIDER = new JsonRpcProvider();
 const PROVIDER = new MockedEthereumProvider();
 const SIGNER = new JsonRpcSigner(undefined, RPC_PROVIDER);
@@ -60,6 +60,9 @@ const SIGNER_ADDRESS = '0xSigner';
 const PROVIDER_WITH_SIGNER = new MockedEthereumProvider({
   signer: SIGNER,
   signerAddress: SIGNER_ADDRESS,
+});
+const TRANSFER_DATA = generateTransferData({
+  requestInformation: generateRequestInformationData({ requestAccount: SIGNER_ADDRESS }),
 });
 
 function createTestCancelable<T>(options?: {
@@ -155,6 +158,32 @@ describe('transfer', () => {
   });
 
   describe('ensureTokenAllowance()', async () => {
+    it('fails if request information is undefined', async () => {
+      const data = generateTransferData({ requestInformation: undefined });
+      const transfer = new TestTransfer(data);
+
+      await expect(transfer.ensureTokenAllowance(PROVIDER_WITH_SIGNER)).rejects.toThrow(
+        'Request is missing information!',
+      );
+    });
+
+    it('fails if given signer is different than the creator', async () => {
+      const creator = getRandomEthereumAddress();
+      const signerAddress = getRandomEthereumAddress();
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({ requestAccount: creator }),
+      });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider({
+        signer: SIGNER,
+        signerAddress: signerAddress,
+      });
+
+      await expect(transfer.ensureTokenAllowance(provider)).rejects.toThrow(
+        'Trying to execute token allowance with a different account than the creator!',
+      );
+    });
+
     it('makes a call to set the allowance for the source token with minimum value of source amount plus fees ', async () => {
       const data = generateTransferData({
         fees: generateTokenAmountData({ amount: '2' }),
@@ -168,7 +197,7 @@ describe('transfer', () => {
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
       const provider = new MockedEthereumProvider({
         signer: signer,
-        signerAddress: SIGNER_ADDRESS,
+        signerAddress: data.requestInformation?.requestAccount,
       });
 
       await transfer.ensureTokenAllowance(provider);
@@ -196,7 +225,7 @@ describe('transfer', () => {
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
       const provider = new MockedEthereumProvider({
         signer: signer,
-        signerAddress: SIGNER_ADDRESS,
+        signerAddress: data.requestInformation?.requestAccount,
       });
 
       await transfer.ensureTokenAllowance(provider);
@@ -212,12 +241,30 @@ describe('transfer', () => {
   });
 
   describe('sendRequestTransaction()', () => {
-    it('fails if given signer address is undefined', async () => {
-      const data = generateTransferData();
+    it('fails if request information is undefined', async () => {
+      const data = generateTransferData({ requestInformation: undefined });
       const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider({ signer: undefined, signerAddress: undefined });
 
-      await expect(transfer.sendRequestTransaction(provider)).rejects.toThrow('Missing signer!');
+      await expect(transfer.sendRequestTransaction(PROVIDER_WITH_SIGNER)).rejects.toThrow(
+        'Request is missing information!',
+      );
+    });
+
+    it('fails if given signer is different than the creator', async () => {
+      const creator = getRandomEthereumAddress();
+      const signerAddress = getRandomEthereumAddress();
+      const data = generateTransferData({
+        requestInformation: generateRequestInformationData({ requestAccount: creator }),
+      });
+      const transfer = new TestTransfer(data);
+      const provider = new MockedEthereumProvider({
+        signer: SIGNER,
+        signerAddress: signerAddress,
+      });
+
+      await expect(transfer.sendRequestTransaction(provider)).rejects.toThrow(
+        'Trying to execute request with a different account than the creator!',
+      );
     });
 
     it('calls the transfer function on the request manager contract', async () => {
@@ -240,7 +287,7 @@ describe('transfer', () => {
       const signer = new JsonRpcSigner(undefined, RPC_PROVIDER);
       const provider = new MockedEthereumProvider({
         signer: signer,
-        signerAddress: SIGNER_ADDRESS,
+        signerAddress: data.requestInformation?.requestAccount,
       });
 
       await transfer.sendRequestTransaction(provider);
@@ -258,18 +305,15 @@ describe('transfer', () => {
       );
     });
 
-    it('sets the request account and transaction hash', async () => {
+    it('sets the transaction hash', async () => {
       define(requestManager, 'sendRequestTransaction', vi.fn().mockResolvedValue('0xHash'));
       define(transactionUtils, 'getCurrentBlockNumber', vi.fn().mockResolvedValue(2));
       const transfer = new TestTransfer(TRANSFER_DATA);
 
-      expect(transfer.requestInformation?.requestAccount).toBeUndefined();
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
-      const provider = new MockedEthereumProvider({ signer: SIGNER, signerAddress: '0xSigner' });
 
-      await transfer.sendRequestTransaction(provider);
+      await transfer.sendRequestTransaction(PROVIDER_WITH_SIGNER);
 
-      expect(transfer.requestInformation?.requestAccount).toBe('0xSigner');
       expect(transfer.requestInformation?.transactionHash).toBe('0xHash');
       expect(transfer.requestInformation?.blockNumberOnTargetChain).toBe(2);
     });
@@ -311,7 +355,9 @@ describe('transfer', () => {
 
     it('fetches & saves the identifier & timestamp of the transfer', async () => {
       const data = generateTransferData({
-        requestInformation: generateRequestInformationData(),
+        requestInformation: generateRequestInformationData({
+          transactionHash: getRandomTransactionHash(),
+        }),
       });
       const transfer = new TestTransfer(data);
       const identifier = '0x123';
