@@ -31,15 +31,15 @@ vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestTransfer extends Transfer {
-  public getStepMethods(provider?: IEthereumProvider) {
+  public getStepMethods(provider: IEthereumProvider) {
     return super.getStepMethods(provider);
   }
 
-  public ensureTokenAllowance(provider?: IEthereumProvider) {
+  public ensureTokenAllowance(provider: IEthereumProvider) {
     return super.ensureTokenAllowance(provider);
   }
 
-  public sendRequestTransaction(provider?: IEthereumProvider) {
+  public sendRequestTransaction(provider: IEthereumProvider) {
     return super.sendRequestTransaction(provider);
   }
 
@@ -153,13 +153,6 @@ describe('transfer', () => {
   });
 
   describe('ensureTokenAllowance()', async () => {
-    it('fails if given signer is undefined', async () => {
-      const data = generateTransferData();
-      const transfer = new TestTransfer(data);
-
-      await expect(transfer.ensureTokenAllowance()).rejects.toThrow('Missing wallet connection!');
-    });
-
     it('makes a call to set the allowance for the source token with minimum value of source amount plus fees ', async () => {
       const data = generateTransferData({
         fees: generateTokenAmountData({ amount: '2' }),
@@ -217,23 +210,12 @@ describe('transfer', () => {
   });
 
   describe('sendRequestTransaction()', () => {
-    it('fails if given signer is undefined', async () => {
-      const data = generateTransferData();
-      const transfer = new TestTransfer(data);
-
-      await expect(transfer.sendRequestTransaction(undefined)).rejects.toThrow(
-        'Missing wallet connection!',
-      );
-    });
-
     it('fails if given signer address is undefined', async () => {
       const data = generateTransferData();
       const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider({ signer: SIGNER, signerAddress: undefined });
+      const provider = new MockedEthereumProvider({ signer: undefined, signerAddress: undefined });
 
-      await expect(transfer.sendRequestTransaction(provider)).rejects.toThrow(
-        'Missing wallet connection!',
-      );
+      await expect(transfer.sendRequestTransaction(provider)).rejects.toThrow('Missing signer!');
     });
 
     it('calls the transfer function on the request manager contract', async () => {
