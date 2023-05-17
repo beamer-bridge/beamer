@@ -49,8 +49,8 @@ class Chain:
     name: str
     rpc: str
     chain_id: ChainId = field(metadata=schema(min=1))
-    l1_messenger: str | tuple[str, ...]
-    l2_messenger: str | tuple[str, ...]
+    l1_messenger: str | tuple[str | int, ...]
+    l2_messenger: str | tuple[str | int, ...]
     finality_period: int = field(metadata=schema(min=1))
     transfer_cost: int = field(metadata=schema(min=0))
     target_weight_ppm: int = field(metadata=schema(min=0))

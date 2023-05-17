@@ -95,11 +95,15 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
     return deployed
 
 
-def _resolve_constructor_args(resolver: Contract, constructor_spec: str | Sequence) -> tuple:
+def _resolve_constructor_args(
+    contract_args: dict[str, Contract], constructor_spec: str | Sequence
+) -> tuple:
     if isinstance(constructor_spec, str):
         # This is just the contract's name.
         return (constructor_spec,)
-    return tuple(resolver.address if arg == "${resolver}" else arg for arg in constructor_spec)
+    return tuple(
+        contract_args[arg].address if "$" in str(arg) else arg for arg in constructor_spec
+    )
 
 
 def deploy_beamer(
@@ -119,10 +123,7 @@ def deploy_beamer(
         mintable_token = deploy_contract(web3, ("MintableToken", int(1e18)))
         deployed_contracts.append(mintable_token)
 
-    l1_messenger = deploy_contract(
-        resolver.w3, _resolve_constructor_args(resolver, chain.l1_messenger)
-    )
-    l2_messenger = deploy_contract(web3, _resolve_constructor_args(resolver, chain.l2_messenger))
+    contract_args = {"${resolver}": resolver}
 
     request_manager = deploy_contract(
         web3,
@@ -134,6 +135,24 @@ def deploy_beamer(
             chain.request_manager_arguments.challenge_period_extension,
         ),
     )
+
+    contract_args["${request_manager}"] = request_manager
+
+    l1_messenger = deploy_contract(
+        resolver.w3, _resolve_constructor_args(contract_args, chain.l1_messenger)
+    )
+    l2_messenger = deploy_contract(
+        web3, _resolve_constructor_args(contract_args, chain.l2_messenger)
+    )
+
+    # Polygon ZkEVM chain ids for networks
+    # mainnnet: 1101
+    # goerli: 1442
+    # local: 1001
+    if chain.chain_id in (1442, 1101, 1001):
+        _transact(l1_messenger.functions.setRemoteMessenger(l2_messenger.address))
+        _transact(l2_messenger.functions.setRemoteMessenger(l1_messenger.address))
+
     _transact(
         request_manager.functions.updateFees(
             chain.fees.min_fee_ppm, chain.fees.lp_fee_ppm, chain.fees.protocol_fee_ppm
