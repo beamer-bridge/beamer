@@ -40,6 +40,7 @@ describe('useTransferRequest', () => {
       const toAddress = getRandomEthereumAddress();
       const sourceToken = generateToken();
       const targetToken = generateToken();
+      const requestCreatorAddress = getRandomEthereumAddress();
 
       const { create } = useTransferRequest();
       const transfer: Transfer = await create({
@@ -50,6 +51,7 @@ describe('useTransferRequest', () => {
         sourceToken,
         targetToken,
         approveInfiniteAmount: true,
+        requestCreatorAddress,
       });
 
       const sourceTokenAmount = TokenAmount.parse(sourceAmount, sourceToken);
@@ -71,6 +73,7 @@ describe('useTransferRequest', () => {
       expect(transfer.targetAccount).toEqual(toAddress);
       expect(transfer.fees).toEqual(feeAmount);
       expect(transfer.approveInfiniteAmount).toBe(true);
+      expect(transfer.requestInformation?.requestAccount).toBe(requestCreatorAddress);
     });
   });
 

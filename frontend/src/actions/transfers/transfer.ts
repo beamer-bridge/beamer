@@ -125,7 +125,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     validityPeriod: UInt256,
     fees: TokenAmount,
     approveInfiniteAmount: boolean,
+    requestCreatorAddress: EthereumAddress,
   ): Transfer {
+    // We need to create the request information here in order to
+    // make sure that all transactions are executed by the same
+    // account.
+    const requestInformation = new RequestInformation({ requestAccount: requestCreatorAddress });
     return new this({
       sourceChain,
       sourceAmount: sourceAmount.encode(),
@@ -136,6 +141,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       fees: fees.encode(),
       date: Date.now(),
       approveInfiniteAmount,
+      requestInformation,
     });
   }
 
@@ -264,6 +270,15 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async ensureTokenAllowance(provider: IEthereumProvider): Promise<void> {
+    if (this._requestInformation === undefined) {
+      throw new Error('Request is missing information!');
+    }
+    if (this._requestInformation.requestAccount !== provider?.signerAddress.value) {
+      throw new Error(
+        'Trying to execute token allowance with a different account than the creator!',
+      );
+    }
+
     let amount: UInt256;
     if (this.approveInfiniteAmount) {
       amount = UInt256.max();
@@ -280,9 +295,11 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async sendRequestTransaction(provider: IEthereumProvider): Promise<void> {
-    const signerAddress = provider?.signerAddress.value;
-    if (signerAddress === undefined) {
-      throw new Error('Missing signer!');
+    if (this._requestInformation === undefined) {
+      throw new Error('Request is missing information!');
+    }
+    if (this._requestInformation.requestAccount !== provider?.signerAddress.value) {
+      throw new Error('Trying to execute request with a different account than the creator!');
     }
 
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
@@ -298,11 +315,8 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this.validityPeriod,
     );
 
-    this._requestInformation = new RequestInformation({
-      transactionHash,
-      requestAccount: signerAddress,
-      blockNumberOnTargetChain,
-    });
+    this._requestInformation.setBlockNumberOnTargetChain(blockNumberOnTargetChain);
+    this._requestInformation.setTransactionHash(transactionHash);
   }
 
   protected async waitForRequestEvent(): Promise<void> {
@@ -408,6 +422,7 @@ export type TransferData = {
   validityPeriod: UInt256Data;
   fees: TokenAmountData;
   date: number;
+  requestCreatorAddress?: boolean;
   approveInfiniteAmount?: boolean;
   steps?: Array<StepData>;
   requestInformation?: RequestInformationData;

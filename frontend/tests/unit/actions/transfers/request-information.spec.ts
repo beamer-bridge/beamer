@@ -50,6 +50,50 @@ describe('RequestInformation', () => {
     });
   });
 
+  describe('setTransactionHash()', () => {
+    it('is possible when transaction hash is not already defined', () => {
+      const data = generateRequestInformationData({ transactionHash: undefined });
+      const information = new RequestInformation(data);
+      const transactionHash = getRandomTransactionHash();
+      information.setTransactionHash(transactionHash);
+
+      expect(information.transactionHash).toEqual(transactionHash);
+    });
+
+    it('fails if transaction hash is alrady defined', () => {
+      const transactionHash = getRandomTransactionHash();
+      const data = generateRequestInformationData({ transactionHash });
+      const information = new RequestInformation(data);
+
+      return expect(() => information.setTransactionHash(transactionHash)).toThrow(
+        'Attempt to overwrite already existing transaction hash of a request!',
+      );
+    });
+  });
+
+  describe('setBlockNumberOnTargetChain()', () => {
+    it('is possible when block number on target chain is not already defined', () => {
+      const data = generateRequestInformationData({ blockNumberOnTargetChain: undefined });
+      const information = new RequestInformation(data);
+      const blockNumberOnTargetChain = getRandomNumber();
+      information.setBlockNumberOnTargetChain(blockNumberOnTargetChain);
+
+      expect(information.blockNumberOnTargetChain).toEqual(blockNumberOnTargetChain);
+    });
+
+    it('fails if block number on target chain is alrady defined', () => {
+      const blockNumberOnTargetChain = getRandomNumber();
+      const data = generateRequestInformationData({ blockNumberOnTargetChain });
+      const information = new RequestInformation(data);
+
+      return expect(() =>
+        information.setBlockNumberOnTargetChain(blockNumberOnTargetChain),
+      ).toThrow(
+        'Attempt to overwrite already existing block number on target chain of a request!',
+      );
+    });
+  });
+
   describe('encode()', () => {
     it('serializes all data to persist token amount', () => {
       const transactionHash = getRandomTransactionHash();

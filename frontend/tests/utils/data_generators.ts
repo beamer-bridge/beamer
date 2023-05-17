@@ -115,7 +115,6 @@ export function generateRequestInformationData(
   partialRequestInformationData?: Partial<RequestInformationData>,
 ): RequestInformationData {
   return {
-    transactionHash: getRandomTransactionHash(),
     requestAccount: getRandomEthereumAddress(),
     ...partialRequestInformationData,
   };
@@ -141,6 +140,7 @@ export function generateTransferData(partialTransferData?: Partial<TransferData>
     fees: generateTokenAmountData(),
     date: Date.now(),
     claimCount: getRandomNumber(),
+    requestInformation: generateRequestInformationData(),
     ...partialTransferData,
   };
 }

@@ -4,7 +4,7 @@ import { Transfer } from '@/actions/transfers';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { getRequestFee } from '@/services/transactions/request-manager';
 import type { EthereumProvider, IEthereumProvider } from '@/services/web3-provider';
-import type { Chain, Token } from '@/types/data';
+import type { Chain, EthereumAddress, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
@@ -15,10 +15,11 @@ export function useTransferRequest() {
     sourceChain: Chain;
     sourceAmount: string;
     targetChain: Chain;
-    toAddress: string;
+    toAddress: EthereumAddress;
     sourceToken: Token;
     targetToken: Token;
     approveInfiniteAmount: boolean;
+    requestCreatorAddress: EthereumAddress;
   }): Promise<Transfer> => {
     const sourceTokenAmount = TokenAmount.parse(options.sourceAmount, options.sourceToken);
     const targetTokenAmount = TokenAmount.parse(options.sourceAmount, options.targetToken);
@@ -44,6 +45,7 @@ export function useTransferRequest() {
         validityPeriod,
         fees,
         options.approveInfiniteAmount,
+        options.requestCreatorAddress,
       ),
     ) as Transfer;
 
