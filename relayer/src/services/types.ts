@@ -6,6 +6,7 @@ import type { ArbitrumRelayerService } from "./arbitrum";
 import type { BobaRelayerService } from "./boba";
 import type { EthereumRelayerService } from "./ethereum";
 import type { OptimismRelayerService } from "./optimism";
+import type { PolygonZKEvmRelayerService } from "./polygon-zkevm";
 
 export type TransactionHash = string;
 
@@ -13,9 +14,12 @@ export type ExtendedRelayerService =
   | typeof ArbitrumRelayerService
   | typeof BobaRelayerService
   | typeof OptimismRelayerService
-  | typeof EthereumRelayerService;
+  | typeof EthereumRelayerService
+  | typeof PolygonZKEvmRelayerService;
 
 export abstract class BaseRelayerService {
+  readonly l1RpcUrl: string;
+  readonly l2RpcUrl: string;
   readonly l1Wallet: Wallet;
   readonly l2Wallet: Wallet;
   readonly fromL2ChainId: number;
@@ -28,6 +32,8 @@ export abstract class BaseRelayerService {
     fromL2ChainId: number,
     toL2ChainId: number,
   ) {
+    this.l1RpcUrl = l1RpcURL;
+    this.l2RpcUrl = l2RpcURL;
     this.l1Wallet = new Wallet(privateKey, new JsonRpcProvider(l1RpcURL));
     this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
     this.fromL2ChainId = fromL2ChainId;
