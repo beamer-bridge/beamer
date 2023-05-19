@@ -69,6 +69,30 @@ class ChainUpdated(TxEvent, SourceChainEvent):
 
 
 @dataclass(frozen=True)
+class FeesUpdated(TxEvent, SourceChainEvent):
+    min_fee_ppm: int
+    lp_fee_ppm: int
+    protocol_fee_ppm: int
+
+
+@dataclass(frozen=True)
+class TokenUpdated(TxEvent, SourceChainEvent):
+    token_address: ChecksumAddress
+    transfer_limit: int
+    eth_in_token: int
+
+
+@dataclass(frozen=True)
+class LpAdded(TxEvent, SourceChainEvent, TargetChainEvent):
+    lp: ChecksumAddress
+
+
+@dataclass(frozen=True)
+class LpRemoved(TxEvent, SourceChainEvent, TargetChainEvent):
+    lp: ChecksumAddress
+
+
+@dataclass(frozen=True)
 class RequestEvent(TxEvent):
     request_id: RequestId
 
@@ -162,6 +186,10 @@ _EVENT_TYPES = dict(
     FillInvalidatedResolved=FillInvalidatedResolved,
     FillInvalidated=FillInvalidated,
     ChainUpdated=ChainUpdated,
+    FeesUpdated=FeesUpdated,
+    TokenUpdated=TokenUpdated,
+    LpAdded=LpAdded,
+    LpRemoved=LpRemoved,
 )
 
 
