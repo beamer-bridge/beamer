@@ -287,14 +287,14 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdi
 
 [[package]]
 name = "ape-solidity"
-version = "0.6.3"
+version = "0.6.4"
 description = "Plugin for Ape Ethereum Framework for compiling Solidity contracts"
 category = "dev"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-solidity-0.6.3.tar.gz", hash = "sha256:bee73a005ec3b8af6673352d5abbaeb5ba3c01333a0947c9ff2d26016e4cc979"},
-    {file = "ape_solidity-0.6.3-py3-none-any.whl", hash = "sha256:c051a129c9016d0e03d83a36bef689be45b36908fbd70b224196688142a64308"},
+    {file = "ape-solidity-0.6.4.tar.gz", hash = "sha256:0ca7a98b75881fa17f998842f8f8971b0be87036a6a10c00194f1d518f6d9d51"},
+    {file = "ape_solidity-0.6.4-py3-none-any.whl", hash = "sha256:59746b43b9df85ff913fdc1b2675721fbd3cf063b5d93aa3aacf6ad17d8bfac1"},
 ]
 
 [package.dependencies]
@@ -4694,4 +4694,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "4e55c9276271cf9387e9300dfc2ff9cfb3d273ffa39bcfaa60322b158e6d841b"
+content-hash = "5ba242523b1b91b671f57b3ec8c6a8245e2d24a7d26162fb0d1869ef38cd15d0"
