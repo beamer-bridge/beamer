@@ -18,3 +18,4 @@ addresses.json
 node_modules
 contracts/contracts/.cache
 contracts/.build/
+/deployments-npm-package/git-commit-version.txt
