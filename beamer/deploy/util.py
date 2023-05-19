@@ -91,7 +91,9 @@ def _resolve_constructor_args(
     if isinstance(constructor_spec, str):
         # This is just the contract's name.
         return (constructor_spec,)
-    return tuple(contract_args[arg].address if "$" in arg else arg for arg in constructor_spec)
+    return tuple(
+        contract_args[arg].address if "$" in str(arg) else arg for arg in constructor_spec
+    )
 
 
 def deploy_beamer(
