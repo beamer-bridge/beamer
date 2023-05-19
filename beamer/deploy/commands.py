@@ -62,7 +62,7 @@ class _ChainIdParam(click.ParamType):
 )
 @click.option(
     "--artifacts-dir",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
     required=True,
     metavar="DIR",
     help="The directory to store contract deployment artifacts in.",
@@ -74,6 +74,8 @@ def deploy_base(
     """Deploy resolver on the base chain."""
     beamer.util.setup_logging(log_level="DEBUG", log_json=False)
     _ensure_commit_is_on_remote()
+
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
     account = beamer.util.account_from_keyfile(keystore_file, password)
