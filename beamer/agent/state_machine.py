@@ -26,14 +26,18 @@ from beamer.events import (
     ClaimStakeWithdrawn,
     DepositWithdrawn,
     Event,
+    FeesUpdated,
     FillInvalidated,
     FillInvalidatedResolved,
     LatestBlockUpdatedEvent,
+    LpAdded,
+    LpRemoved,
     RequestCreated,
     RequestFilled,
     RequestResolved,
     SourceChainEvent,
     TargetChainEvent,
+    TokenUpdated,
 )
 from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
 
@@ -113,6 +117,12 @@ def process_event(event: Event, context: Context) -> HandlerResult:
 
         case ChainUpdated():
             return _handle_chain_updated(event, context)
+
+        case TokenUpdated() | FeesUpdated():
+            return True, None
+
+        case LpAdded() | LpRemoved():
+            return True, None
 
     raise RuntimeError("Unrecognized event type")
 
