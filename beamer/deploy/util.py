@@ -11,13 +11,14 @@ from web3.contract import Contract, ContractConstructor
 from web3.contract.contract import ContractFunction
 
 import beamer.deploy.config as config
+from beamer.typing import BlockNumber
 from beamer.util import transact
 
 log = structlog.get_logger(__name__)
 
 
 class DeployedContract(Contract):
-    deployment_block: int
+    deployment_block: BlockNumber
     deployment_txhash: str
     deployment_args: list[Any]
     name: str

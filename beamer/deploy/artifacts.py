@@ -13,7 +13,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from beamer.deploy.util import DeployedContract, get_commit_id, make_contract
-from beamer.typing import ChainId
+from beamer.typing import BlockNumber, ChainId
 
 
 class ValidationError(Exception):
@@ -32,7 +32,7 @@ class DeployedContractInfo:
     beamer_commit: str
     tx_hash: str
     address: ChecksumAddress = field(metadata=validators(_validate_address))
-    deployment_block: int = field(metadata=schema(min=0))
+    deployment_block: BlockNumber = field(metadata=schema(min=0))
     deployment_args: list[str | int]
 
     @staticmethod
