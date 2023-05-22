@@ -16,7 +16,9 @@ yarn build
 ```
 
 ### Run your unit tests
-TODO testing framework needs to get added
+```
+yarn test:unit
+```
 
 ### Lints files
 ```
