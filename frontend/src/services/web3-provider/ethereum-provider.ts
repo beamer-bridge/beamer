@@ -52,6 +52,20 @@ export abstract class BasicEthereumProvider extends EventEmitter implements IEth
     this.setSigner(accounts[0]);
   }
 
+  async waitForTransaction(transactionHash: string, confirmations?: number, timeout?: number) {
+    const receipt = await this.web3Provider.waitForTransaction(
+      transactionHash,
+      confirmations,
+      timeout,
+    );
+
+    if (receipt.status === 0) {
+      throw new Error(`Transaction ${receipt.transactionHash} reverted on chain.`);
+    }
+
+    return receipt.transactionHash;
+  }
+
   setSigner(account: string): void {
     this.signer.value = this.web3Provider.getSigner(account);
     this.signerAddress.value = account;

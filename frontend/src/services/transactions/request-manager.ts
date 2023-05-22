@@ -2,7 +2,7 @@ import type { Listener, TransactionResponse } from '@ethersproject/providers';
 
 import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
-import type { EthereumAddress } from '@/types/data';
+import type { EthereumAddress, TransactionHash } from '@/types/data';
 import type { RequestManager } from '@/types/ethers-contracts';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -109,7 +109,7 @@ export async function sendRequestTransaction(
   targetTokenAddress: EthereumAddress,
   targetAccount: EthereumAddress,
   validityPeriod: UInt256,
-): Promise<string> {
+): Promise<TransactionHash> {
   const signer = provider.signer.value;
   if (signer === undefined) {
     throw new Error('Missing signer!');
@@ -128,8 +128,6 @@ export async function sendRequestTransaction(
     validityPeriod.asBigNumber,
   ] as const;
 
-  const chainId = await signer.getChainId();
-
   try {
     const estimatedGasLimit = await requestManagerContract.estimateGas.createRequest(
       ...requestParameter,
@@ -139,12 +137,7 @@ export async function sendRequestTransaction(
       gasLimit: estimatedGasLimit,
     });
 
-    const transactionReceipt = await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
-    let transactionHash = transactionReceipt.transactionHash;
-    if (provider.getActualTransactionHash) {
-      transactionHash = await provider.getActualTransactionHash(transactionHash);
-    }
-    return transactionHash;
+    return transaction.hash;
   } catch (error: unknown) {
     console.error(error);
     const parseErrorMessage = getTransactionErrorMessage(error);

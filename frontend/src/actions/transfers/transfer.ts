@@ -11,7 +11,10 @@ import {
   withdrawRequest,
 } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance } from '@/services/transactions/token';
-import { getCurrentBlockNumber } from '@/services/transactions/utils';
+import {
+  getConfirmationTimeBlocksForChain,
+  getCurrentBlockNumber,
+} from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
@@ -20,6 +23,8 @@ import { TokenAmount } from '@/types/token-amount';
 import type { UInt256Data } from '@/types/uint-256';
 import { UInt256 } from '@/types/uint-256';
 
+import type { AllowanceInformationData } from './allowance-information';
+import { AllowanceInformation } from './allowance-information';
 import type { RequestFulfillmentData } from './request-fulfillment';
 import { RequestFulfillment } from './request-fulfillment';
 import type { RequestInformationData } from './request-information';
@@ -80,6 +85,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   readonly fees: TokenAmount;
   readonly date: Date;
   readonly approveInfiniteAmount: boolean;
+  private _allowanceInformation?: AllowanceInformation;
   private _requestInformation?: RequestInformation;
   private _requestFulfillment?: RequestFulfillment;
   private _expired: boolean;
@@ -99,6 +105,9 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     this.fees = new TokenAmount(data.fees);
     this.date = new Date(data.date);
     this.approveInfiniteAmount = data.approveInfiniteAmount ?? false;
+    this._allowanceInformation = data.allowanceInformation
+      ? new AllowanceInformation(data.allowanceInformation)
+      : undefined;
     this._requestInformation = data.requestInformation
       ? new RequestInformation(data.requestInformation)
       : undefined;
@@ -151,6 +160,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
   get requestFulfillment(): RequestFulfillment | undefined {
     return this._requestFulfillment;
+  }
+
+  get allowanceInformation(): AllowanceInformation | undefined {
+    return this._allowanceInformation;
   }
 
   get expired(): boolean {
@@ -261,6 +274,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       date: this.date.getTime(),
       approveInfiniteAmount: this.approveInfiniteAmount,
       steps: this.steps.map((step) => step.encode()),
+      allowanceInformation: this._allowanceInformation?.encode(),
       requestInformation: this._requestInformation?.encode(),
       requestFulfillment: this._requestFulfillment?.encode(),
       expired: this._expired,
@@ -279,19 +293,32 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       );
     }
 
-    let amount: UInt256;
-    if (this.approveInfiniteAmount) {
-      amount = UInt256.max();
-    } else {
-      amount = this.sourceAmount.uint256.add(this.fees.uint256);
+    if (!this._allowanceInformation) {
+      let amount: UInt256;
+      if (this.approveInfiniteAmount) {
+        amount = UInt256.max();
+      } else {
+        amount = this.sourceAmount.uint256.add(this.fees.uint256);
+      }
+
+      const internalTransactionHash = await ensureTokenAllowance(
+        provider,
+        this.sourceAmount.token.address,
+        this.sourceChain.requestManagerAddress,
+        amount,
+      );
+
+      this._allowanceInformation = new AllowanceInformation({ internalTransactionHash });
     }
 
-    await ensureTokenAllowance(
-      provider,
-      this.sourceAmount.token.address,
-      this.sourceChain.requestManagerAddress,
-      amount,
-    );
+    if (this._allowanceInformation.internalTransactionHash) {
+      const transactionHash = await provider.waitForTransaction(
+        this._allowanceInformation.internalTransactionHash,
+        getConfirmationTimeBlocksForChain(this.sourceChain.identifier),
+      );
+
+      this._allowanceInformation.setTransactionHash(transactionHash);
+    }
   }
 
   protected async sendRequestTransaction(provider: IEthereumProvider): Promise<void> {
@@ -302,9 +329,18 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       throw new Error('Trying to execute request with a different account than the creator!');
     }
 
+    // Check if we previously stored a transaction hash in order to skip re-executing a transaction related to this action
+    if (this._requestInformation.internalTransactionHash) {
+      const transactionHash = await provider.waitForTransaction(
+        this._requestInformation.internalTransactionHash,
+        getConfirmationTimeBlocksForChain(this.sourceChain.identifier),
+      );
+      return this._requestInformation.setTransactionHash(transactionHash);
+    }
+
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
-    const transactionHash = await sendRequestTransaction(
+    const internalTransactionHash = await sendRequestTransaction(
       provider,
       this.sourceAmount.uint256,
       this.targetChain.identifier,
@@ -316,7 +352,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     );
 
     this._requestInformation.setBlockNumberOnTargetChain(blockNumberOnTargetChain);
-    this._requestInformation.setTransactionHash(transactionHash);
+    this._requestInformation.setInternalTransactionHash(internalTransactionHash);
+
+    const transactionHash = await provider.waitForTransaction(
+      internalTransactionHash,
+      getConfirmationTimeBlocksForChain(this.sourceChain.identifier),
+    );
+
+    return this._requestInformation.setTransactionHash(transactionHash);
   }
 
   protected async waitForRequestEvent(): Promise<void> {
@@ -425,6 +468,7 @@ export type TransferData = {
   requestCreatorAddress?: boolean;
   approveInfiniteAmount?: boolean;
   steps?: Array<StepData>;
+  allowanceInformation?: AllowanceInformationData;
   requestInformation?: RequestInformationData;
   requestFulfillment?: RequestFulfillmentData;
   expired?: boolean;

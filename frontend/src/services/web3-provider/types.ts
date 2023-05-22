@@ -6,7 +6,7 @@ import type {
 } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 
-import type { Chain, Token } from '@/types/data';
+import type { Chain, Token, TransactionHash } from '@/types/data';
 
 export interface IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
@@ -19,6 +19,11 @@ export interface IEthereumProvider {
   getChainId(): Promise<number>;
   addToken?(token: Token): Promise<boolean>;
   getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
+  waitForTransaction(
+    transactionHash: TransactionHash,
+    confirmations?: number,
+    timeout?: number,
+  ): Promise<TransactionHash>;
   disconnectable: boolean;
   isContractWallet: boolean;
 }

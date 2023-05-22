@@ -31,12 +31,34 @@ export class SafeProvider extends BasicEthereumProvider {
     super(new SafeAppProvider(safe, sdk));
   }
 
+  async waitForTransaction(
+    internalTransactionHash: string,
+    confirmations?: number,
+    timeout?: number,
+  ) {
+    const receipt = await this.web3Provider.waitForTransaction(
+      internalTransactionHash,
+      confirmations,
+      timeout,
+    );
+
+    if (receipt.status === 0) {
+      throw new Error(`Transaction ${receipt.transactionHash} reverted on chain.`);
+    }
+
+    const transactionHash = await this.getActualTransactionHash(internalTransactionHash);
+
+    return transactionHash;
+  }
+
   async getActualTransactionHash(internalTransactionHash: string): Promise<string> {
     const transactionDetails = await this.sdk.txs.getBySafeTxHash(internalTransactionHash);
     const transactionHash = transactionDetails.txHash;
+
     if (transactionHash === undefined) {
       throw new Error('Transaction might not have been executed yet!');
     }
+
     return transactionHash;
   }
 }

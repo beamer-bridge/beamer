@@ -3,13 +3,12 @@ import type { Contract } from 'ethers';
 
 import StandardTokenDeployment from '@/assets/StandardToken.json';
 import {
-  getConfirmationTimeBlocksForChain,
   getReadOnlyContract,
   getReadWriteContract,
   getSafeEventHandler,
 } from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
-import type { EthereumAddress, Token } from '@/types/data';
+import type { EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { StandardToken } from '@/types/ethers-contracts';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -19,7 +18,7 @@ export async function ensureTokenAllowance(
   tokenAddress: string,
   allowedSpender: string,
   minimumRequiredAmount: UInt256,
-): Promise<void> {
+): Promise<TransactionHash | undefined> {
   const signer = provider.signer.value;
   if (signer === undefined) {
     throw new Error('Missing signer!');
@@ -33,14 +32,14 @@ export async function ensureTokenAllowance(
   const allowance = new UInt256(
     (await tokenContract.allowance(signerAddress, allowedSpender)).toString(),
   );
-  const chainId = await signer.getChainId();
 
   if (allowance.lt(minimumRequiredAmount)) {
     const transaction = await tokenContract.approve(
       allowedSpender,
       minimumRequiredAmount.asBigNumber,
     );
-    await transaction.wait(getConfirmationTimeBlocksForChain(chainId));
+
+    return transaction.hash;
   }
 }
 
