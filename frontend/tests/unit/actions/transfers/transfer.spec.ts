@@ -12,6 +12,7 @@ import type { IEthereumProvider } from '@/services/web3-provider';
 import type { Cancelable } from '@/types/async';
 import { UInt256 } from '@/types/uint-256';
 import {
+  generateAllowanceInformationData,
   generateChain,
   generateRequestInformationData,
   generateStepData,
@@ -147,7 +148,12 @@ describe('transfer', () => {
     it('triggers all protocol relevant functions', async () => {
       const transfer = new TestTransfer(TRANSFER_DATA);
 
-      await transfer.execute(PROVIDER_WITH_SIGNER);
+      const providerWithSigner = new MockedEthereumProvider({
+        signer: SIGNER,
+        signerAddress: SIGNER_ADDRESS,
+      });
+
+      await transfer.execute(providerWithSigner);
 
       expect(tokenUtils.ensureTokenAllowance).toHaveBeenCalledTimes(1);
       expect(requestManager.sendRequestTransaction).toHaveBeenCalledTimes(1);
@@ -238,6 +244,24 @@ describe('transfer', () => {
         UInt256.max(),
       );
     });
+
+    it('skips re-executing the transaction related to this action when an internalTransactionHash was previously defined', async () => {
+      const internalTransactionHash = getRandomTransactionHash();
+      const data = generateTransferData({
+        allowanceInformation: generateAllowanceInformationData({ internalTransactionHash }),
+      });
+      const transfer = new TestTransfer(data);
+      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const provider = new MockedEthereumProvider({
+        signer: signer,
+        signerAddress: data.requestInformation?.requestAccount,
+      });
+
+      await transfer.ensureTokenAllowance(provider);
+
+      expect(tokenUtils.ensureTokenAllowance).not.toHaveBeenCalled();
+      expect(transfer.allowanceInformation?.transactionHash).toBe(internalTransactionHash);
+    });
   });
 
   describe('sendRequestTransaction()', () => {
@@ -305,17 +329,51 @@ describe('transfer', () => {
       );
     });
 
-    it('sets the transaction hash', async () => {
+    it('sets both internal & actual transaction hashes', async () => {
       define(requestManager, 'sendRequestTransaction', vi.fn().mockResolvedValue('0xHash'));
       define(transactionUtils, 'getCurrentBlockNumber', vi.fn().mockResolvedValue(2));
       const transfer = new TestTransfer(TRANSFER_DATA);
 
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
+      expect(transfer.requestInformation?.internalTransactionHash).toBeUndefined();
 
-      await transfer.sendRequestTransaction(PROVIDER_WITH_SIGNER);
+      const providerWithSigner = new MockedEthereumProvider({
+        signer: SIGNER,
+        signerAddress: SIGNER_ADDRESS,
+      });
+
+      await transfer.sendRequestTransaction(providerWithSigner);
 
       expect(transfer.requestInformation?.transactionHash).toBe('0xHash');
+      expect(transfer.requestInformation?.internalTransactionHash).toBe('0xHash');
       expect(transfer.requestInformation?.blockNumberOnTargetChain).toBe(2);
+    });
+
+    describe('if an internal transaction hash was already defined in the RequestInformation object', () => {
+      it('skips re-executing the transaction on chain and instead waits until the internal transaction hash has been confirmed/mined', async () => {
+        const internalTransactionHash = getRandomTransactionHash();
+        const transferData = generateTransferData({
+          requestInformation: generateRequestInformationData({
+            requestAccount: SIGNER_ADDRESS,
+            internalTransactionHash,
+          }),
+        });
+
+        const transfer = new TestTransfer(transferData);
+
+        const providerWithSigner = new MockedEthereumProvider({
+          signer: SIGNER,
+          signerAddress: SIGNER_ADDRESS,
+        });
+
+        expect(transfer.requestInformation?.internalTransactionHash).toBeDefined();
+        expect(transfer.requestInformation?.transactionHash).toBeUndefined();
+
+        await transfer.sendRequestTransaction(providerWithSigner);
+
+        expect(transfer.requestInformation?.transactionHash).toBe(internalTransactionHash);
+        expect(requestManager.sendRequestTransaction).not.toHaveBeenCalled();
+      });
     });
   });
 

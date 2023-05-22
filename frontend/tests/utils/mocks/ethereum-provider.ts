@@ -15,6 +15,7 @@ export class MockedWeb3Provider {
   getBlock = vi.fn();
   getNetwork = vi.fn();
   listAccounts = vi.fn();
+  waitForTransaction = vi.fn();
   getSigner = vi.fn();
   on = vi.fn();
 }
@@ -77,6 +78,7 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   init = vi.fn();
   getLatestBlock = vi.fn();
   getProvider = vi.fn();
+  waitForTransaction = vi.fn(async (txHash) => txHash);
   switchChainSafely: Mock | undefined = vi.fn();
   switchChain: Mock | undefined = vi.fn();
   addChain: Mock | undefined = vi.fn();

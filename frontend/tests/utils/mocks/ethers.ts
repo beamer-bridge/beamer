@@ -1,3 +1,5 @@
+import { getRandomTransactionHash } from '../data_generators';
+
 export class MockedBigNumber {
   constructor(public value: string) {}
 
@@ -16,6 +18,7 @@ export class MockedTransactionReceipt {
   logs: string[] = [];
   status = 1;
   blockHash = '0x123';
+  transactionHash = getRandomTransactionHash();
 
   constructor(public props: Partial<MockedTransactionReceipt> = {}) {
     Object.assign(this, props);
