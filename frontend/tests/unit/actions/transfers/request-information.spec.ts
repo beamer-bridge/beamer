@@ -50,27 +50,6 @@ describe('RequestInformation', () => {
     });
   });
 
-  describe('setTransactionHash()', () => {
-    it('is possible when transaction hash is not already defined', () => {
-      const data = generateRequestInformationData({ transactionHash: undefined });
-      const information = new RequestInformation(data);
-      const transactionHash = getRandomTransactionHash();
-      information.setTransactionHash(transactionHash);
-
-      expect(information.transactionHash).toEqual(transactionHash);
-    });
-
-    it('fails if transaction hash is alrady defined', () => {
-      const transactionHash = getRandomTransactionHash();
-      const data = generateRequestInformationData({ transactionHash });
-      const information = new RequestInformation(data);
-
-      return expect(() => information.setTransactionHash(transactionHash)).toThrow(
-        'Attempt to overwrite already existing transaction hash of a request!',
-      );
-    });
-  });
-
   describe('setBlockNumberOnTargetChain()', () => {
     it('is possible when block number on target chain is not already defined', () => {
       const data = generateRequestInformationData({ blockNumberOnTargetChain: undefined });
@@ -97,15 +76,23 @@ describe('RequestInformation', () => {
   describe('encode()', () => {
     it('serializes all data to persist token amount', () => {
       const transactionHash = getRandomTransactionHash();
+      const internalTransactionHash = getRandomTransactionHash();
       const requestAccount = getRandomEthereumAddress();
       const blockNumberOnTargetChain = getRandomNumber();
       const identifier = getRandomString();
-      const data = { transactionHash, requestAccount, blockNumberOnTargetChain, identifier };
+      const data = {
+        transactionHash,
+        requestAccount,
+        blockNumberOnTargetChain,
+        identifier,
+        internalTransactionHash,
+      };
       const information = new RequestInformation(data);
 
       const encodedData = information.encode();
 
       expect(encodedData.transactionHash).toMatchObject(transactionHash);
+      expect(encodedData.internalTransactionHash).toMatchObject(internalTransactionHash);
       expect(encodedData.requestAccount).toMatchObject(requestAccount);
       expect(encodedData.blockNumberOnTargetChain).toMatchObject(blockNumberOnTargetChain);
       expect(encodedData.identifier).toEqual(identifier);

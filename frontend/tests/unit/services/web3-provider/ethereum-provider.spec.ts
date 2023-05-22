@@ -8,6 +8,7 @@ import {
 } from '@/services/web3-provider/ethereum-provider';
 import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedEip1193Provider, MockedWeb3Provider } from '~/utils/mocks/ethereum-provider';
+import { MockedTransactionReceipt } from '~/utils/mocks/ethers';
 
 vi.mock('@ethersproject/providers');
 vi.mock('ethers');
@@ -132,6 +133,29 @@ describe('BasicEthereumProvider', () => {
 
       expect(ethereumProvider.signer.value).toBe('fake-signer');
       expect(ethereumProvider.signerAddress.value).toBe(firstAddress);
+    });
+  });
+
+  describe('waitForTransaction()', () => {
+    it('waits until given transaction has been confirmed/mined on chain', async () => {
+      const receipt = new MockedTransactionReceipt();
+      const web3Provider = mockWeb3Provider();
+      web3Provider.waitForTransaction = vi.fn().mockReturnValue(receipt);
+
+      const ethereumProvider = new TestBasicEthereumProvider();
+      const transactionHash = await ethereumProvider.waitForTransaction(receipt.transactionHash);
+
+      expect(transactionHash).toBe(receipt.transactionHash);
+    });
+    it('throws when transaction has reverted on chain', async () => {
+      const receipt = new MockedTransactionReceipt({ status: 0 });
+      const web3Provider = mockWeb3Provider();
+      web3Provider.waitForTransaction = vi.fn().mockReturnValue(receipt);
+
+      const ethereumProvider = new TestBasicEthereumProvider();
+      expect(() => ethereumProvider.waitForTransaction(receipt.transactionHash)).rejects.toThrow(
+        `Transaction ${receipt.transactionHash} reverted on chain.`,
+      );
     });
   });
 

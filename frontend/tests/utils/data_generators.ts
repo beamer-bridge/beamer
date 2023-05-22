@@ -3,7 +3,12 @@ import { DeploymentInfo } from 'config/deployment';
 import { TokenMetadata } from 'config/tokens/token';
 
 import type { StepData } from '@/actions/steps';
-import type { RequestInformationData, TransferData } from '@/actions/transfers';
+import type {
+  AllowanceInformationData,
+  RequestInformationData,
+  TransactionInformationData,
+  TransferData,
+} from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
 import type { RequestFulfillmentData } from '@/actions/transfers/request-fulfillment';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
@@ -126,6 +131,22 @@ export function generateRequestFulfillmentData(
   return {
     timestamp: getRandomNumber(),
     ...partialRequestFulfillmentData,
+  };
+}
+
+export function generateTransactionInformationData(
+  partialTransactionInformationData?: Partial<TransactionInformationData>,
+): TransactionInformationData {
+  return {
+    ...partialTransactionInformationData,
+  };
+}
+
+export function generateAllowanceInformationData(
+  partialAllowanceInformationData?: Partial<AllowanceInformationData>,
+): AllowanceInformationData {
+  return {
+    ...partialAllowanceInformationData,
   };
 }
 
