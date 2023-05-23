@@ -28,7 +28,7 @@
     "@ethersproject/providers": "5.7.2",
     "commander": "^9.4.1",
     "ethers": "5.7.2",
-    "pkg": "^5.8.0"
+    "pkg": "^5.8.1"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^10.2.0",
