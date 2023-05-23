@@ -51,5 +51,9 @@ Create the following issues and group them into an epic:
 - [ ] Write an E2E test script and add id to CI workflow
 - [ ] Add deployment config
 - [ ] Add source for fee calculation and integrate in workflow
+- [ ] Deploy on testnet
+- [ ] Add rollup to testnet frontend
+- [ ] Test deployment on testnet
 - [ ] Deploy on mainnet
+- [ ] Test deployment on mainnet
 - [ ] Add rollup to frontend
