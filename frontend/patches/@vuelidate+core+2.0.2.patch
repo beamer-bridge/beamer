@@ -1,0 +1,12 @@
+diff --git a/node_modules/@vuelidate/core/package.json b/node_modules/@vuelidate/core/package.json
+index ff0878e..f7bc1e0 100644
+--- a/node_modules/@vuelidate/core/package.json
++++ b/node_modules/@vuelidate/core/package.json
+@@ -19,6 +19,7 @@
+   ],
+   "exports": {
+     ".": {
++      "types": "./index.d.ts",
+       "import": "./dist/index.mjs",
+       "require": "./dist/index.cjs"
+     },
