@@ -63,6 +63,26 @@ e2e_test_fill() {
     echo Fill tx hash: $e2e_test_l2_txhash
 }
 
+e2e_test_relayer() {
+    local root=$(get_root_dir)
+    local l1_rpc=$1
+    local l2_rpc=$2
+    local network_config=$3
+    local privkey=$4
+    local txhash=$5
+    local relayer=${root}/relayer/relayer-node18-linux-x64
+    
+    echo Starting relayer...
+    timeout 5m bash -c "until ${relayer} --l1-rpc-url '$l1_rpc' \
+                                         --l2-relay-to-rpc-url '$l2_rpc' \
+                                         --l2-relay-from-rpc-url '$l2_rpc' \
+                                         --network-to '$network_config' \
+                                         --network-from '$network_config' \
+                                         --wallet-private-key '$privkey' \
+                                         --l2-transaction-hash '$txhash'; \
+                        do sleep 1s; done"
+}
+
 e2e_test_verify() {
     local root="$(get_root_dir)"
     local deployment_dir=$1

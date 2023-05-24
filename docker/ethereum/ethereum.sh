@@ -33,19 +33,13 @@ up() {
 e2e_test() {
     l2_rpc=http://0.0.0.0:8545
     password=""
-    relayer=${ROOT}/relayer/relayer-node18-linux-x64
     l2_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.chains."1337".EthereumL2Messenger.address')
 
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
 
     export ETHEREUM_L2_MESSENGER=$l2_messenger
-    echo Starting relayer...
-    ${relayer} --l1-rpc-url http://0.0.0.0:8545 \
-               --l2-relay-to-rpc-url $l2_rpc \
-               --l2-relay-from-rpc-url $l2_rpc \
-               --wallet-private-key $PRIVKEY \
-               --l2-transaction-hash $e2e_test_l2_txhash
 
+    e2e_test_relayer $l2_rpc $l2_rpc "" $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 

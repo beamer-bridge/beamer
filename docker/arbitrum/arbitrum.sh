@@ -84,7 +84,6 @@ create_deployment_config_file() {
 e2e_test() {
     l2_rpc=http://0.0.0.0:8547
     password=""
-    relayer=${ROOT}/relayer/relayer-node18-linux-x64
     l1_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.base_chain.ArbitrumL1Messenger.address')
 
     network_config="${CACHE_DIR}/localnetwork.json"
@@ -95,15 +94,8 @@ e2e_test() {
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
 
     export ARBITRUM_L1_MESSENGER=$l1_messenger
-    echo Starting relayer...
-    ${relayer} --l1-rpc-url http://0.0.0.0:8545 \
-               --l2-relay-to-rpc-url $l2_rpc \
-               --l2-relay-from-rpc-url $l2_rpc \
-               --network-to $network_config \
-               --network-from $network_config \
-               --wallet-private-key $PRIVKEY \
-               --l2-transaction-hash $e2e_test_l2_txhash
 
+    e2e_test_relayer http://0.0.0.0:8545 $l2_rpc $network_config $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
