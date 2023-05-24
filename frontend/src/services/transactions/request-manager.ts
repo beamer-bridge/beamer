@@ -1,11 +1,11 @@
 import type { Listener, TransactionResponse } from '@ethersproject/providers';
 
-import RequestManagerDeployment from '@/assets/RequestManager.json';
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress, TransactionHash } from '@/types/data';
 import type { RequestManager } from '@/types/ethers-contracts';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
+import { RequestManager__factory } from '#contract-factories/RequestManager__factory.ts';
 
 import type { IEthereumProvider } from '../web3-provider';
 import {
@@ -25,7 +25,7 @@ export async function getTokenMinLpFee(
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     getJsonRpcProvider(rpcUrl),
   );
 
@@ -41,7 +41,7 @@ export async function getTokenTransferLimit(
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     getJsonRpcProvider(rpcUrl),
   );
 
@@ -58,7 +58,7 @@ export async function getAmountBeforeFees(
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     getJsonRpcProvider(rpcUrl),
   );
   const tokenAddress = totalAmount.token.address;
@@ -85,7 +85,7 @@ export async function getRequestFee(
 ): Promise<UInt256> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     getJsonRpcProvider(rpcUrl),
   );
   return new UInt256(
@@ -115,7 +115,7 @@ export async function sendRequestTransaction(
   }
   const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     signer,
   );
   const requestParameter = [
@@ -152,7 +152,7 @@ export async function getRequestInformation(
   const provider = getJsonRpcProvider(rpcUrl);
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     provider,
   );
   const { chainId } = await provider.getNetwork();
@@ -199,7 +199,7 @@ export async function getRequestData(
 ): Promise<RequestData & RequestDataDerivedProperties> {
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     getJsonRpcProvider(rpcUrl),
   );
 
@@ -246,7 +246,7 @@ export function listenOnClaimCountChange(options: {
   const provider = getJsonRpcProvider(options.rpcUrl);
   const contract = getReadOnlyContract<RequestManager>(
     options.requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     provider,
   );
 
@@ -272,7 +272,7 @@ export function waitUntilClaimsWithdrawn(
   const provider = getJsonRpcProvider(rpcUrl);
   const contract = getReadOnlyContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     provider,
   );
   const cancel = () => {
@@ -381,7 +381,7 @@ export async function withdrawRequest(
   }
   const requestManagerContract = getReadWriteContract<RequestManager>(
     requestManagerAddress,
-    RequestManagerDeployment.abi,
+    RequestManager__factory.abi,
     signer,
   );
   const chainId = await signer.getChainId();
