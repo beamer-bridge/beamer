@@ -1,7 +1,7 @@
+import MintableTokenDeployment from '@beamer-bridge/deployments/dist/abis/goerli/MintableToken.json';
 import type { Listener } from '@ethersproject/providers';
 import type { Contract } from 'ethers';
 
-import StandardTokenDeployment from '@/assets/StandardToken.json';
 import {
   getReadOnlyContract,
   getReadWriteContract,
@@ -9,7 +9,7 @@ import {
 } from '@/services/transactions/utils';
 import type { IEthereumProvider } from '@/services/web3-provider';
 import type { EthereumAddress, Token, TransactionHash } from '@/types/data';
-import type { StandardToken } from '@/types/ethers-contracts';
+import type { MintableToken } from '@/types/ethers-contracts/goerli';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
@@ -23,9 +23,9 @@ export async function ensureTokenAllowance(
   if (signer === undefined) {
     throw new Error('Missing signer!');
   }
-  const tokenContract = getReadWriteContract<StandardToken>(
+  const tokenContract = getReadWriteContract<MintableToken>(
     tokenAddress,
-    StandardTokenDeployment.abi,
+    MintableTokenDeployment.abi,
     signer,
   );
   const signerAddress = await signer.getAddress();
@@ -48,9 +48,9 @@ export async function getTokenBalance(
   token: Token,
   accountAddress: string,
 ): Promise<TokenAmount> {
-  const tokenContract = getReadOnlyContract<StandardToken>(
+  const tokenContract = getReadOnlyContract<MintableToken>(
     token.address,
-    StandardTokenDeployment.abi,
+    MintableTokenDeployment.abi,
     provider.getProvider(),
   );
   const balance = new UInt256((await tokenContract.balanceOf(accountAddress)).toString());
@@ -63,9 +63,9 @@ export async function getTokenAllowance(
   ownerAddress: EthereumAddress,
   spenderAddress: EthereumAddress,
 ): Promise<TokenAmount> {
-  const tokenContract = getReadOnlyContract<StandardToken>(
+  const tokenContract = getReadOnlyContract<MintableToken>(
     token.address,
-    StandardTokenDeployment.abi,
+    MintableTokenDeployment.abi,
     provider.getProvider(),
   );
   const allowance = new UInt256(
@@ -81,9 +81,9 @@ export function listenOnTokenBalanceChange(options: {
   onReduce: Listener;
   onIncrease: Listener;
 }): Contract {
-  const tokenContract = getReadOnlyContract<StandardToken>(
+  const tokenContract = getReadOnlyContract<MintableToken>(
     options.token.address,
-    StandardTokenDeployment.abi,
+    MintableTokenDeployment.abi,
     options.provider.getProvider(),
   );
 

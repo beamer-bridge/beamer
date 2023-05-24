@@ -80,5 +80,17 @@
   },
   "engines": {
     "node": ">=16"
+  },
+  "imports": {
+    "#contract-factories/*.ts": {
+      "types": "./src/types/ethers-contracts/factories/goerli/*.ts",
+      "production": "./src/types/ethers-contracts/factories/mainnet/*.ts",
+      "default": "./src/types/ethers-contracts/factories/goerli/*.ts"
+    },
+    "#contracts/*.ts": {
+      "types": "./src/types/ethers-contracts/goerli/*.ts",
+      "production": "./src/types/ethers-contracts/mainnet/*.ts",
+      "default": "./src/types/ethers-contracts/goerli/*.ts"
+    }
   }
 }
