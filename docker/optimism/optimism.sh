@@ -48,19 +48,11 @@ create_deployment_config_file() {
 e2e_test() {
     l2_rpc=http://localhost:8545
     password=""
-    relayer=${ROOT}/relayer/relayer-node18-linux-x64
     contract_addresses="${CACHE_DIR}/addresses.json"
     echo Copying contract addresses to $contract_addresses
     docker exec ops-deployer-1 cat genesis/addresses.json > $contract_addresses
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
-    echo Starting relayer
-    ${relayer} --l1-rpc-url http://localhost:9545 \
-               --l2-relay-to-rpc-url $l2_rpc \
-               --l2-relay-from-rpc-url $l2_rpc \
-               --network-to $contract_addresses \
-               --network-from $contract_addresses \
-               --wallet-private-key $PRIVKEY \
-               --l2-transaction-hash $e2e_test_l2_txhash
+    e2e_test_relayer http://localhost:9545 $l2_rpc $contract_addresses $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
