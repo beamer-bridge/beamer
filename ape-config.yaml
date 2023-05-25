@@ -19,6 +19,9 @@ dependencies:
   - name: Optimism
     local: ./contracts/contracts/chains/
     contracts_folder: ./optimism
+  - name: Polygon-ZkEVM
+    local: ./contracts/contracts/chains/
+    contracts_folder: ./polygon_zkevm
 
 default_ecosystem: ethereum
 
@@ -29,6 +32,7 @@ solidity:
     - 'OpenZeppelin/openzeppelin-contracts@4.8.0/contracts=OpenZeppelin/4.8.0'
     - 'interfaces=Interfaces'
     - 'optimism=Optimism'
+    - 'polygon_zkevm=Polygon-ZkEVM'
 
 ganache:
   server:

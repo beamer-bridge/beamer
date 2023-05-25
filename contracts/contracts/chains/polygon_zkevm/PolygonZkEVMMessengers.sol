@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "../../../interfaces/IMessenger.sol";
 import "../../RestrictedCalls.sol";
-import "./PolygonZkBridgeInterface.sol";
+import "polygon_zkevm/PolygonZkBridgeInterface.sol";
 
 // This messenger reepresents both L1 & L2 messengers.
 // The prefix "local" refers to instances on the same chain, while
@@ -22,7 +22,7 @@ contract PolygonZkEVMMessenger is IMessenger, RestrictedCalls {
     }
 
     function setRemoteMessenger(address _remoteMessenger) public onlyOwner {
-        require(_remoteMessenger == address(0), "Remote messenger already set");
+        require(remoteMessenger == address(0), "Remote messenger already set");
         remoteMessenger = _remoteMessenger;
     }
 
