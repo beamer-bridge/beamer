@@ -168,7 +168,7 @@ def deploy(
         log.info("Loaded chain config", name=chain.name, chain_id=chain.chain_id, path=str(path))
 
         url = rpc_info[chain.chain_id]
-        w3 = make_web3(url, account)
+        w3 = make_web3(url, account, timeout=60)
         assert w3.eth.chain_id == chain.chain_id
         log.info("Connected to chain RPC", chain_id=chain.chain_id, url=url)
 

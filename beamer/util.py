@@ -140,8 +140,9 @@ def make_web3(
     url: URL,
     account: Optional[LocalAccount] = None,
     gas_price_strategy: GasPriceStrategy = rpc_gas_price_strategy,
+    timeout: int = 5,
 ) -> Web3:
-    w3 = Web3(HTTPProvider(url, request_kwargs=dict(timeout=20)))
+    w3 = Web3(HTTPProvider(url, request_kwargs=dict(timeout=timeout)))
 
     # Add POA middleware for geth POA chains, no/op for other chains
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
