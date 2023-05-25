@@ -16,23 +16,28 @@ def _get_contract_info(artifacts_dir: Path) -> dict[ChainId, dict[str, dict[str,
     contract_info: dict[ChainId, dict[str, dict[str, str]]] = {}
     for file_path in artifacts_dir.glob("*.deployment.json"):
         deployment = beamer.deploy.artifacts.Deployment.from_file(file_path)
-        if file_path.stem == "base.deployment":
-            ecosystem = "ethereum"
-            chain_id = deployment.base.chain_id
-            contracts = deployment.base.contracts
-        else:
-            assert deployment.chain is not None
-            ecosystem_info = file_path.stem.split(".")[0]
-            _, ecosystem = ecosystem_info.split("-", 1)
-            chain_id = deployment.chain.chain_id
-            contracts = deployment.chain.contracts
+        network = file_path.parent.stem
+        if deployment.base.chain_id not in contract_info:
+            contract_info[deployment.base.chain_id] = {}
+        for contract_name, contract in deployment.base.contracts.items():
+            contract_info[deployment.base.chain_id][contract_name] = {
+                "address": contract.address,
+                "ecosystem": "ethereum",
+                "network": network,
+            }
+        if deployment.chain is None:
+            continue
+        ecosystem_info = file_path.stem.split(".")[0]
+        _, ecosystem = ecosystem_info.split("-", 1)
+        chain_id = deployment.chain.chain_id
+        contracts = deployment.chain.contracts
         if chain_id not in contract_info:
             contract_info[chain_id] = {}
         for contract_name, contract in contracts.items():
             contract_info[chain_id][contract_name] = {
                 "address": contract.address,
                 "ecosystem": ecosystem,
-                "network": file_path.parent.stem,
+                "network": network,
             }
 
     return contract_info
