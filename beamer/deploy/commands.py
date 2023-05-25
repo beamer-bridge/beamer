@@ -67,13 +67,26 @@ class _ChainIdParam(click.ParamType):
     metavar="DIR",
     help="The directory to store contract deployment artifacts in.",
 )
+@click.option(
+    "--commit-check",
+    type=bool,
+    default=True,
+    show_default=True,
+    help="Whether to check for commit on the remote.",
+)
 @click.argument("chain_id", type=_ChainIdParam())
 def deploy_base(
-    rpc_file: Path, keystore_file: Path, password: str, artifacts_dir: Path, chain_id: ChainId
+    rpc_file: Path,
+    keystore_file: Path,
+    password: str,
+    artifacts_dir: Path,
+    chain_id: ChainId,
+    commit_check: bool,
 ) -> None:
     """Deploy resolver on the base chain."""
     beamer.util.setup_logging(log_level="DEBUG", log_json=False)
-    _ensure_commit_is_on_remote()
+    if commit_check:
+        _ensure_commit_is_on_remote()
 
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -132,17 +145,26 @@ def deploy_base(
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
 )
+@click.option(
+    "--commit-check",
+    type=bool,
+    default=True,
+    show_default=True,
+    help="Whether to check for commit on the remote.",
+)
 def deploy(
     rpc_file: Path,
     keystore_file: Path,
     password: str,
     artifacts_dir: Path,
     deploy_mintable_token: bool,
+    commit_check: bool,
     **chains: dict,
 ) -> None:
     """Deploy L2 Beamer contracts on the specified chains and set up the trusted call chain."""
     beamer.util.setup_logging(log_level="DEBUG", log_json=False)
-    _ensure_commit_is_on_remote()
+    if commit_check:
+        _ensure_commit_is_on_remote()
 
     rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
     log.info("Loaded RPC file")
