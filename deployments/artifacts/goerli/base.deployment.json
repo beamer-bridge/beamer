@@ -3,10 +3,10 @@
     "base": {
         "chain_id": 5,
         "Resolver": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0xd91736fd22316f7383e60654eda6e195c90d42141a19a4dbfdb1a18cce72efe4",
-            "address": "0x880292d23338F81B54f9C74e11A720A2d2b4813c",
-            "deployment_block": 8750450,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x73361f2adfc0db26553eaf7e75c485e2cbdf163e26d4862466854286eb38dfc4",
+            "address": "0xDCBF185279C7D0F2d448cb674d9429323c8120DC",
+            "deployment_block": 9066315,
             "deployment_args": []
         }
     }

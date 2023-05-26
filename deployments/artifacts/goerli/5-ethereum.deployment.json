@@ -3,29 +3,29 @@
     "base": {
         "chain_id": 5,
         "EthereumL1Messenger": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0x3e7a4565c89b352f537148e18373b4eb432537c1747d5b18b2242a9d99d15e3a",
-            "address": "0x28bC2Da62fde87Bc22F0224a2e1c6493657eDc57",
-            "deployment_block": 8750452,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x82d021ae9aa73cfaa5c2bcb4885c4bc93d8d76857ee61d6fcde278beacb9c91e",
+            "address": "0x69AF938828Ec696CE63F5734024400cc5Fd3b59b",
+            "deployment_block": 9066318,
             "deployment_args": []
         }
     },
     "chain": {
         "chain_id": 5,
         "MintableToken": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0x9b8539731cf5e28e5885af460a0887de0fb0b641fd5545a3d9ce81f88be15a7b",
-            "address": "0x50fA2A18fd639E961c05B9ce722851C7ED346F93",
-            "deployment_block": 8750451,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x4dab57528eec479bebd899366d8f88dad6ac2119a4ae0bc16d8573a379427d42",
+            "address": "0x62431B10a86FC3264A7E503A7918BB742c449A72",
+            "deployment_block": 9066316,
             "deployment_args": [
                 1000000000000000000
             ]
         },
         "RequestManager": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0x181d3f02d38190a32f569cdf4157ab9c5fb7e0e885050edc94a9c289921346d2",
-            "address": "0xda8C87C3C480913Bb1c6f161b50B029467BC2718",
-            "deployment_block": 8750454,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0xb4439bb4e6987486db41e1b31c5b28909a7d483e84c026ae70fd262832b10123",
+            "address": "0x2f0d9Dea245174E159b715F05e7572495ae923a1",
+            "deployment_block": 9066317,
             "deployment_args": [
                 470000000000000,
                 900,
@@ -34,21 +34,21 @@
             ]
         },
         "FillManager": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0x0aa9b7178f36cd9b834cdd3a10ac952413db318ad7ad55b94d31ecaedbb08afa",
-            "address": "0xCeBeF26D607fb50f60e4fE2aA9380A986b48CD1b",
-            "deployment_block": 8750460,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x4180e6b135da37943ef9569f620b76c55ca1e036b27e14cc85771b8aff3fc41f",
+            "address": "0x60b1BAbF322101ef206fE40e93241719d8fEA12F",
+            "deployment_block": 9066325,
             "deployment_args": [
-                "0x656b26DCF80ea2c25772143636D5B024F7f5183b"
+                "0x6064A4d69D6535981F1091Fa2243d9a106046e46"
             ]
         },
         "EthereumL2Messenger": {
-            "beamer_commit": "0d09825c844d20ddc6d2709c5c832ea987b6fb9a",
-            "tx_hash": "0xb750f1fdbc46ed9e2c9db1b066f311de47aa3af02bdaad8bef82330091df2126",
-            "address": "0x656b26DCF80ea2c25772143636D5B024F7f5183b",
-            "deployment_block": 8750453,
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0xd1a97e0d5dc1cccd5a4e737b8e5433f4ba31c36c2224dc4b5095366ebba3d7cd",
+            "address": "0x6064A4d69D6535981F1091Fa2243d9a106046e46",
+            "deployment_block": 9066319,
             "deployment_args": [
-                "0x880292d23338F81B54f9C74e11A720A2d2b4813c"
+                "0xDCBF185279C7D0F2d448cb674d9429323c8120DC"
             ]
         }
     }

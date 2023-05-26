@@ -1,0 +1,61 @@
+{
+    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "base": {
+        "chain_id": 5,
+        "PolygonZkEVMMessenger": {
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x8d1fc6c7d5da9ceb0f8db80855347683f58600653d0569ba3216ece10136047f",
+            "address": "0x5c826bcad9A00A9eFA019c2FeFA4bE94144b7c9c",
+            "deployment_block": 9066337,
+            "deployment_args": [
+                "0xF6BEEeBB578e214CA9E23B0e9683454Ff88Ed2A7",
+                "0xDCBF185279C7D0F2d448cb674d9429323c8120DC",
+                1
+            ]
+        }
+    },
+    "chain": {
+        "chain_id": 1442,
+        "MintableToken": {
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0x95cf450d49cc53cadb76ca1cb840fb6c98d9a334aea1258dc4e2a9cc977e635a",
+            "address": "0x8D7ca47D7d0D9951CEdFC1E6eDA598268dAADE78",
+            "deployment_block": 779675,
+            "deployment_args": [
+                1000000000000000000
+            ]
+        },
+        "RequestManager": {
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0xb12ef3d2843b34b647113bfa5deb1bb314d7453a54466cc13f448657208cde98",
+            "address": "0x4e32CEc57BCaE80928f58D3dbD84550D397F5416",
+            "deployment_block": 779677,
+            "deployment_args": [
+                470000000000000,
+                900,
+                900,
+                900
+            ]
+        },
+        "FillManager": {
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0xe3ef5dbf8d8e10281c5fad411a792a4603d8d85490c3bfa677268d0755127712",
+            "address": "0x5b49f4ef7E1D5625500946A74033dff37aa9B098",
+            "deployment_block": 779697,
+            "deployment_args": [
+                "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F"
+            ]
+        },
+        "PolygonZkEVMMessenger": {
+            "beamer_commit": "3d443ff54763df4c55f2ef5338091b40d09be6ca",
+            "tx_hash": "0xd556f91ef4b8417b21196e368fe1b2d79092007ddad82b061fa3b06f91d46d4a",
+            "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
+            "deployment_block": 779686,
+            "deployment_args": [
+                "0xF6BEEeBB578e214CA9E23B0e9683454Ff88Ed2A7",
+                "0x4e32CEc57BCaE80928f58D3dbD84550D397F5416",
+                0
+            ]
+        }
+    }
+}
