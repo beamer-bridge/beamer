@@ -516,9 +516,29 @@ workflows:
       - create-relayers:
           requires:
             - install-npm-packages
+      - compile-contracts:
+          requires:
+            - install-python
+            - install-npm-packages
       - test-relayer:
           requires:
             - install-npm-packages
+      - e2e-test-ethereum:
+          requires:
+            - compile-contracts
+            - create-relayers
+      - e2e-test-optimism:
+          requires:
+            - compile-contracts
+            - create-relayers
+      - e2e-test-arbitrum:
+          requires:
+            - compile-contracts
+            - create-relayers
+      - e2e-test-polygon-zkevm:
+          requires:
+            - compile-contracts
+            - create-relayers
       - build-and-publish-container-image:
           requires:
             - install-python
