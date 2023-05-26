@@ -64,7 +64,8 @@ Deploy the contracts on the local ganache test chain::
 
 Generate a config file with token definition::
 
-    TOKEN_ADDR=$(jq -r '.L2."1337".MintableToken.address' < deployments/ganache-local/deployment.json)
+
+    TOKEN_ADDR=$(jq -r '.chains."1337".MintableToken.address' < deployments/ganache-local/deployment.json)
     echo -e "[tokens]\nTST = [[\"1337\", \"$TOKEN_ADDR\"]]"  > agent-ganache-local.conf
 
 Mint some test tokens::
@@ -88,7 +89,7 @@ Start ``beamer-agent``::
     beamer agent --account-path 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                  --account-password '' \
                  --config agent-ganache-local.conf \
-                 --base-chain http://localhost:8545
+                 --base-chain http://localhost:8545 \
                  --chain l2=http://localhost:8545 \
                  --source-chain=l2 \
                  --target-chain=l2 \
