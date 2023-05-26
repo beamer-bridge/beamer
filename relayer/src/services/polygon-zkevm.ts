@@ -67,7 +67,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
       return response;
     } catch (e) {
       if (e.message == "not found in the Storage") {
-        await sleep(2000);
+        await sleep(5000);
         return this.getMessageInfoSafe(depositCount, originNetwork);
       }
       throw e;
@@ -210,7 +210,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     console.log("Found BridgeEvent. Proceeding with the next steps...");
 
     // 2. Fetch message data
-    const message = await this.getMessageInfo(
+    const message = await this.getMessageInfoSafe(
       bridgeEventParameters.depositCount,
       bridgeEventParameters.originNetwork,
     );
@@ -225,7 +225,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     console.log("Waiting for message to be ready for claiming.");
     let readyForClaim = message.ready_for_claim;
     while (!readyForClaim) {
-      const { ready_for_claim } = await this.getMessageInfo(
+      const { ready_for_claim } = await this.getMessageInfoSafe(
         bridgeEventParameters.depositCount,
         bridgeEventParameters.originNetwork,
       );
