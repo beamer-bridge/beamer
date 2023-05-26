@@ -128,13 +128,17 @@ export class EthereumRelayerService extends BaseRelayerService {
   }
 
   async relayTxToL1(l1TransactionHash: TransactionHash): Promise<string | undefined> {
-    console.log("Ethereum execution");
+    console.log("\nExecuting message on Ethereum L1.");
 
     const callParameters = await this.parseEventDataFromTxHash(l1TransactionHash);
 
     if (!callParameters) {
-      throw new Error("Couldn't find a matching event in transaction logs.");
+      throw new Error(
+        "Couldn't find a matching event (RequestFilled | FillInvalidated) in the transaction logs.",
+      );
     }
+
+    console.log("Found matching event. Proceeding with the next steps...");
 
     // Execute EthereumL2Messenger.relayMessage
     const l2ChainId = await this.getL2ChainId();
@@ -156,14 +160,22 @@ export class EthereumRelayerService extends BaseRelayerService {
     const isMessageRelayed = storedMessageHashStatus == 2;
 
     if (isMessageRelayed) {
-      console.log("Message has already been relayed..");
-
       const resolverAddress = await ethereumMessenger.resolver();
-      return await this.findTransactionHashForMessage(
+      const transactionHash = await this.findTransactionHashForMessage(
         ...parameters,
         BigNumber.from(l2ChainId),
         resolverAddress,
       );
+
+      if (transactionHash) {
+        console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
+        return transactionHash;
+      } else {
+        throw new Error(
+          `Message has already been relayed but the related L1 transaction hash cannot be found. \n
+          Did you properly configure the EthereumL2Messenger contract address & Resolver's deployed block number?`,
+        );
+      }
     }
 
     const estimatedGasLimit = await ethereumMessenger.estimateGas.relayMessage(...parameters);
@@ -172,8 +184,10 @@ export class EthereumRelayerService extends BaseRelayerService {
       gasLimit: estimatedGasLimit,
     });
     const transactionReceipt = await transaction.wait();
+    const transactionHash = transactionReceipt.transactionHash;
 
-    return transactionReceipt.transactionHash;
+    console.log(`Successfully executed the message on L1. Transaction hash: ${transactionHash}\n`);
+    return transactionHash;
   }
 
   async finalize(): Promise<void> {
