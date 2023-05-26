@@ -188,7 +188,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     console.log("Claim message transaction sent: ", L1ClaimTxHash.hash);
 
     await L1ClaimTxHash.wait();
-    console.log("Successfully relayed message to L1.");
+    console.log("Successfully relayed message to L1.\n\n");
 
     return L1ClaimTxHash.hash;
   }
