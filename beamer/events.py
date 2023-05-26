@@ -334,13 +334,14 @@ class EventFetcher:
                 event_abis=self._event_abis,
             )
 
-    def fetch(self) -> list[Event]:
-        try:
-            block_data = self._web3.eth.get_block("latest")
-        except requests.exceptions.ConnectionError:
-            raise
-        except RequestException:
-            return []
+    def fetch(self, block_data=None) -> list[Event]:
+        if not block_data:
+            try:
+                block_data = self._web3.eth.get_block("latest")
+            except requests.exceptions.ConnectionError:
+                raise
+            except RequestException:
+                return []
 
         block_number = BlockNumber(block_data["number"] - self._confirmation_blocks)
 

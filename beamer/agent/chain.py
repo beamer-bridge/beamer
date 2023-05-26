@@ -1,3 +1,5 @@
+import json
+import re
 import os
 import sys
 import threading
@@ -8,6 +10,7 @@ from typing import Callable
 
 import requests
 import structlog
+from websockets.sync.client import connect as ws_connect
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
 from web3.types import Timestamp, Wei
@@ -59,6 +62,7 @@ class EventMonitor:
         self._web3 = web3
         self._chain_id = ChainId(self._web3.eth.chain_id)
         self._contracts = contracts
+        self._contract_addresses = [c.address for c in self._contracts]
         self._deployment_block = deployment_block
         self._stop = False
         self._on_new_events = on_new_events
@@ -68,6 +72,14 @@ class EventMonitor:
         self._poll_period = poll_period
         self._confirmation_blocks = confirmation_blocks
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
+        self._ws_rpc_url = re.sub("^http", "ws", self._web3.provider.endpoint_uri)
+        self._ws_subscribe_request = json.dumps(
+            {
+                "id": 1,
+                "method": "eth_subscribe",
+                "params": ["newHeads", {"address": self._contract_addresses}],
+            }
+        )
 
         for contract in contracts:
             assert self._chain_id == contract.w3.eth.chain_id, f"Chain id mismatch for {contract}"
@@ -87,11 +99,11 @@ class EventMonitor:
         self._on_sync_done.append(event_processor.mark_sync_done)
         self._on_rpc_status_change.append(event_processor.set_rpc_working)
 
-    def _inner_fetch(self, fetcher: EventFetcher) -> list[Event]:
+    def _inner_fetch(self, fetcher: EventFetcher, block_data=None) -> list[Event]:
         events = []
         was_working = self._rpc_working
         try:
-            events.extend(fetcher.fetch())
+            events.extend(fetcher.fetch(block_data))
         except requests.exceptions.ConnectionError:
             self._rpc_working = False
         else:
@@ -108,7 +120,7 @@ class EventMonitor:
     def _thread_func(self) -> None:
         self._log.info(
             "EventMonitor started",
-            addresses=[c.address for c in self._contracts],
+            addresses=self._contract_addresses,
         )
         fetcher = EventFetcher(
             self._web3, self._contracts, self._deployment_block, self._confirmation_blocks
@@ -120,12 +132,40 @@ class EventMonitor:
         if events:
             self._call_on_new_events(events)
         self._call_on_sync_done()
-        self._log.info("Sync done")
-        while not self._stop:
+        self._log.info(
+            "Sync done. Subscribe for newHeads",
+            url=self._ws_rpc_url,
+            request=self._ws_subscribe_request,
+        )
+
+        # Subscribe for new events
+        with ws_connect(self._ws_rpc_url) as ws:
+            ws.send(self._ws_subscribe_request)
+            ws.recv()
+
+            # Just after subscription is established, must fetch events using 
+            # fallback method, to catch events that might have been created
+            # during subscription creation period of time.
             events = self._inner_fetch(fetcher)
             if events:
                 self._call_on_new_events(events)
-            time.sleep(self._poll_period)
+
+            # Now start fetching events directly from subscription
+            self._log.info("Waiting for new data")
+            while not self._stop:
+                try:
+                    message = ws.recv(timeout=5)
+                except TimeoutError:
+                    ws.ping()
+                    continue
+
+                # {'jsonrpc': '2.0', 'method': 'eth_subscription', 'params': {'result': BLOCK_DATA_HERE}}
+                block_data = json.loads(message)["params"]["result"]
+                block_data["number"] = int(block_data["number"], 16)    # "0x9" -> 9
+                events = self._inner_fetch(fetcher, block_data)
+                if events:
+                    self._call_on_new_events(events)
+
         self._log.info("EventMonitor stopped")
 
     def _call_on_new_events(self, events: list[Event]) -> None:
