@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@arbitrum/sdk": "3.1.4",
-    "@eth-optimism/sdk": "2.1.0",
+    "@eth-optimism/sdk": "3.1.0",
     "@eth-optimism/sdk-1.0.2": "npm:@eth-optimism/sdk@1.0.2",
     "@ethersproject/providers": "5.7.2",
     "commander": "^9.4.1",

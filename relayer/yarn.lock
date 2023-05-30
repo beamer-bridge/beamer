@@ -371,15 +371,15 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.41.0.tgz#080321c3b68253522f7646b55b577dd99d2950b3"
   integrity sha512-LxcyMGxwmTh2lY9FwHPGWOHmYFCZvbrFCBZL4FzSSsxsRPuhrYUg/49/0KDfW8tnIEaEHtfmn6+NPN+1DqaNmA==
 
-"@eth-optimism/contracts-bedrock@0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts-bedrock/-/contracts-bedrock-0.14.0.tgz#f93006416c8b114fb78d2e477dccd525aa651458"
-  integrity sha512-mvbSE2q2cyHUwg1jtHwR4JOQJcwdCVRAkmBdXCKUP0XsP48NT1J92bYileRdiUM5nLIESgNNmPA8L2J87mr62g==
+"@eth-optimism/contracts-bedrock@0.16.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts-bedrock/-/contracts-bedrock-0.16.0.tgz#531cb81529ad3f895be538c1d8762eace6241a95"
+  integrity sha512-MfHJdeQ/BzHgkoHnA+NGb1hU8CH0OFsp4ylmFi0uwYh3xPJxcHt9qhy1g4MGGMUGAPIUmlBPaqhwbBlQkaeFrA==
   dependencies:
-    "@eth-optimism/core-utils" "^0.12.0"
     "@openzeppelin/contracts" "4.7.3"
     "@openzeppelin/contracts-upgradeable" "4.7.3"
-    ethers "^5.7.0"
+    "@rari-capital/solmate" "github:transmissions11/solmate#8f9b23f8838670afda0fd8983f2c41e8037ae6bc"
+    clones-with-immutable-args "github:Saw-mon-and-Natalie/clones-with-immutable-args#105efee1b9127ed7f6fedf139e1fc796ce8791f2"
 
 "@eth-optimism/contracts@0.5.18":
   version "0.5.18"
@@ -400,7 +400,7 @@
     "@ethersproject/abstract-provider" "^5.7.0"
     "@ethersproject/abstract-signer" "^5.7.0"
 
-"@eth-optimism/core-utils@0.12.0", "@eth-optimism/core-utils@^0.12.0":
+"@eth-optimism/core-utils@0.12.0":
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.12.0.tgz#6337e4599a34de23f8eceb20378de2a2de82b0ea"
   integrity sha512-qW+7LZYCz7i8dRa7SRlUKIo1VBU8lvN0HeXCxJR+z+xtMzMQpPds20XJNCMclszxYQHkXY00fOT6GvFw9ZL6nw==
@@ -421,6 +421,26 @@
     "@ethersproject/web" "^5.7.0"
     bufio "^1.0.7"
     chai "^4.3.4"
+
+"@eth-optimism/core-utils@0.12.2":
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.12.2.tgz#cacf8c488e8c9bf75b193a08763043294a4882fa"
+  integrity sha512-rJjsRF//hegpfeWzcWRVO+SJ7XK+uwpidUGECQ5/aGfO+o0/J0kaiRhvGtUvJHsY5D2+gThqQkkx+ZwlGuBeuQ==
+  dependencies:
+    "@ethersproject/abi" "^5.7.0"
+    "@ethersproject/abstract-provider" "^5.7.0"
+    "@ethersproject/address" "^5.7.0"
+    "@ethersproject/bignumber" "^5.7.0"
+    "@ethersproject/bytes" "^5.7.0"
+    "@ethersproject/constants" "^5.7.0"
+    "@ethersproject/contracts" "^5.7.0"
+    "@ethersproject/keccak256" "^5.7.0"
+    "@ethersproject/properties" "^5.7.0"
+    "@ethersproject/rlp" "^5.7.0"
+    "@ethersproject/web" "^5.7.0"
+    chai "^4.3.4"
+    ethers "^5.7.0"
+    node-fetch "^2.6.7"
 
 "@eth-optimism/core-utils@0.8.1":
   version "0.8.1"
@@ -447,14 +467,14 @@
     merkletreejs "^0.2.27"
     rlp "^2.2.7"
 
-"@eth-optimism/sdk@2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-2.1.0.tgz#8c679ddcf84144415746b73ed6e4eaaf07fb6350"
-  integrity sha512-XfRMsPNZRzdlNGARx3UIX88xaCBTJRzsZuKrRz2j8aqYkTpDOvdz87zYsmj+6Nl2tdOlgcxlhZPFCqdRtbiCaQ==
+"@eth-optimism/sdk@3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/sdk/-/sdk-3.1.0.tgz#c0c48d1111375c0bc2b80457cbde455e69079c0a"
+  integrity sha512-E1/Tk145Aln1qGxFcbEugtjzTJTnZgmTt8AUe4g9ghC7+6r1YOVav+KZuoMoyR+nF6/FbKdmVq0wqYilZOLq3w==
   dependencies:
     "@eth-optimism/contracts" "0.6.0"
-    "@eth-optimism/contracts-bedrock" "0.14.0"
-    "@eth-optimism/core-utils" "0.12.0"
+    "@eth-optimism/contracts-bedrock" "0.16.0"
+    "@eth-optimism/core-utils" "0.12.2"
     lodash "^4.17.21"
     merkletreejs "^0.2.27"
     rlp "^2.2.7"
@@ -1219,6 +1239,10 @@
   version "4.7.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.7.3.tgz#939534757a81f8d69cc854c7692805684ff3111e"
   integrity sha512-dGRS0agJzu8ybo44pCIf3xBaPQN/65AIXNgK8+4gzKd5kbvlqyxryUYVLJv7fK98Seyd2hDZzVEHSWAh0Bt1Yw==
+
+"@rari-capital/solmate@github:transmissions11/solmate#8f9b23f8838670afda0fd8983f2c41e8037ae6bc":
+  version "7.0.0-alpha.3"
+  resolved "https://codeload.github.com/transmissions11/solmate/tar.gz/8f9b23f8838670afda0fd8983f2c41e8037ae6bc"
 
 "@sinclair/typebox@^0.25.16":
   version "0.25.24"
@@ -1997,6 +2021,10 @@ cliui@^8.0.1:
     string-width "^4.2.0"
     strip-ansi "^6.0.1"
     wrap-ansi "^7.0.0"
+
+"clones-with-immutable-args@github:Saw-mon-and-Natalie/clones-with-immutable-args#105efee1b9127ed7f6fedf139e1fc796ce8791f2":
+  version "2.0.0"
+  resolved "https://codeload.github.com/Saw-mon-and-Natalie/clones-with-immutable-args/tar.gz/105efee1b9127ed7f6fedf139e1fc796ce8791f2"
 
 co@^4.6.0:
   version "4.6.0"
@@ -4073,6 +4101,13 @@ node-fetch@^2.6.6:
   version "2.6.11"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.11.tgz#cde7fc71deef3131ef80a738919f999e6edfff25"
   integrity sha512-4I6pdBY1EthSqDmJkiNk3JIT8cswwR9nfeW/cPdUagJYEQG7R95WRH74wpz7ma8Gh/9dI9FP+OU+0E4FvtA55w==
+  dependencies:
+    whatwg-url "^5.0.0"
+
+node-fetch@^2.6.7:
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.12.tgz#02eb8e22074018e3d5a83016649d04df0e348fba"
+  integrity sha512-C/fGU2E8ToujUivIO0H+tpQ6HWo4eEmchoPIoXtxCrVghxdKq+QOHqEZW7tuP3KlV3bC8FRMO5nMCC7Zm1VP6g==
   dependencies:
     whatwg-url "^5.0.0"
 

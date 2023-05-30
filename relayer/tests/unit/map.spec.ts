@@ -26,7 +26,7 @@ function createTestArgs(
 }
 
 describe("createRelayer", () => {
-  it("maps arbitrum chain ids to an ArbitrumRelayerService", () => {
+  it("maps Arbitrum chain ids to an ArbitrumRelayerService", () => {
     const chainId = 42161;
     const goerliChainId = 421613;
     const testnetChainId = 412346;
@@ -40,7 +40,7 @@ describe("createRelayer", () => {
     expect(testnetRelayer instanceof ArbitrumRelayerService).toBe(true);
   });
 
-  it("maps boba chain ids to an BobaRelayerService", () => {
+  it("maps Boba chain ids to an BobaRelayerService", () => {
     const chainId = 288;
     const goerliChainId = 2888;
 
@@ -51,7 +51,7 @@ describe("createRelayer", () => {
     expect(goerliRelayer instanceof BobaRelayerService).toBe(true);
   });
 
-  it("maps optimism chain ids to an OptimismRelayerService", () => {
+  it("maps Optimism chain ids to an OptimismRelayerService", () => {
     const chainId = 10;
     const goerliChainId = 420;
 
@@ -62,7 +62,7 @@ describe("createRelayer", () => {
     expect(goerliRelayer instanceof OptimismRelayerService).toBe(true);
   });
 
-  it("maps ethereum chain ids to EthereumRelayerService", () => {
+  it("maps Ethereum chain ids to EthereumRelayerService", () => {
     const chainId = 1;
     const goerliChainId = 5;
     const localChainId = 1337;
@@ -74,6 +74,17 @@ describe("createRelayer", () => {
     expect(relayer instanceof EthereumRelayerService).toBe(true);
     expect(goerliRelayer instanceof EthereumRelayerService).toBe(true);
     expect(localChainRelayer instanceof EthereumRelayerService).toBe(true);
+  });
+
+  it("maps Base chain ids to OptimismRelayerService", () => {
+    const chainId = 8453;
+    const goerliChainId = 84531;
+
+    const relayer = createRelayer(chainId, createTestArgs(1, chainId));
+    const goerliRelayer = createRelayer(goerliChainId, createTestArgs(5, goerliChainId));
+
+    expect(relayer instanceof OptimismRelayerService).toBe(true);
+    expect(goerliRelayer instanceof OptimismRelayerService).toBe(true);
   });
 
   it("throws for unknown chain ids", () => {
