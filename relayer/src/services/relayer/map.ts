@@ -20,6 +20,9 @@ export const SERVICES: Record<number, ExtendedRelayerService> = {
   1101: PolygonZKEvmRelayerService,
   1442: PolygonZKEvmRelayerService,
   1001: PolygonZKEvmRelayerService,
+  // OP forks
+  84531: OptimismRelayerService,
+  8453: OptimismRelayerService,
 };
 
 export function createRelayer(
