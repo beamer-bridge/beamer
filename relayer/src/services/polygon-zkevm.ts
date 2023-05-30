@@ -1,7 +1,7 @@
 import type { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { readFileSync } from "fs";
 
-import { PolygonZKEvmBridge__factory } from "../../types-gen/contracts";
+import { PolygonZKEvmBridge__factory } from "../../types-gen/contracts/external/factories/";
 import { parseBridgeEvent } from "../common/events/polygon-zkevm/BridgeEvent";
 import { sleep } from "../common/util";
 import type { TransactionHash } from "./types";
@@ -40,7 +40,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
   async getMessageMerkleProof(
     depositCount: number,
     originNetwork: number,
-  ): Promise<MerkleProofResponse | undefined> {
+  ): Promise<MerkleProofResponse> {
     const networkConfig = await this.getNetworkConfig();
 
     const merkleProofUrl = new URL(networkConfig.bridgeServiceUrl + this.MERKLE_PROOF_ENDPOINT);
@@ -96,9 +96,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
   checkTransactionValidity(transactionReceipt: TransactionReceipt, networkName: string): void {
     if (!transactionReceipt) {
-      throw new Error(
-        `Transaction "${transactionReceipt.transactionHash}" cannot be found on ${networkName}...`,
-      );
+      throw new Error(`Transaction cannot be found on ${networkName}...`);
     }
     if (!transactionReceipt.status) {
       throw new Error(

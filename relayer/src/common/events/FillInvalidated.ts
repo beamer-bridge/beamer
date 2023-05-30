@@ -1,7 +1,6 @@
 import type { Log } from "@ethersproject/providers";
-import { Interface } from "ethers/lib/utils";
 
-import { abis } from "../../deployments";
+import { FillManager__factory } from "../../../types-gen/contracts/beamer/factories/FillManager__factory";
 import { isUndefined } from "../util";
 
 interface Result extends ReadonlyArray<unknown> {
@@ -21,7 +20,7 @@ export const isValidFillInvalidatedEvent = (data: Result): data is FillInvalidat
 };
 
 export const parseFillInvalidatedEvent = (logs: Log[]): FillInvalidatedEventData | null => {
-  const iface = new Interface(abis.FillManager);
+  const iface = FillManager__factory.createInterface();
 
   for (const log of logs) {
     try {

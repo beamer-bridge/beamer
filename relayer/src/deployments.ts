@@ -1,4 +1,3 @@
-import { abi as FillManagerABI } from "@beamer-bridge/deployments/dist/abis/mainnet/FillManager.json";
 import { chain as chainEthereumGoerli } from "@beamer-bridge/deployments/dist/artifacts/goerli/5-ethereum.deployment.json";
 import { base as baseArbitrumGoerli } from "@beamer-bridge/deployments/dist/artifacts/goerli/421613-arbitrum.deployment.json";
 import { base as baseGoerli } from "@beamer-bridge/deployments/dist/artifacts/goerli/base.deployment.json";
@@ -24,8 +23,4 @@ export const contractsMeta = {
   mainnet: {
     RESOLVER_DEPLOY_BLOCK_NUMBER: baseMainnet.Resolver.deployment_block,
   },
-};
-
-export const abis = {
-  FillManager: FillManagerABI,
 };

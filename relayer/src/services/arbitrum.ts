@@ -11,7 +11,7 @@ import type { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 
-import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts";
+import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts/beamer";
 import { addresses } from "../deployments";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";

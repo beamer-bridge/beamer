@@ -18,7 +18,9 @@
     "lint:fix": "eslint --ext .js,.ts --ignore-path .gitignore --fix .",
     "test:unit": "jest unit",
     "test:coverage": "jest --collect-coverage",
-    "generate-types": "typechain --target=ethers-v5 ./node_modules/@beamer-bridge/deployments/dist/abis/mainnet/**.json --out-dir=./types-gen/contracts/",
+    "generate-types": "yarn generate-beamer-types && yarn generate-external-types",
+    "generate-beamer-types": "typechain --target=ethers-v5 --glob='./node_modules/@beamer-bridge/deployments/dist/abis/mainnet/!(deployment).json' --out-dir=./types-gen/contracts/beamer/",
+    "generate-external-types": "typechain --target=ethers-v5 --glob='./src/assets/abi/PolygonZKEvmBridge.json' --out-dir=./types-gen/contracts/external/",
     "postinstall": "yarn generate-types"
   },
   "dependencies": {

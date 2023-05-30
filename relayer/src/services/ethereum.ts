@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 
-import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts";
+import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts/beamer";
 import { parseFillInvalidatedEvent } from "../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../common/events/RequestFilled";
 import { addresses, contractsMeta } from "../deployments";
@@ -78,16 +78,17 @@ export class EthereumRelayerService extends BaseRelayerService {
     filler: string,
     fillChainId: BigNumber,
     resolverAddress: string,
-  ): Promise<string | null> {
+  ): Promise<string | undefined> {
     const resolver = Resolver__factory.connect(resolverAddress, this.l1Wallet);
     const currentBlock = await this.l1Wallet.provider.getBlock("latest");
     let currentBlockNumber = currentBlock.number;
     const resolverDeployBlockNumber =
       CONTRACTS_DATA[await this.getL1ChainId()].RESOLVER_DEPLOY_BLOCK_NUMBER;
 
+    const filter = resolver.filters.Resolution();
     while (currentBlockNumber > resolverDeployBlockNumber) {
       const events = await resolver.queryFilter(
-        "Resolution" as unknown,
+        filter,
         currentBlockNumber - FILTER_BLOCKS_PER_ITERATION,
         currentBlockNumber,
       );
@@ -110,7 +111,7 @@ export class EthereumRelayerService extends BaseRelayerService {
       currentBlockNumber -= FILTER_BLOCKS_PER_ITERATION;
     }
 
-    return null;
+    return undefined;
   }
 
   private createMessageHash(
