@@ -12,15 +12,24 @@ from beamer.typing import URL, ChainId
 log = structlog.get_logger(__name__)
 
 
+def _get_contract_unique_name(contract_name: str, chain_id: ChainId) -> str:
+    return f"{contract_name}-{chain_id}"
+
+
 def _get_contract_info(artifacts_dir: Path) -> dict[ChainId, dict[str, dict[str, str]]]:
     contract_info: dict[ChainId, dict[str, dict[str, str]]] = {}
     for file_path in artifacts_dir.glob("*.deployment.json"):
         deployment = beamer.deploy.artifacts.Deployment.from_file(file_path)
+        related_chain_id = (
+            deployment.chain.chain_id if deployment.chain else deployment.base.chain_id
+        )
         network = file_path.parent.stem
-        if deployment.base.chain_id not in contract_info:
-            contract_info[deployment.base.chain_id] = {}
+        chain_id = deployment.base.chain_id
+        if chain_id not in contract_info:
+            contract_info[chain_id] = {}
         for contract_name, contract in deployment.base.contracts.items():
-            contract_info[deployment.base.chain_id][contract_name] = {
+            unique_contract_name = _get_contract_unique_name(contract_name, related_chain_id)
+            contract_info[chain_id][unique_contract_name] = {
                 "address": contract.address,
                 "ecosystem": "ethereum",
                 "network": network,
@@ -34,7 +43,8 @@ def _get_contract_info(artifacts_dir: Path) -> dict[ChainId, dict[str, dict[str,
         if chain_id not in contract_info:
             contract_info[chain_id] = {}
         for contract_name, contract in contracts.items():
-            contract_info[chain_id][contract_name] = {
+            unique_contract_name = _get_contract_unique_name(contract_name, chain_id)
+            contract_info[chain_id][unique_contract_name] = {
                 "address": contract.address,
                 "ecosystem": ecosystem,
                 "network": network,
@@ -44,13 +54,14 @@ def _get_contract_info(artifacts_dir: Path) -> dict[ChainId, dict[str, dict[str,
 
 
 def _verify_contract(
-    contract_name: str, contract_info: dict[str, str], rpc_url: URL, chain_id: ChainId
+    unique_contract_name: str, contract_info: dict[str, str], rpc_url: URL, chain_id: ChainId
 ) -> None:
     try:
         ape_ecosystem = getattr(ape.networks, contract_info["ecosystem"])
         ape_network = getattr(ape_ecosystem, contract_info["network"])
         with ape_network.use_provider(rpc_url):
             etherscan = ape.networks.provider.network.explorer
+            contract_name, _ = unique_contract_name.split("-")
             assert etherscan is not None
             getattr(ape.project, contract_name).at(contract_info["address"])
             log.info(
