@@ -79,7 +79,7 @@
     "vitest": "^0.31.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": "16.x"
   },
   "imports": {
     "#contract-factories/*.ts": {
