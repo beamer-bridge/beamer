@@ -53,11 +53,16 @@ def _generate_abis(contract_commits: dict[str, set[str]]) -> dict[str, str]:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 _compile_abis(commit_id, tmpdirname)
                 for contract_name in contract_commits:
+                    if commit_id not in contract_commits[contract_name]:
+                        continue
                     abi_path = Path(tmpdirname) / f"contracts/.build/{contract_name}.json"
                     with open(abi_path, "r") as fp:
                         contract_abi = fp.read()
                     abi = generated_abis.get(contract_name)
-                    if abi is not None and contract_abi != abi:
+                    if (
+                        abi is not None
+                        and json.loads(contract_abi)["abi"] != json.loads(abi)["abi"]
+                    ):
                         raise ValueError(f"Different ABI found for {contract_name}")
                     generated_abis[contract_name] = contract_abi
             processed_commit_ids.add(commit_id)
