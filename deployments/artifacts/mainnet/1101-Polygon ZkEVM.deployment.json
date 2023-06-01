@@ -1,0 +1,52 @@
+{
+    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "base": {
+        "chain_id": 1,
+        "PolygonZkEVMMessenger": {
+            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
+            "tx_hash": "0xce41bc8d28fb33916f1215fc0e722595fea609048bbfee8d72a78804d58e7b7d",
+            "address": "0xA0f99747DF0DfC38d5c08f032ecBF87caD2bF8d4",
+            "deployment_block": 17385667,
+            "deployment_args": [
+                "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",
+                "0xCb60516819a28431233195A8b7E0227C288B61AD",
+                1
+            ]
+        }
+    },
+    "chain": {
+        "chain_id": 1101,
+        "RequestManager": {
+            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
+            "tx_hash": "0x0aa31a8f0824ac50bd562fb8bdf52791d7f9378ba47720c2cbe0bc02db6139a0",
+            "address": "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
+            "deployment_block": 578936,
+            "deployment_args": [
+                1500000000000000,
+                86400,
+                86400,
+                86400
+            ]
+        },
+        "FillManager": {
+            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
+            "tx_hash": "0x4fd1f2f77963ef8bc2799a2f60cf5562c7f92179e0403a1c2f63ea7177acd9f3",
+            "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
+            "deployment_block": 578946,
+            "deployment_args": [
+                "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F"
+            ]
+        },
+        "PolygonZkEVMMessenger": {
+            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
+            "tx_hash": "0x5cdb7364b5419bcce5aa68eb2ccb8dd602f736371afad5a7a9fe332a4d42fedf",
+            "address": "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F",
+            "deployment_block": 578943,
+            "deployment_args": [
+                "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",
+                "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
+                0
+            ]
+        }
+    }
+}
