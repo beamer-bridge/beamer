@@ -104,6 +104,7 @@ def make_claim_challenged(
     claim = Claim(
         claim_made=ClaimMade(
             event_chain_id=request.source_chain_id,
+            event_address=to_checksum_address(ADDRESS_ZERO),
             tx_hash=HexBytes(b""),
             claim_id=claim_id,
             request_id=request.id,

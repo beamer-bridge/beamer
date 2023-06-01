@@ -98,6 +98,7 @@ def transfer_request():
         block_number=BLOCK_NUMBER,
         tx_hash=HexBytes(b"1"),
         event_chain_id=SOURCE_CHAIN_ID,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         lp_fee=TokenAmount(1),
         protocol_fee=TokenAmount(1),
     )
@@ -108,6 +109,7 @@ def transfer_fill(agent_address):
     return RequestFilled(
         request_id=REQUEST_ID,
         event_chain_id=TARGET_CHAIN_ID,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         fill_id=FillId(b"1"),
         source_chain_id=SOURCE_CHAIN_ID,
         target_token_address=TARGET_TOKEN_ADDRESS,
@@ -127,6 +129,7 @@ def transfer_claim(agent_address):
         claimer=agent_address,
         claimer_stake=CLAIMER_STAKE,
         event_chain_id=TARGET_CHAIN_ID,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         last_challenger=to_checksum_address(ADDRESS_ZERO),
         challenger_stake_total=Wei(0),
         termination=Termination(100),

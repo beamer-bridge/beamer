@@ -2,7 +2,9 @@ import time
 from unittest.mock import patch
 
 import pytest
+from eth_utils import to_checksum_address
 from hexbytes import HexBytes
+from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.chain import process_claims
 from beamer.agent.state_machine import process_event
@@ -46,6 +48,7 @@ def test_handle_fill_invalidated_resolved():
 
     event = FillInvalidatedResolved(
         event_chain_id=request.source_chain_id,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         tx_hash=HexBytes(""),
         request_id=request.id,
         fill_id=request.fill_id,
@@ -79,6 +82,7 @@ def test_handle_fill_invalidated():
     tx_hash = make_tx_hash()
     event = FillInvalidated(
         event_chain_id=request.target_chain_id,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         tx_hash=tx_hash,
         request_id=request.id,
         fill_id=request.fill_id,
