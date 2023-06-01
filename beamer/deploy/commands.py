@@ -172,7 +172,7 @@ def deploy(
         assert w3.eth.chain_id == chain.chain_id
         log.info("Connected to chain RPC", chain_id=chain.chain_id, url=url)
 
-        l1_contracts, l2_contracts = deploy_beamer(base_w3, chain, resolver)
+        l1_contracts, l2_contracts = deploy_beamer(w3, chain, resolver)
         if deploy_mintable_token:
             l2_contracts += (deploy_contract(w3, ("MintableToken", int(1e18))),)
 
