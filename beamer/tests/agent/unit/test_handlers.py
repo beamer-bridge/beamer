@@ -3,7 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from eth_typing import BlockNumber, HexStr
+from eth_utils import to_checksum_address
 from hexbytes import HexBytes
+from web3.constants import ADDRESS_ZERO
 from web3.datastructures import AttributeDict
 from web3.types import ChecksumAddress, TxReceipt, Wei
 
@@ -207,6 +209,7 @@ def test_handle_request_resolved():
 
     event = RequestResolved(
         event_chain_id=SOURCE_CHAIN_ID,
+        event_address=to_checksum_address(ADDRESS_ZERO),
         tx_hash=HexBytes(""),
         request_id=request.id,
         filler=filler,

@@ -46,6 +46,7 @@ def test_challenge_own_claim(config, request_manager, token, direction):
     claim = Claim(
         ClaimMade(
             event_chain_id=ChainId(ape.chain.chain_id),
+            event_address=to_checksum_address(ADDRESS_ZERO),
             tx_hash=HexBytes(b""),
             claim_id=ClaimId(1),
             request_id=request.id,
@@ -213,6 +214,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         [
             RequestFilled(
                 event_chain_id=chain_id,
+                event_address=to_checksum_address(ADDRESS_ZERO),
                 tx_hash=HexBytes(b""),
                 request_id=request_id,
                 fill_id=FillId(b"1"),
@@ -232,6 +234,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         [
             RequestFilled(
                 event_chain_id=chain_id,
+                event_address=to_checksum_address(ADDRESS_ZERO),
                 tx_hash=HexBytes(b""),
                 request_id=request_id,
                 fill_id=FillId(b"1"),
@@ -251,6 +254,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         [
             RequestFilled(
                 event_chain_id=chain_id,
+                event_address=to_checksum_address(ADDRESS_ZERO),
                 tx_hash=HexBytes(b""),
                 request_id=request_id,
                 fill_id=FillId(b"1"),
@@ -270,6 +274,7 @@ def test_agent_ignores_invalid_fill(_, request_manager, token, agent: Agent, dir
         [
             RequestFilled(
                 event_chain_id=chain_id,
+                event_address=to_checksum_address(ADDRESS_ZERO),
                 tx_hash=HexBytes(b""),
                 request_id=request_id,
                 fill_id=FillId(b"1"),
