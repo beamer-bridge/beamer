@@ -10,6 +10,7 @@ from eth_utils.abi import event_abi_to_log_topic
 from hexbytes import HexBytes
 from requests.exceptions import HTTPError, ReadTimeout, RequestException
 from web3 import HTTPProvider, Web3
+from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.contract.contract import get_event_data
 from web3.types import ABIEvent, BlockData, ChecksumAddress, FilterParams, LogReceipt, Wei
@@ -31,6 +32,7 @@ _BLOCK_UPDATED_FORMAT = "<LatestBlockUpdatedEvent event_chain_id=%s block_number
 @dataclass(frozen=True)
 class Event:
     event_chain_id: ChainId
+    event_address: ChecksumAddress
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,12 @@ class TargetChainEvent(Event):
 @dataclass(frozen=True)
 class LatestBlockUpdatedEvent(Event):
     block_data: BlockData
+
+    def __init__(self, event_chain_id: ChainId, block_data: BlockData) -> None:
+        # We need to set these directly via __dict__ since the class is frozen.
+        self.__dict__["event_chain_id"] = event_chain_id
+        self.__dict__["event_address"] = ADDRESS_ZERO
+        self.__dict__["block_data"] = block_data
 
     def __repr__(self) -> str:
         chain_id = self.event_chain_id
@@ -228,6 +236,7 @@ def _decode_event(
     if data.event in _EVENT_TYPES:
         kwargs = {_camel_to_snake(name): value for name, value in data.args.items()}
         kwargs["event_chain_id"] = chain_id
+        kwargs["event_address"] = log_entry["address"]
         kwargs["block_number"] = log_entry["blockNumber"]
         kwargs["tx_hash"] = log_entry["transactionHash"]
         _convert_bytes(kwargs)
