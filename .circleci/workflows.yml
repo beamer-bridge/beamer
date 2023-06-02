@@ -49,7 +49,25 @@ commands:
 
       - ensure-node-environment
 
+  build-frontend:
+    parameters:
+      mode:
+        type: enum
+        enum: [development, staging, production]
+        default: production
+    steps:
+      - node/install-packages:
+          pkg-manager: yarn
+          app-dir: ~/beamer/frontend
+      - run:
+          name: Build
+          command: yarn build --mode <<parameters.mode >>
+
 parameters:
+  action:
+    type: enum
+    enum: [default, frontend-mainnet-deployment, frontend-testnet-deployment, frontend-shadow-deployment]
+    default: default
   docs-updated:
     type: boolean
     default: false
@@ -70,7 +88,11 @@ parameters:
     default: false
   deployment-package-json-updated:
     type: boolean
-    default: false  
+    default: false
+  trigger-frontend-deployment:
+    type: enum
+    enum: [none, mainnet, testnet, shadow]
+    default: none
 
 
 executors:
@@ -305,12 +327,7 @@ jobs:
     steps:
       - checkout:
           path: ~/beamer
-      - node/install-packages:
-          pkg-manager: yarn
-          app-dir: ~/beamer/frontend
-      - run:
-          name: Build
-          command: yarn build
+      - build-frontend
       - run:
           name: Lint
           command: yarn lint
@@ -407,8 +424,47 @@ jobs:
             - run:
                 name: Push the image to github container registry
                 command: docker push -a ${IMAGE_NAME}
-                                             
+  
+  deploy-frontend:
+    executor: node/default
+    working_directory: ~/beamer/frontend
+    environment:
+      REPO_URL: git@github.com:beamer-bridge/frontend-deployment.git
+      TMP_DIR: /tmp/frontend-deployment
+    steps:
+      - checkout:
+          path: ~/beamer
+      - when:
+          condition:
+            or:
+              - equal: [mainnet, <<pipeline.parameters.trigger-frontend-deployment>>]
+              - equal: [shadow, <<pipeline.parameters.trigger-frontend-deployment>>]
+          steps:
+            - build-frontend:
+                mode: production
+      - when:
+          condition:
+            equal: [testnet, <<pipeline.parameters.trigger-frontend-deployment>>]
+          steps:
+            - build-frontend:
+                mode: staging
+      - add_ssh_keys:
+          fingerprints:
+            - 3a:6e:26:54:04:d8:58:3f:63:7c:3d:00:a1:d7:c2:be
+      - run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com > ~/.ssh/known_hosts
+          git clone "${REPO_URL}" -b <<pipeline.parameters.trigger-frontend-deployment>> "${TMP_DIR}"
+          rm -rf "${TMP_DIR}"/*
+          cp -r ~/beamer/frontend/dist/* "${TMP_DIR}"
+          cd "${TMP_DIR}"
+          git config user.name "${CIRCLE_USERNAME}"
+          git config user.email "${CIRCLE_USERNAME}@users.noreply.github.com"
+          git add --all
+          git commit -m "Deployment ${CIRCLE_SHA1}"
+          git push origin <<pipeline.parameters.trigger-frontend-deployment>>
 
+                                             
 workflows:
   npm-release:
     when: 
@@ -546,3 +602,9 @@ workflows:
             - install-python
             - create-relayers
             - test-relayer
+
+  frontend-deployment:
+    unless: 
+      equal: [none, <<pipeline.parameters.trigger-frontend-deployment>>]
+    jobs:
+      - deploy-frontend
