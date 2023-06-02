@@ -4,6 +4,7 @@ Command reference
 The Beamer software currently supports two commands: 
 
 * :ref:`command-agent` allows to run a Beamer agent.
+* :ref:`command-config-read` reads contract configuration from the chain.
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 
 .. _command-agent:
@@ -65,6 +66,34 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
      - Time in seconds which is waited before new events are fetched from the chains after 
        the last fetch. If a value for a specific chain is provided in the config file, it 
        takes precedence for this chain. Default: ``5.0``.
+
+
+.. _command-config-read:
+
+``beamer config read``
+^^^^^^^^^^^^^^^^^^^^^^
+
+``beamer config read --rpc-file RPC-FILE --abi-dir DIR --artifact CHAIN-NAME.deployment.json STATE_PATH``
+
+The command reads the latest contract configuration state from the chain and
+store it into ``STATE_PATH``. If ``STATE_PATH`` already exists, it is used as
+the starting point to fetch contract events from. Otherwise, contracts events
+are fetched from the deployment block.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifact CHAIN-NAME.deployment.json``
+     - Path to the deployment artifact.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
 
 
 .. _command-health-check:
