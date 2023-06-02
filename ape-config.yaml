@@ -6,6 +6,8 @@ plugins:
   - name: optimism
   - name: arbitrum
   - name: etherscan
+  - name: polygon-zkevm
+  - name: base
 
 contracts_folder: contracts/contracts
 
