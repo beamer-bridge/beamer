@@ -355,7 +355,7 @@ class EventFetcher:
             events = self._fetch_range(from_block, to_block)
             if events is not None:
                 result.extend(events)
-            from_block = BlockNumber(to_block + 1)
+                from_block = BlockNumber(to_block + 1)
 
         self._next_block_number = from_block
         try:
