@@ -1,6 +1,3 @@
-[submodule "docker/optimism"]
-	path = docker/optimism/optimism
-	url = https://github.com/ethereum-optimism/optimism.git
 [submodule "docker/arbitrum/nitro"]
 	path = docker/arbitrum/nitro
 	url = https://github.com/OffchainLabs/nitro.git
