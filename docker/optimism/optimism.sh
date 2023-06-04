@@ -2,7 +2,6 @@
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
 ROOT="$(get_root_dir)"
-OPTIMISM="${ROOT}/docker/optimism/optimism"
 
 # Deployer's address & private key.
 ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
@@ -12,30 +11,41 @@ CACHE_DIR=$(obtain_cache_dir $0)
 DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
 DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/optimism-local.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
+OPTIMISM="${CACHE_DIR}/optimism"
+CONTRACT_ADDRESSES=${OPTIMISM}/.devnet/addresses.json
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
 echo Beamer deployer\'s keyfile: ${KEYFILE}
 
+configure_repo() {
+    repo="https://github.com/ethereum-optimism/optimism.git"
+    commit_id="6a474e36aba94f15ed90f71d1920e4b1d34513ab"
+    git clone --no-checkout ${repo} ${OPTIMISM}
+    cd ${OPTIMISM}
+    git checkout ${commit_id}
+}
+
 down() {
     echo "Shutting down the end-to-end environment"
-    make -C ${OPTIMISM}/ops down
+    cd ${OPTIMISM}
+    make devnet-down
+    make devnet-clean
+    cd ${ROOT}
 }
 
 up() {
     echo "Starting the end-to-end environment"
-    docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
-    # FIXME: Need removal after: https://github.com/beamer-bridge/beamer/issues/1242
-    export DOCKER_TAG_MESSAGE_RELAYER=0.5.25
-    docker compose ${docker_compose_file} up --scale relayer=0 -d
-
-    echo "Wait to make sure all services are up and running"
-    # The current wait-for-sequencer.sh script in the optimism repo
-    # has a bug in that it does not specify the configuration files.
-    # So work around that here.
-    WAIT_FOR_SEQUENCER_SCRIPT=$(mktemp)-wait-for-sequencer.sh
-    sed "s#docker-compose#docker-compose ${docker_compose_file}#" \
-            "${OPTIMISM}/ops/scripts/wait-for-sequencer.sh" > ${WAIT_FOR_SEQUENCER_SCRIPT}
-    sh ${WAIT_FOR_SEQUENCER_SCRIPT}
+    source ~/.bashrc
+    if [ ! -d ${OPTIMISM} ]; then
+        configure_repo
+    fi
+    cd ${OPTIMISM}
+    echo "v16.20.0" > .nvmrc
+    nvm use
+    yarn install
+    yarn build
+    make devnet-up-deploy
+    cd ${ROOT}
 }
 
 create_deployment_config_file() {
@@ -46,13 +56,15 @@ create_deployment_config_file() {
 }
 
 e2e_test() {
-    l2_rpc=http://localhost:8545
+    l2_rpc=http://localhost:9545
     password=""
-    contract_addresses="${CACHE_DIR}/addresses.json"
-    echo Copying contract addresses to $contract_addresses
-    docker exec ops-deployer-1 cat genesis/addresses.json > $contract_addresses
+    
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
-    e2e_test_relayer http://localhost:9545 $l2_rpc $contract_addresses $PRIVKEY $e2e_test_l2_txhash
+    echo Sending Proof
+    e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
+    sleep 20
+    echo L1 Resolve
+    e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
@@ -70,9 +82,7 @@ EOF
 }
 
 addresses() {
-    docker logs ops-deployer-1 2>/dev/null |
-    sed -nE 's/deploying "([^"]+)" .+ deployed at (.+) with.*$/\1: \2/p' | sort | 
-    poetry run python ${ROOT}/scripts/parse-addresses.py
+    cat ${CONTRACT_ADDRESSES}
 }
 
 case $1 in
