@@ -42,6 +42,7 @@ up() {
     cd ${OPTIMISM}
     echo "v16.20.0" > .nvmrc
     nvm use
+    npm install --global yarn
     yarn install
     yarn build
     make devnet-up-deploy

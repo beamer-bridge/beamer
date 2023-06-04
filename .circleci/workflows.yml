@@ -49,6 +49,29 @@ commands:
 
       - ensure-node-environment
 
+  restore-go:
+    steps:
+      # Restore cached Go installation at /home/circleci/.go
+      - restore_cache:
+          name: Restore cached Go installation
+          key: go-1.20.2-{{ .Environment.CACHE_VERSION }}
+
+  restore-foundry:
+    steps:
+      # Restore cached Foundry installation at /home/circleci/.foundry
+      - restore_cache:
+          name: Restore cached Foundry installation
+          key: foundry-{{ .Environment.CACHE_VERSION }}
+
+  initialize-optimism-environment:
+    steps:
+      - attach_workspace:
+          at: /
+      
+      - restore-go
+      - restore-foundry
+      - run: nvm install v16.20.0
+
 parameters:
   docs-updated:
     type: boolean
@@ -90,6 +113,36 @@ jobs:
           paths:
             - home/circleci/beamer
 
+  install-go:
+    executor: vm
+    steps:
+      - attach_workspace:
+          at: /
+      - run: wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz 
+      - run: tar -xvf go1.20.2.linux-amd64.tar.gz
+      - run: mv go /home/circleci/.go
+      - run: echo GOROOT=/home/circleci/.go >> ~/.bashrc
+      - run: echo PATH=$GOPATH/bin:/home/circleci/.go/bin:$PATH >> ~/.bashrc
+      - save_cache:
+          key: go-1.20.2-{{ .Environment.CACHE_VERSION }}
+          paths:
+            - /home/circleci/.go
+            - ~/.bashrc
+
+  install-foundry:
+    executor: vm
+    steps:
+      - attach_workspace:
+          at: /
+      - run: curl -L https://foundry.paradigm.xyz | bash
+      - run: source ~/.bashrc
+      - run: foundryup
+      - save_cache:
+          key: foundry-{{ .Environment.CACHE_VERSION }}
+          paths:
+            - /home/circleci/.foundry
+            - ~/.bashrc
+  
   install-python:
     executor: vm
     steps:
@@ -207,15 +260,7 @@ jobs:
       OPTIMISM: "docker/optimism"
     steps:
       - initialize-environment
-      - run: git submodule status $OPTIMISM/optimism | awk '{print $1;}' > "/tmp/optimism-commit-hash"
-      - restore_cache:
-          key: optimism-submodule-{{ checksum "/tmp/optimism-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
-      - run: git submodule update --init $OPTIMISM/optimism
-      - save_cache:
-          key: optimism-submodule-{{ checksum "/tmp/optimism-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
-          paths:
-            - docker/optimism/optimism
-            - .git/modules/docker/optimism
+      - initialize-optimism-environment
       - run: bash $OPTIMISM/optimism.sh up
       - run: bash $OPTIMISM/optimism.sh deploy-beamer
       - run: bash $OPTIMISM/optimism.sh e2e-test
@@ -439,6 +484,12 @@ workflows:
       - install-python:
           requires:
             - checkout
+      - install-go:
+          requires:
+            - checkout
+      - install-foundry:
+          requires:
+            - checkout
       - lint:
           requires:
             - install-python
@@ -463,6 +514,8 @@ workflows:
             - create-relayers
       - e2e-test-optimism:
           requires:
+            - install-go
+            - install-foundry
             - compile-contracts
             - create-relayers
       - e2e-test-arbitrum:
@@ -515,6 +568,12 @@ workflows:
       - install-npm-packages:
           requires:
             - checkout
+      - install-go:
+          requires:
+            - checkout
+      - install-foundry:
+          requires:
+            - checkout
       - create-relayers:
           requires:
             - install-npm-packages
@@ -531,6 +590,8 @@ workflows:
             - create-relayers
       - e2e-test-optimism:
           requires:
+            - install-go
+            - install-foundry
             - compile-contracts
             - create-relayers
       - e2e-test-arbitrum:
