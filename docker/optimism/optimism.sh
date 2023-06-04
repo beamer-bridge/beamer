@@ -2,7 +2,6 @@
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
 ROOT="$(get_root_dir)"
-OPTIMISM="${ROOT}/docker/optimism/optimism"
 
 # Deployer's address & private key.
 ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
@@ -12,70 +11,100 @@ CACHE_DIR=$(obtain_cache_dir $0)
 DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
 DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/optimism-local.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
+OPTIMISM="${CACHE_DIR}/optimism"
+OPTIMISM_COMMIT_ID="6a474e36aba94f15ed90f71d1920e4b1d34513ab"
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
 echo Beamer deployer\'s keyfile: ${KEYFILE}
 
+e2e_test_op_proof(){
+    local l1_rpc=$1
+    local l2_rpc=$2
+    local privkey=$3
+    local txhash=$4
+    local relayer=${ROOT}/relayer/relayer-node18-linux-x64
+
+    echo Starting OP relayer message prover...
+    timeout 5m bash -c "until ${relayer} prove-op-message \
+                                         --l1-rpc-url $l1_rpc \
+                                         --l2-rpc-url $l2_rpc \
+                                         --wallet-private-key $privkey \
+                                         --l2-transaction-hash $txhash; \
+    do sleep 1s; done"
+}
+
+configure_repo() {
+    repo="https://github.com/ethereum-optimism/optimism.git"
+    git init ${OPTIMISM}
+    cd ${OPTIMISM}
+    git fetch --depth 1 ${repo} ${OPTIMISM_COMMIT_ID} 
+    git checkout ${OPTIMISM_COMMIT_ID}
+}
+
+run_on_op_launcher () {
+    command=$1
+    docker run -v /var/run/docker.sock:/var/run/docker.sock \
+        -v ${OPTIMISM}:${OPTIMISM} \
+        --network=host optimism-launcher:${OPTIMISM_COMMIT_ID} bash -c "${command}"
+}
+
 down() {
     echo "Shutting down the end-to-end environment"
-    make -C ${OPTIMISM}/ops down
+    run_on_op_launcher "cd ${OPTIMISM} && make devnet-down && make devnet-clean"
+}
+
+build() {
+    DOCKER_BUILDKIT=1 docker build ${ROOT}/docker/optimism -t optimism-launcher:${OPTIMISM_COMMIT_ID}
 }
 
 up() {
     echo "Starting the end-to-end environment"
-    docker_compose_file="-f ${OPTIMISM}/ops/docker-compose.yml"
-    # FIXME: Need removal after: https://github.com/beamer-bridge/beamer/issues/1242
-    export DOCKER_TAG_MESSAGE_RELAYER=0.5.25
-    docker compose ${docker_compose_file} up --scale relayer=0 -d
-
-    echo "Wait to make sure all services are up and running"
-    # The current wait-for-sequencer.sh script in the optimism repo
-    # has a bug in that it does not specify the configuration files.
-    # So work around that here.
-    WAIT_FOR_SEQUENCER_SCRIPT=$(mktemp)-wait-for-sequencer.sh
-    sed "s#docker-compose#docker-compose ${docker_compose_file}#" \
-            "${OPTIMISM}/ops/scripts/wait-for-sequencer.sh" > ${WAIT_FOR_SEQUENCER_SCRIPT}
-    sh ${WAIT_FOR_SEQUENCER_SCRIPT}
+    if [ ! -d ${OPTIMISM} ]; then
+        configure_repo
+    fi
+    if [ -n "$(docker images -q optimism-launcher:latest)" ] || echo "does not exist"; then
+        build
+    fi
+    run_on_op_launcher "cd ${OPTIMISM} && make devnet-up"
 }
 
 create_deployment_config_file() {
-    ADDRESS=$(addresses | jq '.["Proxy__OVM_L1CrossDomainMessenger"]')
+    ADDRESS='"0x6900000000000000000000000000000000000002"'
     sed "s/\${l1_messenger_args}/${ADDRESS}/" \
         ${ROOT}/scripts/deployment/optimism-local-template.json \
         > ${DEPLOYMENT_CONFIG_FILE}
 }
 
 e2e_test() {
-    l2_rpc=http://localhost:8545
+    relayer=${ROOT}/relayer/relayer-node18-linux-x64
+    l2_rpc=http://localhost:9545
     password=""
-    contract_addresses="${CACHE_DIR}/addresses.json"
-    echo Copying contract addresses to $contract_addresses
-    docker exec ops-deployer-1 cat genesis/addresses.json > $contract_addresses
+    
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
     echo Sending Proof
-    e2e_test_op_proof http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
+    
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
     echo L1 Resolve
-    e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
+    timeout 1m bash -c "until ${relayer} relay \
+                                         --l1-rpc-url http://localhost:8545 \
+                                         --l2-relay-to-rpc-url $l2_rpc \
+                                         --l2-relay-from-rpc-url $l2_rpc \
+                                         --wallet-private-key $PRIVKEY \
+                                         --l2-transaction-hash $e2e_test_l2_txhash; \
+                        do sleep 1s; done"
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 usage() {
     cat <<EOF
-$0  [up | down | addresses | deploy-beamer | e2e-test ]
+$0  [up | down | deploy-beamer | e2e-test ]
 
 Commands:
   up             Bring up a private Optimism instance.
   down           Stop the Optimism instance.
-  addresses      List deployed Optimism contracts' addresses.
   deploy-beamer  Deploy Beamer contracts.
   e2e-test       Run a test that verifies L2 -> L1 -> L2 messaging.
 EOF
-}
-
-addresses() {
-    docker logs ops-deployer-1 2>/dev/null |
-    sed -nE 's/deploying "([^"]+)" .+ deployed at (.+) with.*$/\1: \2/p' | sort | 
-    poetry run python ${ROOT}/scripts/parse-addresses.py
 }
 
 case $1 in
@@ -85,10 +114,6 @@ case $1 in
 
     down)
         down
-        ;;
-
-    addresses)
-        addresses
         ;;
 
     deploy-beamer)

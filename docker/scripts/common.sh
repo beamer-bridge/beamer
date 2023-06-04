@@ -74,32 +74,14 @@ e2e_test_relayer() {
     
     echo Starting relayer...
     timeout 5m bash -c "until ${relayer} relay \
-                                         --l1-rpc-url '$l1_rpc' \
-                                         --l2-relay-to-rpc-url '$l2_rpc' \
-                                         --l2-relay-from-rpc-url '$l2_rpc' \
-                                         --network-to '$network_config' \
-                                         --network-from '$network_config' \
-                                         --wallet-private-key '$privkey' \
-                                         --l2-transaction-hash '$txhash'; \
+                                         --l1-rpc-url $l1_rpc \
+                                         --l2-relay-to-rpc-url $l2_rpc \
+                                         --l2-relay-from-rpc-url $l2_rpc \
+                                         --network-to $network_config \
+                                         --network-from $network_config \
+                                         --wallet-private-key $privkey \
+                                         --l2-transaction-hash $txhash; \
                         do sleep 1s; done"
-}
-
-e2e_test_op_proof(){
-    local root=$(get_root_dir)
-    local l1_rpc=$1
-    local l2_rpc=$2
-    local network_config=$3
-    local privkey=$4
-    local txhash=$5
-    local relayer=${root}/relayer/relayer-node18-linux-x64
-
-    echo Starting OP relayer message prover...
-    ${relayer} prove-op-message \
-                --l1-rpc-url $l1_rpc \
-                --l2-rpc-url $l2_rpc \
-                --custom-network $network_config \
-                --wallet-private-key $privkey \
-                --l2-transaction-hash $txhash
 }
 
 e2e_test_verify() {
