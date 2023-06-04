@@ -1,6 +1,6 @@
 {
     "name": "Optimism",
-    "chain_id": 17,
+    "chain_id": 901,
     "l1_messenger": ["OptimismL1Messenger", ${l1_messenger_args}],
     "l2_messenger": "OptimismL2Messenger",
     "finality_period": 3600,
