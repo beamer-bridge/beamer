@@ -468,10 +468,9 @@ jobs:
 workflows:
   npm-release:
     when: 
-     condition: 
       or: 
-        - <<pipeline.parameters.deployment-artifacts-updated>>
-        - <<pipeline.parameters.deployment-package-json-updated>>
+        - equal: [ true, <<pipeline.parameters.deployment-artifacts-updated>> ]
+        - equal: [ true, <<pipeline.parameters.deployment-package-json-updated>> ]
     jobs:
       - checkout
       - install-npm-packages:
