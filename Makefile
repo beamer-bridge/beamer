@@ -60,8 +60,8 @@ container-image: relayers
 relayers:
 	yarn --cwd relayer install
 	yarn --cwd relayer build
-	yarn --cwd relayer run pkg -t node18-linux-x64 -o relayer-node18-linux-x64 build/src/service.js
-	yarn --cwd relayer run pkg -t node18-macos-x64 -o relayer-node18-macos-x64 build/src/service.js
+	yarn --cwd relayer run pkg -t node18-linux-x64 -o relayer-node18-linux-x64 build/src/cli.js
+	yarn --cwd relayer run pkg -t node18-macos-x64 -o relayer-node18-macos-x64 build/src/cli.js
 	mkdir -p beamer/data/relayers
 	cp relayer/relayer-*-x64 beamer/data/relayers
 
