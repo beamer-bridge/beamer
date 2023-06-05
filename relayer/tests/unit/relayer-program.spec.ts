@@ -1,7 +1,7 @@
+import type { ProgramOptions } from "@/cli/programs/relay";
+import { RelayerProgram, validateArgs } from "@/cli/programs/relay";
 import { getNetworkId } from "@/common/network";
-import { SERVICES } from "@/map";
-import type { ProgramOptions } from "@/relayer-program";
-import { RelayerProgram, validateArgs } from "@/relayer-program";
+import { SERVICES } from "@/services/relayer/map";
 import {
   getRandomPrivateKey,
   getRandomTransactionHash,

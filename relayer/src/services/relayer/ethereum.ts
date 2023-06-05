@@ -1,11 +1,11 @@
 import { BigNumber } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 
-import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts";
-import { parseFillInvalidatedEvent } from "../common/events/FillInvalidated";
-import { parseRequestFilledEvent } from "../common/events/RequestFilled";
-import type { TransactionHash } from "./types";
-import { BaseRelayerService } from "./types";
+import { EthereumL2Messenger__factory, Resolver__factory } from "../../../types-gen/contracts";
+import { parseFillInvalidatedEvent } from "../../common/events/FillInvalidated";
+import { parseRequestFilledEvent } from "../../common/events/RequestFilled";
+import type { TransactionHash } from "../types";
+import { BaseRelayerService } from "../types";
 
 type RelayCallParams = {
   requestId: string;

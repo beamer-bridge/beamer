@@ -13,7 +13,7 @@
   "homepage": "https://www.beamerbridge.com/",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node ./src/service.ts",
+    "start": "node -r ./node_modules/ts-node/register ./src/cli.ts",
     "lint": "eslint --ext .js,.ts --ignore-path .gitignore --max-warnings 0 .",
     "lint:fix": "eslint --ext .js,.ts --ignore-path .gitignore --fix .",
     "test:unit": "jest unit",
