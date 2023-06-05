@@ -39,6 +39,7 @@ def run_relayer_for_tx(
     subprocess.run(
         [
             str(relayer),
+            "relay",
             "--l1-rpc-url",
             l1_rpc,
             "--l2-relay-to-rpc-url",
