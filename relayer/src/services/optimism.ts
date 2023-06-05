@@ -21,6 +21,7 @@ export class OptimismRelayerService extends BaseRelayerService {
       l1ChainId: await this.getL1ChainId(),
       l2ChainId: await this.getL2ChainId(),
       contracts: this.customNetworkContracts ?? {},
+      bedrock: true,
     });
 
     const messages = await messenger.getMessagesByTransaction(l2TransactionHash);
