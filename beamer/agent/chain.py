@@ -10,6 +10,7 @@ from typing import Callable
 
 import requests
 import structlog
+from hexbytes import HexBytes
 from websockets.sync.client import connect as ws_connect
 from web3 import HTTPProvider, Web3
 from web3.contract import Contract
@@ -73,13 +74,10 @@ class EventMonitor:
         self._confirmation_blocks = confirmation_blocks
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
         self._ws_rpc_url = re.sub("^http", "ws", self._web3.provider.endpoint_uri)
-        self._ws_subscribe_request = json.dumps(
-            {
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["newHeads", {"address": self._contract_addresses}],
-            }
-        )
+        self._ws_subscribe_params = {
+            "logs": ["logs", {"address": self._contract_addresses}],
+            "blocks": ["newHeads"],
+        }
 
         for contract in contracts:
             assert self._chain_id == contract.w3.eth.chain_id, f"Chain id mismatch for {contract}"
@@ -99,11 +97,11 @@ class EventMonitor:
         self._on_sync_done.append(event_processor.mark_sync_done)
         self._on_rpc_status_change.append(event_processor.set_rpc_working)
 
-    def _inner_fetch(self, fetcher: EventFetcher, block_data=None) -> list[Event]:
+    def _inner_fetch(self, fetcher: EventFetcher) -> list[Event]:
         events = []
         was_working = self._rpc_working
         try:
-            events.extend(fetcher.fetch(block_data))
+            events.extend(fetcher.fetch())
         except requests.exceptions.ConnectionError:
             self._rpc_working = False
         else:
@@ -122,8 +120,13 @@ class EventMonitor:
             "EventMonitor started",
             addresses=self._contract_addresses,
         )
+        block_cache = {}
         fetcher = EventFetcher(
-            self._web3, self._contracts, self._deployment_block, self._confirmation_blocks
+            self._web3,
+            self._contracts,
+            self._deployment_block,
+            self._confirmation_blocks,
+            block_cache,
         )
         current_block = self._web3.eth.block_number
         events = []
@@ -132,18 +135,32 @@ class EventMonitor:
         if events:
             self._call_on_new_events(events)
         self._call_on_sync_done()
-        self._log.info(
-            "Sync done. Subscribe for newHeads",
-            url=self._ws_rpc_url,
-            request=self._ws_subscribe_request,
-        )
+        self._log.info("Sync done")
 
-        # Subscribe for new events
+        """
+        # The old way: polling
+        while not self._stop:
+            events = self._inner_fetch(fetcher)
+            if events:
+                self._call_on_new_events(events)
+            time.sleep(self._poll_period)
+        return
+        """
+
+        # Subscribe via websocket for new events and blocks
+        subscription_ids = {}  # {0x10: "logs", 0x11: "blocks"}
         with ws_connect(self._ws_rpc_url) as ws:
-            ws.send(self._ws_subscribe_request)
-            ws.recv()
+            for sub_type, sub_params in self._ws_subscribe_params.items():
+                req = json.dumps(
+                    {"id": len(subscription_ids), "method": "eth_subscribe", "params": sub_params}
+                )
+                self._log.info(f"Subscribe for {sub_type}", url=self._ws_rpc_url, request=req)
+                ws.send(req)
+                message = json.loads(ws.recv())
+                sub_id = message["result"]
+                subscription_ids[sub_id] = sub_type
 
-            # Just after subscription is established, must fetch events using 
+            # Just after subscription is established, must fetch events using
             # fallback method, to catch events that might have been created
             # during subscription creation period of time.
             events = self._inner_fetch(fetcher)
@@ -159,12 +176,41 @@ class EventMonitor:
                     ws.ping()
                     continue
 
-                # {'jsonrpc': '2.0', 'method': 'eth_subscription', 'params': {'result': BLOCK_DATA_HERE}}
-                block_data = json.loads(message)["params"]["result"]
-                block_data["number"] = int(block_data["number"], 16)    # "0x9" -> 9
-                events = self._inner_fetch(fetcher, block_data)
-                if events:
-                    self._call_on_new_events(events)
+                # {'jsonrpc': '2.0', 'method': 'eth_subscription', 'params': {'result': DATA_HERE, 'subscription': ID}}
+                params = json.loads(message)["params"]
+                sub_id = params["subscription"]
+                match subscription_ids.get(sub_id):
+                    # There is a new event triggered by our contracts.
+                    case "logs":
+                        event = params["result"]
+                        block_number = int(event["blockNumber"], 16)
+
+                        # If event was received before a block, invalidate cache
+                        if (
+                            "latest" in block_cache
+                            and block_number != block_cache["latest"]["number"]
+                        ):
+                            del block_cache["latest"]
+
+                        events = self._inner_fetch(fetcher)
+                        if events:
+                            self._call_on_new_events(events)
+
+                    # There is a new block
+                    case "blocks":
+                        block = params["result"]
+
+                        # Convert fields from hex-str to int
+                        for f in ("number", "timestamp"):
+                            block[f] = int(block[f], 16)
+
+                        # Convert str hashes into str-hash into HexBytes
+                        for f in ("hash",):
+                            block[f] = HexBytes(block[f])
+
+                        # Add block to cache, to save further rpc calls
+                        block_cache["latest"] = block
+                        block_cache[block["number"]] = block
 
         self._log.info("EventMonitor stopped")
 

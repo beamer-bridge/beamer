@@ -259,6 +259,7 @@ class EventFetcher:
         contracts: tuple[Contract, ...],
         start_block: BlockNumber,
         confirmation_blocks: int,
+        block_cache: dict,
     ):
         self._web3 = web3
         self._chain_id = ChainId(web3.eth.chain_id)
@@ -267,6 +268,7 @@ class EventFetcher:
         self._blocks_to_fetch = EventFetcher._DEFAULT_BLOCKS
         self._event_abis = _make_topics_abi_mapping_for_contracts(contracts)
         self._confirmation_blocks = confirmation_blocks
+        self._blocks_cache = block_cache
         self._log = structlog.get_logger(type(self).__name__).bind(chain_id=self._chain_id)
 
         for contract in contracts:
@@ -334,14 +336,17 @@ class EventFetcher:
                 event_abis=self._event_abis,
             )
 
-    def fetch(self, block_data=None) -> list[Event]:
-        if not block_data:
-            try:
-                block_data = self._web3.eth.get_block("latest")
-            except requests.exceptions.ConnectionError:
-                raise
-            except RequestException:
-                return []
+    def _get_block(self, number):
+        return self._blocks_cache.get(number) or self._web3.eth.get_block(number)
+
+    def fetch(self) -> list[Event]:
+        block_data = self._get_block("latest")
+        try:
+            block_data = self._get_block("latest")
+        except requests.exceptions.ConnectionError:
+            raise
+        except RequestException:
+            return []
 
         block_number = BlockNumber(block_data["number"] - self._confirmation_blocks)
 
@@ -361,7 +366,7 @@ class EventFetcher:
         self._next_block_number = from_block
         try:
             # Block number needs to be decremented here, because it is already incremented above
-            block_data = self._web3.eth.get_block(from_block - 1)
+            block_data = self._get_block(from_block - 1)
         except requests.exceptions.ConnectionError:
             raise
         except RequestException:
