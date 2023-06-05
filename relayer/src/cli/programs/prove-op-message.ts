@@ -6,7 +6,7 @@ export type ProgramOptions = {
   l2RpcUrl: string;
   walletPrivateKey: string;
   l2TransactionHash: string;
-  customNetwork: string;
+  customNetwork?: string;
 };
 
 export class OPMessageProverProgram {
