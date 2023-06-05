@@ -8,11 +8,14 @@ import { createRelayer } from "@/services/relayer/map";
 import type { BaseRelayerService } from "@/services/types";
 import { getRandomNumber, getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
 
+jest.mock("@eth-optimism/sdk");
+
 describe("createRelayer", () => {
   const testArgs: ConstructorParameters<typeof BaseRelayerService> = [
     getRandomUrl("l1"),
     getRandomUrl("l2"),
     getRandomPrivateKey(),
+    getRandomNumber(),
     getRandomNumber(),
     getRandomNumber(),
   ];
