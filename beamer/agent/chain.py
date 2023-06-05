@@ -325,6 +325,7 @@ def process_claims(context: Context) -> None:
 
         if claim.claimer_winning.is_active or claim.challenger_winning.is_active:
             maybe_withdraw(claim, context)
+            maybe_prove(claim, context)
             if _l1_resolution_threshold_reached(claim, context):
                 maybe_resolve(claim, context)
             else:
@@ -572,10 +573,68 @@ def _timestamp_is_l1_finalized(
     return int(time.time()) > timestamp + target_chain_finality
 
 
+def maybe_prove(claim: Claim, context: Context) -> None:
+    # mainnet: 10, goerli: 420, local: 17
+    if context.target_chain_id not in (10, 420, 17):
+        claim.message_proved = True
+        return
+
+    if claim.message_proved:
+        return
+
+    request = context.requests.get(claim.request_id)
+
+    assert request is not None, "Active claim for non-existent request"
+
+    own_challenge_stake = Wei(claim.get_challenger_stake(context.address))
+    can_prove = (
+        claim.claimer == context.address and claim.challenger_exists()
+    ) or own_challenge_stake > 0
+
+    if not can_prove:
+        return
+
+    if request.fill_tx is not None:
+        proof_tx = request.fill_tx
+    elif claim.invalidation_tx is not None:
+        proof_tx = claim.invalidation_tx
+
+    if proof_tx in context.l1_resolutions:
+        return
+
+    future = context.task_pool.submit(
+        run_relayer_for_tx,
+        context.config.base_chain_rpc_url,
+        context.target_rpc_url,
+        context.source_rpc_url,
+        context.config.account.key,
+        proof_tx,
+        True,
+    )
+
+    def on_future_done(f: Future) -> None:
+        try:
+            f.result()
+        except Exception as ex:
+            context.logger.error("Optimism prove failed", ex=ex, tx_hash=proof_tx)
+        else:
+            claim.message_proved = True
+        finally:
+            context.l1_resolutions.pop(proof_tx, None)
+
+    future.add_done_callback(on_future_done)
+    context.l1_resolutions[proof_tx] = future
+
+    context.logger.info("Initiated Optimism prove", request=request, claim=claim, tx_hash=proof_tx)
+
+
 def maybe_resolve(claim: Claim, context: Context) -> bool:
     request = context.requests.get(claim.request_id)
 
     assert request is not None, "Active claim for non-existent request"
+
+    if not claim.message_proved:
+        return False
 
     if not _proof_ready_for_l1_relay(request) and not _invalidation_ready_for_l1_relay(claim):
         return False

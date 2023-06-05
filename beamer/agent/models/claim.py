@@ -28,6 +28,7 @@ class Claim(StateMachine):
         self.transaction_pending = False
         self.invalidation_tx: Optional[HexBytes] = None
         self.invalidation_timestamp: Optional[Timestamp] = None
+        self.message_proved: bool = False
         self.unprocessed_claim_made_events: set[ClaimMade] = set()
         super().__init__()
 
@@ -162,6 +163,9 @@ class Claim(StateMachine):
 
         self._latest_claim_made = new_claim_made
         self.transaction_pending = False
+
+    def challenger_exists(self) -> bool:
+        return bool(self._challenger_stakes)
 
     def __repr__(self) -> str:
         state = self.current_state.id
