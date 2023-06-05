@@ -1,9 +1,11 @@
-import { program } from "commander";
+import { Command } from "commander";
 import { ppid } from "process";
 
-import { killOnParentProcessChange } from "./common/process";
-import type { ProgramOptions } from "./relayer-program";
-import { RelayerProgram, validateArgs } from "./relayer-program";
+import { killOnParentProcessChange } from "../../common/process";
+import type { ProgramOptions } from "../programs/relay";
+import { RelayerProgram, validateArgs } from "../programs/relay";
+
+const program = new Command();
 
 program
   .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
@@ -51,14 +53,3 @@ async function main() {
 if (require.main === module) {
   main();
 }
-
-process
-  .on("unhandledRejection", (reason) => {
-    console.error(new Date().toUTCString() + " Unhandled Rejection:", reason);
-    process.exit(1);
-  })
-  .on("uncaughtException", (error) => {
-    console.error(new Date().toUTCString() + " Uncaught Exception:", error.message);
-    console.error(error.stack);
-    process.exit(1);
-  });

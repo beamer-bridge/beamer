@@ -2,11 +2,11 @@ import type { Provider } from "@ethersproject/providers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Wallet } from "ethers";
 
-import type { ArbitrumRelayerService } from "./arbitrum";
-import type { BobaRelayerService } from "./boba";
-import type { EthereumRelayerService } from "./ethereum";
-import type { OptimismRelayerService } from "./optimism";
-import type { PolygonZKEvmRelayerService } from "./polygon-zkevm";
+import type { ArbitrumRelayerService } from "./relayer/arbitrum";
+import type { BobaRelayerService } from "./relayer/boba";
+import type { EthereumRelayerService } from "./relayer/ethereum";
+import type { OptimismRelayerService } from "./relayer/optimism";
+import type { PolygonZKEvmRelayerService } from "./relayer/polygon-zkevm";
 
 export type TransactionHash = string;
 

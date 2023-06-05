@@ -1,6 +1,6 @@
-import { getNetworkId } from "./common/network";
-import { createRelayer } from "./map";
-import type { BaseRelayerService } from "./services/types";
+import { getNetworkId } from "../../common/network";
+import { createRelayer } from "../../services/relayer/map";
+import type { BaseRelayerService } from "../../services/types";
 
 export type ProgramOptions = {
   l1RpcUrl: string;
