@@ -1,5 +1,5 @@
 import type { ProgramOptions } from "@/cli/programs/relay";
-import { RelayerProgram, validateArgs } from "@/cli/programs/relay";
+import { RelayerProgram } from "@/cli/programs/relay";
 import { getNetworkId } from "@/common/network";
 import { SERVICES } from "@/services/relayer/map";
 import {
@@ -21,7 +21,7 @@ const validOptions: ProgramOptions = {
 
 describe("validateArgs", () => {
   it("gives no error for valid ProgramOptions", () => {
-    const errors = validateArgs(validOptions);
+    const errors = RelayerProgram.validateArgs(validOptions);
     expect(errors).toEqual([]);
   });
 
@@ -32,7 +32,9 @@ describe("validateArgs", () => {
     ];
 
     for (const hash of invalidTransactionHashes) {
-      const errors = validateArgs(Object.assign({}, validOptions, { l2TransactionHash: hash }));
+      const errors = RelayerProgram.validateArgs(
+        Object.assign({}, validOptions, { l2TransactionHash: hash }),
+      );
 
       expect(errors).toEqual([
         `Invalid argument value for "--l2-transaction-hash": "${hash}" doesn't look like a txn hash...`,

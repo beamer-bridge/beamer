@@ -12,24 +12,24 @@ export type ProgramOptions = {
   networkTo?: string;
 };
 
-export function validateArgs(args: ProgramOptions): Array<string> {
-  const validationErrors = [];
-
-  if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66) {
-    validationErrors.push(
-      `Invalid argument value for "--l2-transaction-hash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
-    );
-  }
-
-  return validationErrors;
-}
-
 export class RelayerProgram {
   constructor(
     readonly l2RelayerFrom: BaseRelayerService,
     readonly l2RelayerTo: BaseRelayerService,
     readonly l2TransactionHash: string,
   ) {}
+
+  static validateArgs(args: ProgramOptions): Array<string> {
+    const validationErrors = [];
+
+    if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66) {
+      validationErrors.push(
+        `Invalid argument value for "--l2-transaction-hash": "${args.l2TransactionHash}" doesn't look like a txn hash...`,
+      );
+    }
+
+    return validationErrors;
+  }
 
   static async createFromArgs(options: ProgramOptions): Promise<RelayerProgram> {
     const fromL2ChainId = await getNetworkId(options.l2RelayFromRpcUrl);
