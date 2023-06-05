@@ -34,20 +34,25 @@ export class RelayerProgram {
   static async createFromArgs(options: ProgramOptions): Promise<RelayerProgram> {
     const fromL2ChainId = await getNetworkId(options.l2RelayFromRpcUrl);
     const toL2ChainId = await getNetworkId(options.l2RelayToRpcUrl);
+    const l1ChainId = await getNetworkId(options.l1RpcUrl);
 
     const relayerFrom = createRelayer(fromL2ChainId, [
       options.l1RpcUrl,
       options.l2RelayFromRpcUrl,
       options.walletPrivateKey,
+      l1ChainId,
       fromL2ChainId,
       toL2ChainId,
+      options.networkFrom,
     ]);
     const relayerTo = createRelayer(toL2ChainId, [
       options.l1RpcUrl,
       options.l2RelayToRpcUrl,
       options.walletPrivateKey,
-      fromL2ChainId,
+      l1ChainId,
       toL2ChainId,
+      fromL2ChainId,
+      options.networkTo,
     ]);
 
     return new this(relayerFrom, relayerTo, options.l2TransactionHash);
