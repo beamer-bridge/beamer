@@ -22,22 +22,29 @@ export abstract class BaseRelayerService {
   readonly l2RpcUrl: string;
   readonly l1Wallet: Wallet;
   readonly l2Wallet: Wallet;
-  readonly fromL2ChainId: number;
-  readonly toL2ChainId: number;
+  readonly l1ChainId: number;
+  readonly l2ChainId: number;
+  readonly destinationChainId?: number;
 
   constructor(
     l1RpcURL: string,
     l2RpcURL: string,
     privateKey: string,
-    fromL2ChainId: number,
-    toL2ChainId: number,
+    l1ChainId: number,
+    l2ChainId: number,
+    destinationChainId?: number,
+    customNetworkFilePath?: string,
   ) {
     this.l1RpcUrl = l1RpcURL;
     this.l2RpcUrl = l2RpcURL;
     this.l1Wallet = new Wallet(privateKey, new JsonRpcProvider(l1RpcURL));
     this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
-    this.fromL2ChainId = fromL2ChainId;
-    this.toL2ChainId = toL2ChainId;
+    this.l1ChainId = l1ChainId;
+    this.l2ChainId = l2ChainId;
+    this.destinationChainId = destinationChainId ?? undefined;
+    if (customNetworkFilePath) {
+      this.addCustomNetwork(customNetworkFilePath);
+    }
   }
 
   get l2RpcProvider(): Provider {

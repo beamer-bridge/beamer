@@ -53,10 +53,10 @@ export class EthereumRelayerService extends BaseRelayerService {
 
     const fillInvalidatedEvent = parseFillInvalidatedEvent(receipt.logs);
 
-    if (fillInvalidatedEvent) {
+    if (fillInvalidatedEvent && this.destinationChainId) {
       return {
         ...fillInvalidatedEvent,
-        sourceChainId: BigNumber.from(this.toL2ChainId),
+        sourceChainId: BigNumber.from(this.destinationChainId),
         filler: "0x0000000000000000000000000000000000000000",
       };
     }
