@@ -9,6 +9,7 @@ import {
 } from "~/utils/data_generators";
 
 jest.mock("@/common/network");
+jest.mock("@eth-optimism/sdk");
 
 const validOptions: ProgramOptions = {
   l1RpcUrl: getRandomUrl("l1"),
@@ -44,6 +45,7 @@ describe("RelayerProgram", () => {
   it("can be created from args", async () => {
     const fromChainId = Number(Object.keys(SERVICES)[0]);
     const toChainId = Number(Object.keys(SERVICES)[3]);
+
     (getNetworkId as jest.Mock)
       .mockResolvedValueOnce(fromChainId)
       .mockResolvedValueOnce(toChainId);
