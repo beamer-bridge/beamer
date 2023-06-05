@@ -73,7 +73,8 @@ e2e_test_relayer() {
     local relayer=${root}/relayer/relayer-node18-linux-x64
     
     echo Starting relayer...
-    timeout 5m bash -c "until ${relayer} --l1-rpc-url '$l1_rpc' \
+    timeout 5m bash -c "until ${relayer} relay \
+                                         --l1-rpc-url '$l1_rpc' \
                                          --l2-relay-to-rpc-url '$l2_rpc' \
                                          --l2-relay-from-rpc-url '$l2_rpc' \
                                          --network-to '$network_config' \
