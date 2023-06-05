@@ -1,10 +1,10 @@
-import { createRelayer } from "@/map";
 import {
   ArbitrumRelayerService,
   BobaRelayerService,
   EthereumRelayerService,
   OptimismRelayerService,
-} from "@/services";
+} from "@/services/relayer";
+import { createRelayer } from "@/services/relayer/map";
 import type { BaseRelayerService } from "@/services/types";
 import { getRandomNumber, getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
 

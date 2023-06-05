@@ -11,9 +11,9 @@ import type { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 
-import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts";
-import type { TransactionHash } from "./types";
-import { BaseRelayerService } from "./types";
+import { ArbitrumL1Messenger__factory } from "../../../types-gen/contracts";
+import type { TransactionHash } from "../types";
+import { BaseRelayerService } from "../types";
 
 const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   42161: {

@@ -1,11 +1,9 @@
-import {
-  ArbitrumRelayerService,
-  BobaRelayerService,
-  EthereumRelayerService,
-  OptimismRelayerService,
-} from "./services";
-import { PolygonZKEvmRelayerService } from "./services/polygon-zkevm";
-import type { BaseRelayerService, ExtendedRelayerService } from "./services/types";
+import type { BaseRelayerService, ExtendedRelayerService } from "../types";
+import { ArbitrumRelayerService } from "./arbitrum";
+import { BobaRelayerService } from "./boba";
+import { EthereumRelayerService } from "./ethereum";
+import { OptimismRelayerService } from "./optimism";
+import { PolygonZKEvmRelayerService } from "./polygon-zkevm";
 
 export const SERVICES: Record<number, ExtendedRelayerService> = {
   42161: ArbitrumRelayerService,

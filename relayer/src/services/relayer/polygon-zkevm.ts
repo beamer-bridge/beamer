@@ -1,11 +1,11 @@
 import type { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { readFileSync } from "fs";
 
-import { PolygonZKEvmBridge__factory } from "../../types-gen/contracts";
-import { parseBridgeEvent } from "../common/events/polygon-zkevm/BridgeEvent";
-import { sleep } from "../common/util";
-import type { TransactionHash } from "./types";
-import { BaseRelayerService } from "./types";
+import { PolygonZKEvmBridge__factory } from "../../../types-gen/contracts";
+import { parseBridgeEvent } from "../../common/events/polygon-zkevm/BridgeEvent";
+import { sleep } from "../../common/util";
+import type { TransactionHash } from "../types";
+import { BaseRelayerService } from "../types";
 
 const CONTRACTS: Record<number, NetworkContracts> = {
   1101: {
