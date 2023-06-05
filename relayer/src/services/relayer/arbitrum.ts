@@ -167,8 +167,8 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return;
   }
 
-  async addCustomNetwork(filePath: string) {
-    const configFileContent = await readFileSync(filePath, "utf-8");
+  addCustomNetwork(filePath: string) {
+    const configFileContent = readFileSync(filePath, "utf-8");
     const config: CustomNetworkConfigFile = JSON.parse(configFileContent);
 
     try {

@@ -273,8 +273,8 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     console.log("Successfully relayed message to PolygonZKEVM.\n\n");
   }
 
-  async addCustomNetwork(filePath: string) {
-    const configFileContent = await readFileSync(filePath, "utf-8");
+  addCustomNetwork(filePath: string) {
+    const configFileContent = readFileSync(filePath, "utf-8");
     const config: NetworkContracts = JSON.parse(configFileContent);
 
     this.customNetworkContracts = {
