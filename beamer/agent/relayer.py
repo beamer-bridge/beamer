@@ -29,6 +29,7 @@ def run_relayer_for_tx(
     l2_relay_to_rpc_url: URL,
     privkey: HexBytes,
     tx_hash: HexBytes,
+    prove_tx: bool = False,
 ) -> None:
     relayer = get_relayer_executable()
 
@@ -36,20 +37,31 @@ def run_relayer_for_tx(
         log.error("No relayer found")
         sys.exit(1)
 
+    command_args = [
+        str(relayer),
+        "relay" if not prove_tx else "prove-op-message",
+        "--l1-rpc-url",
+        l1_rpc,
+        "--wallet-private-key",
+        privkey.hex(),
+        "--l2-transaction-hash",
+        tx_hash.hex(),
+    ]
+
+    if prove_tx:
+        command_args.extend(["--l2-rpc-url", l2_relay_from_rpc_url])
+    else:
+        command_args.extend(
+            [
+                "--l2-relay-to-rpc-url",
+                l2_relay_to_rpc_url,
+                "--l2-relay-from-rpc-url",
+                l2_relay_from_rpc_url,
+            ]
+        )
+
     subprocess.run(
-        [
-            str(relayer),
-            "--l1-rpc-url",
-            l1_rpc,
-            "--l2-relay-to-rpc-url",
-            l2_relay_to_rpc_url,
-            "--l2-relay-from-rpc-url",
-            l2_relay_from_rpc_url,
-            "--wallet-private-key",
-            privkey.hex(),
-            "--l2-transaction-hash",
-            tx_hash.hex(),
-        ],
+        command_args,
         capture_output=True,
         encoding="utf-8",
         check=True,  # check throws an error right away
