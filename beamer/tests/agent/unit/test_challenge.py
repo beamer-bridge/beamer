@@ -1,5 +1,9 @@
+from unittest.mock import patch
+
 import pytest
-from web3.types import Wei
+from eth_typing import BlockNumber
+from hexbytes import HexBytes
+from web3.types import BlockData, Wei
 
 from beamer.agent.chain import process_claims
 from beamer.tests.agent.unit.utils import (
@@ -13,7 +17,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-from beamer.typing import FillId, Termination
+from beamer.typing import ChainId, FillId, Termination
 
 
 @pytest.mark.parametrize("fill_id", [FILL_ID, FillId(b"cafebabe")])
@@ -85,3 +89,31 @@ def test_join_false_claim_challenge_only_when_unfilled(filler):
         assert claim.transaction_pending
     else:
         assert not claim.transaction_pending
+
+
+@patch("beamer.agent.relayer.run_relayer_for_tx")
+def test_optimism_prove(_mocked_relayer_call):
+    op_chain_id = ChainId(17)
+    context, _ = make_context()
+    context.latest_blocks[op_chain_id] = BlockData(
+        {"number": BlockNumber(30), "timestamp": TIMESTAMP}
+    )
+    context.finality_periods[op_chain_id] = 1
+    context.target_chain_id = op_chain_id
+    request = make_request()
+    request.target_chain_id = op_chain_id
+    context.requests.add(request.id, request)
+    request.filler = make_address()
+    request.fill_timestamp = TIMESTAMP
+    request.fill_tx = HexBytes(make_address())
+    claim = make_claim_challenged(
+        request=request,
+        claimer=context.address,
+        challenger=make_address(),
+        challenger_stake=Wei(CLAIMER_STAKE + 1),
+        termination=Termination(TIMESTAMP + 1),
+    )
+    context.claims.add(claim.id, claim)
+    process_claims(context)
+
+    assert request.fill_tx in context.l1_resolutions
