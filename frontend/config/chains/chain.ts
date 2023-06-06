@@ -13,6 +13,8 @@ export class ChainMetadata {
   readonly tokenSymbols: Array<string>;
   readonly nativeCurrency?: NativeCurrency;
   readonly internalRpcUrl: string;
+  readonly disabled?: boolean;
+  readonly disabled_reason?: string;
 
   constructor(data: ChainMetadataData) {
     this.identifier = data.identifier;
@@ -23,6 +25,8 @@ export class ChainMetadata {
     this.tokenSymbols = data.tokenSymbols ?? [];
     this.nativeCurrency = data.nativeCurrency;
     this.internalRpcUrl = data.internalRpcUrl;
+    this.disabled = data.disabled;
+    this.disabled_reason = data.disabled_reason;
   }
 
   public formatUsingTokenMetas(tokenMetas: TokenMetadata[]): Partial<ChainWithTokens> {
@@ -56,8 +60,10 @@ export type ChainMetadataData = {
   explorerUrl: string;
   rpcUrl: string;
   name: string;
-  imageUrl?: string;
   tokenSymbols: Array<string>;
-  nativeCurrency?: NativeCurrency;
   internalRpcUrl: string;
+  nativeCurrency?: NativeCurrency;
+  imageUrl?: string;
+  disabled?: boolean;
+  disabled_reason?: string;
 };

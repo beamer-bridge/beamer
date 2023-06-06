@@ -10,5 +10,7 @@
     "symbol": "ETH",
     "decimals": 18
   },
-  "internalRpcUrl": "https://opt-mainnet.g.alchemy.com/v2/6iXyfY0pJWkrQC6Xr_6kmNUN0Cr5puI5"
+  "internalRpcUrl": "https://opt-mainnet.g.alchemy.com/v2/6iXyfY0pJWkrQC6Xr_6kmNUN0Cr5puI5",
+  "disabled": true,
+  "disabled_reason": "Beamer Bridge is currently refining its integration with Optimism following their recent 'Bedrock' update to maintain the safety and security of your token transfers. We're committed to promptly restoring Optimism support.\n\nWe appreciate your patience and thank you for choosing Beamer!"
 }
