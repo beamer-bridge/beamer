@@ -93,7 +93,7 @@ def test_join_false_claim_challenge_only_when_unfilled(filler):
 
 @patch("beamer.agent.relayer.run_relayer_for_tx")
 def test_optimism_prove(_mocked_relayer_call):
-    op_chain_id = ChainId(17)
+    op_chain_id = ChainId(901)
     context, _ = make_context()
     context.latest_blocks[op_chain_id] = BlockData(
         {"number": BlockNumber(30), "timestamp": TIMESTAMP}

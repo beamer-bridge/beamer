@@ -574,8 +574,8 @@ def _timestamp_is_l1_finalized(
 
 
 def maybe_prove(claim: Claim, context: Context) -> None:
-    # mainnet: 10, goerli: 420, local: 17
-    if context.target_chain_id not in (10, 420, 17):
+    # mainnet: 10, goerli: 420, local: 901
+    if context.target_chain_id not in (10, 420, 901):
         claim.message_proved = True
         return
 
