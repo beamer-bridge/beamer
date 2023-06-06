@@ -33,8 +33,16 @@ export function getChainSelectorOption(
       imageUrl: chains[chainId].imageUrl,
       nativeCurrency: chains[chainId].nativeCurrency,
       internalRpcUrl: chains[chainId].internalRpcUrl,
+      disabled: chains[chainId].disabled,
+      disabled_reason: chains[chainId].disabled_reason,
     };
-    return { value: chain, label: chain.name, imageUrl: chain.imageUrl };
+    return {
+      value: chain,
+      label: chain.name,
+      imageUrl: chain.imageUrl,
+      disabled: chains[chainId].disabled,
+      disabled_reason: chains[chainId].disabled_reason,
+    };
   }
   return null;
 }

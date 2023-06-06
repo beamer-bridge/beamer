@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import BasicInput from '@/components/inputs/BasicInput.vue';
 import Selector from '@/components/inputs/Selector.vue';
 import type { SelectorOption } from '@/types/form';
-import { generateTokenSelectorOption } from '~/utils/data_generators';
+import { generateChainSelectorOption, generateTokenSelectorOption } from '~/utils/data_generators';
 
 const testOptions: SelectorOption<number>[] = [];
 for (let i = 0; i < 10; i++) {
@@ -192,5 +192,31 @@ describe('Selector.vue', () => {
     const img = option.find('img');
 
     expect(img.exists()).toBe(false);
+  });
+
+  it('detects and renders certain options as disabled (unselectable)', async () => {
+    const wrapper = createWrapper({
+      options: [generateChainSelectorOption({ disabled: true })],
+    });
+
+    await openSelectorView(wrapper);
+
+    const option = wrapper.find('[data-test="option"]');
+
+    await option.trigger('click');
+
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy();
+  });
+
+  it('renders a tooltip with explanation for a disabled option', async () => {
+    const wrapper = createWrapper({
+      options: [generateChainSelectorOption({ disabled: true, disabled_reason: 'A reason' })],
+    });
+
+    await openSelectorView(wrapper);
+
+    const tooltip = wrapper.find('[data-test="disabled-tooltip"]');
+
+    expect(tooltip.exists()).toBe(true);
   });
 });

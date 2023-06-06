@@ -17,6 +17,8 @@ export type Chain = {
   imageUrl?: string; // TODO: restrict more
   nativeCurrency?: NativeCurrency;
   internalRpcUrl: string;
+  disabled?: boolean;
+  disabled_reason?: string;
 };
 
 export type Token = {

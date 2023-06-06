@@ -283,6 +283,8 @@ export function generateChainSelectorOption(partialChain?: Partial<Chain>): Sele
     label: chain.name,
     value: chain,
     imageUrl: chain.imageUrl,
+    disabled: chain.disabled,
+    disabled_reason: chain.disabled_reason,
   };
 }
 
