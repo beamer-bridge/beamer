@@ -177,9 +177,10 @@ const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
 
-const providerChainOption = computed(() =>
-  getChainSelectorOption(provider.value?.chainId.value, chains.value),
-);
+const providerChainOption = computed(() => {
+  const option = getChainSelectorOption(provider.value?.chainId.value, chains.value);
+  return option?.disabled ? undefined : option;
+});
 
 const _selectedSourceChain = ref<SelectorOption<Chain> | null>(null);
 const selectedSourceChain = computed({
