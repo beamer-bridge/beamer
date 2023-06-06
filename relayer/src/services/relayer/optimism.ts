@@ -64,6 +64,7 @@ export class OptimismRelayerService extends BaseRelayerService {
   async proveMessage(l2TransactionHash: TransactionHash) {
     console.log(`\nProving OP message on L1 for L2 Transaction hash: ${l2TransactionHash}`);
 
+    await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
     const message = await this.getMessageInTransaction(l2TransactionHash);
     const status = await this.messenger.getMessageStatus(message);
 
@@ -98,8 +99,8 @@ export class OptimismRelayerService extends BaseRelayerService {
   async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash | undefined> {
     console.log("Optimism outbox execution.");
 
+    await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
     const message = await this.getMessageInTransaction(l2TransactionHash);
-
     const status = await this.messenger.getMessageStatus(message);
 
     console.log(`Message status: ${MessageStatus[status]}`);
