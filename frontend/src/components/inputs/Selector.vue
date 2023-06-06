@@ -29,18 +29,26 @@
       <div
         class="no-scrollbar flex h-full w-full flex-col gap-2 overflow-x-hidden overflow-y-scroll"
       >
-        <div
-          v-for="option in filteredOptions"
-          :key="option.label"
-          :class="[
-            optionClasses,
-            option.label === modelValue?.label ? highlightedOptionClasses : '',
-          ]"
-          data-test="option"
-          @click="selectOption(option)"
-        >
-          <img v-if="displayOptionIcon" class="h-7" :src="option.imageUrl ?? PlaceholderImage" />
-          <span>{{ option.label }}</span>
+        <div v-for="option in filteredOptions" :key="option.label" class="relative">
+          <div
+            :class="[
+              optionClasses,
+              option.label === modelValue?.label ? highlightedOptionClasses : '',
+              option.disabled ? disabledOptionClasses : enabledOptionClasses,
+            ]"
+            data-test="option"
+            class="relative"
+            @click="!option.disabled && selectOption(option)"
+          >
+            <img v-if="displayOptionIcon" class="h-7" :src="option.imageUrl ?? PlaceholderImage" />
+            <span>{{ option.label }}</span>
+          </div>
+          <OptionDisabledTooltip
+            v-if="option.disabled && option.disabled_reason"
+            data-test="disabled-tooltip"
+            class="absolute top-[0.60rem] !flex w-full flex-row justify-end"
+            :text="option.disabled_reason"
+          ></OptionDisabledTooltip>
         </div>
       </div>
       <div class="items-end">
@@ -61,6 +69,7 @@ import { computed, ref } from 'vue';
 
 import PlaceholderImage from '@/assets/images/question-mark.svg';
 import BasicInput from '@/components/inputs/BasicInput.vue';
+import OptionDisabledTooltip from '@/components/OptionDisabledTooltip.vue';
 import type { SelectorOption } from '@/types/form';
 
 interface Props {
@@ -124,8 +133,9 @@ const selectionOverlayClasses = `absolute top-0 bottom-0 right-0 left-0
   flex flex-col gap-3
 `;
 const optionClasses = `flex flex-row items-center gap-4 cursor-pointer
-  flex-[0_0_2.5rem] w-full px-4 rounded-xl border border-sea-green text-mint text
-  hover:border-teal-dark hover:bg-teal-dark
+  flex-[0_0_2.5rem] w-full px-4 py-1 rounded-xl border border-sea-green text-mint text
 `;
+const enabledOptionClasses = `hover:border-teal-dark hover:bg-teal-dark`;
+const disabledOptionClasses = `opacity-50`;
 const highlightedOptionClasses = `!text-sea-green font-semibold bg-teal-dark`;
 </script>

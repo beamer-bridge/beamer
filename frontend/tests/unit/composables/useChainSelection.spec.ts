@@ -56,7 +56,13 @@ describe('getChainSelectorOption', () => {
 
     const chainSelectorOption = getChainSelectorOption(chainId, chains) as SelectorOption<Chain>;
 
-    expect(Object.keys(chainSelectorOption)).toEqual(['value', 'label', 'imageUrl']);
+    expect(Object.keys(chainSelectorOption)).toEqual([
+      'value',
+      'label',
+      'imageUrl',
+      'disabled',
+      'disabled_reason',
+    ]);
   });
   it('returns null if chain is not found in provided set of chains', () => {
     const chain = generateChainWithTokens({ identifier: 1 });

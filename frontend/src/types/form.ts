@@ -26,4 +26,6 @@ export type SelectorOption<T> = {
   label: string;
   value: T;
   imageUrl?: string;
+  disabled?: boolean;
+  disabled_reason?: string;
 };
