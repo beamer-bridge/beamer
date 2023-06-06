@@ -84,6 +84,24 @@ e2e_test_relayer() {
                         do sleep 1s; done"
 }
 
+e2e_test_op_proof(){
+    local root=$(get_root_dir)
+    local l1_rpc=$1
+    local l2_rpc=$2
+    local network_config=$3
+    local privkey=$4
+    local txhash=$5
+    local relayer=${root}/relayer/relayer-node18-linux-x64
+
+    echo Starting OP relayer message prover...
+    ${relayer} prove-op-message \
+                --l1-rpc-url $l1_rpc \
+                --l2-rpc-url $l2_rpc \
+                --custom-network $network_config \
+                --wallet-private-key $privkey \
+                --l2-transaction-hash $txhash
+}
+
 e2e_test_verify() {
     local root="$(get_root_dir)"
     local deployment_dir=$1

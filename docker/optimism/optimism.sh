@@ -52,7 +52,10 @@ e2e_test() {
     echo Copying contract addresses to $contract_addresses
     docker exec ops-deployer-1 cat genesis/addresses.json > $contract_addresses
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
-    e2e_test_relayer http://localhost:9545 $l2_rpc $contract_addresses $PRIVKEY $e2e_test_l2_txhash
+    echo Sending Proof
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
+    echo L1 Resolve
+    e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
