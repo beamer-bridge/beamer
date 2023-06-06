@@ -62,7 +62,7 @@ e2e_test() {
     
     e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
     echo Sending Proof
-    e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
     sleep 20
     echo L1 Resolve
     e2e_test_relayer http://localhost:8545 $l2_rpc $CONTRACT_ADDRESSES $PRIVKEY $e2e_test_l2_txhash
