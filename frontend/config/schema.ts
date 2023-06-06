@@ -96,6 +96,14 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
               minLength: 42,
               maxLength: 42,
             },
+            disabled: {
+              type: 'boolean',
+              nullable: true,
+            },
+            disabled_reason: {
+              type: 'string',
+              nullable: true,
+            },
           },
           required: [
             'identifier',
