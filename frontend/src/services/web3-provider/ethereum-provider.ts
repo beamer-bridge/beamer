@@ -124,10 +124,6 @@ export abstract class EthereumProvider<
     return successful;
   }
 
-  async closeExternalConnection(): Promise<void> {
-    return;
-  }
-
   // Returns false in case the provider does not have the chain.
   // Throws if the user rejects.
   protected abstract switchChain(newChainId: number): Promise<boolean>;
