@@ -23,7 +23,7 @@ export async function createSafeProvider(): Promise<SafeProvider | undefined> {
   return safeProvider;
 }
 
-export class SafeProvider extends BasicEthereumProvider {
+export class SafeProvider extends BasicEthereumProvider<SafeAppProvider> {
   disconnectable = false;
   isContractWallet = true;
 

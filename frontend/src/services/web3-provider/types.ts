@@ -7,22 +7,24 @@ export interface IEthereumProvider {
   signer: ShallowRef<JsonRpcSigner | undefined>;
   signerAddress: ShallowRef<string | undefined>;
   chainId: Ref<number>;
+  disconnectable: boolean;
+  isContractWallet: boolean;
+
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
   getProvider(): Web3Provider;
-  switchChainSafely?(newChain: Chain): Promise<boolean>;
+  disconnect(): void;
   getChainId(): Promise<number>;
-  addToken?(token: Token): Promise<boolean>;
-  getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
   waitForTransaction(
     transactionHash: TransactionHash,
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionHash>;
-  disconnectable: boolean;
-  isContractWallet: boolean;
-  disconnect(): Promise<void>;
-  closeExternalConnection(): Promise<void>;
+
+  switchChainSafely?(newChain: Chain): Promise<boolean>;
+  addToken?(token: Token): Promise<boolean>;
+  getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
+  closeExternalConnection?(): Promise<void>;
 }
 
 export interface EventEmitter {
