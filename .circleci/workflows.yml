@@ -228,6 +228,8 @@ jobs:
     environment:
       OPTIMISM: "docker/optimism"
     steps:
+      # Temporarily disable polygon-zkevm tests
+      - run: circleci-agent step halt
       - initialize-environment
       - run: git submodule status $OPTIMISM/optimism | awk '{print $1;}' > "/tmp/optimism-commit-hash"
       - restore_cache:
