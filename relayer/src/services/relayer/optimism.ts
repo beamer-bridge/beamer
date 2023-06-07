@@ -1,6 +1,5 @@
 import type { DeepPartial, OEContractsLike } from "@eth-optimism/sdk";
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
-import { readFileSync } from "fs";
 
 import type { TransactionHash } from "../types";
 import { BaseRelayerService } from "../types";
@@ -124,36 +123,4 @@ export class OptimismRelayerService extends BaseRelayerService {
   async finalize(): Promise<void> {
     return;
   }
-
-  addCustomNetwork(filePath: string) {
-    const configFileContent = readFileSync(filePath, "utf-8");
-    const config: CustomNetworkConfigFile = JSON.parse(configFileContent);
-
-    this.customNetworkContracts = {
-      l1: {
-        AddressManager: config.AddressManager,
-        BondManager: config.BondManager,
-        CanonicalTransactionChain: config.CanonicalTransactionChain,
-        L1CrossDomainMessenger: config.Proxy__OVM_L1CrossDomainMessenger,
-        L1StandardBridge: config.Proxy__OVM_L1StandardBridge,
-        StateCommitmentChain: config.StateCommitmentChain,
-      },
-    };
-  }
 }
-
-type CustomNetworkConfigFile = {
-  BondManager: string;
-  Proxy__OVM_L1CrossDomainMessenger: string;
-  Lib_AddressManager: string;
-  L1StandardBridge_for_verification_only: string;
-  OVM_L1CrossDomainMessenger: string;
-  ChugSplashDictator: string;
-  AddressDictator: string;
-  CanonicalTransactionChain: string;
-  Proxy__OVM_L1StandardBridge: string;
-  StateCommitmentChain: string;
-  "ChainStorageContainer-SCC-batches": string;
-  "ChainStorageContainer-CTC-batches": string;
-  AddressManager: string;
-};
