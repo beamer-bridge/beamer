@@ -8,10 +8,12 @@ import {
   L2TransactionReceipt,
 } from "@arbitrum/sdk";
 import type { Signer } from "@ethersproject/abstract-signer";
+import type { JsonRpcProvider } from "@ethersproject/providers";
 import { BigNumber } from "ethers";
 import { readFileSync } from "fs";
 
 import { ArbitrumL1Messenger__factory } from "../../../types-gen/contracts";
+import { sleep } from "../../common/util";
 import type { TransactionHash } from "../types";
 import { BaseRelayerService } from "../types";
 
@@ -84,7 +86,9 @@ export class ArbitrumRelayerService extends BaseRelayerService {
 
   async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string | undefined> {
     console.log("Arbitrum outbox execution");
+    const timeToWaitMs = 1000 * 60;
 
+    await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
     /**
      * First, let's find the Arbitrum txn from the txn hash provided
      */
@@ -95,9 +99,13 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     const l2Receipt = new L2TransactionReceipt(receipt);
 
     /**
-     * Note that in principle, a single transaction could trigger any number of outgoing messages; the common case will be there's only one.
-     * For the sake of this script, we assume there's only one / just grab the first one.
+     * Note that in principle, a single transaction could trigger any number of outgoing messages; the common case (for Beamer) will be there's only one.
      */
+    let dataAvailable = false;
+    while (!dataAvailable) {
+      dataAvailable = await l2Receipt.isDataAvailable(this.l2RpcProvider as JsonRpcProvider);
+      await sleep(timeToWaitMs);
+    }
     const messages = await l2Receipt.getL2ToL1Messages<Signer>(this.l1Wallet);
     const l2ToL1Msg = messages[0];
 
@@ -113,7 +121,6 @@ export class ArbitrumRelayerService extends BaseRelayerService {
      * before we try to execute out message, we need to make sure the l2 block it's included in is confirmed! (It can only be confirmed after the dispute period; Arbitrum is an optimistic rollup after-all)
      * waitUntilReadyToExecute() waits until the item outbox entry exists
      */
-    const timeToWaitMs = 1000 * 60;
     console.log("Waiting for outbox entry to show up...");
     await l2ToL1Msg.waitUntilReadyToExecute(this.l2RpcProvider, timeToWaitMs);
 
