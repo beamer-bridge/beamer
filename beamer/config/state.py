@@ -1,17 +1,21 @@
+import copy
 import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generator
+from typing import Generator, TypeVar
 
 import apischema
 from apischema import schema, validator
-from apischema.metadata import alias
+from apischema.metadata import alias, order
 from apischema.objects import get_alias
 from eth_typing import ChecksumAddress
 from eth_utils import is_checksum_address
 
 from beamer.typing import BlockNumber, ChainId
+
+
+T = TypeVar("T")
 
 
 class ValidationError(Exception):
@@ -51,22 +55,11 @@ class RequestManagerConfig:
 
 
 @dataclass
-class Configuration:
-    block: BlockNumber = field(metadata=schema(min=1))
+class _BaseConfiguration:
     chain_id: ChainId = field(metadata=schema(min=1))
     token_addresses: dict[str, ChecksumAddress]
     request_manager: RequestManagerConfig = field(metadata=alias("RequestManager"))
     fill_manager: FillManagerConfig = field(metadata=alias("FillManager"))
-
-    def compute_checksum(self) -> str:
-        data = apischema.serialize(self)
-        # We add a newline at the end so that one can easily compute the checksum
-        # using common tools e.g.
-        #
-        #   grep -v checksum state-file | sha256sum
-        #   jq --indent 4 'del(.checksum)' state-file | sha256sum
-        serialized = json.dumps(data, indent=4) + "\n"
-        return hashlib.sha256(serialized.encode("utf-8")).digest().hex()
 
     @validator
     def _check_token_addresses(self) -> Generator:
@@ -84,6 +77,65 @@ class Configuration:
                 yield loc, f"missing address for token {name}"
 
     @staticmethod
+    def _convert_chain_ids(data: dict) -> None:
+        # convert chain ID strings to integers, since the schema expects
+        # integers
+        if "RequestManager" in data:
+            chains = data["RequestManager"].get("chains")
+            if chains is not None:
+                new_chains = {}
+                for chain_id, value in chains.items():
+                    try:
+                        chain_id = ChainId(int(chain_id))
+                    except ValueError as exc:
+                        raise ValidationError(f"invalid chain ID: {chain_id}") from exc
+                    new_chains[chain_id] = value
+                data["RequestManager"]["chains"] = new_chains
+
+    def clone(self: T) -> T:
+        return copy.deepcopy(self)
+
+
+@dataclass
+class DesiredConfiguration(_BaseConfiguration):
+    @staticmethod
+    def from_file(path: Path) -> "DesiredConfiguration":
+        with open(path, "rt") as f:
+            data = json.load(f)
+
+        _BaseConfiguration._convert_chain_ids(data)
+        try:
+            config = apischema.deserialize(DesiredConfiguration, data)
+        except apischema.ValidationError as exc:
+            raise ValidationError from exc
+        return config
+
+    def to_file(self, path: Path) -> None:
+        data = apischema.serialize(self)
+        with open(path, "wt") as f:
+            json.dump(data, f, indent=4)
+
+    def to_config(self, block: BlockNumber) -> "Configuration":
+        data = apischema.serialize(self, no_copy=False)
+        data["block"] = block
+        return apischema.deserialize(Configuration, data)
+
+
+@dataclass
+class Configuration(_BaseConfiguration):
+    block: BlockNumber = field(metadata=schema(min=1) | order(-1))
+
+    def compute_checksum(self) -> str:
+        data = apischema.serialize(self)
+        # We add a newline at the end so that one can easily compute the checksum
+        # using common tools e.g.
+        #
+        #   grep -v checksum state-file | sha256sum
+        #   jq --indent 4 'del(.checksum)' state-file | sha256sum
+        serialized = json.dumps(data, indent=4) + "\n"
+        return hashlib.sha256(serialized.encode("utf-8")).digest().hex()
+
+    @staticmethod
     def initial(chain_id: ChainId, block: BlockNumber) -> "Configuration":
         fm_config = FillManagerConfig(whitelist=set())
         rm_config = RequestManagerConfig(
@@ -97,25 +149,17 @@ class Configuration:
             fill_manager=fm_config,
         )
 
+    def to_desired_config(self) -> DesiredConfiguration:
+        data = apischema.serialize(self, no_copy=False)
+        del data["block"]
+        return apischema.deserialize(DesiredConfiguration, data)
+
     @staticmethod
     def from_file(path: Path) -> "Configuration":
         with open(path, "rt") as f:
             data = json.load(f)
 
-        if "RequestManager" in data:
-            # convert chain ID strings to integers, since the schema expects
-            # integers
-            chains = data["RequestManager"].get("chains")
-            if chains is not None:
-                new_chains = {}
-                for chain_id, value in chains.items():
-                    try:
-                        chain_id = ChainId(int(chain_id))
-                    except ValueError as exc:
-                        raise ValidationError(f"invalid chain ID: {chain_id}") from exc
-                    new_chains[chain_id] = value
-                data["RequestManager"]["chains"] = new_chains
-
+        _BaseConfiguration._convert_chain_ids(data)
         checksum = data.pop("checksum")
         try:
             config = apischema.deserialize(Configuration, data)
