@@ -99,6 +99,41 @@ are fetched from the deployment block.
      - Path to the JSON file containing RPC information.
 
 
+.. _command-config-write:
+
+``beamer config write``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+``beamer config write --rpc-file RPC-FILE --abi-dir DIR --artifact CHAIN_ID-CHAIN_NAME.deployment.json
+CURRENT_STATE_PATH DESIRED_STATE_PATH``
+
+The command reads current contract configuration from CURRENT_STATE_PATH and
+the desired contract configuration from DESIRED_STATE_PATH and then issues
+appropriate transactions to the chain to make the contract configuration match
+the desired configuration.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifact CHAIN_ID-CHAIN_NAME.deployment.json``
+     - Path to the deployment artifact.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
+
+
 .. _command-health-check:
 
 ``beamer health-check``
