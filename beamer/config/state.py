@@ -52,7 +52,7 @@ class RequestManagerConfig:
 
 @dataclass
 class Configuration:
-    block: int = field(metadata=schema(min=1))
+    block: BlockNumber = field(metadata=schema(min=1))
     chain_id: ChainId = field(metadata=schema(min=1))
     token_addresses: dict[str, ChecksumAddress]
     request_manager: RequestManagerConfig = field(metadata=alias("RequestManager"))
