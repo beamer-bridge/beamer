@@ -14,7 +14,6 @@ import { readFileSync } from "fs";
 import { ArbitrumL1Messenger__factory } from "../../types-gen/contracts";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
-import { JsonRpcProvider } from "@ethersproject/providers";
 
 const L1_CONTRACTS: Record<number, { ARBITRUM_L1_MESSENGER: string }> = {
   42161: {
@@ -99,13 +98,9 @@ export class ArbitrumRelayerService extends BaseRelayerService {
      * Note that in principle, a single transaction could trigger any number of outgoing messages; the common case will be there's only one.
      * For the sake of this script, we assume there's only one / just grab the first one.
      */
-    let dataAvailable = false;
-    while (!dataAvailable) {
-      dataAvailable = await l2Receipt.isDataAvailable(this.l2RpcProvider as JsonRpcProvider);
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 60));
-    }
     const messages = await l2Receipt.getL2ToL1Messages<Signer>(this.l1Wallet);
     const l2ToL1Msg = messages[0];
+    console.log(messages);
 
     /**
      * Check if already executed
@@ -121,7 +116,7 @@ export class ArbitrumRelayerService extends BaseRelayerService {
      */
     const timeToWaitMs = 1000 * 60;
     console.log("Waiting for outbox entry to show up...");
-    await l2ToL1Msg.waitUntilReadyToExecute(this.l2RpcProvider, timeToWaitMs);
+    await l2ToL1Msg.waitUntilReadyToExecute(this.l2RpcProvider);
 
     /**
      * Now that its confirmed and not executed, we can execute our message in its outbox entry.
