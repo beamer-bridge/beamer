@@ -1,7 +1,7 @@
 import type { Log } from "@ethersproject/providers";
 import type { BigNumber } from "ethers";
 
-import { PolygonZKEvmBridge__factory } from "../../../../types-gen/contracts";
+import { PolygonZKEvmBridge__factory } from "../../../../types-gen/contracts/external/";
 import { isUndefined } from "../../util";
 
 interface Result extends ReadonlyArray<unknown> {

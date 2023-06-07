@@ -367,6 +367,10 @@
     "@chainsafe/as-sha256" "^0.3.1"
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
+"@beamer-bridge/deployments@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/@beamer-bridge/deployments/-/deployments-2.0.0.tgz#187ea98bdfaaec3855fd31d7ead87082774e87ab"
+  integrity sha512-lXssuGCPFXaLuvJ4QSdhArEp+5YEqHw/r2CG3FlPMB111MVMy+PWadKLymFxt2j1HHg0FrRFTEbbzU+huqF6qw==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"

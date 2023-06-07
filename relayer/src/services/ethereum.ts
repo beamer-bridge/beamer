@@ -1,9 +1,10 @@
 import { BigNumber } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 
-import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts";
+import { EthereumL2Messenger__factory, Resolver__factory } from "../../types-gen/contracts/beamer";
 import { parseFillInvalidatedEvent } from "../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../common/events/RequestFilled";
+import { addresses, contractsMeta } from "../deployments";
 import type { TransactionHash } from "./types";
 import { BaseRelayerService } from "./types";
 
@@ -14,21 +15,27 @@ type RelayCallParams = {
   filler: string;
 };
 
-const L1_CONTRACTS: Record<number, { ETHEREUM_L2_MESSENGER: string }> = {
+const CONTRACTS_DATA: Record<
+  number,
+  { ETHEREUM_L2_MESSENGER: string; RESOLVER_DEPLOY_BLOCK_NUMBER: number }
+> = {
   1: {
-    ETHEREUM_L2_MESSENGER: "0x3222C9a1e5d7856FCBc551A30a63634e7Fd634Da",
+    ETHEREUM_L2_MESSENGER: addresses.mainnet.EthereumL2Messenger,
+    RESOLVER_DEPLOY_BLOCK_NUMBER: contractsMeta.mainnet.RESOLVER_DEPLOY_BLOCK_NUMBER,
   },
   5: {
-    ETHEREUM_L2_MESSENGER: "0x6064A4d69D6535981F1091Fa2243d9a106046e46",
+    ETHEREUM_L2_MESSENGER: addresses.goerli.EthereumL2Messenger,
+    RESOLVER_DEPLOY_BLOCK_NUMBER: contractsMeta.goerli.RESOLVER_DEPLOY_BLOCK_NUMBER,
   },
   1337: {
     ETHEREUM_L2_MESSENGER: process.env.ETHEREUM_L2_MESSENGER || "",
+    RESOLVER_DEPLOY_BLOCK_NUMBER: process.env.RESOLVER_DEPLOY_BLOCK_NUMBER
+      ? parseInt(process.env.RESOLVER_DEPLOY_BLOCK_NUMBER)
+      : 0,
   },
 };
 
 const FILTER_BLOCKS_PER_ITERATION = 5000;
-// TODO: import from `deployments` npm package once ready
-const RESOLVER_DEPLOY_BLOCK_NUMBER = 16946576;
 
 export class EthereumRelayerService extends BaseRelayerService {
   async parseEventDataFromTxHash(
@@ -71,14 +78,17 @@ export class EthereumRelayerService extends BaseRelayerService {
     filler: string,
     fillChainId: BigNumber,
     resolverAddress: string,
-  ): Promise<string | null> {
+  ): Promise<string | undefined> {
     const resolver = Resolver__factory.connect(resolverAddress, this.l1Wallet);
     const currentBlock = await this.l1Wallet.provider.getBlock("latest");
     let currentBlockNumber = currentBlock.number;
+    const resolverDeployBlockNumber =
+      CONTRACTS_DATA[await this.getL1ChainId()].RESOLVER_DEPLOY_BLOCK_NUMBER;
 
-    while (currentBlockNumber > RESOLVER_DEPLOY_BLOCK_NUMBER) {
+    const filter = resolver.filters.Resolution();
+    while (currentBlockNumber > resolverDeployBlockNumber) {
       const events = await resolver.queryFilter(
-        "Resolution" as unknown,
+        filter,
         currentBlockNumber - FILTER_BLOCKS_PER_ITERATION,
         currentBlockNumber,
       );
@@ -101,7 +111,7 @@ export class EthereumRelayerService extends BaseRelayerService {
       currentBlockNumber -= FILTER_BLOCKS_PER_ITERATION;
     }
 
-    return null;
+    return undefined;
   }
 
   private createMessageHash(
@@ -142,7 +152,7 @@ export class EthereumRelayerService extends BaseRelayerService {
 
     // Execute EthereumL2Messenger.relayMessage
     const l2ChainId = await this.getL2ChainId();
-    const ethereumMessengerAddress = L1_CONTRACTS[l2ChainId].ETHEREUM_L2_MESSENGER;
+    const ethereumMessengerAddress = CONTRACTS_DATA[l2ChainId].ETHEREUM_L2_MESSENGER;
     const ethereumMessenger = EthereumL2Messenger__factory.connect(
       ethereumMessengerAddress,
       this.l2Wallet,
