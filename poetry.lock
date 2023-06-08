@@ -196,14 +196,14 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-moc
 
 [[package]]
 name = "ape-etherscan"
-version = "0.6.4"
+version = "0.6.5"
 description = "ape-etherscan: Etherscan Explorer Plugin for Ethereum-based networks"
 category = "dev"
 optional = false
-python-versions = ">=3.8,<3.11"
+python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-etherscan-0.6.4.tar.gz", hash = "sha256:1d76a490377f76521d6c3aaed54450c5631cc79771f7e35fca93cfd74d25015b"},
-    {file = "ape_etherscan-0.6.4-py3-none-any.whl", hash = "sha256:1183f8f4427175fb8905012d32475ea3d86a8ec22113b8a7e0229375f8de759b"},
+    {file = "ape-etherscan-0.6.5.tar.gz", hash = "sha256:f4d345d6cbc32a3a767b0b8a9c33bfbf31a1ae0b6eabfb1912a1ff246eebd4e1"},
+    {file = "ape_etherscan-0.6.5-py3-none-any.whl", hash = "sha256:e31e984541cdb0ecd0cf464fafa5364968c8d6530ffbfa67275c3a892323b18f"},
 ]
 
 [package.dependencies]
@@ -211,11 +211,11 @@ eth-ape = ">=0.6.7,<0.7"
 requests = "*"
 
 [package.extras]
-dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-bsc", "ape-fantom", "ape-infura", "ape-optimism", "ape-polygon", "ape-solidity", "black (>=23.3.0)", "commitizen", "flake8 (>=5.0.4)", "hypothesis (>=6.2.0,<7)", "ipdb", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-requests (>=2.28.7)", "types-setuptools", "wheel"]
+dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-base", "ape-bsc", "ape-fantom", "ape-infura", "ape-optimism", "ape-polygon", "ape-solidity", "black (>=23.3.0)", "commitizen", "flake8 (>=5.0.4)", "hypothesis (>=6.2.0,<7)", "ipdb", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-requests (>=2.28.7)", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=3.4.3,<4)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
 lint = ["black (>=23.3.0)", "flake8 (>=5.0.4)", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-requests (>=2.28.7)", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine", "wheel"]
-test = ["ape-arbitrum", "ape-bsc", "ape-fantom", "ape-infura", "ape-optimism", "ape-polygon", "ape-solidity", "hypothesis (>=6.2.0,<7)", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-xdist"]
+test = ["ape-arbitrum", "ape-base", "ape-bsc", "ape-fantom", "ape-infura", "ape-optimism", "ape-polygon", "ape-solidity", "hypothesis (>=6.2.0,<7)", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-xdist"]
 
 [[package]]
 name = "ape-ganache"
@@ -4739,4 +4739,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "0a50ecffd6aaf27757deafdeb1ad3cb94f88f2fc1121d5be79fc3e4fae1e9268"
+content-hash = "058a2b1b93db2faae0596088dd7ffc3952b606ec9223843526fa7a0dd4243f00"
