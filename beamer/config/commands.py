@@ -110,19 +110,21 @@ def read(
 
     request_manager = deployment.obtain_contract(w3, "chain", "RequestManager")
     fill_manager = deployment.obtain_contract(w3, "chain", "FillManager")
-    start_block = min(
-        deployment.chain.contracts["RequestManager"].deployment_block,
-        deployment.chain.contracts["FillManager"].deployment_block,
-    )
-    fetcher = EventFetcher(
-        w3, (request_manager, fill_manager), start_block=start_block, confirmation_blocks=0
-    )
 
     if state_path.exists():
         config = Configuration.from_file(state_path)
+        start_block = config.block
     else:
+        start_block = min(
+            deployment.chain.contracts["RequestManager"].deployment_block,
+            deployment.chain.contracts["FillManager"].deployment_block,
+        )
         config = Configuration.initial(chain_id, start_block)
 
+    start_block = BlockNumber(start_block + 1)
+    fetcher = EventFetcher(
+        w3, (request_manager, fill_manager), start_block=start_block, confirmation_blocks=0
+    )
     events = fetcher.fetch()
     for event in events:
         _replay_event(w3, deployment, config, event)
