@@ -98,11 +98,12 @@ export class OptimismRelayerService extends BaseRelayerService {
     if (status !== MessageStatus.READY_FOR_RELAY) {
       throw new Error("Message not ready for relaying.");
     }
-
     // Now we can relay the message to L1.
     console.log("Relaying...");
     try {
-      await this.messenger.finalizeMessage(message);
+      await this.messenger.finalizeMessage(message, {
+        overrides: { gasLimit: 2000000 },
+      });
     } catch (err) {
       if (!err.message.includes("message has already been received.")) {
         throw err;
