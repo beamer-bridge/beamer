@@ -95,9 +95,11 @@ export class OptimismRelayerService extends BaseRelayerService {
         });
 
         await tx.wait(1);
-      } else if (!err.message.includes("message has already been received.")) {
+      } else if (err.message.includes("CrossDomainMessenger: message has already been relayed")) {
+        console.log("Message has already been relayed.");
+      } else {
         throw err;
-      } // Otherwise the message was relayed by someone else
+      }
     }
     return true;
   }
