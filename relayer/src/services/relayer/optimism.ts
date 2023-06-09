@@ -1,4 +1,4 @@
-import type { DeepPartial, OEContractsLike } from "@eth-optimism/sdk";
+import type { CrossChainMessage, DeepPartial, OEContractsLike } from "@eth-optimism/sdk";
 import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
 
 import type { TransactionHash } from "../types";
@@ -75,6 +75,33 @@ export class OptimismRelayerService extends BaseRelayerService {
     return;
   }
 
+  async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
+    try {
+      // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
+      (await this.messenger.finalizeMessage(message)).wait(1);
+    } catch (err) {
+      if (err.message.includes("OptimismPortal: withdrawal has already been finalized")) {
+        // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay still failed
+        // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
+        console.log("Try relaying via messenger..");
+        const crossChainMessage = await this.messenger.toCrossChainMessage(message);
+        const withdrawal = await this.messenger.toLowLevelMessage(crossChainMessage);
+
+        const tx = await this.l1Wallet.sendTransaction({
+          to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
+          // withdrawal.message contains the complete transaction data
+          data: withdrawal.message,
+          gasLimit: 2_000_000,
+        });
+
+        await tx.wait(1);
+      } else if (!err.message.includes("message has already been received.")) {
+        throw err;
+      } // Otherwise the message was relayed by someone else
+    }
+    return true;
+  }
+
   async prepare(): Promise<boolean> {
     return true;
   }
@@ -100,16 +127,8 @@ export class OptimismRelayerService extends BaseRelayerService {
     }
     // Now we can relay the message to L1.
     console.log("Relaying...");
-    try {
-      await this.messenger.finalizeMessage(message, {
-        overrides: { gasLimit: 2000000 },
-      });
-    } catch (err) {
-      if (!err.message.includes("message has already been received.")) {
-        throw err;
-      } // Otherwise the message was relayed by someone else
-    }
 
+    await this.safeRelayMessage(message);
     const receipt = await this.messenger.waitForMessageReceipt(message);
 
     console.log(`Transaction hash: ${receipt.transactionReceipt.transactionHash}`);
