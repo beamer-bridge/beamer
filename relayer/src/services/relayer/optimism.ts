@@ -91,34 +91,27 @@ export class OptimismRelayerService extends BaseRelayerService {
     const crossChainMessage = await this.messenger.toBedrockCrossChainMessage(message);
     const lowLevelMessage = await this.messenger.toLowLevelMessage(crossChainMessage);
 
-    try {
-      const hash = hashLowLevelMessage(lowLevelMessage);
-      const isWithdrawn = await this.isMessageWithdrawn(hash);
+    const hash = hashLowLevelMessage(lowLevelMessage);
+    const isWithdrawn = await this.isMessageWithdrawn(hash);
 
-      if (!isWithdrawn) {
-        // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
-        (await this.messenger.finalizeMessage(message)).wait(1);
-      } else {
-        // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay probably failed
-        // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
-        console.log("Try relaying via messenger..");
+    if (!isWithdrawn) {
+      // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
+      (await this.messenger.finalizeMessage(message)).wait(1);
+    } else {
+      // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay probably failed
+      // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
+      console.log("Try relaying via messenger..");
 
-        const tx = await this.l1Wallet.sendTransaction({
-          to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
-          // lowLevelMessage.message contains the complete transaction data
-          data: lowLevelMessage.message,
-          gasLimit: 2_000_000,
-        });
+      const tx = await this.l1Wallet.sendTransaction({
+        to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
+        // lowLevelMessage.message contains the complete transaction data
+        data: lowLevelMessage.message,
+        gasLimit: 2_000_000,
+      });
 
-        await tx.wait(1);
-      }
-    } catch (err) {
-      if (err.message.includes("CrossDomainMessenger: message has already been relayed")) {
-        console.log("Message has already been relayed.");
-      } else {
-        throw err;
-      }
+      await tx.wait(1);
     }
+
     return true;
   }
 
