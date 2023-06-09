@@ -1,5 +1,10 @@
 import type { CrossChainMessage, DeepPartial, OEContractsLike } from "@eth-optimism/sdk";
-import { CrossChainMessenger, MessageReceiptStatus, MessageStatus } from "@eth-optimism/sdk";
+import {
+  CrossChainMessenger,
+  hashLowLevelMessage,
+  MessageReceiptStatus,
+  MessageStatus,
+} from "@eth-optimism/sdk";
 
 import type { TransactionHash } from "../types";
 import { BaseRelayerService } from "../types";
@@ -75,27 +80,40 @@ export class OptimismRelayerService extends BaseRelayerService {
     return;
   }
 
-  async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
+  private async isMessageWithdrawn(messageHash: string) {
+    const OptimismPortal = this.messenger.contracts.l1.OptimismPortal.connect(this.l1Wallet);
+    const isWithdrawn = await OptimismPortal.finalizedWithdrawals(messageHash);
+
+    return isWithdrawn;
+  }
+
+  private async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
+    const crossChainMessage = await this.messenger.toBedrockCrossChainMessage(message);
+    const lowLevelMessage = await this.messenger.toLowLevelMessage(crossChainMessage);
+
     try {
-      // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
-      (await this.messenger.finalizeMessage(message)).wait(1);
-    } catch (err) {
-      if (err.message.includes("OptimismPortal: withdrawal has already been finalized")) {
-        // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay still failed
+      const hash = hashLowLevelMessage(lowLevelMessage);
+      const isWithdrawn = await this.isMessageWithdrawn(hash);
+
+      if (!isWithdrawn) {
+        // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
+        (await this.messenger.finalizeMessage(message)).wait(1);
+      } else {
+        // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay probably failed
         // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
         console.log("Try relaying via messenger..");
-        const crossChainMessage = await this.messenger.toCrossChainMessage(message);
-        const withdrawal = await this.messenger.toLowLevelMessage(crossChainMessage);
 
         const tx = await this.l1Wallet.sendTransaction({
           to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
-          // withdrawal.message contains the complete transaction data
-          data: withdrawal.message,
+          // lowLevelMessage.message contains the complete transaction data
+          data: lowLevelMessage.message,
           gasLimit: 2_000_000,
         });
 
         await tx.wait(1);
-      } else if (err.message.includes("CrossDomainMessenger: message has already been relayed")) {
+      }
+    } catch (err) {
+      if (err.message.includes("CrossDomainMessenger: message has already been relayed")) {
         console.log("Message has already been relayed.");
       } else {
         throw err;
