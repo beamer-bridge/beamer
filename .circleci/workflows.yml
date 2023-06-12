@@ -226,26 +226,26 @@ jobs:
   e2e-test-optimism:
     executor: vm
     environment:
-      OPTIMISM: "docker/optimism"
+      OPTIMISM_FOLDER: "docker/optimism"
     steps:
       - initialize-environment
-      - run: bash $OPTIMISM/optimism.sh up
-      - run: bash $OPTIMISM/optimism.sh deploy-beamer
-      - run: bash $OPTIMISM/optimism.sh e2e-test
-      - run: bash $OPTIMISM/optimism.sh down
+      - run: bash $OPTIMISM_FOLDER/optimism.sh up
+      - run: bash $OPTIMISM_FOLDER/optimism.sh deploy-beamer
+      - run: bash $OPTIMISM_FOLDER/optimism.sh e2e-test
+      - run: bash $OPTIMISM_FOLDER/optimism.sh down
 
   e2e-test-arbitrum:
     executor: vm
     environment:
-      ARBITRUM: "docker/arbitrum"
+      ARBITRUM_FOLDER: "docker/arbitrum"
     steps:
       - initialize-environment
-      - run: git submodule status $ARBITRUM/nitro | awk '{print $1;}' > "/tmp/arbitrum-commit-hash"
+      - run: git submodule status $ARBITRUM_FOLDER/nitro | awk '{print $1;}' > "/tmp/arbitrum-commit-hash"
       - restore_cache:
           key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
       - run: |
-          git submodule update --init $ARBITRUM/nitro
-          cd $ARBITRUM/nitro
+          git submodule update --init $ARBITRUM_FOLDER/nitro
+          cd $ARBITRUM_FOLDER/nitro
           git submodule update --init blockscout brotli fastcache go-ethereum \
                                       arbitrator/wasm-libraries/soft-float/SoftFloat
       - save_cache:
@@ -253,23 +253,23 @@ jobs:
           paths:
             - docker/arbitrum/nitro
             - .git/modules/docker/arbitrum
-      - run: bash $ARBITRUM/arbitrum.sh up
-      - run: bash $ARBITRUM/arbitrum.sh deploy-beamer
-      - run: bash $ARBITRUM/arbitrum.sh e2e-test
-      - run: bash $ARBITRUM/arbitrum.sh down
+      - run: bash $ARBITRUM_FOLDER/arbitrum.sh up
+      - run: bash $ARBITRUM_FOLDER/arbitrum.sh deploy-beamer
+      - run: bash $ARBITRUM_FOLDER/arbitrum.sh e2e-test
+      - run: bash $ARBITRUM_FOLDER/arbitrum.sh down
 
   e2e-test-polygon-zkevm:
     executor: vm
     environment: 
-      POLYGON_ZKEVM: "docker/polygon_zkevm"
+      POLYGON_ZKEVM_FOLDER: "docker/polygon_zkevm"
     steps:
       # Temporarily disable polygon-zkevm tests
       - run: circleci-agent step halt
       - initialize-environment
-      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh up
-      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh deploy-beamer
-      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh e2e-test
-      - run: bash $POLYGON_ZKEVM/polygon_zkevm.sh down
+      - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh up
+      - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh deploy-beamer
+      - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh e2e-test
+      - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh down
 
   build-docs:
     executor: vm
