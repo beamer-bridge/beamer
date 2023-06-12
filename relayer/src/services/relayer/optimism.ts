@@ -93,24 +93,27 @@ export class OptimismRelayerService extends BaseRelayerService {
 
     const hash = hashLowLevelMessage(lowLevelMessage);
     const isWithdrawn = await this.isMessageWithdrawn(hash);
+    let tx = null;
 
     if (!isWithdrawn) {
       // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
-      (await this.messenger.finalizeMessage(message)).wait(1);
+      tx = await this.messenger.finalizeMessage(message, {
+        overrides: { gasLimit: 2_000_000 },
+      });
     } else {
       // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay probably failed
       // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
       console.log("Try relaying via messenger..");
 
-      const tx = await this.l1Wallet.sendTransaction({
+      tx = await this.l1Wallet.sendTransaction({
         to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
         // lowLevelMessage.message contains the complete transaction data
         data: lowLevelMessage.message,
         gasLimit: 2_000_000,
       });
-
-      await tx.wait(1);
     }
+
+    await tx.wait(1);
 
     return true;
   }
