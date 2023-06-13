@@ -14,13 +14,23 @@ export class OptimismRelayerService extends BaseRelayerService {
   customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
   messenger: CrossChainMessenger | undefined;
 
-  /** Used in the gas estimation process
-   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L417
-   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol#L14-L21
+  /**
+   *  We utilize a little "hack" in the Optimism Contracts for properly estimating the min. gas required for relaying the message.
+   *  When doing the estimation via `estimateGas` we provide the ESTIMATION_ADDRESS as the "from" address so it hits the right "spots" in the contracts
+   *  in order to force the estimation algorithm to return the right gasLimit estimation.
+   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L381-L388
+   *  Without this, the estimated min. gas returned when estimating the `CrossDomainMessenger.relayMessage` is wrong.
    *
-   *  This is the only way to catch reverts when relaying messages with incorrectly set minGasLimit. We also catch internal reverts from our contracts.
-   *  Without the gas estimation step, the calls to the OptimismPortal & CrossDomainMessenger will always succeed even if the message was not relayed successfully
-   *  */
+   *  Note: With a wrong min. gas limit estimation, the submitted transactions to the OptimismPortal & CrossChainMessenger will
+   *  always succeed even if the underlying message was not relayed successfully due to missing gas.
+   *
+   *  Another benefit of this is catching reverts when relaying messages that are destined to fail due to other issues unrelated to the gasLimit:
+   *  - https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L417
+   *  - https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L409-L411
+   *
+   *
+   * The value of this constant is defined here: https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol#L14-L21
+   * */
   readonly ESTIMATION_ADDRESS = "0x0000000000000000000000000000000000000001";
 
   constructor(...args: ConstructorParameters<typeof BaseRelayerService>) {
@@ -109,7 +119,6 @@ export class OptimismRelayerService extends BaseRelayerService {
   ): Promise<TransactionResponse> {
     const lowLevelMessage = await this.messenger.toLowLevelMessage(message);
 
-    // Gas estimation step
     const gasLimit = await this.l1Wallet.provider.estimateGas({
       from: this.ESTIMATION_ADDRESS,
       to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
@@ -154,6 +163,18 @@ export class OptimismRelayerService extends BaseRelayerService {
     });
   }
 
+  /**
+   * Since OP Bedrock, the relay process consists of 2 contract calls.
+   * 1. A call to `OptimismPortal.finalizeWithdrawalTransaction` - initiates the relay by doing certain checks & forwarding the call
+   * 2. A call to `CrossDomainMessenger.relayMessage` that was forwarded by the OptimismPortal in the previous step which in the end executes our message on L1.
+   *
+   * The first call will always result in a successful transaction no matter the status of the underlying call (CrossDomainMessenger.relayMessage).
+   * When the underlying message execution on L1 failed, we have no way to replay the relay process via the OptimismPortal anymore as
+   * the message was marked as withdrawn in the first call.
+   * What we need to do instead is to go via the `CrossDomainMessenger.relayMessage` to replay a message relay.
+   *
+   * This function takes care of handling these failures by deciding on which route should be used.
+   */
   private async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
     const withdrawalHash = await this.getMessageWithdrawalHash(message);
     const isWithdrawn = await this.isMessageWithdrawn(withdrawalHash);
