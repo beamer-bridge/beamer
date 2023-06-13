@@ -76,7 +76,7 @@ create_deployment_config_file() {
 }
 
 e2e_test() {
-    relayer=${ROOT}/relayer/relayer-node18-linux-x64
+    relayer=$(get_relayer_binary)
     l2_rpc=http://localhost:9545
     password=""
     
