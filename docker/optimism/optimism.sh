@@ -22,7 +22,7 @@ e2e_test_op_proof(){
     local l2_rpc=$2
     local privkey=$3
     local txhash=$4
-    local relayer=${ROOT}/relayer/relayer-node18-linux-x64
+    local relayer=$(get_relayer_binary)
 
     echo Starting OP relayer message prover...
     timeout 5m bash -c "until ${relayer} prove-op-message \
@@ -95,15 +95,55 @@ e2e_test() {
     e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
+
+e2e_test_fallback() {
+    relayer=$(get_relayer_binary)
+    l2_rpc=http://localhost:9545
+    password=""
+
+    export SOURCE_CHAIN_ID=123
+    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    echo Sending Proof
+    
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
+    echo L1 Resolve
+    sleep 15
+    # we need this relay call to fail
+    if ${relayer} relay \
+        --l1-rpc-url http://localhost:8545 \
+        --l2-relay-to-rpc-url $l2_rpc \
+        --l2-relay-from-rpc-url $l2_rpc \
+        --wallet-private-key $PRIVKEY \
+        --l2-transaction-hash $e2e_test_l2_txhash; then 
+        echo Relayer failed to fail
+        exit 1
+    else
+        echo Relayer failed as expected
+    fi
+    local output=$(poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 verify-portal-call)
+    export BLOCK_NUMBER=$(echo "$output" | awk -F: '/Block Number/ { print $2 }')
+    poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 set-chain-on-resolver ${DEPLOYMENT_DIR} $l2_rpc
+    ${relayer} relay \
+        --l1-rpc-url http://localhost:8545 \
+        --l2-relay-to-rpc-url $l2_rpc \
+        --l2-relay-from-rpc-url $l2_rpc \
+        --wallet-private-key $PRIVKEY \
+        --l2-transaction-hash $e2e_test_l2_txhash
+    poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 verify-messenger-call
+    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+}
+
 usage() {
     cat <<EOF
-$0  [up | down | deploy-beamer | e2e-test ]
+$0  [up | down | deploy-beamer | e2e-test | e2e-test-fallback]
 
 Commands:
-  up             Bring up a private Optimism instance.
-  down           Stop the Optimism instance.
-  deploy-beamer  Deploy Beamer contracts.
-  e2e-test       Run a test that verifies L2 -> L1 -> L2 messaging.
+  up                    Bring up a private Optimism instance.
+  down                  Stop the Optimism instance.
+  deploy-beamer         Deploy Beamer contracts.
+  e2e-test              Run a test that verifies L2 -> L1 -> L2 messaging.
+  e2e-test-fallback     Run a test that verifies relayer's fallback mechanism.
+
 EOF
 }
 
@@ -123,6 +163,10 @@ case $1 in
 
     e2e-test)
         e2e_test
+        ;;
+
+    e2e-test-fallback)
+        e2e_test_fallback
         ;;
 
     *)
