@@ -232,6 +232,7 @@ jobs:
       - run: bash $OPTIMISM_FOLDER/optimism.sh up
       - run: bash $OPTIMISM_FOLDER/optimism.sh deploy-beamer
       - run: bash $OPTIMISM_FOLDER/optimism.sh e2e-test
+      - run: bash $OPTIMISM_FOLDER/optimism.sh e2e-test-fallback
       - run: bash $OPTIMISM_FOLDER/optimism.sh down
 
   e2e-test-arbitrum:
