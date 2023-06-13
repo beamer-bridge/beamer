@@ -127,9 +127,9 @@ class Configuration:
             raise ValidationError(f"checksum mismatch: {checksum} (expected {computed_checksum})")
         return config
 
-    def to_file(self, artifact: Path) -> None:
+    def to_file(self, path: Path) -> None:
         # Make sure the checksum is added first so it is the first field to appear.
         # We do that so it is easy to remove it from the JSON output, e.g. by using grep.
         data = dict(checksum=self.compute_checksum(), **apischema.serialize(self))
-        with open(artifact, "wt") as f:
+        with open(path, "wt") as f:
             json.dump(data, f, indent=4)
