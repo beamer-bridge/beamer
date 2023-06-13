@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import web3
 from web3 import Web3
@@ -33,23 +33,30 @@ def load_contract_abi(deployment_dir: Path, contract_name: str) -> list:
 DeploymentInfo = dict[ChainId, dict[str, ContractInfo]]
 
 
-def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
+def prepare_deployment_infos(
+    deployment_dir: Path, contracts: dict[str, dict[str, Any]]
+) -> dict[str, ContractInfo]:
     abis = {}
+    infos = {}
+    for name, deployment_data in contracts.items():
+        if name not in abis:
+            abis[name] = load_contract_abi(deployment_dir, name)
+        abi = abis[name]
+        infos[name] = ContractInfo(
+            address=deployment_data["address"],
+            deployment_block=deployment_data["deployment_block"],
+            abi=abi,
+        )
+    return infos
+
+
+def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
     deployment_info = {}
     with deployment_dir.joinpath("deployment.json").open("rt") as f:
         deployment = json.load(f)
 
     for chain_id, deployed_contracts in deployment["chains"].items():
-        infos = {}
-        for name, deployment_data in deployed_contracts.items():
-            if name not in abis:
-                abis[name] = load_contract_abi(deployment_dir, name)
-            abi = abis[name]
-            infos[name] = ContractInfo(
-                address=deployment_data["address"],
-                deployment_block=deployment_data["deployment_block"],
-                abi=abi,
-            )
+        infos = prepare_deployment_infos(deployment_dir, deployed_contracts)
         deployment_info[ChainId(int(chain_id))] = infos
     return deployment_info
 
