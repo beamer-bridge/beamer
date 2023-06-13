@@ -1,3 +1,4 @@
+import os
 import random
 import sys
 from pathlib import Path
@@ -19,7 +20,11 @@ def main() -> None:
     web3 = make_web3(l2_rpc, deployer)
 
     l2_contracts = contracts_for_web3(web3, deployment_dir)
-    chain_id = ChainId(web3.eth.chain_id)
+    overriden_chain_id = os.getenv("SOURCE_CHAIN_ID")
+    if overriden_chain_id is None:
+        source_chain_id = ChainId(web3.eth.chain_id)
+    else:
+        source_chain_id = ChainId(int(overriden_chain_id))
 
     fill_manager = l2_contracts["FillManager"]
     token = l2_contracts["MintableToken"]
@@ -28,7 +33,7 @@ def main() -> None:
     request_amount = 123
 
     request_id = create_request_id(
-        chain_id, chain_id, token.address, deployer.address, request_amount, nonce
+        source_chain_id, web3.eth.chain_id, token.address, deployer.address, request_amount, nonce
     )
     print("Request ID:", "0x%s" % request_id.hex())
 
@@ -42,7 +47,7 @@ def main() -> None:
     web3.eth.wait_for_transaction_receipt(tx_hash)
 
     tx_hash = fill_manager.functions.fillRequest(
-        chain_id, token.address, deployer.address, request_amount, nonce
+        source_chain_id, token.address, deployer.address, request_amount, nonce
     ).transact()
     print("Fill tx hash:", tx_hash.hex())
 
