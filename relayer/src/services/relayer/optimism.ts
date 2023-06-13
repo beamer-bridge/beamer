@@ -5,6 +5,7 @@ import {
   MessageReceiptStatus,
   MessageStatus,
 } from "@eth-optimism/sdk";
+import type { TransactionResponse } from "@ethersproject/providers";
 
 import type { TransactionHash } from "../types";
 import { BaseRelayerService } from "../types";
@@ -13,12 +14,21 @@ export class OptimismRelayerService extends BaseRelayerService {
   customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
   messenger: CrossChainMessenger | undefined;
 
+  /** Used in the gas estimation process
+   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L417
+   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol#L14-L21
+   *
+   *  This is the only way to catch reverts when relaying messages with incorrectly set minGasLimit. We also catch internal reverts from our contracts.
+   *  Without the gas estimation step, the calls to the OptimismPortal & CrossDomainMessenger will always succeed even if the message was not relayed successfully
+   *  */
+  readonly ESTIMATION_ADDRESS = "0x0000000000000000000000000000000000000001";
+
   constructor(...args: ConstructorParameters<typeof BaseRelayerService>) {
     super(...args);
 
     this.messenger = new CrossChainMessenger({
       l1SignerOrProvider: this.l1Wallet,
-      l2SignerOrProvider: this.l2RpcProvider,
+      l2SignerOrProvider: this.l2Wallet,
       l1ChainId: this.l1ChainId,
       l2ChainId: this.l2ChainId,
       contracts: this.customNetworkContracts ?? {},
@@ -80,6 +90,13 @@ export class OptimismRelayerService extends BaseRelayerService {
     return;
   }
 
+  private async getMessageWithdrawalHash(message: CrossChainMessage): Promise<string> {
+    const crossChainMessage = await this.messenger.toBedrockCrossChainMessage(message);
+    const lowLevelMessage = await this.messenger.toLowLevelMessage(crossChainMessage);
+
+    return hashLowLevelMessage(lowLevelMessage);
+  }
+
   private async isMessageWithdrawn(messageHash: string) {
     const OptimismPortal = this.messenger.contracts.l1.OptimismPortal.connect(this.l1Wallet);
     const isWithdrawn = await OptimismPortal.finalizedWithdrawals(messageHash);
@@ -87,30 +104,69 @@ export class OptimismRelayerService extends BaseRelayerService {
     return isWithdrawn;
   }
 
-  private async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
-    const crossChainMessage = await this.messenger.toBedrockCrossChainMessage(message);
-    const lowLevelMessage = await this.messenger.toLowLevelMessage(crossChainMessage);
+  private async relayMessageViaCrossDomainMessenger(
+    message: CrossChainMessage,
+  ): Promise<TransactionResponse> {
+    const lowLevelMessage = await this.messenger.toLowLevelMessage(message);
 
-    const hash = hashLowLevelMessage(lowLevelMessage);
-    const isWithdrawn = await this.isMessageWithdrawn(hash);
+    // Gas estimation step
+    const gasLimit = await this.l1Wallet.provider.estimateGas({
+      from: this.ESTIMATION_ADDRESS,
+      to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
+      data: lowLevelMessage.message,
+    });
+
+    return await this.l1Wallet.sendTransaction({
+      to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
+      // lowLevelMessage.message contains the complete transaction data
+      data: lowLevelMessage.message,
+      gasLimit,
+    });
+  }
+
+  private async relayMessageViaOptimismPortal(
+    message: CrossChainMessage,
+  ): Promise<TransactionResponse> {
+    const lowLevelMessage = await this.messenger.toLowLevelMessage(message);
+
+    const OptimismPortalContract = await this.messenger.contracts.l1.OptimismPortal.connect(
+      this.l1RpcProvider,
+    );
+    const gasLimit = await OptimismPortalContract.estimateGas.finalizeWithdrawalTransaction(
+      [
+        lowLevelMessage.messageNonce,
+        lowLevelMessage.sender,
+        lowLevelMessage.target,
+        lowLevelMessage.value,
+        lowLevelMessage.minGasLimit,
+        lowLevelMessage.message,
+      ],
+      {
+        from: this.ESTIMATION_ADDRESS,
+      },
+    );
+
+    // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
+    return await this.messenger.finalizeMessage(message, {
+      overrides: {
+        gasLimit,
+      },
+    });
+  }
+
+  private async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
+    const withdrawalHash = await this.getMessageWithdrawalHash(message);
+    const isWithdrawn = await this.isMessageWithdrawn(withdrawalHash);
     let tx = null;
 
     if (!isWithdrawn) {
-      // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
-      tx = await this.messenger.finalizeMessage(message, {
-        overrides: { gasLimit: 2_000_000 },
-      });
+      console.log("Try relaying via Optimism Portal..");
+      tx = await this.relayMessageViaOptimismPortal(message);
     } else {
       // Here, the case was that OptimismPortal marked the withdrawal as finalized but the relay probably failed
       // We need to call the L1CrossDomainMessenger to relay the message for us instead of going via the OptimismPortal
-      console.log("Try relaying via messenger..");
-
-      tx = await this.l1Wallet.sendTransaction({
-        to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
-        // lowLevelMessage.message contains the complete transaction data
-        data: lowLevelMessage.message,
-        gasLimit: 2_000_000,
-      });
+      console.log("Try relaying via CrossDomainMessenger..");
+      tx = await this.relayMessageViaCrossDomainMessenger(message);
     }
 
     await tx.wait(1);
@@ -138,9 +194,6 @@ export class OptimismRelayerService extends BaseRelayerService {
       return receipt.transactionReceipt.transactionHash;
     }
 
-    if (status !== MessageStatus.READY_FOR_RELAY) {
-      throw new Error("Message not ready for relaying.");
-    }
     // Now we can relay the message to L1.
     console.log("Relaying...");
 
