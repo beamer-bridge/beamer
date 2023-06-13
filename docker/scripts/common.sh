@@ -63,14 +63,25 @@ e2e_test_fill() {
     echo Fill tx hash: $e2e_test_l2_txhash
 }
 
-e2e_test_relayer() {
+get_relayer_binary() {
     local root=$(get_root_dir)
+    local relayer=${root}/relayer/relayer-node18-linux-x64
+
+    unamestr=$(uname)
+    if [[ "$unamestr" == 'Darwin' ]]; then
+       relayer=${root}/relayer/relayer-node18-macos-x64
+    fi
+
+    echo $relayer
+}
+
+e2e_test_relayer() {
     local l1_rpc=$1
     local l2_rpc=$2
     local network_config=$3
     local privkey=$4
     local txhash=$5
-    local relayer=${root}/relayer/relayer-node18-linux-x64
+    local relayer=$(get_relayer_binary)
     
     echo Starting relayer...
     timeout 5m bash -c "until ${relayer} relay \

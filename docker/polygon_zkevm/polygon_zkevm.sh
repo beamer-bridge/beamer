@@ -65,11 +65,7 @@ e2e_test() {
     l2_rpc=http://localhost:8123
     password=""
 
-    if [[ $(uname) == 'Linux' ]]; then
-        relayer=${ROOT}/relayer/relayer-node18-linux-x64
-    elif [[ $(uname) == 'Darwin' ]]; then
-        relayer=${ROOT}/relayer/relayer-node18-macos-x64
-    fi
+    relayer=$(get_relayer_binary)
 
     network_file="${CACHE_DIR}/network.json"
     echo Copying contract addresses to $network_file
