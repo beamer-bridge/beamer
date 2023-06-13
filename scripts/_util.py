@@ -1,4 +1,5 @@
-from typing import Optional
+from functools import update_wrapper
+from typing import Any, Callable, Optional
 
 import click
 from eth_utils import decode_hex, is_checksum_address, is_hexstr, to_canonical_address
@@ -27,3 +28,11 @@ def validate_bytes(
         raise click.BadParameter("not a hex string")
 
     return decode_hex(value)
+
+
+def pass_args(f: Callable) -> Callable:
+    @click.pass_context
+    def new_func(ctx: Any, *args: Any, **kwargs: Any) -> Callable:
+        return ctx.invoke(f, *ctx.obj.values(), *args, **kwargs)
+
+    return update_wrapper(new_func, f)

@@ -1,6 +1,5 @@
-from functools import update_wrapper
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 import click
 import structlog
@@ -12,17 +11,9 @@ from web3.contract import Contract
 from beamer.contracts import contracts_for_web3
 from beamer.typing import URL, Address, ChainId, TokenAmount
 from beamer.util import account_from_keyfile, make_web3, setup_logging, transact
-from scripts._util import validate_address, validate_bytes
+from scripts._util import pass_args, validate_address, validate_bytes
 
 log = structlog.get_logger(__name__)
-
-
-def pass_args(f: Callable) -> Callable:
-    @click.pass_context
-    def new_func(ctx: Any, *args: Any, **kwargs: Any) -> Callable:
-        return ctx.invoke(f, *ctx.obj.values(), *args, **kwargs)
-
-    return update_wrapper(new_func, f)
 
 
 @click.group("cli")
