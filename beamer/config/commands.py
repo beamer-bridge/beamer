@@ -131,3 +131,4 @@ def read(
 
     config.block = fetcher.synced_block
     config.to_file(state_path)
+    log.info("Stored configuration", path=str(state_path))
