@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.2.0 (2023-06-14)
+
+* agent: Restructure common modules to top level directory
+* agent: Add support for Optimism Bedrock relayer calls
+* beamer: Introduce new beamer commands `deploy-base` and `deploy`
+* beamer: Introduce new deployment artifacts structure
+* beamer: Introduce new beamer command `config` with subcommand `read`
+* frontend/relayer: Release npm packages containing the deployment artifacts via CI
+* contracts: Implement Polygon zkEVM messenger
+* frontend: Support for Safe contract wallets 
+* frontend: Transfers get continued even if user closes app before finalizing the two transactions
+* frontend: Notification when transfer was completed and share via Twitter
+* frontend: Minor bug fixes
+* relayer: Integrate relayer in Optimism E2E test
+* relayer: Implement PolygonZKEvm relayer service
+* relayer: Improve logging
+* relayer: Add support for Optimism Bedrock
+* relayer: Extend relayer CLI to support multiple subcommands
+* relayer: Bug fixes
+* scripts: Introduce generate_abi script
+
 ## v2.1.0 (2023-04-27)
 
 * agent: only continue challenge after message is finalized
