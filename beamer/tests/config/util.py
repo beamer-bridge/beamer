@@ -59,6 +59,7 @@ def deploy(deployer, destdir):
             artifacts_dir,
             "--commit-check",
             "no",
+            "--deploy-mintable-token",
             f"{root}/deployments/config/local/1337-ethereum.json",
         ),
     )
