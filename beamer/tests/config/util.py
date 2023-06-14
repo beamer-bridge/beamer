@@ -13,7 +13,7 @@ def run(*args):
     assert result.exit_code == 0
 
 
-def _write_keystore_file(path, private_key, password):
+def write_keystore_file(path, private_key, password):
     obj = eth_account.Account.encrypt(private_key, password)
     path.write_text(json.dumps(obj))
 
@@ -21,7 +21,7 @@ def _write_keystore_file(path, private_key, password):
 def deploy(deployer, destdir):
     password = "test"
     keystore_file = destdir / f"{deployer.address}.json"
-    _write_keystore_file(keystore_file, deployer.private_key, password)
+    write_keystore_file(keystore_file, deployer.private_key, password)
     artifacts_dir = destdir / "artifacts"
     artifacts_dir.mkdir()
 
