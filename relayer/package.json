@@ -14,8 +14,11 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r ./node_modules/ts-node/register ./src/cli.ts",
-    "lint": "eslint --ext .js,.ts --ignore-path .gitignore --max-warnings 0 .",
-    "lint:fix": "eslint --ext .js,.ts --ignore-path .gitignore --fix .",
+    "check-types": "tsc --noEmit",
+    "eslint": "eslint --ext .js,.ts --ignore-path .gitignore --max-warnings 0 .",
+    "eslint:fix": "eslint --ext .js,.ts --ignore-path .gitignore --fix .",
+    "lint": "yarn check-types && yarn eslint",
+    "lint:fix": "yarn check-types; yarn eslint:fix",
     "test:unit": "jest unit",
     "test:coverage": "jest --collect-coverage",
     "generate-types": "typechain --target=ethers-v5 ./src/assets/abi/**.json --out-dir=./types-gen/contracts/",
