@@ -26,13 +26,13 @@ class ValidationError(Exception):
         return "\n".join(map(str, self.__cause__.errors))  # pylint: disable=no-member
 
 
-@dataclass(frozen=True)
+@dataclass
 class TokenConfig:
     transfer_limit: int = field(metadata=schema(min=0))
     eth_in_token: int = field(metadata=schema(min=0))
 
 
-@dataclass(frozen=True)
+@dataclass
 class ChainConfig:
     finality_period: int = field(metadata=schema(min=1))
     target_weight_ppm: int = field(metadata=schema(min=0, max=999_999))
