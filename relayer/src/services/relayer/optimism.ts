@@ -12,7 +12,8 @@ import { BaseRelayerService } from "../types";
 
 export class OptimismRelayerService extends BaseRelayerService {
   customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
-  messenger: CrossChainMessenger | undefined;
+  messenger: CrossChainMessenger;
+
   /**
    *
    * A static gas limit value high enough to make sure that the message relays
@@ -140,7 +141,7 @@ export class OptimismRelayerService extends BaseRelayerService {
   private async safeRelayMessage(message: CrossChainMessage): Promise<boolean> {
     const withdrawalHash = await this.getMessageWithdrawalHash(message);
     const isWithdrawn = await this.isMessageWithdrawn(withdrawalHash);
-    let tx = null;
+    let tx: TransactionResponse;
 
     if (!isWithdrawn) {
       console.log("Try relaying via Optimism Portal..");

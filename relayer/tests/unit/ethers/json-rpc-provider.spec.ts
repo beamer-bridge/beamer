@@ -54,7 +54,7 @@ describe("ExtendedJsonRpcProvider", () => {
         .spyOn(JsonRpcProvider.prototype, "estimateGas")
         .mockResolvedValue(BigNumber.from(originalGasEstimation));
 
-      const estimatedGas = await rpcProvider.estimateGas(undefined);
+      const estimatedGas = await rpcProvider.estimateGas({});
       expect(estimatedGas.toNumber()).toBe(
         (originalGasEstimation * (100 + bufferSizePercent)) / 100,
       );

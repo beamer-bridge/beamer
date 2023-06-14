@@ -70,7 +70,7 @@ export class BobaRelayerService extends BaseRelayerService {
     try {
       await messenger.finalizeMessage(message);
     } catch (err) {
-      if (!err.message.includes("message has already been received.")) {
+      if (!(err instanceof Error && err.message.includes("message has already been received."))) {
         throw err;
       } // Otherwise the message was relayed by someone else
     }

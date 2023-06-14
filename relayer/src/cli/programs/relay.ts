@@ -20,7 +20,7 @@ export class RelayerProgram {
   ) {}
 
   static validateArgs(args: ProgramOptions): Array<string> {
-    const validationErrors = [];
+    const validationErrors: string[] = [];
 
     if (!args.l2TransactionHash.startsWith("0x") || args.l2TransactionHash.trim().length != 66) {
       validationErrors.push(
