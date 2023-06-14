@@ -19,7 +19,8 @@
     "paths": {
       "@/*": ["src/*"],
       "~/*": ["tests/*"]
-    }
+    },
+    "strict": true,
   },
   "include": ["src/**/*.ts", "src/**/*.json", "tests/**/*.ts", "types-gen/**/*.ts"],
   "exclude": ["node_modules", "dist"]

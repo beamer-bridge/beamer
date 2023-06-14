@@ -30,7 +30,7 @@ const CONTRACTS: Record<number, NetworkContracts> = {
 export class PolygonZKEvmRelayerService extends BaseRelayerService {
   MERKLE_PROOF_ENDPOINT = "/merkle-proof";
   BRIDGES_ENDPOINT = "/bridge";
-  customNetworkContracts: NetworkContracts;
+  customNetworkContracts?: NetworkContracts;
 
   async getNetworkConfig(): Promise<NetworkContracts> {
     const l2NetworkId = await this.getL2ChainId();
@@ -40,7 +40,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
   async getMessageMerkleProof(
     depositCount: number,
     originNetwork: number,
-  ): Promise<MerkleProofResponse | undefined> {
+  ): Promise<MerkleProofResponse> {
     const networkConfig = await this.getNetworkConfig();
 
     const merkleProofUrl = new URL(networkConfig.bridgeServiceUrl + this.MERKLE_PROOF_ENDPOINT);
@@ -66,7 +66,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
       const response = await this.getMessageInfo(depositCount, originNetwork);
       return response;
     } catch (e) {
-      if (e.message == "not found in the Storage") {
+      if ((e as Error).message && (e as Error).message == "not found in the Storage") {
         await sleep(5000);
         return this.getMessageInfoSafe(depositCount, originNetwork);
       }
@@ -96,9 +96,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
 
   checkTransactionValidity(transactionReceipt: TransactionReceipt, networkName: string): void {
     if (!transactionReceipt) {
-      throw new Error(
-        `Transaction "${transactionReceipt.transactionHash}" cannot be found on ${networkName}...`,
-      );
+      throw new Error(`Transaction cannot be found on ${networkName}...`);
     }
     if (!transactionReceipt.status) {
       throw new Error(

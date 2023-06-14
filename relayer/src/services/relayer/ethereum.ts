@@ -2,6 +2,7 @@ import { BigNumber } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 
 import { EthereumL2Messenger__factory, Resolver__factory } from "../../../types-gen/contracts";
+import type { TypedEvent, TypedEventFilter } from "../../../types-gen/contracts/common";
 import { parseFillInvalidatedEvent } from "../../common/events/FillInvalidated";
 import { parseRequestFilledEvent } from "../../common/events/RequestFilled";
 import type { TransactionHash } from "../types";
@@ -75,7 +76,7 @@ export class EthereumRelayerService extends BaseRelayerService {
     filler: string,
     fillChainId: BigNumber,
     resolverAddress: string,
-  ): Promise<string | null> {
+  ): Promise<string | undefined> {
     const resolver = Resolver__factory.connect(resolverAddress, this.l1Wallet);
     const currentBlock = await this.l1Wallet.provider.getBlock("latest");
     const resolverDeployBlockNumber = L1_CONTRACTS[this.l1ChainId].RESOLVER_DEPLOY_BLOCK_NUMBER;
@@ -83,7 +84,8 @@ export class EthereumRelayerService extends BaseRelayerService {
 
     while (currentBlockNumber > resolverDeployBlockNumber) {
       const events = await resolver.queryFilter(
-        "Resolution" as unknown,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        "Resolution" as TypedEventFilter<TypedEvent<any, any>>,
         currentBlockNumber - FILTER_BLOCKS_PER_ITERATION,
         currentBlockNumber,
       );
@@ -106,7 +108,7 @@ export class EthereumRelayerService extends BaseRelayerService {
       currentBlockNumber -= FILTER_BLOCKS_PER_ITERATION;
     }
 
-    return null;
+    return undefined;
   }
 
   private createMessageHash(
