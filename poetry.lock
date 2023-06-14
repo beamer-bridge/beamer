@@ -169,22 +169,22 @@ test = ["ape-arbitrum", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0
 
 [[package]]
 name = "ape-arbitrum"
-version = "0.6.0"
+version = "0.6.1"
 description = "ape-arbitrum: Ape Ecosystem Plugin for Arbitrum"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-arbitrum-0.6.0.tar.gz", hash = "sha256:eb4ae35f3c29b192212f7c115e0c50fba42517417b022edb5b2f6ed83d85849b"},
-    {file = "ape_arbitrum-0.6.0-py3-none-any.whl", hash = "sha256:96e4e90a3432b8620e19c49d519979b38a15e696fc48d7fcaa01474cf4686f92"},
+    {file = "ape-arbitrum-0.6.1.tar.gz", hash = "sha256:8ec877288a6fd6239a6b51ef80eabcfc0207ea85b9af82cfd04ef7cbea1fa08b"},
+    {file = "ape_arbitrum-0.6.1-py3-none-any.whl", hash = "sha256:ba207add726b5ed48b2fdced22dae232ed1b92a76ca868167a50b4da9bca5207"},
 ]
 
 [package.dependencies]
 eth-ape = ">=0.6.0,<0.7"
 
 [package.extras]
-dev = ["Sphinx (>=4.4.0,<5.0)", "black (>=22.12.0)", "commitizen", "flake8 (>=5.0.4)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991)", "myst-parser (>=0.17.0,<0.18)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-click (>=3.1.0,<4.0)", "sphinx-rtd-theme (>=1.0.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine", "types-setuptools", "wheel"]
+dev = ["Sphinx (>=4.4.0,<5.0)", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "myst-parser (>=0.17.0,<0.18)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-click (>=3.1.0,<4.0)", "sphinx-rtd-theme (>=1.0.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=4.4.0,<5.0)", "myst-parser (>=0.17.0,<0.18)", "sphinx-click (>=3.1.0,<4.0)", "sphinx-rtd-theme (>=1.0.0,<2)", "sphinxcontrib-napoleon (>=0.7)"]
-lint = ["black (>=22.12.0)", "flake8 (>=5.0.4)", "isort (>=5.10.1)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991)", "types-setuptools"]
+lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-xdist"]
 
@@ -4622,4 +4622,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "5592f09d817e0edb1c3e0454bbe818b2afd12a8743814a28e4686e4895718cc2"
+content-hash = "30e4dcaf4d2bccd24f4ed3cda556b47030097d3eec3b3d5ffedd488b51a1d6ae"
