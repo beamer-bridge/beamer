@@ -1,3 +1,0 @@
-[submodule "docker/arbitrum/nitro"]
-	path = docker/arbitrum/nitro
-	url = https://github.com/OffchainLabs/nitro.git

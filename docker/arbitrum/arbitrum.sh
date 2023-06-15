@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
-ROOT="$(get_root_dir)"
-NITRO="${ROOT}/docker/arbitrum/nitro"
-
 # Deployer's address & private key.
 ADDRESS=0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
 
-CACHE_DIR=$(obtain_cache_dir $0)
-DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/arbitrum-local.json"
+CACHE_DIR=$(obtain_cache_dir "$0")
+NITRO="${CACHE_DIR}/nitro"
+ARTIFACTS_DIR="${CACHE_DIR}/deployments/artifacts/local"
+DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/412346-arbitrum.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
 echo Beamer deployer\'s keyfile: ${KEYFILE}
 
-TEST_NODE_SCRIPT="${CACHE_DIR}/test-node-patched.bash"
+TEST_NODE_SCRIPT="${NITRO}/test-node-patched.bash"
 
 patch_test_node_script() {
     # We need to patch the test-node.bash script so that it
@@ -34,6 +32,19 @@ patch_test_node_script() {
     }
 }
 
+configure_repo() {
+    repo="https://github.com/OffchainLabs/nitro.git"
+    commit_id="0b32740ddd245ff0e52b1fd1a0372b90195f6a0c"
+    git init ${NITRO}
+    cd ${NITRO}
+    git fetch --depth 1 ${repo} ${commit_id} 
+    git checkout ${commit_id}
+    git submodule update --init blockscout
+}
+
+if [ ! -d ${NITRO} ]; then
+    configure_repo
+fi
 patch_test_node_script
 
 down() {
@@ -46,6 +57,13 @@ down() {
     fi
 
     docker-compose -f ${NITRO}/docker-compose.yaml down
+}
+
+fund_account() {
+    ${TEST_NODE_SCRIPT} script send-l1 --ethamount 100 --to address_${ADDRESS}
+    ${TEST_NODE_SCRIPT} script send-l2 --ethamount 100 --to address_${ADDRESS}
+    # Wait a bit for the transactions to go through
+    sleep 3
 }
 
 wait_for_sequencer() {
@@ -61,13 +79,6 @@ wait_for_sequencer() {
         fi
         ((i=i+1))
     done
-}
-
-fund_account() {
-    ${TEST_NODE_SCRIPT} script send-l1 --ethamount 100 --to address_${ADDRESS}
-    ${TEST_NODE_SCRIPT} script send-l2 --ethamount 100 --to address_${ADDRESS}
-    # Wait a bit for the transactions to go through
-    sleep 3
 }
 
 up() {
@@ -88,26 +99,30 @@ create_deployment_config_file() {
     INBOX=\"$(echo $INBOX | python -c 'import eth_utils; print(eth_utils.to_checksum_address(input()))')\"
 
     sed "s/\${l1_messenger_args}/${BRIDGE}, ${INBOX}/" \
-        ${ROOT}/scripts/deployment/arbitrum-local-template.json \
+        ${ROOT}/deployments/config/local/412346-arbitrum.json \
         > ${DEPLOYMENT_CONFIG_FILE}
 }
 
 e2e_test() {
+    image_id=$(docker ps --filter "ancestor=nitro-testnode-scripts" --format "{{.ID}}")
+    if [[ ! -z $image_id ]]; then
+        docker stop $image_id
+    fi
     l2_rpc=http://0.0.0.0:8547
     password=""
-    l1_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.base_chain.ArbitrumL1Messenger.address')
+    l1_messenger=$(jq -r '.base.ArbitrumL1Messenger.address' ${ARTIFACTS_DIR}/412346-arbitrum.deployment.json)
 
     network_config="${CACHE_DIR}/localnetwork.json"
     echo Copying network config to $network_config
     docker-compose -f ${NITRO}/docker-compose.yaml run --entrypoint sh testnode-tokenbridge \
                    -c "cat localNetwork.json" > $network_config
 
-    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
 
     export ARBITRUM_L1_MESSENGER=$l1_messenger
 
     e2e_test_relayer http://0.0.0.0:8545 $l2_rpc $network_config $PRIVKEY $e2e_test_l2_txhash
-    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 
@@ -134,7 +149,7 @@ case $1 in
 
     deploy-beamer)
         create_deployment_config_file &&
-        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${ARTIFACTS_DIR} 1337
         ;;
 
     e2e-test)
