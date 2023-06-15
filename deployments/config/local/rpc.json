@@ -1,6 +1,7 @@
 {
     "1337": "http://localhost:8545",
+    "900": "http://localhost:8545",
     "901": "http://localhost:9545",
-    "412346": "",
-    "1001": ""
+    "412346": "http://localhost:8547",
+    "1001": "http://localhost:8123"
 }

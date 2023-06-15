@@ -14,6 +14,10 @@ get_root_dir() {
     nth_parent 3 "$(realpath "$0")"
 }
 
+ROOT="$(get_root_dir)"
+RPC_FILE="${ROOT}/deployments/config/local/rpc.json"
+ABI_DIR="${ROOT}/contracts/.build"
+
 obtain_cache_dir() {
     # Create a cache dir if it does not exist
     cachedir="/tmp/beamer-$(basename -s .sh $1)-$(sha256sum $1 | cut -c-10)"
@@ -25,38 +29,44 @@ ensure_keyfile_exists() {
     # Generate a keyfile if it does not exist
     privkey=$1
     keyfile=$2
-    root=$(get_root_dir)
     [ -f $keyfile ] || {
-        poetry run python ${root}/scripts/generate_account.py --key ${privkey} --password '' ${keyfile}
+        poetry run python ${ROOT}/scripts/generate_account.py --key ${privkey} --password '' ${keyfile}
     }
 }
 
 deploy_beamer() {
-    root=$(get_root_dir)
     keyfile=$1
     config_file=$2
-    output_dir=$3
-    pushd "${root}"
+    artifacts_dir=$3
+    base_chain_id=$4
+    pushd "${ROOT}"
     rm -rf "${output_dir}" &&
-    poetry run python scripts/deployment/main.py \
-        --keystore-file ${keyfile} \
+    poetry run beamer deploy-base \
+        --keystore-file $keyfile \
         --password '' \
-        --config-file "${config_file}" \
-        --output-dir "${output_dir}" \
-        --allow-same-chain \
-        --deploy-mintable-token
+        --artifacts-dir $artifacts_dir \
+        --rpc-file $RPC_FILE \
+        --commit-check false \
+        $base_chain_id &&
+    poetry run beamer deploy \
+        --keystore-file $keyfile \
+        --password '' \
+        --artifacts-dir $artifacts_dir \
+        --rpc-file $RPC_FILE \
+        --deploy-mintable-token \
+        --commit-check false \
+        $config_file
     popd
 }
 
 e2e_test_fill() {
-    local root="$(get_root_dir)"
-    local deployment_dir=$1
-    local keyfile=$2
-    local password=$3
-    local l2_rpc=$4
+    local artifacts_dir=$1
+    local l2_rpc=$2
+    local keyfile=$3
+    local password=$4
 
     echo Performing test fill on L2...
-    local output=$(poetry run python "$root/scripts/e2e-test-fill.py" $deployment_dir $keyfile "$password" $l2_rpc)
+    local output=$(poetry run python "$ROOT/scripts/e2e-test-fill.py" $artifacts_dir $ABI_DIR $l2_rpc $keyfile "$password")
     e2e_test_request_id=$(echo "$output" | awk -F: '/Request ID/ { print $2 }')
     e2e_test_l2_txhash=$(echo "$output" | awk -F: '/Fill tx hash/ { print $2 }')
     echo Request ID: $e2e_test_request_id
@@ -96,12 +106,11 @@ e2e_test_relayer() {
 }
 
 e2e_test_verify() {
-    local root="$(get_root_dir)"
-    local deployment_dir=$1
+    local artifacts_dir=$1
     local l2_rpc=$2
     local address=$3
     local request_id=$4
 
     echo Verifying L1 resolution...
-    poetry run python "$root/scripts/e2e-test-verify.py" $deployment_dir $l2_rpc $address $request_id
+    poetry run python "$ROOT/scripts/e2e-test-verify.py" $artifacts_dir $ABI_DIR $l2_rpc $address $request_id
 }

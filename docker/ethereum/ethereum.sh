@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
-ROOT="$(get_root_dir)"
-
 # Deployer's address & private key.
 ADDRESS=0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 PRIVKEY=0x3ff6c8dfd3ab60a14f2a2d4650387f71fe736b519d990073e650092faaa621fa
 
 CACHE_DIR=$(obtain_cache_dir "$0")
-DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${ROOT}/scripts/deployment/ethereum-local.json"
+ARTIFACTS_DIR="${CACHE_DIR}/deployments/artifacts/local"
+DEPLOYMENT_CONFIG_FILE="${ROOT}/deployments/config/local/1337-ethereum.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
@@ -33,14 +31,12 @@ up() {
 e2e_test() {
     l2_rpc=http://0.0.0.0:8545
     password=""
-    l2_messenger=$(cat ${DEPLOYMENT_DIR}/deployment.json | jq -r '.chains."1337".EthereumL2Messenger.address')
-
-    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
-
+    l2_messenger=$(jq -r '.chain.EthereumL2Messenger.address' ${ARTIFACTS_DIR}/1337-ethereum.deployment.json)
+    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}" 
     export ETHEREUM_L2_MESSENGER=$l2_messenger
 
     e2e_test_relayer $l2_rpc $l2_rpc "" $PRIVKEY $e2e_test_l2_txhash
-    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 usage() {
@@ -65,7 +61,7 @@ case $1 in
     ;;
 
     deploy-beamer)
-        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${ARTIFACTS_DIR} 1337
     ;;
 
     e2e-test)
