@@ -1,18 +1,19 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import web3
 from web3 import Web3
 from web3.contract import Contract
 
-from beamer.typing import Address, BlockNumber, ChainId
+import beamer.deploy.artifacts
+from beamer.typing import BlockNumber, ChainId, ChecksumAddress
 
 
 @dataclass
 class ContractInfo:
-    address: Address
+    address: ChecksumAddress
     deployment_block: BlockNumber
     abi: list
 
@@ -24,8 +25,8 @@ def make_contracts(w3: web3.Web3, contracts_info: dict[str, ContractInfo]) -> di
     }
 
 
-def load_contract_abi(deployment_dir: Path, contract_name: str) -> list:
-    with deployment_dir.joinpath(f"{contract_name}.json").open("rt") as f:
+def load_contract_abi(abi_dir: Path, contract_name: str) -> list:
+    with abi_dir.joinpath(f"{contract_name}.json").open("rt") as f:
         data = json.load(f)
     return data["abi"]
 
@@ -34,34 +35,35 @@ DeploymentInfo = dict[ChainId, dict[str, ContractInfo]]
 
 
 def prepare_deployment_infos(
-    deployment_dir: Path, contracts: dict[str, dict[str, Any]]
+    abi_dir: Path, contracts: dict[str, beamer.deploy.artifacts.DeployedContractInfo]
 ) -> dict[str, ContractInfo]:
     abis = {}
     infos = {}
-    for name, deployment_data in contracts.items():
+    for name, contract in contracts.items():
         if name not in abis:
-            abis[name] = load_contract_abi(deployment_dir, name)
+            abis[name] = load_contract_abi(abi_dir, name)
         abi = abis[name]
         infos[name] = ContractInfo(
-            address=deployment_data["address"],
-            deployment_block=deployment_data["deployment_block"],
+            address=contract.address,
+            deployment_block=contract.deployment_block,
             abi=abi,
         )
     return infos
 
 
-def load_deployment_info(deployment_dir: Path) -> DeploymentInfo:
+def load_deployment_info(artifacts_dir: Path, abi_dir: Path) -> DeploymentInfo:
     deployment_info = {}
-    with deployment_dir.joinpath("deployment.json").open("rt") as f:
-        deployment = json.load(f)
-
-    for chain_id, deployed_contracts in deployment["chains"].items():
-        infos = prepare_deployment_infos(deployment_dir, deployed_contracts)
-        deployment_info[ChainId(int(chain_id))] = infos
+    for artifact_path in artifacts_dir.glob("*.deployment.json"):
+        deployment = beamer.deploy.artifacts.Deployment.from_file(artifact_path)
+        if deployment.chain is None:
+            continue
+        deployment_info[deployment.chain.chain_id] = prepare_deployment_infos(
+            abi_dir, deployment.chain.contracts
+        )
     return deployment_info
 
 
-def contracts_for_web3(web3: Web3, deployment_dir: Path) -> dict[str, Contract]:
-    deployment_info = load_deployment_info(deployment_dir)
+def contracts_for_web3(web3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[str, Contract]:
+    deployment_info = load_deployment_info(artifacts_dir, abi_dir)
     chain_id = ChainId(web3.eth.chain_id)
     return make_contracts(web3, deployment_info[chain_id])
