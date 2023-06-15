@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
-ROOT="$(get_root_dir)"
-
 # Deployer's address & private key.
 ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 PRIVKEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 CACHE_DIR=$(obtain_cache_dir $0)
+ARTIFACTS_DIR="${CACHE_DIR}/deployments/artifacts/local"
+
 POLYGON_ZKEVM="${CACHE_DIR}/polygon_zkevm"
-DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/polygon-zkevm-local.json"
+DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/1001-polygon-zkevm.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
 
 ensure_keyfile_exists ${PRIVKEY} ${KEYFILE}
@@ -27,8 +26,9 @@ down() {
 configure_repo() {
     repo="https://github.com/0xPolygonHermez/zkevm-bridge-service.git"
     commit_id="09e0247b335a19a5e16945e8e1e805e410e41ca3"
-    git clone --no-checkout ${repo} ${POLYGON_ZKEVM}
+    git init ${POLYGON_ZKEVM}
     cd ${POLYGON_ZKEVM}
+    git fetch --depth 1 ${repo} ${commit_id}
     git checkout ${commit_id}
 }
 
@@ -38,7 +38,7 @@ create_deployment_config_file () {
     fi
     address=$(bridge_address)
     sed "s/\"\${native_bridge}\"/${address}/" \
-    ${ROOT}/scripts/deployment/polygon-zkevm-local-template.json \
+    ${ROOT}/deployments/config/local/1001-polygon-zkevm.json \
     > ${DEPLOYMENT_CONFIG_FILE}
     cd ${ROOT}
 }
@@ -65,8 +65,6 @@ e2e_test() {
     l2_rpc=http://localhost:8123
     password=""
 
-    relayer=$(get_relayer_binary)
-
     network_file="${CACHE_DIR}/network.json"
     echo Copying contract addresses to $network_file
     address=$(bridge_address)
@@ -81,16 +79,9 @@ e2e_test() {
         "bridgeServiceUrl": "http://localhost:8080"
     }
 EOF
-    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
-    echo Starting relayer
-    ${relayer} --l1-rpc-url http://localhost:8545 \
-               --l2-relay-to-rpc-url $l2_rpc \
-               --l2-relay-from-rpc-url $l2_rpc \
-               --network-to $network_file \
-               --network-from $network_file \
-               --wallet-private-key $PRIVKEY \
-               --l2-transaction-hash $e2e_test_l2_txhash
-    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
+    e2e_test_relayer http://localhost:8545 $l2_rpc $network_file $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 usage() {
@@ -116,7 +107,7 @@ case $1 in
 
     deploy-beamer)
         create_deployment_config_file &&
-        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${ARTIFACTS_DIR} 1337
         ;;
 
     e2e-test)
