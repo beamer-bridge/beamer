@@ -1,5 +1,5 @@
 {
-    "name": "Ethereum on ganache L1",
+    "name": "ethereum",
     "chain_id": 1337,
     "finality_period": 1,
     "transfer_cost": 1000000000000000,

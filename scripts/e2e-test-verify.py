@@ -9,14 +9,15 @@ from beamer.contracts import contracts_for_web3
 
 
 def main() -> None:
-    assert len(sys.argv) == 5
-    deployment_dir = Path(sys.argv[1])
-    l2_rpc = sys.argv[2]
-    deployer_address = eth_utils.to_checksum_address(sys.argv[3])
-    request_id = sys.argv[4]
+    assert len(sys.argv) == 6
+    artifacts_dir = Path(sys.argv[1])
+    abi_dir = Path(sys.argv[2])
+    l2_rpc = sys.argv[3]
+    deployer_address = eth_utils.to_checksum_address(sys.argv[4])
+    request_id = sys.argv[5]
 
     web3 = Web3(HTTPProvider(l2_rpc))
-    l2_contracts = contracts_for_web3(web3, deployment_dir)
+    l2_contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
     request_manager = l2_contracts["RequestManager"]
 
     print("Waiting for resolution data...", flush=True, end="")

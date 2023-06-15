@@ -10,16 +10,17 @@ from beamer.util import account_from_keyfile, make_web3
 
 
 def main() -> None:
-    assert len(sys.argv) == 5
-    deployment_dir = Path(sys.argv[1])
-    keystore_file = Path(sys.argv[2])
-    password = sys.argv[3]
-    l2_rpc = URL(sys.argv[4])
+    assert len(sys.argv) == 6
+    artifacts_dir = Path(sys.argv[1])
+    abi_dir = Path(sys.argv[2])
+    l2_rpc = URL(sys.argv[3])
+    keystore_file = Path(sys.argv[4])
+    password = sys.argv[5]
 
     deployer = account_from_keyfile(keystore_file, password)
     web3 = make_web3(l2_rpc, deployer)
 
-    l2_contracts = contracts_for_web3(web3, deployment_dir)
+    l2_contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
     overriden_chain_id = os.getenv("SOURCE_CHAIN_ID")
     if overriden_chain_id is None:
         source_chain_id = ChainId(web3.eth.chain_id)
