@@ -18,11 +18,18 @@ log = structlog.get_logger(__name__)
 
 @click.group("cli")
 @click.option(
-    "--deployment-dir",
+    "--artifacts-dir",
     type=Path,
     required=True,
     metavar="DIR",
-    help="The directory that stores contract deployment files.",
+    help="The directory that stores deployment artifact files.",
+)
+@click.option(
+    "--abi-dir",
+    type=Path,
+    required=True,
+    metavar="DIR",
+    help="Path to the directory with contract ABIs",
 )
 @click.option(
     "--keystore-file",
@@ -37,12 +44,14 @@ log = structlog.get_logger(__name__)
 )
 @click.option("--eth-rpc", default="http://localhost:8545", type=str, help="Ethereum node RPC URI")
 @click.pass_context
-def cli(ctx: Any, deployment_dir: Path, keystore_file: Path, password: str, eth_rpc: URL) -> None:
+def cli(
+    ctx: Any, artifacts_dir: Path, abi_dir: Path, keystore_file: Path, password: str, eth_rpc: URL
+) -> None:
     setup_logging(log_level="DEBUG", log_json=False)
 
     account = account_from_keyfile(keystore_file, password)
     web3 = make_web3(eth_rpc, account)
-    contracts = contracts_for_web3(web3, deployment_dir)
+    contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
 
     ctx.ensure_object(dict)
     ctx.obj["web3"] = web3
