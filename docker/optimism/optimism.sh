@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 . "$(realpath $(dirname $0))/../scripts/common.sh"
 
-ROOT="$(get_root_dir)"
-
 # Deployer's address & private key.
 ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 PRIVKEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 CACHE_DIR=$(obtain_cache_dir $0)
-DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/optimism-local.json"
+ARTIFACTS_DIR="${CACHE_DIR}/deployments/artifacts/local"
+DEPLOYMENT_CONFIG_FILE="${CACHE_DIR}/901-optimism.json"
 KEYFILE="${CACHE_DIR}/${ADDRESS}.json"
 OPTIMISM="${CACHE_DIR}/optimism"
 OPTIMISM_COMMIT_ID="6a474e36aba94f15ed90f71d1920e4b1d34513ab"
@@ -71,7 +69,7 @@ up() {
 create_deployment_config_file() {
     ADDRESS='"0x6900000000000000000000000000000000000002"'
     sed "s/\${l1_messenger_args}/${ADDRESS}/" \
-        ${ROOT}/scripts/deployment/optimism-local-template.json \
+        ${ROOT}/deployments/config/local/901-optimism.json \
         > ${DEPLOYMENT_CONFIG_FILE}
 }
 
@@ -80,7 +78,7 @@ e2e_test() {
     l2_rpc=http://localhost:9545
     password=""
     
-    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
     echo Sending Proof
     
     e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
@@ -92,7 +90,7 @@ e2e_test() {
                                          --wallet-private-key $PRIVKEY \
                                          --l2-transaction-hash $e2e_test_l2_txhash; \
                         do sleep 1s; done"
-    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 
@@ -102,7 +100,7 @@ e2e_test_fallback() {
     password=""
 
     export SOURCE_CHAIN_ID=123
-    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
     echo Sending Proof
     
     e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
@@ -120,17 +118,32 @@ e2e_test_fallback() {
     else
         echo Relayer failed as expected
     fi
-    local output=$(poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 verify-portal-call)
+    local output=$(poetry run python $ROOT/scripts/e2e-test-op-commands.py \
+        ${KEYFILE} \
+        "${password}" \
+        http://localhost:8545 \
+        verify-portal-call
+    )
     export BLOCK_NUMBER=$(echo "$output" | awk -F: '/Block Number/ { print $2 }')
-    poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 set-chain-on-resolver ${DEPLOYMENT_DIR} $l2_rpc
+    poetry run python $ROOT/scripts/e2e-test-op-commands.py \
+        ${KEYFILE} \
+        "${password}" \
+        http://localhost:8545 \
+        set-chain-on-resolver \
+        $ARTIFACTS_DIR \
+        $l2_rpc
     ${relayer} relay \
         --l1-rpc-url http://localhost:8545 \
         --l2-relay-to-rpc-url $l2_rpc \
         --l2-relay-from-rpc-url $l2_rpc \
         --wallet-private-key $PRIVKEY \
         --l2-transaction-hash $e2e_test_l2_txhash
-    poetry run python $ROOT/scripts/e2e-test-op-commands.py ${KEYFILE} "${password}" http://localhost:8545 verify-messenger-call
-    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
+    poetry run python $ROOT/scripts/e2e-test-op-commands.py \
+        ${KEYFILE} \
+        "${password}" \
+        http://localhost:8545 \
+        verify-messenger-call
+    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 usage() {
@@ -158,7 +171,7 @@ case $1 in
 
     deploy-beamer)
         create_deployment_config_file &&
-        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+        deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${ARTIFACTS_DIR} 900
         ;;
 
     e2e-test)
