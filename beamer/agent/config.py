@@ -95,7 +95,8 @@ def _default_config() -> dict:
 
 _REQUIRED_KEYS = (
     "confirmation-blocks",
-    "deployment-dir",
+    "artifacts-dir",
+    "abi-dir",
     "fill-wait-time",
     "unsafe-fill-time",
     "account.path",
@@ -134,7 +135,7 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     password = _get_value(config, "account.password")
     account = account_from_keyfile(path, password)
 
-    deployment_info = load_deployment_info(Path(config["deployment-dir"]))
+    deployment_info = load_deployment_info(Path(config["artifacts-dir"]), Path(config["abi-dir"]))
     token_checker = TokenChecker(list(config["tokens"].values()))
 
     return Config(

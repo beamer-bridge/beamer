@@ -41,10 +41,16 @@ def _sigint_handler(agent: Agent) -> None:
     "--account-password", type=str, prompt=False, help="The password needed to unlock the account."
 )
 @click.option(
-    "--deployment-dir",
+    "--artifacts-dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     metavar="DIR",
-    help="The directory containing contract deployment files.",
+    help="The directory containing deployment artifact files.",
+)
+@click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    metavar="DIR",
+    help="The directory containing contract abi files.",
 )
 @click.option(
     "--fill-wait-time",
@@ -104,7 +110,8 @@ def agent(
     config_path: Path,
     account_path: Optional[Path],
     account_password: Optional[str],
-    deployment_dir: Optional[Path],
+    artifacts_dir: Optional[Path],
+    abi_dir: Optional[Path],
     fill_wait_time: Optional[int],
     log_level: Optional[str],
     base_chain: str,
@@ -126,7 +133,8 @@ def agent(
     options = {
         "fill-wait-time": fill_wait_time,
         "log-level": log_level,
-        "deployment-dir": deployment_dir,
+        "artifacts-dir": artifacts_dir,
+        "abi-dir": abi_dir,
         "metrics.prometheus-port": metrics_prometheus_port,
         "source-chain": source_chain,
         "target-chain": target_chain,

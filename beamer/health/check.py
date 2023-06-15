@@ -43,7 +43,8 @@ TokenDetailsMap = dict[str, TokenDetails]
 
 class HealthConfig(TypedDict):
     agent_address: str
-    deployment_dir: Path
+    artifacts_dir: Path
+    abi_dir: Path
     notification_system: str
     notification_message_prefix: str
     rpcs: dict[int, str]
@@ -149,7 +150,8 @@ def _set_config(path: Path) -> None:
 
     GLOBAL_CONFIG = {
         "agent_address": config["agent-address"].lower(),
-        "deployment_dir": Path(config["deployment-dir"]),
+        "artifacts_dir": Path(config["artifacts-dir"]),
+        "abi_dir": Path(config["abi-dir"]),
         "notification_system": config["notification-system"],
         "notification_message_prefix": config["notification-message-prefix"],
         "rpcs": rpcs,
@@ -197,7 +199,9 @@ def cleanup_transfers(transfers: TransferMap) -> None:
 
 
 def fetch_events() -> ChainEventMap:
-    deployment_info = beamer.contracts.load_deployment_info(get_config()["deployment_dir"])
+    deployment_info = beamer.contracts.load_deployment_info(
+        get_config()["artifacts_dir"], get_config()["abi_dir"]
+    )
     events = {}
 
     for chain_id, (rpc) in get_config()["rpcs"].items():
