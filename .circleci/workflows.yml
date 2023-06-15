@@ -241,19 +241,6 @@ jobs:
       ARBITRUM_FOLDER: "docker/arbitrum"
     steps:
       - initialize-environment
-      - run: git submodule status $ARBITRUM_FOLDER/nitro | awk '{print $1;}' > "/tmp/arbitrum-commit-hash"
-      - restore_cache:
-          key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
-      - run: |
-          git submodule update --recursive --init $ARBITRUM_FOLDER/nitro
-          cd $ARBITRUM_FOLDER/nitro
-          git submodule update --init blockscout brotli fastcache go-ethereum \
-                                      arbitrator/wasm-libraries/soft-float/SoftFloat
-      - save_cache:
-          key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
-          paths:
-            - docker/arbitrum/nitro
-            - .git/modules/docker/arbitrum
       - run: bash $ARBITRUM_FOLDER/arbitrum.sh up
       - run: bash $ARBITRUM_FOLDER/arbitrum.sh deploy-beamer
       - run: bash $ARBITRUM_FOLDER/arbitrum.sh e2e-test
