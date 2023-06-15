@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from typing import Any
@@ -9,11 +8,10 @@ from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3 import Web3
 
-from beamer.contracts import contracts_for_web3, make_contracts, prepare_deployment_infos
+import beamer.deploy.artifacts
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3, transact
 from scripts._util import pass_args
-
 
 # Topic signatures are taken from:
 # https://github.com/ethereum-optimism/optimism/blob/develop/op-bindings/bindings/l1crossdomainmessenger.go
@@ -66,28 +64,27 @@ def verify_portal_call(
 
 @cli.command("set-chain-on-resolver")
 @click.argument(
-    "deployment-dir",
+    "artifacts-dir",
     type=Path,
     required=True,
 )
 @click.argument("l2-rpc", type=str)
 @pass_args
 def set_messenger_on_resolver(
-    account: LocalAccount, web3_l1: Web3, deployment_dir: Path, l2_rpc: URL
+    account: LocalAccount, web3_l1: Web3, artifacts_dir: Path, l2_rpc: URL
 ) -> None:
     web3 = make_web3(l2_rpc, account)
     source_chain_id = ChainId(int(os.environ["SOURCE_CHAIN_ID"]))
 
-    with deployment_dir.joinpath("deployment.json").open("rt") as f:
-        deployment = json.load(f)
+    op_deployment_path = artifacts_dir / "901-optimism.deployment.json"
+    base_deployment_path = artifacts_dir / "base.deployment.json"
 
-    deployment_info = prepare_deployment_infos(deployment_dir, deployment["base_chain"])
-    l1_contracts = make_contracts(web3_l1, deployment_info)
-    l2_contracts = contracts_for_web3(web3, deployment_dir)
+    base_deployment = beamer.deploy.artifacts.Deployment.from_file(base_deployment_path)
+    op_deployment = beamer.deploy.artifacts.Deployment.from_file(op_deployment_path)
 
-    resolver = l1_contracts["Resolver"]
-    request_manager = l2_contracts["RequestManager"]
-    l1_messenger = l1_contracts["OptimismL1Messenger"]
+    resolver = base_deployment.obtain_contract(web3_l1, "base", "Resolver")
+    request_manager = op_deployment.obtain_contract(web3, "chain", "RequestManager")
+    l1_messenger = op_deployment.obtain_contract(web3_l1, "base", "OptimismL1Messenger")
 
     transact(
         resolver.functions.addRequestManager(
