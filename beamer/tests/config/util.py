@@ -63,5 +63,5 @@ def deploy(deployer, destdir):
         ),
     )
 
-    artifact = f"{artifacts_dir}/1337-Ethereum on ganache L1.deployment.json"
+    artifact = f"{artifacts_dir}/1337-ethereum.deployment.json"
     return rpc_file, artifact
