@@ -12,7 +12,7 @@ import ape
 import eth_account
 import psutil
 import yaml
-from eth_utils import to_canonical_address
+from eth_utils import to_checksum_address
 from yaml.loader import SafeLoader
 
 from beamer.agent.agent import Agent
@@ -122,14 +122,12 @@ def _get_config(
         contracts_info = dict(
             RequestManager=ContractInfo(
                 deployment_block=BlockNumber(1),
-                address=to_canonical_address(
-                    slave_contract_addresses[chain_id]["request_manager"]
-                ),
+                address=to_checksum_address(slave_contract_addresses[chain_id]["request_manager"]),
                 abi=[abi.dict() for abi in contracts.request_manager.contract_type.abi],
             ),
             FillManager=ContractInfo(
                 deployment_block=BlockNumber(1),
-                address=to_canonical_address(slave_contract_addresses[chain_id]["fill_manager"]),
+                address=to_checksum_address(slave_contract_addresses[chain_id]["fill_manager"]),
                 abi=[abi.dict() for abi in contracts.fill_manager.contract_type.abi],
             ),
         )
@@ -226,7 +224,7 @@ def _mint_agent_tokens(
         while not w3.is_connected():
             time.sleep(1)
         l2_token = w3.eth.contract(
-            address=to_canonical_address(
+            address=to_checksum_address(
                 slave_contract_addresses[ChainId(int(chain_name))]["token"]
             ),
             abi=[abi.dict() for abi in token.contract_type.abi],

@@ -7,34 +7,49 @@ import ape
 import eth_account
 import pytest
 from click.testing import CliRunner
+from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.commands import agent
 
 
-def _generate_deployment_dir(output_dir, root, contracts):
+def _generate_deployment_dir(deployment_dir, root, contracts):
+    artifacts_dir = deployment_dir / "artifacts"
+    abi_dir = deployment_dir / "abis"
+    artifacts_dir.mkdir()
+    abi_dir.mkdir()
     data = {
-        "beamer_commit": "0" * 40,
-        "chains": {
-            str(ape.chain.chain_id): {
-                "RequestManager": {
-                    "address": contracts.request_manager.address,
-                    "deployment_block": 1,
-                },
-                "FillManager": {"address": contracts.fill_manager.address, "deployment_block": 1},
-            }
+        "deployer": ADDRESS_ZERO,
+        "base": {"chain_id": ape.chain.chain_id},
+        "chain": {
+            "chain_id": ape.chain.chain_id,
+            "RequestManager": {
+                "beamer_commit": "0" * 40,
+                "tx_hash": contracts.request_manager.txn_hash,
+                "address": contracts.request_manager.address,
+                "deployment_block": 1,
+                "deployment_args": [],
+            },
+            "FillManager": {
+                "beamer_commit": "0" * 40,
+                "tx_hash": contracts.fill_manager.txn_hash,
+                "address": contracts.fill_manager.address,
+                "deployment_block": 1,
+                "deployment_args": [],
+            },
         },
     }
-    with output_dir.joinpath("deployment.json").open("wt") as f:
+    with artifacts_dir.joinpath("1337-ethereum.deployment.json").open("wt") as f:
         json.dump(data, f)
 
     src = root / "contracts/.build"
-    shutil.copy(src / "RequestManager.json", output_dir)
-    shutil.copy(src / "FillManager.json", output_dir)
+    shutil.copy(src / "RequestManager.json", abi_dir)
+    shutil.copy(src / "FillManager.json", abi_dir)
 
 
 _CONFIG_FILE = """
 unsafe-fill-time = {unsafe_fill_time}
-deployment-dir = "{deployment_dir}"
+artifacts-dir = "{artifacts_dir}"
+abi-dir = "{abi_dir}"
 poll-period = {poll_period}
 confirmation-blocks = {confirmation_blocks}
 
@@ -57,7 +72,9 @@ rpc-url = "{bar_rpc_url}"
 """
 
 
-def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time, confirmation_blocks):
+def _generate_options(
+    keyfile, artifacts_dir, abi_dir, config, unsafe_fill_time, confirmation_blocks
+):
     return (
         "--account-path",
         str(keyfile),
@@ -69,8 +86,10 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time, confirm
         f"l2a={config.rpc_urls['l2a']}",
         "--chain",
         f"l2b={config.rpc_urls['l2b']}",
-        "--deployment-dir",
-        str(deployment_dir),
+        "--artifacts-dir",
+        str(artifacts_dir),
+        "--abi-dir",
+        str(abi_dir),
         "--unsafe-fill-time",
         unsafe_fill_time,
         "--poll-period",
@@ -81,7 +100,7 @@ def _generate_options(keyfile, deployment_dir, config, unsafe_fill_time, confirm
 
 
 def _generate_options_config(
-    keyfile, deployment_dir, config, unsafe_fill_time, confirmation_blocks
+    keyfile, artifacts_dir, abi_dir, config, unsafe_fill_time, confirmation_blocks
 ):
     content = _CONFIG_FILE.format(
         path=str(keyfile),
@@ -89,7 +108,8 @@ def _generate_options_config(
         foo_rpc_url=config.rpc_urls["l2a"],
         foo_confirmation_blocks=config.confirmation_blocks["l2a"],
         bar_rpc_url=config.rpc_urls["l2b"],
-        deployment_dir=deployment_dir,
+        artifacts_dir=artifacts_dir,
+        abi_dir=abi_dir,
         unsafe_fill_time=unsafe_fill_time,
         poll_period=config.poll_period,
         foo_poll_period=0.2,
@@ -118,6 +138,8 @@ def test_cli(
     root = pathlib.Path(__file__).parents[3]
     deployment_dir = tmp_path / "deployment"
     deployment_dir.mkdir()
+    artifacts_dir = deployment_dir / "artifacts"
+    abi_dir = deployment_dir / "abis"
     _generate_deployment_dir(deployment_dir, root, contracts)
 
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
@@ -126,7 +148,7 @@ def test_cli(
     unsafe_time, error = unsafe_fill_time_option
 
     options = generate_options(
-        keyfile, deployment_dir, config, unsafe_time, config.confirmation_blocks["l2a"]
+        keyfile, artifacts_dir, abi_dir, config, unsafe_time, config.confirmation_blocks["l2a"]
     )
     runner = CliRunner()
     result = runner.invoke(agent, options)
