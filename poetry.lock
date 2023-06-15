@@ -232,13 +232,13 @@ test = ["ape-arbitrum", "ape-base", "ape-bsc", "ape-fantom", "ape-infura", "ape-
 
 [[package]]
 name = "ape-ganache"
-version = "0.6.6"
+version = "0.6.7"
 description = "ape-ganache: Ape network provider for Ganache"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-ganache-0.6.6.tar.gz", hash = "sha256:4c34265ed42f6009591e04032822664da9604f5eaf66f32f6c761141cc9167e6"},
-    {file = "ape_ganache-0.6.6-py3-none-any.whl", hash = "sha256:86d321e24c77bd02e8a4057c769b46c49192a95c8d39ced0d75a31bd1069017a"},
+    {file = "ape-ganache-0.6.7.tar.gz", hash = "sha256:99ce207bf18eb6cce150db736b6d03dc097960e2fe35f69c59d9306c071ba348"},
+    {file = "ape_ganache-0.6.7-py3-none-any.whl", hash = "sha256:4239adf90d6750f325a768f01343ddfea236876aa9c84f72ba7f7a53693d2a53"},
 ]
 
 [package.dependencies]
@@ -4622,4 +4622,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "30e4dcaf4d2bccd24f4ed3cda556b47030097d3eec3b3d5ffedd488b51a1d6ae"
+content-hash = "f7b667198d7b54bb769a56fa04dfbf986f01c6041a693a7cac0fb65035d0a601"
