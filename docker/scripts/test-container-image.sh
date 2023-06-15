@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 . "$(realpath $(dirname $0))/common.sh"
 
-ROOT="$(get_root_dir)"
-
 CACHE_DIR=$(obtain_cache_dir "$0")
-DEPLOYMENT_DIR="${CACHE_DIR}/deployment"
-DEPLOYMENT_CONFIG_FILE="${ROOT}/scripts/deployment/ethereum-local.json"
+
+ARTIFACTS_DIR="${CACHE_DIR}/deployments/artifacts/local"
+DEPLOYMENT_CONFIG_FILE="${ROOT}/deployments/config/local/1337-ethereum.json"
 
 # Generate deployer's key.
 KEYFILE=$(mktemp -p ${CACHE_DIR})
@@ -26,21 +25,24 @@ function cleanup {
 trap cleanup EXIT
 
 echo Deploying Beamer...
-mkdir -p ${CACHE_DIR}/deployment
-deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${DEPLOYMENT_DIR}
+mkdir -p ${ARTIFACTS_DIR}
+cp -r ${ABI_DIR} ${CACHE_DIR}/abis
+deploy_beamer ${KEYFILE} ${DEPLOYMENT_CONFIG_FILE} ${ARTIFACTS_DIR} 1337
 
 echo Whitelisting deployer...
 python ${ROOT}/scripts/call_contracts.py --keystore-file ${KEYFILE} \
                                          --password '' \
                                          --eth-rpc http://localhost:8545 \
-                                         --deployment-dir ${DEPLOYMENT_DIR} \
+                                         --artifacts-dir ${ARTIFACTS_DIR} \
+                                         --abi-dir ${ABI_DIR} \
                                          whitelist ${ADDRESS}
 
 cat <<EOF > ${CACHE_DIR}/agent.conf
 log-level = "debug"
-deployment-dir = "${DEPLOYMENT_DIR}"
+artifacts-dir = "${ARTIFACTS_DIR}"
 poll-period = 0.1
 confirmation-blocks = 0
+abi-dir = "${CACHE_DIR}/abis"
 
 [account]
 path = "${KEYFILE}"
