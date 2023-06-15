@@ -1,5 +1,5 @@
 {
-    "name": "Polygon ZkEVM Local",
+    "name": "polygon-zkevm",
     "chain_id": 1001,
     "l1_messenger": [
         "PolygonZkEVMMessenger",
