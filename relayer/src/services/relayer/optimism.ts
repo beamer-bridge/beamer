@@ -13,25 +13,12 @@ import { BaseRelayerService } from "../types";
 export class OptimismRelayerService extends BaseRelayerService {
   customNetworkContracts: DeepPartial<OEContractsLike> | undefined;
   messenger: CrossChainMessenger | undefined;
-
   /**
-   *  We utilize a little "hack" in the Optimism Contracts for properly estimating the min. gas required for relaying the message.
-   *  When doing the estimation via `estimateGas` we provide the ESTIMATION_ADDRESS as the "from" address so it hits the right "spots" in the contracts
-   *  in order to force the estimation algorithm to return the right gasLimit estimation.
-   *  https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L381-L388
-   *  Without this, the estimated min. gas returned when estimating the `CrossDomainMessenger.relayMessage` is wrong.
    *
-   *  Note: With a wrong min. gas limit estimation, the submitted transactions to the OptimismPortal & CrossChainMessenger will
-   *  always succeed even if the underlying message was not relayed successfully due to missing gas.
-   *
-   *  Another benefit of this is catching reverts when relaying messages that are destined to fail due to other issues unrelated to the gasLimit:
-   *  - https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/L1/OptimismPortal.sol#L417
-   *  - https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/universal/CrossDomainMessenger.sol#L409-L411
-   *
-   *
-   * The value of this constant is defined here: https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol#L14-L21
-   * */
-  readonly ESTIMATION_ADDRESS = "0x0000000000000000000000000000000000000001";
+   * A static gas limit value high enough to make sure that the message relays
+   * will successfully pass the internal gas limit checks in the OP contracts.
+   */
+  readonly RELAY_GAS_LIMIT = 3_000_000;
 
   constructor(...args: ConstructorParameters<typeof BaseRelayerService>) {
     super(...args);
@@ -119,46 +106,21 @@ export class OptimismRelayerService extends BaseRelayerService {
   ): Promise<TransactionResponse> {
     const lowLevelMessage = await this.messenger.toLowLevelMessage(message);
 
-    const gasLimit = await this.l1Wallet.provider.estimateGas({
-      from: this.ESTIMATION_ADDRESS,
-      to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
-      data: lowLevelMessage.message,
-    });
-
     return await this.l1Wallet.sendTransaction({
       to: this.messenger.contracts.l1.L1CrossDomainMessenger.address,
       // lowLevelMessage.message contains the complete transaction data
       data: lowLevelMessage.message,
-      gasLimit,
+      gasLimit: this.RELAY_GAS_LIMIT,
     });
   }
 
   private async relayMessageViaOptimismPortal(
     message: CrossChainMessage,
   ): Promise<TransactionResponse> {
-    const lowLevelMessage = await this.messenger.toLowLevelMessage(message);
-
-    const OptimismPortalContract = await this.messenger.contracts.l1.OptimismPortal.connect(
-      this.l1RpcProvider,
-    );
-    const gasLimit = await OptimismPortalContract.estimateGas.finalizeWithdrawalTransaction(
-      [
-        lowLevelMessage.messageNonce,
-        lowLevelMessage.sender,
-        lowLevelMessage.target,
-        lowLevelMessage.value,
-        lowLevelMessage.minGasLimit,
-        lowLevelMessage.message,
-      ],
-      {
-        from: this.ESTIMATION_ADDRESS,
-      },
-    );
-
     // Finalize message via OptimismPortal (it calls the L1CrossDomainMessenger internally)
     return await this.messenger.finalizeMessage(message, {
       overrides: {
-        gasLimit,
+        gasLimit: this.RELAY_GAS_LIMIT,
       },
     });
   }
