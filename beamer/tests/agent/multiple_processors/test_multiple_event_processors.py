@@ -149,6 +149,8 @@ def _get_config(
         account=account,
         fill_wait_time=0,
         unsafe_fill_time=600,
+        min_source_balance=0,
+        min_source_balance_per_chain={},
         prometheus_metrics_port=None,
         log_level="debug",
         poll_period=1.0,
