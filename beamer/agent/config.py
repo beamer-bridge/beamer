@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 import toml
 from eth_account.signers.local import LocalAccount
+from eth_utils import to_wei
 
 from beamer.agent.util import TokenChecker
 from beamer.contracts import DeploymentInfo, load_deployment_info
@@ -26,6 +27,8 @@ class Config:
     token_checker: TokenChecker
     fill_wait_time: int
     unsafe_fill_time: int
+    min_source_balance: int
+    min_source_balance_per_chain: dict[str, int]
     confirmation_blocks: dict[str, int]
     prometheus_metrics_port: Optional[int]
     log_level: str
@@ -83,6 +86,7 @@ def _default_config() -> dict:
     return {
         "fill-wait-time": 120,
         "unsafe-fill-time": 600,
+        "min-source-balance": 0.1,
         "log-level": "info",
         "account": {},
         "rpc_urls": {},
@@ -99,6 +103,7 @@ _REQUIRED_KEYS = (
     "abi-dir",
     "fill-wait-time",
     "unsafe-fill-time",
+    "min-source-balance",
     "account.path",
     "account.password",
 )
@@ -119,11 +124,15 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         raise ConfigError(f"missing settings: {missing}")
 
     rpc_urls = {}
+    min_source_balance_per_chain = {}
     poll_period_per_chain = {}
     confirmation_blocks = {}
 
     for chain_name, chain_info in config["chains"].items():
         rpc_urls[chain_name] = URL(chain_info["rpc-url"])
+        min_source_balance = chain_info.get("min-source-balance")
+        if min_source_balance is not None:
+            min_source_balance_per_chain[chain_name] = to_wei(min_source_balance, "ether")
         poll_period = chain_info.get("poll-period")
         if poll_period is not None:
             poll_period_per_chain[chain_name] = float(poll_period)
@@ -147,6 +156,8 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
         confirmation_blocks=confirmation_blocks,
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],
+        min_source_balance=to_wei(config["min-source-balance"], "ether"),
+        min_source_balance_per_chain=min_source_balance_per_chain,
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
         log_level=_get_value(config, "log-level"),
         poll_period=config["poll-period"],

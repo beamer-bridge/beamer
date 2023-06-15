@@ -141,10 +141,12 @@ def make_context() -> Tuple[Context, Config]:
         base_chain_rpc_url=URL(""),
         token_checker=checker,
         fill_wait_time=1,
+        unsafe_fill_time=1,
+        min_source_balance=0,
+        min_source_balance_per_chain={},
         prometheus_metrics_port=None,
         confirmation_blocks={"l2a": 0, "l2b": 0},
         log_level="debug",
-        unsafe_fill_time=1,
         poll_period=1.0,
         poll_period_per_chain={},
     )

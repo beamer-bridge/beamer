@@ -228,6 +228,8 @@ def config(request_manager, fill_manager, token, token_list):
         account=account,
         fill_wait_time=0,
         unsafe_fill_time=600,
+        min_source_balance=0,
+        min_source_balance_per_chain={},
         prometheus_metrics_port=None,
         base_chain_rpc_url=URL(url),
         log_level="debug",
