@@ -9,6 +9,7 @@ from typing import Callable
 import requests
 import structlog
 from web3 import HTTPProvider, Web3
+from web3._utils.empty import Empty
 from web3.contract import Contract
 from web3.types import Timestamp, Wei
 
@@ -347,9 +348,26 @@ def fill_request(request: Request, context: Context) -> None:
         context.logger.info("Request expired, ignoring", request=request)
         request.ignore()
         return
-    w3 = context.fill_manager.w3
-    token = w3.eth.contract(abi=get_ERC20_abi(), address=request.target_token_address)
-    address = w3.eth.default_account
+
+    source_web3 = context.request_manager.w3
+    source_address = source_web3.eth.default_account
+    assert not isinstance(source_address, Empty)
+    source_balance = source_web3.eth.get_balance(source_address)
+    min_source_balance = context.config.min_source_balance_per_chain.get(
+        context.source_chain.name, context.config.min_source_balance
+    )
+    if source_balance < min_source_balance:
+        context.logger.info(
+            "Not enough balance to claim, ignoring",
+            request=request,
+            min_source_balance=min_source_balance,
+            source_balance=source_balance,
+        )
+        return
+
+    target_web3 = context.fill_manager.w3
+    token = target_web3.eth.contract(abi=get_ERC20_abi(), address=request.target_token_address)
+    address = target_web3.eth.default_account
     balance = token.functions.balanceOf(address).call()
     if balance < request.amount:
         context.logger.info(
@@ -369,7 +387,7 @@ def fill_request(request: Request, context: Context) -> None:
             request_amount=request.amount,
         )
         return
-    chain_id = ChainId(w3.eth.chain_id)
+    chain_id = ChainId(target_web3.eth.chain_id)
     token_address = token.address
     mutex = context.fill_mutexes[(chain_id, token_address)]
     with mutex:
