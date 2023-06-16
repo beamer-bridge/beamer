@@ -26,8 +26,11 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
    * - ``--account-password PASSWORD``
      - The password needed to unlock the account.
 
-   * - ``--deployment-dir DIR``
-     - The directory containing contract deployment files.
+   * - ``--artifacts-dir DIR``
+     - The directory containing deployment artifact files.
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract abi files.
 
    * - ``--fill-wait-time TIME``
      - Time in seconds to wait for a fill event before challenging a false claim.

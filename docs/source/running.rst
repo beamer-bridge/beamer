@@ -24,7 +24,7 @@ an agent requires the following:
  * A directory containing Beamer contracts' deployment information.
    See  :ref:`deployment-info`.
 
-   Related options: ``--deployment-dir``
+   Related options: ``--artifacts-dir``, ``--abi-dir``
 
 
 For a detailed explanation of configuration options, see :ref:`config-agent`.
@@ -38,25 +38,24 @@ The contracts' deployment information
 During the Beamer contracts' deployment process, a directory with deployment information is created.
 The directory typically looks like this::
 
-	deployments/
-	└── goerli
-		├── deployment.json
-		├── FillManager.json
-		├── MintableToken.json
-		├── OptimismL1Messenger.json
-		├── OptimismL2Messenger.json
-		├── RequestManager.json
-		└── Resolver.json
+  deployments/
+  └── artifacts/
+    └── goerli/
+      ├── base.deployment.json
+      ├── 5-ethereum.deployment.json
+      ├── 420-optimism.deployment.json
+      ├── 421613-arbitrum.deployment.json
+      └── 84531-base.deployment.json
 
-The above shows contract `deployment on Goerli`_.
+The above shows contract `artifacts on Goerli`_.
 
-The ``deployment.json`` file contains information on the chains that the
+The ``<chain-id>-<chain-name>.deployment.json`` files contain information on specific chain that the
 contracts have been deployed on, the contracts' addresses, as well as the block
 number at the time of deployment.
 
 The rest of the files contain contract ABI information which is needed by the agent.
 
-.. _deployment on Goerli: https://github.com/beamer-bridge/beamer/tree/main/deployments/goerli
+.. _artifacts on Goerli: https://github.com/beamer-bridge/beamer/tree/main/deployments/artifacts/goerli
 
 .. _agent-container:
 
@@ -70,7 +69,8 @@ To run an agent container simply do::
                                                   --base-chain <l1-rpc-url> \
                                                   --chain source=<source-l2-rpc-url> \
                                                   --chain target=<target-l2-rpc-url> \
-                                                  --deployment-dir <contract-deployment-dir> \
+                                                  --artifacts-dir <artifacts-dir> \
+                                                  --abi-dir <abi-dir> \
                                                   --source-chain source \
                                                   --target-chain target
 
@@ -102,7 +102,8 @@ While still inside the virtual environment, run::
                  --chain l1=<l1-rpc-url> \
                  --chain source=<source-l2-rpc-url> \
                  --chain target=<target-l2-rpc-url> \
-                 --deployment-dir <contract-deployment-dir> \
+                 --artifacts-dir <artifacts-dir> \
+                 --abi-dir <abi-dir> \
                  --source-chain source \
                  --target-chain target
 

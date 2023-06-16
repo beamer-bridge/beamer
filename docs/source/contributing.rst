@@ -56,16 +56,25 @@ Create a JSON keyfile corresponding to one of the accounts pre-funded by ganache
 
 Deploy the contracts on the local ganache test chain::
 
-    python scripts/deployment/main.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
-                                      --password '' \
-                                      --output-dir deployments/ganache-local \
-                                      --config-file scripts/deployment/ganache-local.json \
-                                      --deploy-mintable-token
+    beamer deploy-base --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                       --password '' \
+                       --artifacts-dir deployments/artifacts/local \
+                       --rpc-file deployments/config/local/rpc.json \
+                       --commit-check false \
+                       1337
+    
+    beamer deploy --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
+                  --password '' \
+                  --artifacts-dir deployments/artifacts/local \
+                  --rpc-file deployments/config/local/rpc.json \
+                  --deploy-mintable-token \
+                  --commit-check false \
+                  deployments/config/local/1337-ethereum.json
 
 Generate a config file with token definition::
 
 
-    TOKEN_ADDR=$(jq -r '.chains."1337".MintableToken.address' < deployments/ganache-local/deployment.json)
+    TOKEN_ADDR=$(jq -r '.chain.MintableToken.address' < deployments/artifacts/local/1337-ethereum.deployment.json)
     echo -e "[tokens]\nTST = [[\"1337\", \"$TOKEN_ADDR\"]]"  > agent-ganache-local.conf
 
 Mint some test tokens::
@@ -73,7 +82,8 @@ Mint some test tokens::
     python scripts/call_contracts.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                                      --password '' \
                                      --eth-rpc http://localhost:8545 \
-                                     --deployment-dir deployments/ganache-local \
+                                     --artifacts-dir deployments/artifacts/local \
+                                     --abi-dir contracts/.build
                                      mint
 
 Whitelist the agent's address::
@@ -81,7 +91,8 @@ Whitelist the agent's address::
     python scripts/call_contracts.py --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                                      --password '' \
                                      --eth-rpc http://localhost:8545 \
-                                     --deployment-dir deployments/ganache-local \
+                                     --artifacts-dir deployments/artifacts/local \
+                                     --abi-dir contracts/.build
                                      whitelist 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc
 
 Start ``beamer-agent``::
@@ -93,12 +104,14 @@ Start ``beamer-agent``::
                  --chain l2=http://localhost:8545 \
                  --source-chain=l2 \
                  --target-chain=l2 \
-                 --deployment-dir deployments/ganache-local \
+                 --artifacts-dir deployments/artifacts/local \
+                 --abi-dir contract/.build \
                  --log-level debug
 
 Submit a request::
 
-    python scripts/call_contracts.py --deployment-dir deployments/ganache-local \
+    python scripts/call_contracts.py --artifacts-dir deployments/artifacts/local \
+                                     --abi-dir contract/.build \
                                      --keystore-file 0x1CEE82EEd89Bd5Be5bf2507a92a755dcF1D8e8dc.json \
                                      --password '' \
                                      --eth-rpc http://localhost:8545 \
@@ -126,10 +139,6 @@ contracts and start the end-to-end test::
 To stop and remove all the containers, simply run::
 
     sh ./docker/optimism/optimism.sh down
-
-To list Optimism contracts' addresses, run::
-
-    sh ./docker/optimism/optimism.sh addresses
 
 
 Running the frontend
