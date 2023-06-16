@@ -16,7 +16,8 @@ class CommandFailed(Exception):
 def run(*args):
     runner = CliRunner()
     result = runner.invoke(*args)
-    assert result.exit_code == 0
+    if result.exit_code:
+        raise CommandFailed(result)
 
 
 def write_keystore_file(path, private_key, password):
