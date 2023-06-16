@@ -589,9 +589,11 @@ workflows:
             - create-relayers
       - build-and-publish-container-image:
           requires:
-            - install-python
-            - create-relayers
             - test-relayer
+            - e2e-test-ethereum
+            - e2e-test-optimism
+            - e2e-test-arbitrum
+            - e2e-test-polygon-zkevm
 
   frontend-deployment:
     unless: 
