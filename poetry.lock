@@ -190,13 +190,13 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-moc
 
 [[package]]
 name = "ape-base"
-version = "0.1.0"
+version = "0.6.0"
 description = "ape-base: Base ecosystem for Ape"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-base-0.1.0.tar.gz", hash = "sha256:bbc0a8ed2265c98e53be21c5c975ba41a64730f73bd69e84d3621bc4a4206f16"},
-    {file = "ape_base-0.1.0-py3-none-any.whl", hash = "sha256:f31321279221786ea8cc021f77624317c8880a131238984ca0d9ab858c31bc9f"},
+    {file = "ape-base-0.6.0.tar.gz", hash = "sha256:a17f8e9cd5de9a54d83f0a20083806584f58b08056b6a2182e83ee49daf37910"},
+    {file = "ape_base-0.6.0-py3-none-any.whl", hash = "sha256:c8373c383737065e9db29b6b3735fdb30bd1952941b3138596fea9d13098e766"},
 ]
 
 [package.dependencies]
@@ -4622,4 +4622,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "2c964d2e3607df81c0b3a129a5fd1cc1a7d4b9dbdc0600053de4758f74dfdfad"
+content-hash = "a033f4bcdfa093ce281c3c5e960c1711c80423103a047bdee8dac8872e73c8c1"
