@@ -14,7 +14,8 @@ option.
 An example configuration::
 
     log-level = "debug"
-    deployment-dir = "deployments/goerli"
+    artifacts-dir = "deployments/artifacts/goerli"
+    abi-dir = "deployments/abis/goerli"
     fill-wait-time = 120
     unsafe-fill-time = 600
     poll-period = 5.0
@@ -149,9 +150,15 @@ Options reference
 
    * - ::
 
-        deployment-dir = DIR
+        artifacts-dir = DIR
 
-     - The directory containing contract deployment files.
+     - The directory containing deployment artifact files.
+
+   * - ::
+
+        abi-dir = DIR
+
+     - The directory containing contract abi files.
 
    * - ::
 
@@ -249,7 +256,8 @@ which is specified by the ``-c``/``--config`` option.
 An example configuration::
 
     agent-address=""
-    deployment-dir="../deployments/mainnet"
+    artifacts-dir="../deployments/artifacts/mainnet"
+    abi-dir="../deployments/abis/mainnet"
     notification-system="telegram"
 
     [notification.rocketchat]
@@ -325,9 +333,15 @@ Options reference
 
    * - ::
 
-        deployment-dir = PATH
+        artifacts-dir = PATH
 
-     - Path to the deployment directory as it can be seen `here <https://github.com/beamer-bridge/beamer/tree/07d66e0bb8c76bb1ff219e24e34e1c24ee7890c6/deployments>`_.
+     - The directory that stores deployment artifact files.
+
+   * - ::
+
+        abi-dir = PATH
+
+     - Path to the contract abi files directory.
 
    * - ::
 
