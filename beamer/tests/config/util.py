@@ -1,10 +1,16 @@
 import json
 import pathlib
+import tempfile
 
 import eth_account
 from click.testing import CliRunner
 
 import beamer.deploy.commands
+from beamer.config.state import Configuration
+
+
+class CommandFailed(Exception):
+    pass
 
 
 def run(*args):
@@ -16,6 +22,25 @@ def run(*args):
 def write_keystore_file(path, private_key, password):
     obj = eth_account.Account.encrypt(private_key, password)
     path.write_text(json.dumps(obj))
+
+
+def read_config_state(rpc_file, artifact):
+    root = pathlib.Path(__file__).parents[3]
+    with tempfile.TemporaryDirectory() as tmp_path:
+        state_path = pathlib.Path(tmp_path) / "config.state"
+        run(
+            beamer.config.commands.read,
+            (
+                "--rpc-file",
+                rpc_file,
+                "--abi-dir",
+                f"{root}/contracts/.build/",
+                "--artifact",
+                artifact,
+                str(state_path),
+            ),
+        )
+        return Configuration.from_file(state_path)
 
 
 def deploy(deployer, destdir):
