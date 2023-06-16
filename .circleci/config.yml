@@ -36,8 +36,8 @@ workflows:
             scripts/.* backend-updated true
             relayer/.* relayer-updated true
             docs/.* docs-updated true
-            deployments/mainnet/deployment.json docs-updated true
             deployments/artifacts/.* deployment-artifacts-updated true
+            deployments/artifacts/.* docs-updated true
             deployments-npm-package/package.json deployment-package-json-updated true
             frontend/.* frontend-updated true
             subgraph/.* subgraph-updated true

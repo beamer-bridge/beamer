@@ -1,25 +1,37 @@
-import json
 import sys
 import textwrap
+from pathlib import Path
 from typing import Generator, Iterable
 
-_NAMES = {
-    1: "Ethereum",
-    10: "Optimism",
-    288: "Boba",
-    42161: "Arbitrum",
-}
+from eth_typing import ChecksumAddress
+
+from beamer.deploy.artifacts import DeployedContractInfo, Deployment
+from beamer.typing import ChainId
+
+_NAMES = {1: "Ethereum", 10: "Optimism", 288: "Boba", 42161: "Arbitrum", 1101: "Polygon ZkEVM"}
 
 _EXPLORERS = {
     1: "https://etherscan.io/address/{address}",
     10: "https://optimistic.etherscan.io/address/{address}",
     288: "https://bobascan.com/address/{address}",
     42161: "https://arbiscan.io/address/{address}",
+    1101: "https://zkevm.polygonscan.com/address/{address}",
 }
+
+_CONTRACT_INFO: dict[ChainId, dict[tuple[str, ChainId], ChecksumAddress]] = {}
+
+
+def process_contracts_for_chain(
+    chain_id: ChainId, contracts: dict[str, DeployedContractInfo]
+) -> None:
+    if chain_id not in _CONTRACT_INFO:
+        _CONTRACT_INFO[chain_id] = {}
+    for contract_name, contract in contracts.items():
+        _CONTRACT_INFO[chain_id][(contract_name, chain_id)] = contract.address
 
 
 def main() -> None:
-    deployment = json.loads(sys.stdin.read())
+    artifacts_dir = Path(sys.argv[1])
     print(
         textwrap.dedent(
             """\
@@ -29,22 +41,29 @@ def main() -> None:
         )
     )
 
-    for chain_id, contracts in deployment["chains"].items():
-        name = _NAMES[int(chain_id)]
-        explorer = _EXPLORERS[int(chain_id)]
-        if name == "Ethereum":
-            base_contracts = deployment["base_chain"]
-            contracts.update(base_contracts)
+    for artifact_path in artifacts_dir.glob("*.deployment.json"):
+        deployment = Deployment.from_file(artifact_path)
+        base_chain_id = deployment.base.chain_id
+        process_contracts_for_chain(base_chain_id, deployment.base.contracts)
+
+        if deployment.chain is None:
+            continue
+
+        chain_id = deployment.chain.chain_id
+        process_contracts_for_chain(chain_id, deployment.chain.contracts)
+
+    for chain_id, contracts in _CONTRACT_INFO.items():
+        explorer = _EXPLORERS[chain_id]
+        name = _NAMES[chain_id]
         _generate_section(name, explorer, contracts)
 
 
 def _generate_section(section_name: str, explorer: str, contracts: dict) -> None:
     def rows() -> Generator[tuple[str, str], None, None]:
         yield "Contract", "Address"
-        for name, contract in contracts.items():
-            address = contract["address"]
+        for name, address in contracts.items():
             url = explorer.format(address=address)
-            yield name, f"`{address} <{url}>`_"
+            yield name[0], f"`{address} <{url}>`_"
 
     section_marker = "-" * len(section_name)
     print(f"\n{section_name}")
