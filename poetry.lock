@@ -4300,13 +4300,13 @@ files = [
 
 [[package]]
 name = "web3"
-version = "6.4.0"
+version = "6.5.0"
 description = "web3.py"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "web3-6.4.0-py3-none-any.whl", hash = "sha256:c86889b9c0b8f9f5ce5f5f0bb9f9bfc551cf775aeaf903964ddf28d303b85c62"},
-    {file = "web3-6.4.0.tar.gz", hash = "sha256:b9fcc2372e7cac27d96621c169be40174eccbb93346bba2ab45ad791140d47fe"},
+    {file = "web3-6.5.0-py3-none-any.whl", hash = "sha256:a6e9f6e4e13d75a5a3726d10b1be91cde5951446e8a6f0efdaee1695b5011472"},
+    {file = "web3-6.5.0.tar.gz", hash = "sha256:ebbce3caa0b50015d15a07f17d2a280abbb94a52c6994babb90f3a5482c97712"},
 ]
 
 [package.dependencies]
@@ -4327,7 +4327,7 @@ requests = ">=2.16.0"
 websockets = ">=10.0.0"
 
 [package.extras]
-dev = ["black (>=22.1.0)", "build (>=0.9.0)", "bumpversion", "eth-tester[py-evm] (==v0.9.0-b.1)", "flake8 (==3.8.3)", "flaky (>=3.7.0)", "hypothesis (>=3.31.2)", "importlib-metadata (<5.0)", "ipfshttpclient (==0.8.0a2)", "isort (>=5.11.0)", "mypy (==0.910)", "pluggy (==0.13.1)", "py-geth (>=3.11.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.18.1)", "pytest-mock (>=1.10)", "pytest-watch (>=4.2)", "pytest-xdist (>=1.29)", "setuptools (>=38.6.0)", "sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)", "tox (>=3.18.0)", "tqdm (>4.32)", "twine (>=1.13)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)", "when-changed (>=0.3.0)"]
+dev = ["black (>=22.1.0)", "build (>=0.9.0)", "bumpversion", "eth-tester[py-evm] (==v0.9.0-b.1)", "flake8 (==3.8.3)", "flaky (>=3.7.0)", "hypothesis (>=3.31.2)", "importlib-metadata (<5.0)", "ipfshttpclient (==0.8.0a2)", "isort (>=5.11.0)", "mypy (==0.910)", "py-geth (>=3.11.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.18.1)", "pytest-mock (>=1.10)", "pytest-watch (>=4.2)", "pytest-xdist (>=1.29)", "setuptools (>=38.6.0)", "sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)", "tox (>=3.18.0)", "tqdm (>4.32)", "twine (>=1.13)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)", "when-changed (>=0.3.0)"]
 docs = ["sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)"]
 ipfs = ["ipfshttpclient (==0.8.0a2)"]
 linter = ["black (>=22.1.0)", "flake8 (==3.8.3)", "isort (>=5.11.0)", "mypy (==0.910)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)"]
@@ -4622,4 +4622,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "7d03ff56e23b019429d8b43c9e5812517a8d17a2748f314610eb3685d0e63af3"
+content-hash = "b1aeddf726de1ffb8ec474d8dcc15a32d166f57167c98c3e3f713500cff6157a"
