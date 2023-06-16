@@ -269,7 +269,7 @@ def _start_agent_fee_test(config: Config):
                     sleeper.sleep(0.1)
 
             receipt = context.fill_manager.w3.eth.get_transaction_receipt(request.fill_tx)
-            fee_map[context.target_chain_id] = receipt["effectiveGasPrice"]
+            fee_map[context.target_chain.id] = receipt["effectiveGasPrice"]
         # For chain id 1 type 2 transactions are used so fee is lower than legacy transactions
         assert min(fee_map.values()) == fee_map[ChainId(1)]
     finally:

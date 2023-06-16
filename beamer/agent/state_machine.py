@@ -3,13 +3,13 @@ import time
 from concurrent.futures import Executor, Future
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Optional, cast
+from typing import Optional
 
 import structlog
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 from statemachine.exceptions import TransitionNotAllowed
-from web3 import HTTPProvider, Web3
+from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 from web3.types import BlockData
@@ -19,7 +19,7 @@ from beamer.agent.config import Config
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.tracker import Tracker
-from beamer.agent.util import TokenChecker
+from beamer.agent.util import Chain, TokenChecker
 from beamer.events import (
     ChainUpdated,
     ClaimMade,
@@ -39,7 +39,7 @@ from beamer.events import (
     TargetChainEvent,
     TokenUpdated,
 )
-from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId
+from beamer.typing import ChainId, ClaimId, FillId, RequestId
 
 log = structlog.get_logger(__name__)
 
@@ -48,10 +48,8 @@ log = structlog.get_logger(__name__)
 class Context:
     requests: Tracker[RequestId, Request]
     claims: Tracker[ClaimId, Claim]
-    source_chain_id: ChainId
-    target_chain_id: ChainId
-    request_manager: Contract
-    fill_manager: Contract
+    source_chain: Chain
+    target_chain: Chain
     token_checker: TokenChecker
     address: ChecksumAddress
     latest_blocks: dict[ChainId, BlockData]
@@ -65,16 +63,12 @@ class Context:
     finality_periods: dict[ChainId, int] = field(default_factory=dict)
 
     @property
-    def source_rpc_url(self) -> URL:
-        provider = cast(HTTPProvider, self.request_manager.w3.provider)
-        assert provider.endpoint_uri is not None
-        return URL(provider.endpoint_uri)
+    def request_manager(self) -> Contract:
+        return self.source_chain.request_manager
 
     @property
-    def target_rpc_url(self) -> URL:
-        provider = cast(HTTPProvider, self.fill_manager.w3.provider)
-        assert provider.endpoint_uri is not None
-        return URL(provider.endpoint_uri)
+    def fill_manager(self) -> Contract:
+        return self.target_chain.fill_manager
 
 
 HandlerResult = tuple[bool, Optional[list[Event]]]
@@ -82,10 +76,10 @@ HandlerResult = tuple[bool, Optional[list[Event]]]
 
 def process_event(event: Event, context: Context) -> HandlerResult:
     match event:
-        case SourceChainEvent() if event.event_chain_id != context.source_chain_id:
+        case SourceChainEvent() if event.event_chain_id != context.source_chain.id:
             return True, None
 
-        case TargetChainEvent() if event.event_chain_id != context.target_chain_id:
+        case TargetChainEvent() if event.event_chain_id != context.target_chain.id:
             return True, None
 
         case LatestBlockUpdatedEvent():
@@ -147,7 +141,7 @@ def _handle_latest_block_updated(
 
 
 def _handle_request_created(event: RequestCreated, context: Context) -> HandlerResult:
-    if event.target_chain_id != context.target_chain_id:
+    if event.target_chain_id != context.target_chain.id:
         return True, None
 
     # If `BEAMER_ALLOW_UNLISTED_PAIRS` is set, ignore the token configuration
@@ -195,7 +189,7 @@ def _handle_request_created(event: RequestCreated, context: Context) -> HandlerR
 
 def _handle_request_filled(event: RequestFilled, context: Context) -> HandlerResult:
     request = context.requests.get(event.request_id)
-    if event.source_chain_id != context.source_chain_id:
+    if event.source_chain_id != context.source_chain.id:
         context.logger.debug("Filled for different source chain", _event=event)
         return True, None
 
