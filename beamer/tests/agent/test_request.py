@@ -395,9 +395,11 @@ def test_handling_reorgs(config, direction, token, request_manager):
 
     assert ape.chain.blocks[-1].number is not None
     expected_block_number = ape.chain.blocks[-1].number - confirmation_blocks
+
     with Sleeper(1) as sleeper:
         while (
-            agent.get_context(direction).latest_blocks[ChainId(ape.chain.chain_id)].number
+            ChainId(ape.chain.chain_id) not in agent.get_context(direction).latest_blocks
+            or agent.get_context(direction).latest_blocks[ChainId(ape.chain.chain_id)].number
             != expected_block_number
         ):
             sleeper.sleep(0.1)
