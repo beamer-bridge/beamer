@@ -1,11 +1,40 @@
 from dataclasses import dataclass
+from typing import cast
 
 from eth_utils import is_checksum_address, to_checksum_address
+from web3 import HTTPProvider, Web3
+from web3.contract import Contract
 
-from beamer.typing import ChainId, ChecksumAddress
-
+from beamer.typing import URL, ChainId, ChecksumAddress
 
 _Token = tuple[ChainId, ChecksumAddress]
+
+
+@dataclass
+class BaseChain:
+    w3: Web3
+    id: ChainId
+
+    @property
+    def rpc_url(self) -> URL:
+        provider = cast(HTTPProvider, self.w3.provider)
+        assert provider.endpoint_uri is not None
+        return URL(provider.endpoint_uri)
+
+
+@dataclass
+class Chain(BaseChain):
+    name: str
+    tokens: list[tuple[ChainId, ChecksumAddress]]
+    contracts: dict[str, Contract]
+
+    @property
+    def request_manager(self) -> Contract:
+        return self.contracts["RequestManager"]
+
+    @property
+    def fill_manager(self) -> Contract:
+        return self.contracts["FillManager"]
 
 
 @dataclass(frozen=True)

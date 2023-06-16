@@ -160,7 +160,7 @@ class EventProcessor:
         self._num_syncs_done = 0
         self._context = context
         self._rpc_working = True
-        self._chain_ids = {self._context.source_chain_id, self._context.target_chain_id}
+        self._chain_ids = {self._context.source_chain.id, self._context.target_chain.id}
 
     @property
     def context(self) -> Context:
@@ -453,11 +453,11 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
 
     if request.fill_timestamp is not None:
         finalized = _timestamp_is_l1_finalized(
-            request.fill_timestamp, context, context.target_chain_id
+            request.fill_timestamp, context, context.target_chain.id
         )
     elif claim.invalidation_timestamp is not None:
         finalized = _timestamp_is_l1_finalized(
-            claim.invalidation_timestamp, context, context.target_chain_id
+            claim.invalidation_timestamp, context, context.target_chain.id
         )
     if not finalized:
         return False
@@ -575,7 +575,7 @@ def _timestamp_is_l1_finalized(
 
 def maybe_prove(claim: Claim, context: Context) -> None:
     # mainnet: 10, goerli: 420, local: 901
-    if context.target_chain_id not in (10, 420, 901):
+    if context.target_chain.id not in (10, 420, 901):
         claim.message_proved = True
         return
 
@@ -605,8 +605,8 @@ def maybe_prove(claim: Claim, context: Context) -> None:
     future = context.task_pool.submit(
         run_relayer_for_tx,
         context.config.base_chain_rpc_url,
-        context.target_rpc_url,
-        context.source_rpc_url,
+        context.target_chain.rpc_url,
+        context.source_chain.rpc_url,
         context.config.account.key,
         proof_tx,
         True,
@@ -666,10 +666,11 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
     future = context.task_pool.submit(
         run_relayer_for_tx,
         context.config.base_chain_rpc_url,
-        context.target_rpc_url,
-        context.source_rpc_url,
+        context.target_chain.rpc_url,
+        context.source_chain.rpc_url,
         context.config.account.key,
         proof_tx,
+        False,
     )
 
     def on_future_done(f: Future) -> None:

@@ -8,6 +8,7 @@ from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 from web3.types import BlockData, Timestamp, Wei
 
+from beamer.agent.agent import Chain
 from beamer.agent.config import Config
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
@@ -49,6 +50,7 @@ class MockEth:
 class MockWeb3:
     def __init__(self, chain_id):
         self.eth = MockEth(chain_id=chain_id)
+        self.provider = MagicMock()
 
 
 def make_request(valid_until: int = TIMESTAMP - 1) -> Request:
@@ -147,13 +149,25 @@ def make_context() -> Tuple[Context, Config]:
         poll_period_per_chain={},
     )
 
+    mock_contracts = {"RequestManager": MagicMock(), "FillManager": MagicMock()}
+
     context = Context(
         requests=Tracker(),
         claims=Tracker(),
-        source_chain_id=SOURCE_CHAIN_ID,
-        target_chain_id=TARGET_CHAIN_ID,
-        request_manager=MagicMock(),
-        fill_manager=MagicMock(),
+        source_chain=Chain(
+            MockWeb3(SOURCE_CHAIN_ID),  # type: ignore
+            SOURCE_CHAIN_ID,
+            "source",
+            [],
+            mock_contracts,  # type: ignore
+        ),
+        target_chain=Chain(
+            MockWeb3(TARGET_CHAIN_ID),  # type: ignore
+            TARGET_CHAIN_ID,
+            "target",
+            [],
+            mock_contracts,  # type: ignore
+        ),
         token_checker=checker,
         address=config.account.address,
         latest_blocks={

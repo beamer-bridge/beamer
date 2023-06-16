@@ -5,11 +5,13 @@ from eth_typing import BlockNumber
 from hexbytes import HexBytes
 from web3.types import BlockData, Wei
 
+from beamer.agent.agent import Chain
 from beamer.agent.chain import process_claims
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIMER_STAKE,
     TIMESTAMP,
+    MockWeb3,
     make_claim_challenged,
     make_claim_unchallenged,
     make_context,
@@ -99,7 +101,9 @@ def test_optimism_prove(_mocked_relayer_call):
         {"number": BlockNumber(30), "timestamp": TIMESTAMP}
     )
     context.finality_periods[op_chain_id] = 1
-    context.target_chain_id = op_chain_id
+    context.target_chain = Chain(
+        MockWeb3(op_chain_id), op_chain_id, "source", [], {}  # type: ignore
+    )
     request = make_request()
     request.target_chain_id = op_chain_id
     context.requests.add(request.id, request)
