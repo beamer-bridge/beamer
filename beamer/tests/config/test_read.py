@@ -1,5 +1,4 @@
 import json
-import pathlib
 
 from typing import Any
 
@@ -7,28 +6,9 @@ import ape
 import pytest
 from apischema.validation.mock import NonTrivialDependency
 
-import beamer.config.commands
-import beamer.deploy.commands
 from beamer.config.state import Configuration
 from beamer.deploy.artifacts import Deployment
-from beamer.tests.config.util import deploy, run
-
-
-def _read_config_state(rpc_file, artifact, state_path):
-    root = pathlib.Path(__file__).parents[3]
-    run(
-        beamer.config.commands.read,
-        (
-            "--rpc-file",
-            rpc_file,
-            "--abi-dir",
-            f"{root}/contracts/.build/",
-            "--artifact",
-            artifact,
-            str(state_path),
-        ),
-    )
-    return Configuration.from_file(state_path)
+from beamer.tests.config.util import deploy, read_config_state
 
 
 def test_config_read_request_manager(tmp_path, token, deployer):
@@ -36,8 +16,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     deployment = Deployment.from_file(artifact)
     assert deployment.chain is not None
 
-    state_path = tmp_path / "config.state"
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert config.request_manager.min_fee_ppm == 0
     assert config.request_manager.lp_fee_ppm == 0
     assert config.request_manager.protocol_fee_ppm == 0
@@ -50,7 +29,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     # check fee update
     request_manager.updateFees(1, 2, 3)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert config.request_manager.min_fee_ppm == 1
     assert config.request_manager.lp_fee_ppm == 2
     assert config.request_manager.protocol_fee_ppm == 3
@@ -60,7 +39,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     # check token update
     request_manager.updateToken(token.address, 4, 5)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert config.block > old_block
     assert len(config.request_manager.tokens) == 1
     symbol = token.symbol()
@@ -72,7 +51,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     # check chain update
     request_manager.updateChain(123, 6, 7, 8)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert len(config.request_manager.chains) == 1
     chain_config = config.request_manager.chains[123]
     assert chain_config.finality_period == 6
@@ -83,13 +62,13 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     lp = ape.accounts.test_accounts[0].address
     request_manager.addAllowedLp(lp)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert config.request_manager.whitelist == {lp}
 
     # check LP removal
     request_manager.removeAllowedLp(lp)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert not config.request_manager.whitelist
 
 
@@ -98,8 +77,7 @@ def test_config_read_fill_manager(tmp_path, deployer):
     deployment = Deployment.from_file(artifact)
     assert deployment.chain is not None
 
-    state_path = tmp_path / "config.state"
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert not config.fill_manager.whitelist
     address = deployment.chain.contracts["FillManager"].address
     fill_manager: Any = ape.project.FillManager.at(address)  # type: ignore
@@ -108,13 +86,13 @@ def test_config_read_fill_manager(tmp_path, deployer):
     lp = ape.accounts.test_accounts[0].address
     fill_manager.addAllowedLp(lp, sender=deployer.address)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert config.fill_manager.whitelist == {lp}
 
     # check LP removal
     fill_manager.removeAllowedLp(lp, sender=deployer.address)
 
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     assert not config.fill_manager.whitelist
 
 
@@ -128,8 +106,7 @@ def test_config_read_checksum_mismatch(tmp_path, deployer):
 
     request_manager.updateFees(1, 2, 3)
 
-    state_path = tmp_path / "config.state"
-    config = _read_config_state(rpc_file, artifact, state_path)
+    config = read_config_state(rpc_file, artifact)
     path = tmp_path / "temp.state"
     config.to_file(path)
 
