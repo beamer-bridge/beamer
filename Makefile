@@ -66,7 +66,7 @@ relayers:
 	cp relayer/relayer-*-x64 beamer/data/relayers
 
 docs:
-	python scripts/generate-contract-addresses-doc-page.py < deployments/mainnet/deployment.json \
+	python scripts/generate-contract-addresses-doc-page.py deployments/artifacts/mainnet \
 														   > docs/source/contracts-addresses.rst
 	make -C docs html
 
