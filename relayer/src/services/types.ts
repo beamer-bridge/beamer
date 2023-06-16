@@ -2,6 +2,7 @@ import type { Provider } from "@ethersproject/providers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Wallet } from "ethers";
 
+import { ExtendedJsonRpcProvider } from "../ethers/json-rpc-provider";
 import type { ArbitrumRelayerService } from "./relayer/arbitrum";
 import type { BobaRelayerService } from "./relayer/boba";
 import type { EthereumRelayerService } from "./relayer/ethereum";
@@ -37,7 +38,7 @@ export abstract class BaseRelayerService {
   ) {
     this.l1RpcUrl = l1RpcURL;
     this.l2RpcUrl = l2RpcURL;
-    this.l1Wallet = new Wallet(privateKey, new JsonRpcProvider(l1RpcURL));
+    this.l1Wallet = new Wallet(privateKey, new ExtendedJsonRpcProvider(l1RpcURL));
     this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
     this.l1ChainId = l1ChainId;
     this.l2ChainId = l2ChainId;
