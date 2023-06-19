@@ -32,8 +32,11 @@ e2e_test() {
     l2_rpc=http://0.0.0.0:8545
     password=""
     l2_messenger=$(jq -r '.chain.EthereumL2Messenger.address' ${ARTIFACTS_DIR}/1337-ethereum.deployment.json)
+    resolver=$(jq -r '.base.Resolver.address' ${ARTIFACTS_DIR}/base.deployment.json)
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}" 
+
     export ETHEREUM_L2_MESSENGER=$l2_messenger
+    export RESOLVER=$resolver
 
     e2e_test_relayer $l2_rpc $l2_rpc "" $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
