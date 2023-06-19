@@ -38,6 +38,13 @@ patch_test_node_script
 
 down() {
     echo "Shutting down the end-to-end environment"
+
+    # First stop the scripts containers, as docker compose down will fail if they are running
+    image_id=$(docker ps --filter "ancestor=nitro-testnode-scripts" --format "{{.ID}}")
+    if [[ ! -z $image_id ]]; then
+        docker stop $image_id
+    fi
+
     docker-compose -f ${NITRO}/docker-compose.yaml down
 }
 
