@@ -22,7 +22,7 @@
     "postinstall": "yarn generate-types"
   },
   "dependencies": {
-    "@arbitrum/sdk": "3.0.0",
+    "@arbitrum/sdk": "3.1.4",
     "@eth-optimism/sdk": "2.1.0",
     "@eth-optimism/sdk-1.0.2": "npm:@eth-optimism/sdk@1.0.2",
     "@ethersproject/providers": "5.7.2",
