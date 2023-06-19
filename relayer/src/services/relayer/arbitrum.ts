@@ -145,10 +145,23 @@ export class ArbitrumRelayerService extends BaseRelayerService {
      */
     if ((await l2ToL1Message.status(this.l2RpcProvider)) == L2ToL1MessageStatus.EXECUTED) {
       console.log("Message already executed! Nothing else to do here.");
-      // TODO IMPORTANT: return l1 transaction hash
-      // I think it is not possible to get it via the SDK.
-      // Maybe we have to use the contracts directly to get it.
-      return "";
+
+      const parameters = await this.parseFillEventDataFromTxHash(l2TransactionHash);
+      const transactionHash = await this.findL1TransactionHashForMessage(
+        parameters.requestId,
+        parameters.fillId,
+        parameters.sourceChainId,
+        parameters.filler,
+        BigNumber.from(this.l2ChainId),
+      );
+      if (!transactionHash) {
+        throw new Error(
+          `Message has already been relayed but the related L1 transaction hash cannot be found. \n
+          Did you properly configure the ArbitrumL2Messenger contract address & Resolver's deployed block number?`,
+        );
+      }
+      console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
+      return transactionHash;
     }
     return false;
   }
