@@ -25,8 +25,8 @@ down() {
 
 configure_repo() {
     repo="https://github.com/0xPolygonHermez/zkevm-bridge-service.git"
-    commit_id="09e0247b335a19a5e16945e8e1e805e410e41ca3"
-    git init ${POLYGON_ZKEVM}
+    commit_id="59c1ba75fa19cf1156762a8c5ffa7f8fd272c60a"
+    git clone --no-checkout ${repo} ${POLYGON_ZKEVM}
     cd ${POLYGON_ZKEVM}
     git fetch --depth 1 ${repo} ${commit_id}
     git checkout ${commit_id}
@@ -79,9 +79,16 @@ e2e_test() {
         "bridgeServiceUrl": "http://localhost:8080"
     }
 EOF
-    e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
-    e2e_test_relayer http://localhost:8545 $l2_rpc $network_file $PRIVKEY $e2e_test_l2_txhash
-    e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
+    e2e_test_fill ${DEPLOYMENT_DIR} ${KEYFILE} "${password}" $l2_rpc
+    echo Starting relayer
+    ${relayer} relay --l1-rpc-url http://localhost:8545 \
+               --l2-relay-to-rpc-url $l2_rpc \
+               --l2-relay-from-rpc-url $l2_rpc \
+               --network-to $network_file \
+               --network-from $network_file \
+               --wallet-private-key $PRIVKEY \
+               --l2-transaction-hash $e2e_test_l2_txhash
+    e2e_test_verify ${DEPLOYMENT_DIR} $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
 usage() {
