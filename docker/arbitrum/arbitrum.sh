@@ -26,6 +26,10 @@ patch_test_node_script() {
         sed -E "s#^(run=true)\$#\1\nforce_init=true#;
                 s#^mydir=\`dirname .0\`#mydir=${NITRO}#" \
             ${NITRO}/test-node.bash > ${TEST_NODE_SCRIPT}
+
+        # fix for flaky test https://github.com/OffchainLabs/nitro/issues/1706
+        sed -i'' -e 's/NITRO_NODE_VERSION=offchainlabs\/nitro-node:v2\.1\.0-beta\.1-03a2aea-dev/NITRO_NODE_VERSION=offchainlabs\/nitro-node:v2.1.0-beta.4-837e45e-dev/' "${TEST_NODE_SCRIPT}"
+
         chmod +x ${TEST_NODE_SCRIPT}
     }
 }
@@ -61,7 +65,7 @@ fund_account() {
 
 up() {
     echo Starting the end-to-end environment
-    ${TEST_NODE_SCRIPT} --init --detach --no-blockscout
+    ${TEST_NODE_SCRIPT} --init --detach
     wait_for_sequencer
     fund_account
 }

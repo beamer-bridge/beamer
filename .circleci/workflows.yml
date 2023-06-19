@@ -244,7 +244,7 @@ jobs:
       - restore_cache:
           key: arbitrum-submodule-{{ checksum "/tmp/arbitrum-commit-hash" }}-{{ .Environment.CACHE_VERSION }}
       - run: |
-          git submodule update --init $ARBITRUM_FOLDER/nitro
+          git submodule update --recursive --init $ARBITRUM_FOLDER/nitro
           cd $ARBITRUM_FOLDER/nitro
           git submodule update --init blockscout brotli fastcache go-ethereum \
                                       arbitrator/wasm-libraries/soft-float/SoftFloat
