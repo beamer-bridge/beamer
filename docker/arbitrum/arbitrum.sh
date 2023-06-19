@@ -40,7 +40,7 @@ down() {
 wait_for_sequencer() {
     local RETRIES=180
     local i=0
-    until docker logs nitro-sequencer-1 2>&1 | grep -q "HTTP server started";
+    until docker logs nitro-sequencer-1 2>&1 | grep "HTTP server started" > /dev/null;
     do
         echo 'Waiting for sequencer...'
         sleep 1
