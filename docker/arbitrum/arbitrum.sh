@@ -111,6 +111,7 @@ e2e_test() {
     l2_rpc=http://0.0.0.0:8547
     password=""
     l1_messenger=$(jq -r '.base.ArbitrumL1Messenger.address' ${ARTIFACTS_DIR}/412346-arbitrum.deployment.json)
+    resolver=$(jq -r '.base.Resolver.address' ${ARTIFACTS_DIR}/base.deployment.json)
 
     network_config="${CACHE_DIR}/localnetwork.json"
     echo Copying network config to $network_config
@@ -120,6 +121,7 @@ e2e_test() {
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
 
     export ARBITRUM_L1_MESSENGER=$l1_messenger
+    export RESOLVER=$resolver
 
     e2e_test_relayer http://0.0.0.0:8545 $l2_rpc $network_config $PRIVKEY $e2e_test_l2_txhash
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
