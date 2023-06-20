@@ -24,7 +24,7 @@ from web3.middleware import (
     construct_simple_cache_middleware,
     geth_poa_middleware,
 )
-from web3.types import GasPriceStrategy, TxParams
+from web3.types import GasPriceStrategy, TxParams, TxReceipt
 from web3.utils.caching import SimpleCache
 
 import beamer.middleware
@@ -47,7 +47,7 @@ def transact(
     poll_latency: float = 0.1,
     attempts: int = 5,
     **kwargs: Any,
-) -> Any:
+) -> TxReceipt:
     try:
         while attempts > 0:
             try:
@@ -55,11 +55,11 @@ def transact(
             except ValueError as exc:
                 attempts -= 1
                 if attempts > 0:
-                    log.error("transact failed, retrying", exc=exc)
+                    log.error("transact failed, retrying", exc=exc, chain_id=func.w3.eth.chain_id)
                     period = random.randint(5, 30) / 10.0
                     time.sleep(period)
                 else:
-                    log.error("transact failed, giving up", exc=exc)
+                    log.error("transact failed, giving up", exc=exc, chain_id=func.w3.eth.chain_id)
                     raise TransactionFailed("too many failed attempts") from exc
             else:
                 break
@@ -72,7 +72,11 @@ def transact(
                 txn_hash, timeout=timeout, poll_latency=poll_latency
             )
         except TimeExhausted as exc:
-            log.error("Timed out waiting for tx receipt, retrying", exc=exc)
+            log.error(
+                "Timed out waiting for tx receipt, retrying",
+                exc=exc,
+                chain_id=func.w3.eth.chain_id,
+            )
         else:
             break
 

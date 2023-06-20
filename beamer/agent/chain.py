@@ -419,7 +419,7 @@ def fill_request(request: Request, context: Context) -> None:
         context.logger.info(
             "Filled request",
             request=request,
-            txn_hash=receipt.transactionHash.hex(),
+            txn_hash=receipt.transactionHash.hex(),  # type: ignore
             token=token.functions.symbol().call(),
         )
 
@@ -453,7 +453,7 @@ def claim_request(request: Request, context: Context) -> None:
     context.logger.info(
         "Claimed request",
         request=request,
-        txn_hash=receipt.transactionHash.hex(),
+        txn_hash=receipt.transactionHash.hex(),  # type: ignore
     )
 
 
@@ -521,7 +521,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     context.logger.info(
         "Challenged claim",
         claim=claim,
-        txn_hash=receipt.transactionHash.hex(),
+        txn_hash=receipt.transactionHash.hex(),  # type: ignore
     )
 
     return True
@@ -761,7 +761,9 @@ def _withdraw(claim: Claim, context: Context) -> None:
         return
 
     claim.transaction_pending = True
-    context.logger.info("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
+    context.logger.info(
+        "Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex()  # type: ignore
+    )
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
@@ -779,5 +781,5 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         request=request.id,
         fill_id=claim.fill_id,
         claim=claim.id,
-        txn_hash=receipt.transactionHash.hex(),
+        txn_hash=receipt.transactionHash.hex(),  # type: ignore
     )
