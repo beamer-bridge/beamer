@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.1 (2023-06-20)
+* relayer: Update Arbitrum SDK to 3.1.4
+* relayer: Update Optimism SDK to 2.1.0
+* ci: fix flaky end-to-end tests
+
+
 ## v2.2.0 (2023-06-14)
 
 * agent: Restructure common modules to top level directory
