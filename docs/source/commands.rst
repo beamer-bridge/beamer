@@ -76,7 +76,7 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
 ``beamer config read``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``beamer config read --rpc-file RPC-FILE --abi-dir DIR --artifact CHAIN-NAME.deployment.json STATE_PATH``
+``beamer config read --rpc-file RPC-FILE --abi-dir DIR --artifact CHAIN_ID-CHAIN_NAME.deployment.json STATE_PATH``
 
 The command reads the latest contract configuration state from the chain and
 store it into ``STATE_PATH``. If ``STATE_PATH`` already exists, it is used as
@@ -92,7 +92,7 @@ are fetched from the deployment block.
    * - ``--abi-dir DIR``
      - The directory containing contract ABI files.
 
-   * - ``--artifact CHAIN-NAME.deployment.json``
+   * - ``--artifact CHAIN_ID-CHAIN_NAME.deployment.json``
      - Path to the deployment artifact.
 
    * - ``--rpc-file``
