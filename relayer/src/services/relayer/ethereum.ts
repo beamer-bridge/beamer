@@ -14,21 +14,25 @@ type RelayCallParams = {
   filler: string;
 };
 
-const L1_CONTRACTS: Record<number, { ETHEREUM_L2_MESSENGER: string }> = {
+const L1_CONTRACTS: Record<
+  number,
+  { ETHEREUM_L2_MESSENGER: string; RESOLVER_DEPLOY_BLOCK_NUMBER: number }
+> = {
   1: {
     ETHEREUM_L2_MESSENGER: "0x3222C9a1e5d7856FCBc551A30a63634e7Fd634Da",
+    RESOLVER_DEPLOY_BLOCK_NUMBER: 16946576,
   },
   5: {
     ETHEREUM_L2_MESSENGER: "0x6064A4d69D6535981F1091Fa2243d9a106046e46",
+    RESOLVER_DEPLOY_BLOCK_NUMBER: 9066315,
   },
   1337: {
     ETHEREUM_L2_MESSENGER: process.env.ETHEREUM_L2_MESSENGER || "",
+    RESOLVER_DEPLOY_BLOCK_NUMBER: 0,
   },
 };
 
 const FILTER_BLOCKS_PER_ITERATION = 5000;
-// TODO: import from `deployments` npm package once ready
-const RESOLVER_DEPLOY_BLOCK_NUMBER = 16946576;
 
 export class EthereumRelayerService extends BaseRelayerService {
   async parseEventDataFromTxHash(
@@ -74,9 +78,10 @@ export class EthereumRelayerService extends BaseRelayerService {
   ): Promise<string | null> {
     const resolver = Resolver__factory.connect(resolverAddress, this.l1Wallet);
     const currentBlock = await this.l1Wallet.provider.getBlock("latest");
+    const resolverDeployBlockNumber = L1_CONTRACTS[this.l1ChainId].RESOLVER_DEPLOY_BLOCK_NUMBER;
     let currentBlockNumber = currentBlock.number;
 
-    while (currentBlockNumber > RESOLVER_DEPLOY_BLOCK_NUMBER) {
+    while (currentBlockNumber > resolverDeployBlockNumber) {
       const events = await resolver.queryFilter(
         "Resolution" as unknown,
         currentBlockNumber - FILTER_BLOCKS_PER_ITERATION,
