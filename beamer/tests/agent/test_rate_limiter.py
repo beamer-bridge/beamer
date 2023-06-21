@@ -48,10 +48,10 @@ def test_rate_limiting_rpc(config):
     ape.chain.mine(200)
 
     post_rate_limited = functools.partial(_post_with_rate_limit, _RateLimiter(2))
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], post_rate_limited)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, post_rate_limited)
     proxy_l2a.start()
 
-    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
 
     agent = Agent(config)
     with structlog.testing.capture_logs() as captured_logs:

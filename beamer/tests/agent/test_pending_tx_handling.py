@@ -40,10 +40,10 @@ def test_pending_tx_handling(request_manager, token, config, monkeypatch):
     (requester,) = alloc_accounts(1)
     make_request(request_manager, token, requester, requester, 1)
 
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], _post_delay_get_transaction_receipt)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, _post_delay_get_transaction_receipt)
     proxy_l2a.start()
 
-    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
     agent = Agent(config)
 
     with structlog.testing.capture_logs() as captured_logs:

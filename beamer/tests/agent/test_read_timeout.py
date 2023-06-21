@@ -35,14 +35,14 @@ def test_read_timeout(config):
 
     delay_eth_get_logs = functools.partial(_post_with_delay, "eth_getLogs", _get_delay)
 
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], delay_eth_get_logs)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, delay_eth_get_logs)
     proxy_l2a.start()
 
-    proxy_l2b = HTTPProxy(config.rpc_urls["l2b"], delay_eth_get_logs)
+    proxy_l2b = HTTPProxy(config.chains["l2b"].rpc_url, delay_eth_get_logs)
     proxy_l2b.start()
 
-    config.rpc_urls["l2a"] = proxy_l2a.url()
-    config.rpc_urls["l2b"] = proxy_l2b.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
+    config.chains["l2b"].rpc_url = proxy_l2b.url()
 
     agent = Agent(config)
     agent.start()
@@ -62,10 +62,10 @@ def test_read_timeout_send_transaction(request_manager, token, config):
     delay_eth_send_raw_tx = functools.partial(
         _post_with_delay, "eth_sendRawTransaction", delay_period
     )
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], delay_eth_send_raw_tx)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, delay_eth_send_raw_tx)
     proxy_l2a.start()
 
-    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
 
     requester, target = alloc_accounts(2)
     make_request(request_manager, token, requester, target, 1, validity_period=1800)

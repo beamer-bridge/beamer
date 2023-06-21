@@ -33,10 +33,10 @@ def test_413_error(config):
 
     post_with_error = functools.partial(_post_with_error_code, 413, itertools.count())
 
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], post_with_error)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, post_with_error)
     proxy_l2a.start()
 
-    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
 
     agent = Agent(config)
 

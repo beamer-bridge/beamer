@@ -587,9 +587,9 @@ def _do_post(handler, url, post_body):
 
 @pytest.mark.usefixtures("setup_relayer_executable")
 def test_rpc_down_on_challenge(request_manager, token, config, direction, chain_params):
-    proxy_l2a = HTTPProxy(config.rpc_urls["l2a"], _do_post)
+    proxy_l2a = HTTPProxy(config.chains["l2a"].rpc_url, _do_post)
     proxy_l2a.start()
-    config.rpc_urls["l2a"] = proxy_l2a.url()
+    config.chains["l2a"].rpc_url = proxy_l2a.url()
 
     agent = beamer.agent.agent.Agent(config)
     agent.start()
@@ -629,7 +629,6 @@ def test_rpc_down_on_challenge(request_manager, token, config, direction, chain_
         # as agent lost the RPC connection, it couldn't counter-challenge because the event
         # processor is halted
         challenge_claim = collector.next_event()
-
         assert challenge_claim is None
 
         proxy_l2a.start()
