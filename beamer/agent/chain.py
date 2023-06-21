@@ -353,9 +353,8 @@ def fill_request(request: Request, context: Context) -> None:
     source_address = source_web3.eth.default_account
     assert not isinstance(source_address, Empty)
     source_balance = source_web3.eth.get_balance(source_address)
-    min_source_balance = context.config.min_source_balance_per_chain.get(
-        context.source_chain.name, context.config.min_source_balance
-    )
+    min_source_balance = context.config.chains[context.source_chain.name].min_source_balance
+
     if source_balance < min_source_balance:
         context.logger.info(
             "Not enough balance to claim, ignoring",

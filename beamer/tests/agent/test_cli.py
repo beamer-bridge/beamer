@@ -84,9 +84,9 @@ def _generate_options(
         "--base-chain",
         str(config.base_chain_rpc_url),
         "--chain",
-        f"l2a={config.rpc_urls['l2a']}",
+        f"l2a={config.chains['l2a'].rpc_url}",
         "--chain",
-        f"l2b={config.rpc_urls['l2b']}",
+        f"l2b={config.chains['l2b'].rpc_url}",
         "--artifacts-dir",
         str(artifacts_dir),
         "--abi-dir",
@@ -94,7 +94,7 @@ def _generate_options(
         "--unsafe-fill-time",
         unsafe_fill_time,
         "--poll-period",
-        config.poll_period,
+        config.chains["l2a"].poll_period,
         "--confirmation-blocks",
         confirmation_blocks,
     )
@@ -106,13 +106,13 @@ def _generate_options_config(
     content = _CONFIG_FILE.format(
         path=str(keyfile),
         base_chain_rpc_url=config.base_chain_rpc_url,
-        foo_rpc_url=config.rpc_urls["l2a"],
-        foo_confirmation_blocks=config.confirmation_blocks["l2a"],
-        bar_rpc_url=config.rpc_urls["l2b"],
+        foo_rpc_url=config.chains["l2a"].rpc_url,
+        foo_confirmation_blocks=config.chains["l2a"].confirmation_blocks,
+        bar_rpc_url=config.chains["l2b"].rpc_url,
         artifacts_dir=artifacts_dir,
         abi_dir=abi_dir,
         unsafe_fill_time=unsafe_fill_time,
-        poll_period=config.poll_period,
+        poll_period=config.chains["l2a"].poll_period,
         foo_poll_period=0.2,
         confirmation_blocks=confirmation_blocks,
     )
@@ -149,7 +149,7 @@ def test_cli(
     unsafe_time, error = unsafe_fill_time_option
 
     options = generate_options(
-        keyfile, artifacts_dir, abi_dir, config, unsafe_time, config.confirmation_blocks["l2a"]
+        keyfile, artifacts_dir, abi_dir, config, unsafe_time, config.chains["l2a"].confirmation_blocks
     )
     runner = CliRunner()
     result = runner.invoke(agent, options)

@@ -385,7 +385,7 @@ def test_event_fetcher_progress_without_events(agent, direction):
 def test_handling_reorgs(config, direction, token, request_manager):
     requester, target = alloc_accounts(2)
     confirmation_blocks = 2
-    config.confirmation_blocks["l2a"] = confirmation_blocks
+    config.chains["l2a"].confirmation_blocks = confirmation_blocks
     agent = Agent(config)
     agent.start()
 

@@ -46,8 +46,8 @@ class Agent:
 
     def _init_chains(self) -> dict[ChainId, Chain]:
         chains: dict[ChainId, Chain] = {}
-        for chain_name, rpc_url in self._config.rpc_urls.items():
-            w3 = make_web3(rpc_url, self._config.account)
+        for chain_name, chain_config in self._config.chains.items():
+            w3 = make_web3(chain_config.rpc_url, self._config.account)
             chain_id = ChainId(w3.eth.chain_id)
             if chain_id in chains:
                 continue
@@ -55,15 +55,12 @@ class Agent:
             contracts = make_contracts(w3, contracts_info)
             request_manager = contracts["RequestManager"]
             fill_manager = contracts["FillManager"]
-            poll_period = self._config.poll_period_per_chain.get(
-                chain_name, self._config.poll_period
-            )
             self._event_monitors[chain_id] = EventMonitor(
                 web3=w3,
                 contracts=(request_manager, fill_manager),
                 deployment_block=_get_deployment_block(contracts_info),
-                poll_period=poll_period,
-                confirmation_blocks=self._config.confirmation_blocks[chain_name],
+                poll_period=chain_config.poll_period,
+                confirmation_blocks=chain_config.confirmation_blocks,
                 on_new_events=[],
                 on_sync_done=[],
                 on_rpc_status_change=[],

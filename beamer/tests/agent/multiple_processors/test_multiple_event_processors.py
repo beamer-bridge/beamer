@@ -16,7 +16,7 @@ from eth_utils import to_checksum_address
 from yaml.loader import SafeLoader
 
 from beamer.agent.agent import Agent
-from beamer.agent.config import Config
+from beamer.agent.config import ChainConfig, Config
 from beamer.agent.util import TokenChecker
 from beamer.contracts import ContractInfo
 from beamer.tests.conftest import Contracts
@@ -132,29 +132,27 @@ def _get_config(
             ),
         )
         deployment_info[chain_id] = contracts_info
-    rpc_urls = {}
-    confirmation_blocks = {}
+
+    chains = {}
     for chain_id, chain_info in chain_map.items():
-        rpc_url = f"http://127.0.0.1:{chain_info.port}"
-        rpc_urls[str(chain_id)] = URL(rpc_url)
-        confirmation_blocks[str(chain_id)] = 0
+        chains[str(chain_id)] = ChainConfig(
+            rpc_url=URL(f"http://127.0.0.1:{chain_info.port}"),
+            min_source_balance=0,
+            confirmation_blocks=0,
+            poll_period=1.0,
+        )
 
     token_list = _get_token_list(chain_map, slave_contract_addresses)
     config = Config(
-        rpc_urls=rpc_urls,
         base_chain_rpc_url=url,
         deployment_info=deployment_info,
-        confirmation_blocks=confirmation_blocks,
         token_checker=TokenChecker(token_list),
         account=account,
         fill_wait_time=0,
         unsafe_fill_time=600,
-        min_source_balance=0,
-        min_source_balance_per_chain={},
         prometheus_metrics_port=None,
         log_level="debug",
-        poll_period=1.0,
-        poll_period_per_chain={},
+        chains=chains,
     )
     return config
 
@@ -221,8 +219,8 @@ def _mint_agent_tokens(
     token: ape.project.MintableToken,
     slave_contract_addresses: dict[ChainId, dict[str, str]],
 ):
-    for chain_name, chain_rpc in config.rpc_urls.items():
-        w3 = make_web3(chain_rpc, config.account)
+    for chain_name, chain_config in config.chains.items():
+        w3 = make_web3(chain_config.rpc_url, config.account)
         while not w3.is_connected():
             time.sleep(1)
         l2_token = w3.eth.contract(

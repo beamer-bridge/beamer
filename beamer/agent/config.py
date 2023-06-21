@@ -19,21 +19,24 @@ class ConfigError(Exception):
 
 
 @dataclass
+class ChainConfig:
+    rpc_url: URL
+    min_source_balance: int
+    confirmation_blocks: int
+    poll_period: float
+
+
+@dataclass
 class Config:
     account: LocalAccount
     deployment_info: DeploymentInfo
     base_chain_rpc_url: URL
-    rpc_urls: dict[str, URL]
     token_checker: TokenChecker
     fill_wait_time: int
     unsafe_fill_time: int
-    min_source_balance: int
-    min_source_balance_per_chain: dict[str, int]
-    confirmation_blocks: dict[str, int]
     prometheus_metrics_port: Optional[int]
     log_level: str
-    poll_period: float
-    poll_period_per_chain: dict[str, float]
+    chains: dict[str, ChainConfig]
 
 
 def _set_value(config: dict[str, Any], key: str, value: Any) -> None:
@@ -89,7 +92,6 @@ def _default_config() -> dict:
         "min-source-balance": 0.1,
         "log-level": "info",
         "account": {},
-        "rpc_urls": {},
         "metrics": {},
         "tokens": {},
         "poll-period": 5.0,
@@ -123,21 +125,14 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     if missing:
         raise ConfigError(f"missing settings: {missing}")
 
-    rpc_urls = {}
-    min_source_balance_per_chain = {}
-    poll_period_per_chain = {}
-    confirmation_blocks = {}
+    chains = {}
 
     for chain_name, chain_info in config["chains"].items():
-        rpc_urls[chain_name] = URL(chain_info["rpc-url"])
-        min_source_balance = chain_info.get("min-source-balance")
-        if min_source_balance is not None:
-            min_source_balance_per_chain[chain_name] = to_wei(min_source_balance, "ether")
-        poll_period = chain_info.get("poll-period")
-        if poll_period is not None:
-            poll_period_per_chain[chain_name] = float(poll_period)
-        confirmation_blocks[chain_name] = chain_info.get(
-            "confirmation-blocks", config["confirmation-blocks"]
+        chains[chain_name] = ChainConfig(
+            URL(chain_info["rpc-url"]),
+            to_wei(chain_info.get("min-source-balance", config["min-source-balance"]), "ether"),
+            chain_info.get("confirmation-blocks", config["confirmation-blocks"]),
+            float(chain_info.get("poll-period", config["poll-period"])),
         )
 
     path = Path(_get_value(config, "account.path"))
@@ -150,16 +145,11 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     return Config(
         account=account,
         deployment_info=deployment_info,
-        rpc_urls=rpc_urls,
         token_checker=token_checker,
         base_chain_rpc_url=config["base-chain"]["rpc-url"],
-        confirmation_blocks=confirmation_blocks,
         fill_wait_time=config["fill-wait-time"],
         unsafe_fill_time=config["unsafe-fill-time"],
-        min_source_balance=to_wei(config["min-source-balance"], "ether"),
-        min_source_balance_per_chain=min_source_balance_per_chain,
         prometheus_metrics_port=_lookup_value(config, "metrics.prometheus-port"),
         log_level=_get_value(config, "log-level"),
-        poll_period=config["poll-period"],
-        poll_period_per_chain=poll_period_per_chain,
+        chains=chains,
     )

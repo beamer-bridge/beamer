@@ -9,7 +9,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.types import BlockData, Timestamp, Wei
 
 from beamer.agent.agent import Chain
-from beamer.agent.config import Config
+from beamer.agent.config import ChainConfig, Config
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.state_machine import Context
@@ -134,21 +134,26 @@ def make_claim_challenged(
 
 def make_context() -> Tuple[Context, Config]:
     checker = TokenChecker([])
+
+    chains = {}
+    for chain_name in ("l2a", "l2b"):
+        chains[chain_name] = ChainConfig(
+            rpc_url=URL(""),
+            min_source_balance=0,
+            confirmation_blocks=0,
+            poll_period=0.5,
+        )
+
     config = Config(
         account=ACCOUNT,
         deployment_info={},
-        rpc_urls={"l2a": URL(""), "l2b": URL("")},
         base_chain_rpc_url=URL(""),
         token_checker=checker,
         fill_wait_time=1,
         unsafe_fill_time=1,
-        min_source_balance=0,
-        min_source_balance_per_chain={},
         prometheus_metrics_port=None,
-        confirmation_blocks={"l2a": 0, "l2b": 0},
         log_level="debug",
-        poll_period=1.0,
-        poll_period_per_chain={},
+        chains=chains,
     )
 
     mock_contracts = {"RequestManager": MagicMock(), "FillManager": MagicMock()}
