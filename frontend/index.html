@@ -47,6 +47,7 @@
     <!-- Matomo -->
     <script>
       var _paq = (window._paq = window._paq || []);
+      _paq.push(['setCookieSameSite', 'None']);
       /* require user tracking consent before processing data */
       _paq.push(['requireConsent']);
       /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
@@ -60,7 +61,7 @@
           g = d.createElement('script'),
           s = d.getElementsByTagName('script')[0];
         g.async = true;
-        g.src = '//cdn.matomo.cloud/beamerbridge.matomo.cloud/matomo.js';
+        g.src = 'https://cdn.matomo.cloud/beamerbridge.matomo.cloud/matomo.js';
         s.parentNode.insertBefore(g, s);
       })();
     </script>
