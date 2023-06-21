@@ -1,0 +1,15 @@
+{
+  "identifier": 1101,
+  "explorerUrl": "https://zkevm.polygonscan.com",
+  "rpcUrl": "https://zkevm-rpc.com",
+  "name": "Polygon zkEVM",
+  "imageUrl": "/images/polygon_zkevm.svg",
+  "tokenSymbols": ["USDC", "DAI"],
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "internalRpcUrl": "https://polygonzkevm-mainnet.g.alchemy.com/v2/Ra2DOarWGxjJtc3gFwK_wjuGHfVAY_Wl",
+  "hidden": true
+}
