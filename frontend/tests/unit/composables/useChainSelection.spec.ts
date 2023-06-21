@@ -43,6 +43,23 @@ describe('useChainSelection', () => {
         getChainSelectorOption(chainTwo.identifier, chains.value),
       ]);
     });
+
+    it('holds a set of chain selector options that exclude options defined as hidden', () => {
+      const chainOne = generateChainWithTokens({ identifier: 1 });
+      const chainTwo = generateChainWithTokens({ identifier: 2, hidden: true });
+
+      const chains = ref({
+        [chainOne.identifier]: chainOne,
+        [chainTwo.identifier]: chainTwo,
+      });
+
+      const { chainOptions } = useChainSelection(chains, ref([]));
+
+      expect(chainOptions.value).toHaveLength(1);
+      expect(chainOptions.value).toEqual([
+        getChainSelectorOption(chainOne.identifier, chains.value),
+      ]);
+    });
   });
 });
 
