@@ -19,6 +19,7 @@ export type Chain = {
   internalRpcUrl: string;
   disabled?: boolean;
   disabled_reason?: string;
+  hidden?: boolean;
 };
 
 export type Token = {
