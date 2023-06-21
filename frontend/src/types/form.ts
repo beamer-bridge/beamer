@@ -28,4 +28,5 @@ export type SelectorOption<T> = {
   imageUrl?: string;
   disabled?: boolean;
   disabled_reason?: string;
+  hidden?: boolean;
 };

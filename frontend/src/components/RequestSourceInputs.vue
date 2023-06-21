@@ -179,7 +179,7 @@ const selectedAmount = ref('');
 
 const providerChainOption = computed(() => {
   const option = getChainSelectorOption(provider.value?.chainId.value, chains.value);
-  return option?.disabled ? undefined : option;
+  return option?.disabled || option?.hidden ? undefined : option;
 });
 
 const _selectedSourceChain = ref<SelectorOption<Chain> | null>(null);

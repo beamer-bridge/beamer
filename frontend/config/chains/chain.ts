@@ -15,6 +15,7 @@ export class ChainMetadata {
   readonly internalRpcUrl: string;
   readonly disabled?: boolean;
   readonly disabled_reason?: string;
+  readonly hidden?: boolean;
 
   constructor(data: ChainMetadataData) {
     this.identifier = data.identifier;
@@ -27,6 +28,7 @@ export class ChainMetadata {
     this.internalRpcUrl = data.internalRpcUrl;
     this.disabled = data.disabled;
     this.disabled_reason = data.disabled_reason;
+    this.hidden = data.hidden;
   }
 
   public formatUsingTokenMetas(tokenMetas: TokenMetadata[]): Partial<ChainWithTokens> {
@@ -66,4 +68,5 @@ export type ChainMetadataData = {
   imageUrl?: string;
   disabled?: boolean;
   disabled_reason?: string;
+  hidden?: boolean;
 };

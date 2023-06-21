@@ -104,6 +104,10 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
               type: 'string',
               nullable: true,
             },
+            hidden: {
+              type: 'boolean',
+              nullable: true,
+            },
           },
           required: [
             'identifier',
