@@ -1,0 +1,14 @@
+{
+  "identifier": 1442,
+  "explorerUrl": "https://explorer.public.zkevm-test.net",
+  "rpcUrl": "https://rpc.public.zkevm-test.net",
+  "name": "Polygon zkEVM Testnet",
+  "imageUrl": "/images/polygon_zkevm.svg",
+  "tokenSymbols": ["TST"],
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "internalRpcUrl": "https://polygonzkevm-testnet.g.alchemy.com/v2/a0n0QGBEv762-f2YK37nmbj_SNC310gJ"
+}
