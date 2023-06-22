@@ -149,7 +149,12 @@ def test_cli(
     unsafe_time, error = unsafe_fill_time_option
 
     options = generate_options(
-        keyfile, artifacts_dir, abi_dir, config, unsafe_time, config.chains["l2a"].confirmation_blocks
+        keyfile,
+        artifacts_dir,
+        abi_dir,
+        config,
+        unsafe_time,
+        config.chains["l2a"].confirmation_blocks,
     )
     runner = CliRunner()
     result = runner.invoke(agent, options)
