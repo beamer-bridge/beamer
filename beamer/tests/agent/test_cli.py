@@ -1,5 +1,4 @@
 import json
-import pathlib
 import shutil
 import signal
 
@@ -10,6 +9,8 @@ from click.testing import CliRunner
 from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.commands import agent
+
+from beamer.tests.util import get_repo_root
 
 
 def _generate_deployment_dir(deployment_dir, root, contracts):
@@ -135,7 +136,7 @@ def test_cli(
     obj = eth_account.Account.encrypt(key, "test")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
-    root = pathlib.Path(__file__).parents[3]
+    root = get_repo_root()
     deployment_dir = tmp_path / "deployment"
     deployment_dir.mkdir()
     artifacts_dir = deployment_dir / "artifacts"

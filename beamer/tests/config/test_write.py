@@ -17,6 +17,7 @@ from beamer.tests.config.util import (
     run,
     write_keystore_file,
 )
+from beamer.tests.util import get_repo_root
 
 
 def _write_config_state(rpc_file, artifact, account, current_config, desired_config):
@@ -30,7 +31,7 @@ def _write_config_state(rpc_file, artifact, account, current_config, desired_con
         keystore_file = Path(tmp_path) / "key.json"
         write_keystore_file(keystore_file, account.private_key, "test")
 
-        root = Path(__file__).parents[3]
+        root = get_repo_root()
         run(
             beamer.config.commands.write,
             (

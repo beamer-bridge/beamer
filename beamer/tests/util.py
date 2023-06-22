@@ -1,4 +1,5 @@
 import contextlib
+import pathlib
 import socket
 import threading
 import time
@@ -39,6 +40,10 @@ def alloc_whitelisted_accounts(n, contracts):
         for contract in contracts:
             contract.addAllowedLp(account)
     return accounts
+
+
+def get_repo_root():
+    return pathlib.Path(__file__).parents[2]
 
 
 class Timeout(Exception):
