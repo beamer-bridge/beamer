@@ -20,6 +20,7 @@ An example configuration::
     unsafe-fill-time = 600
     poll-period = 5.0
     confirmation-blocks = 0
+    min-source-balance = 0.1
 
     [account]
     path = "account.json"
@@ -30,11 +31,12 @@ An example configuration::
 
     [base-chain]
     rpc-url = "GOERLI_TESTNET_RPC_URL"
-    poll-period = 60.0
 
     [chains.goerli-arbitrum]
     rpc-url = "GOERLI_ARBITRUM_RPC_URL"
     confirmation-blocks = 1
+    poll-period = 60.0
+    min-source-balance = 0.2
 
     [chains.goerli-optimism]
     rpc-url = "GOERLI_OPTIMISM_RPC_URL"
@@ -243,6 +245,22 @@ Options reference
 
      - Time in seconds to wait between two consecutive RPC requests for new events.
        The value applies only to chain NAME, taking precedence over the global poll period.
+
+   * - ::
+
+        min-source-balance = ETH
+
+     - Minimum ETH balance on source chain to fill requests on target chain..
+       The value applies to all chains that don't have the chain-specific min-source-balance defined.
+       Default: ``0.1``.
+
+   * - ::
+
+        [chains.NAME]
+        min-source-balance = ETH
+
+     - Minimum ETH balance on chain NAME to fill requests originating from it.
+       The value applies only to chain NAME, taking precedence over the global min-source-balance.
 
 
 .. _config-health-check:
