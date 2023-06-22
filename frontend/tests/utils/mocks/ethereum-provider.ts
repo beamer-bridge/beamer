@@ -108,6 +108,8 @@ export class MockedCoinbaseProvider extends MockedEthereumProvider {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
+
+  closeExternalConnection = vi.fn();
 }
 export class MockedInjectedProvider extends MockedEthereumProvider {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {

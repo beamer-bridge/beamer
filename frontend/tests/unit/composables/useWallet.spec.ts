@@ -337,4 +337,37 @@ describe('useWallets', () => {
       expect(connectedWallet.value).toBeUndefined();
     });
   });
+  describe('triggers a session (external) disconnect for the providers that support it', () => {
+    it('Coinbase', async () => {
+      const provider = ref(undefined);
+      const connectedWallet = ref(undefined);
+      const { connectCoinbase, disconnectWallet } = useWallet(provider, connectedWallet, ref({}));
+
+      await connectCoinbase();
+
+      const providerInstance = provider.value as unknown as MockedCoinbaseProvider;
+
+      await disconnectWallet();
+
+      expect(providerInstance.closeExternalConnection).toHaveBeenCalled();
+    });
+
+    it('WalletConnect', async () => {
+      const provider = ref(undefined);
+      const connectedWallet = ref(undefined);
+      const { connectWalletConnect, disconnectWallet } = useWallet(
+        provider,
+        connectedWallet,
+        ref({}),
+      );
+
+      await connectWalletConnect();
+
+      const providerInstance = provider.value as unknown as MockedWalletConnectProvider;
+
+      await disconnectWallet();
+
+      expect(providerInstance.closeExternalConnection).toHaveBeenCalled();
+    });
+  });
 });
