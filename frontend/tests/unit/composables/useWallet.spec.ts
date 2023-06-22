@@ -331,7 +331,8 @@ describe('useWallets', () => {
       expect(provider.value).toBeInstanceOf(MockedMetaMaskProvider);
       expect(connectedWallet.value).toBe('metamask');
 
-      disconnectWallet();
+      await disconnectWallet();
+
       expect(provider.value).toBeUndefined();
       expect(connectedWallet.value).toBeUndefined();
     });
