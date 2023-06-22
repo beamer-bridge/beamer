@@ -1,6 +1,6 @@
 import { hexValue } from 'ethers/lib/utils';
 
-import { EthereumProvider } from '@/services/web3-provider';
+import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
 import { WalletConnect } from '@/services/web3-provider/util-export';
 
 const BEAMER_PROJECT_ID = 'b0909ba73ce9e30c4decb50a963c9b2a';
