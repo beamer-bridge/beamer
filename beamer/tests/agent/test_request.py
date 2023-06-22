@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import ape
 import pytest
-from eth_utils import to_checksum_address
+import structlog.testing
+from eth_utils import to_checksum_address, to_wei
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 from web3.types import Timestamp, Wei
@@ -418,3 +419,32 @@ def test_handling_reorgs(config, direction, token, request_manager):
             sleeper.sleep(0.1)
 
     agent.stop()
+
+
+def test_no_source_balance_for_fill(direction, config, token, request_manager):
+    requester, target = alloc_accounts(2)
+    min_source_balance = to_wei(1, "ether")
+    config.chains["l2a"].min_source_balance = min_source_balance
+    ape.chain.provider.web3.provider.make_request("evm_setAccountBalance", [config.account.address, "0x0"])
+    agent = Agent(config)
+
+    request_id = make_request(request_manager, token, requester, target, 1)
+
+    with structlog.testing.capture_logs() as captured_logs:
+        agent.start()
+        with Sleeper(2) as sleeper:
+            while (request := agent.get_context(direction).requests.get(request_id)) is None:
+                sleeper.sleep(0.1)
+        agent.stop()
+
+    expected_log = dict(
+        event="Not enough balance to claim, ignoring",
+        min_source_balance=min_source_balance,
+        source_balance=0,
+        request=request,
+        target_chain_id=ape.chain.chain_id,
+        source_chain_id=ape.chain.chain_id,
+        log_level="info",
+    )
+
+    assert expected_log in captured_logs
