@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@beamer-bridge/deployments": "2.0.1",
-    "@coinbase/wallet-sdk": "3.0.4",
+    "@coinbase/wallet-sdk": "3.7.1",
     "@ethersproject/providers": "^5.5.2",
     "@fontsource/sora": "^4.5.5",
     "@metamask/detect-provider": "^1.2.0",
