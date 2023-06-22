@@ -8,6 +8,8 @@ from click.testing import CliRunner
 import beamer.deploy.commands
 from beamer.config.state import Configuration
 
+from beamer.tests.util import get_repo_root
+
 
 class CommandFailed(Exception):
     pass
@@ -26,7 +28,7 @@ def write_keystore_file(path, private_key, password):
 
 
 def read_config_state(rpc_file, artifact):
-    root = pathlib.Path(__file__).parents[3]
+    root = get_repo_root()
     with tempfile.TemporaryDirectory() as tmp_path:
         state_path = pathlib.Path(tmp_path) / "config.state"
         run(
@@ -71,7 +73,7 @@ def deploy(deployer, destdir):
         ),
     )
 
-    root = pathlib.Path(__file__).parents[3]
+    root = get_repo_root()
     run(
         beamer.deploy.commands.deploy,
         (
