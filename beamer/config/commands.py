@@ -384,5 +384,5 @@ def write(
             log.error("Transaction failed", exc=exc)
             sys.exit(1)
         else:
-            txhash = receipt.transactionHash.hex()
-            log.info("Transaction sent", block=receipt.blockNumber, txhash=txhash)
+            txhash = receipt.transactionHash.hex()  # type: ignore
+            log.info("Transaction sent", block=receipt.blockNumber, txhash=txhash)  # type: ignore
