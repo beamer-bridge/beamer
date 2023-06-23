@@ -28,7 +28,7 @@ down() {
 configure_repo() {
     repo="https://github.com/0xPolygonHermez/zkevm-bridge-service.git"
     commit_id="59c1ba75fa19cf1156762a8c5ffa7f8fd272c60a"
-    git clone --no-checkout ${repo} ${POLYGON_ZKEVM}
+    git init ${POLYGON_ZKEVM}
     cd ${POLYGON_ZKEVM}
     git fetch --depth 1 ${repo} ${commit_id}
     git checkout ${commit_id}
