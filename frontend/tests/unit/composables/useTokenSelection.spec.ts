@@ -15,4 +15,15 @@ describe('useTokenSelection', () => {
     expect(tokenOptions.value[0].value).toEqual(tokenOne);
     expect(tokenOptions.value[1].value).toEqual(tokenTwo);
   });
+
+  it('filters out the token selector options that are marked as hidden', () => {
+    const tokenOne = generateToken({ hidden: true });
+    const tokenTwo = generateToken();
+    const tokens = ref([tokenOne, tokenTwo]);
+
+    const { tokenOptions } = useTokenSelection(tokens);
+
+    expect(tokenOptions.value).toHaveLength(1);
+    expect(tokenOptions.value[0].value).toEqual(tokenTwo);
+  });
 });

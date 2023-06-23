@@ -9,12 +9,14 @@ export class TokenMetadata {
   readonly decimals: number;
   readonly addresses: TokenAddresses;
   readonly imageUrl?: string;
+  readonly hidden?: boolean;
 
   constructor(data: TokenMetadataData) {
     this.symbol = data.symbol;
     this.decimals = data.decimals;
     this.addresses = data.addresses;
     this.imageUrl = data.imageUrl;
+    this.hidden = data.hidden;
   }
 
   public isChainSupported(chainId: string): boolean {
@@ -30,6 +32,7 @@ export class TokenMetadata {
       symbol: this.symbol,
       decimals: this.decimals,
       imageUrl: this.imageUrl,
+      hidden: this.hidden,
       address: this.addresses[chainId],
     };
   }
@@ -68,4 +71,5 @@ export type TokenMetadataData = {
   decimals: number;
   addresses: TokenAddresses;
   imageUrl?: string;
+  hidden?: boolean;
 };
