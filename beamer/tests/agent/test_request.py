@@ -425,7 +425,9 @@ def test_no_source_balance_for_fill(direction, config, token, request_manager):
     requester, target = alloc_accounts(2)
     min_source_balance = to_wei(1, "ether")
     config.chains["l2a"].min_source_balance = min_source_balance
-    ape.chain.provider.web3.provider.make_request("evm_setAccountBalance", [config.account.address, "0x0"])
+    ape.chain.provider.web3.provider.make_request(
+        "evm_setAccountBalance", [config.account.address, "0x0"]
+    )
     agent = Agent(config)
 
     request_id = make_request(request_manager, token, requester, target, 1)
