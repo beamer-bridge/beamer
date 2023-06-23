@@ -3,7 +3,7 @@ import { hexValue } from 'ethers/lib/utils';
 import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
 import { WalletConnect } from '@/services/web3-provider/util-export';
 
-const BEAMER_PROJECT_ID = 'b0909ba73ce9e30c4decb50a963c9b2a';
+const BEAMER_PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || '';
 
 export async function createWalletConnectProvider(rpcList: {
   [chainId: string]: string;
