@@ -4,7 +4,7 @@
   "rpcUrl": "https://zkevm-rpc.com",
   "name": "Polygon zkEVM",
   "imageUrl": "/images/polygon_zkevm.svg",
-  "tokenSymbols": ["USDC", "DAI"],
+  "tokenSymbols": ["USDC", "USDT", "DAI"],
   "nativeCurrency": {
     "name": "Ether",
     "symbol": "ETH",
