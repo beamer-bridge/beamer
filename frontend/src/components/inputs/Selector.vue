@@ -40,7 +40,11 @@
             class="relative"
             @click="!option.disabled && selectOption(option)"
           >
-            <img v-if="displayOptionIcon" class="h-7" :src="option.imageUrl ?? PlaceholderImage" />
+            <img
+              v-if="displayOptionIcon"
+              class="h-7 w-7"
+              :src="option.imageUrl ?? PlaceholderImage"
+            />
             <span>{{ option.label }}</span>
           </div>
           <OptionDisabledTooltip

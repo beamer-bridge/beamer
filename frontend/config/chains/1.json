@@ -4,7 +4,7 @@
   "rpcUrl": "https://rpc.flashbots.net",
   "name": "Ethereum Mainnet",
   "imageUrl": "/images/ethereum.svg",
-  "tokenSymbols": ["USDC", "DAI"],
+  "tokenSymbols": ["USDC", "USDT", "DAI"],
   "nativeCurrency": {
     "name": "Ether",
     "symbol": "ETH",
