@@ -251,8 +251,6 @@ jobs:
     environment: 
       POLYGON_ZKEVM_FOLDER: "docker/polygon_zkevm"
     steps:
-      # Temporarily disable polygon-zkevm tests
-      - run: circleci-agent step halt
       - initialize-environment
       - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh up
       - run: bash $POLYGON_ZKEVM_FOLDER/polygon_zkevm.sh deploy-beamer
