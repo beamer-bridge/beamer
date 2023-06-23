@@ -5,7 +5,11 @@ import type { Token } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
 
 export function useTokenSelection(tokens: Ref<Token[]>) {
-  const tokenOptions = computed(() => tokens.value.map(getTokenSelectorOption));
+  const tokenOptions = computed(() =>
+    tokens.value
+      .map(getTokenSelectorOption)
+      .filter((tokenSelectionOption) => !tokenSelectionOption.value.hidden),
+  );
 
   return {
     tokenOptions,

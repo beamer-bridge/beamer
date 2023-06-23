@@ -27,6 +27,7 @@ export type Token = {
   symbol: string;
   decimals: number;
   imageUrl?: string; // TODO: restrict more
+  hidden?: boolean;
 };
 
 export const ETH: Token = {

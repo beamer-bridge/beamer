@@ -14,7 +14,7 @@ export function useChainSelection(chains: Ref<ChainConfigMapping>, ignoreChains:
       'identifier',
     )
       .map((chain) => getChainSelectorOption(chain.identifier, chains.value))
-      .filter((chain) => !chain?.hidden);
+      .filter((chain) => !chain?.value.hidden);
   });
 
   return { chainOptions };
@@ -45,7 +45,6 @@ export function getChainSelectorOption(
       imageUrl: chain.imageUrl,
       disabled: chains[chainId].disabled,
       disabled_reason: chains[chainId].disabled_reason,
-      hidden: chains[chainId].hidden,
     };
   }
   return null;

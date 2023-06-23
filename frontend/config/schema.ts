@@ -61,6 +61,10 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
                     minLength: 42,
                     maxLength: 42,
                   },
+                  hidden: {
+                    type: 'boolean',
+                    nullable: true,
+                  },
                 },
                 required: ['symbol', 'decimals', 'address'],
                 additionalProperties: true,

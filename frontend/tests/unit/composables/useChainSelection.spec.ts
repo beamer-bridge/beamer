@@ -79,7 +79,6 @@ describe('getChainSelectorOption', () => {
       'imageUrl',
       'disabled',
       'disabled_reason',
-      'hidden',
     ]);
   });
   it('returns null if chain is not found in provided set of chains', () => {
