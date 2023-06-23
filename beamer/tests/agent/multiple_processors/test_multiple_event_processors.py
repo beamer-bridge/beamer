@@ -12,6 +12,7 @@ import ape
 import eth_account
 import psutil
 import yaml
+from ape_test.accounts import TestAccount
 from eth_utils import to_checksum_address
 from yaml.loader import SafeLoader
 
@@ -26,12 +27,6 @@ from beamer.util import make_web3, transact
 
 _SLAVE_TEST_PATH = Path(__file__).parent / "_test_slave.py"
 _CONFIG_PATH = ape.project.local_project.path / ape.project.local_project.config_file_name
-
-
-# ape local account, to be used for fulfilling requests.
-# The private key here corresponds to the 10th account ganache creates on
-# startup.
-_LOCAL_ACCOUNT = ape.accounts.test_accounts[-1]
 
 
 @dataclass
@@ -113,8 +108,9 @@ def _get_config(
     chain_map: dict[ChainId, _ChainInfo],
     contracts: Contracts,
     slave_contract_addresses: dict[ChainId, dict[str, str]],
+    local_account: TestAccount,
 ) -> Config:
-    account = eth_account.Account.from_key(_LOCAL_ACCOUNT.private_key)
+    account = eth_account.Account.from_key(local_account.private_key)
     url = ape.config.provider.uri
     deployment_info = {}
 
@@ -232,7 +228,9 @@ def _mint_agent_tokens(
         transact(l2_token.functions.mint(config.account.address, 300))
 
 
-def test_multiple_event_processors(contracts: Contracts, token: ape.project.MintableToken):
+def test_multiple_event_processors(
+    contracts: Contracts, token: ape.project.MintableToken, local_account: TestAccount
+):
     chain_map = _get_chain_map()
     with _new_networks(chain_map):
         slave_test_procs = []
@@ -243,7 +241,7 @@ def test_multiple_event_processors(contracts: Contracts, token: ape.project.Mint
                 contract_addresses = _get_slave_contract_addresses(slave)
                 slave_contract_addresses[chain_id] = contract_addresses
                 slave_test_procs.append(slave)
-        config = _get_config(chain_map, contracts, slave_contract_addresses)
+        config = _get_config(chain_map, contracts, slave_contract_addresses, local_account)
         _mint_agent_tokens(config, token, slave_contract_addresses)
         _start_agent_test(config)
         _stop_slave_tests(slave_test_procs)
@@ -276,7 +274,9 @@ def _start_agent_fee_test(config: Config):
         agent.stop()
 
 
-def test_l1_base_fees(contracts: Contracts, token: ape.project.MintableToken):
+def test_l1_base_fees(
+    contracts: Contracts, token: ape.project.MintableToken, local_account: TestAccount
+):
     chain_map = {ChainId(1): _ChainInfo(9545, False), ChainId(2): _ChainInfo(9546, True)}
     with _new_networks(chain_map):
         slave_test_procs = []
@@ -287,7 +287,7 @@ def test_l1_base_fees(contracts: Contracts, token: ape.project.MintableToken):
                 contract_addresses = _get_slave_contract_addresses(slave)
                 slave_contract_addresses[chain_id] = contract_addresses
                 slave_test_procs.append(slave)
-        config = _get_config(chain_map, contracts, slave_contract_addresses)
+        config = _get_config(chain_map, contracts, slave_contract_addresses, local_account)
         _mint_agent_tokens(config, token, slave_contract_addresses)
         _start_agent_fee_test(config)
         _stop_slave_tests(slave_test_procs)
