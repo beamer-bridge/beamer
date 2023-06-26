@@ -1,0 +1,17 @@
+{
+    "checksum": "a5aaf72bfd4d763fe37ac8f3adab2bc525e68380e92e527df0be67bbb11fc0e3",
+    "block": 1592695,
+    "chain_id": 1101,
+    "token_addresses": {},
+    "RequestManager": {
+        "min_fee_ppm": 0,
+        "lp_fee_ppm": 0,
+        "protocol_fee_ppm": 0,
+        "chains": {},
+        "tokens": {},
+        "whitelist": []
+    },
+    "FillManager": {
+        "whitelist": []
+    }
+}

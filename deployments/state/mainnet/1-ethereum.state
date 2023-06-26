@@ -1,0 +1,55 @@
+{
+    "checksum": "518399f113594195c6c170f96329a0e098a5bb13cda587f5756592803a74a11a",
+    "block": 17563009,
+    "chain_id": 1,
+    "token_addresses": {
+        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    },
+    "RequestManager": {
+        "min_fee_ppm": 100000,
+        "lp_fee_ppm": 3000,
+        "protocol_fee_ppm": 0,
+        "chains": {
+            "42161": {
+                "finality_period": 691200,
+                "target_weight_ppm": 447533,
+                "transfer_cost": 219575224164724
+            },
+            "10": {
+                "finality_period": 604800,
+                "target_weight_ppm": 514901,
+                "transfer_cost": 417355892523036
+            },
+            "1": {
+                "finality_period": 1,
+                "target_weight_ppm": 275603,
+                "transfer_cost": 9992608543035212
+            }
+        },
+        "tokens": {
+            "DAI": {
+                "transfer_limit": 10000000000000000000000,
+                "eth_in_token": 1839534184406240000000
+            },
+            "USDC": {
+                "transfer_limit": 50000000000,
+                "eth_in_token": 1839515741
+            }
+        },
+        "whitelist": [
+            "0xa1151b7F265AA2e546382D8deF6c2A2613798F88",
+            "0x0F536e54cE49f2dBdD8ae5E86F7b41f09a2e2818",
+            "0x79b68B3d5533EfBF08c383eCCd47966d8EF181FC",
+            "0xa48B6821024ff16884763A21CE149d3412a933E2"
+        ]
+    },
+    "FillManager": {
+        "whitelist": [
+            "0xa1151b7F265AA2e546382D8deF6c2A2613798F88",
+            "0x0F536e54cE49f2dBdD8ae5E86F7b41f09a2e2818",
+            "0x79b68B3d5533EfBF08c383eCCd47966d8EF181FC",
+            "0xa48B6821024ff16884763A21CE149d3412a933E2"
+        ]
+    }
+}
