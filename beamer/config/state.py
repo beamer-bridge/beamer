@@ -41,7 +41,7 @@ class ChainConfig:
 
 @dataclass
 class FillManagerConfig:
-    whitelist: set[ChecksumAddress]
+    whitelist: list[ChecksumAddress]
 
 
 @dataclass
@@ -51,7 +51,7 @@ class RequestManagerConfig:
     protocol_fee_ppm: int = field(metadata=schema(min=0, max=999_999))
     chains: dict[ChainId, ChainConfig]
     tokens: dict[str, TokenConfig]
-    whitelist: set[ChecksumAddress]
+    whitelist: list[ChecksumAddress]
 
 
 @dataclass
@@ -137,9 +137,9 @@ class Configuration(_BaseConfiguration):
 
     @staticmethod
     def initial(chain_id: ChainId, block: BlockNumber) -> "Configuration":
-        fm_config = FillManagerConfig(whitelist=set())
+        fm_config = FillManagerConfig(whitelist=[])
         rm_config = RequestManagerConfig(
-            min_fee_ppm=0, lp_fee_ppm=0, protocol_fee_ppm=0, chains={}, tokens={}, whitelist=set()
+            min_fee_ppm=0, lp_fee_ppm=0, protocol_fee_ppm=0, chains={}, tokens={}, whitelist=[]
         )
         return Configuration(
             block=block,

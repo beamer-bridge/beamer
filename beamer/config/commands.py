@@ -59,9 +59,9 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
 
         case LpAdded():
             if event.event_address == deployment.chain.contracts["RequestManager"].address:
-                config.request_manager.whitelist.add(event.lp)
+                config.request_manager.whitelist.append(event.lp)
             elif event.event_address == deployment.chain.contracts["FillManager"].address:
-                config.fill_manager.whitelist.add(event.lp)
+                config.fill_manager.whitelist.append(event.lp)
             else:
                 raise ValueError(f"event from an unexpected address: {event}")
 
@@ -221,11 +221,13 @@ def _generate_whitelist_updates(
 
     yield from helper(
         "RequestManager",
-        current_config.request_manager.whitelist,
-        desired_config.request_manager.whitelist,
+        set(current_config.request_manager.whitelist),
+        set(desired_config.request_manager.whitelist),
     )
     yield from helper(
-        "FillManager", current_config.fill_manager.whitelist, desired_config.fill_manager.whitelist
+        "FillManager",
+        set(current_config.fill_manager.whitelist),
+        set(desired_config.fill_manager.whitelist),
     )
 
 
