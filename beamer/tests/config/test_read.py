@@ -63,7 +63,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     request_manager.addAllowedLp(lp)
 
     config = read_config_state(rpc_file, artifact)
-    assert config.request_manager.whitelist == {lp}
+    assert config.request_manager.whitelist == [lp]
 
     # check LP removal
     request_manager.removeAllowedLp(lp)
@@ -87,7 +87,7 @@ def test_config_read_fill_manager(tmp_path, deployer):
     fill_manager.addAllowedLp(lp, sender=deployer.address)
 
     config = read_config_state(rpc_file, artifact)
-    assert config.fill_manager.whitelist == {lp}
+    assert config.fill_manager.whitelist == [lp]
 
     # check LP removal
     fill_manager.removeAllowedLp(lp, sender=deployer.address)

@@ -85,7 +85,7 @@ def test_config_write_request_manager(deployment_objects, deployer):
     desired.request_manager.tokens["TST"].eth_in_token = 2_000
 
     lp = ape.accounts.test_accounts[0].address
-    desired.request_manager.whitelist.add(lp)
+    desired.request_manager.whitelist.append(lp)
 
     _write_config_state(rpc_file, artifact, deployer, current, desired)
 
@@ -115,7 +115,7 @@ def test_config_write_fill_manager(deployment_objects, deployer):
 
     lp = ape.accounts.test_accounts[0].address
     desired = current.to_desired_config()
-    desired.fill_manager.whitelist.add(lp)
+    desired.fill_manager.whitelist.append(lp)
 
     _write_config_state(rpc_file, artifact, deployer, current, desired)
 
