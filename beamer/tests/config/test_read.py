@@ -1,14 +1,17 @@
 import json
-
+import logging
+import subprocess
 from typing import Any
 
 import ape
 import pytest
 from apischema.validation.mock import NonTrivialDependency
 
+import beamer.config.commands
 from beamer.config.state import Configuration
 from beamer.deploy.artifacts import Deployment
-from beamer.tests.config.util import deploy, read_config_state
+from beamer.tests.config.util import CommandFailed, deploy, read_config_state, run
+from beamer.tests.util import get_repo_root
 
 
 def test_config_read_request_manager(tmp_path, token, deployer):
@@ -123,3 +126,86 @@ def test_config_read_checksum_mismatch(tmp_path, deployer):
     # because apischema will raise NonTrivialDependency.
     with pytest.raises(NonTrivialDependency):
         Configuration.from_file(path)
+
+
+_DATA = """{
+    "checksum": "a5aaf72bfd4d763fe37ac8f3adab2bc525e68380e92e527df0be67bbb11fc0e3",
+    "block": 1592695,
+    "chain_id": 1101,
+    "token_addresses": {},
+    "RequestManager": {
+        "min_fee_ppm": 0,
+        "lp_fee_ppm": 0,
+        "protocol_fee_ppm": 0,
+        "chains": {},
+        "tokens": {},
+        "whitelist": []
+    },
+    "FillManager": {
+        "whitelist": []
+    }
+}"""
+
+
+def test_config_checksum_can_be_computed_externally(tmp_path):
+    path = tmp_path / "dummy.state"
+    path.write_text(_DATA)
+    output = subprocess.check_output(f"grep -v checksum {path} | sha256sum", shell=True)
+    checksum = output.decode().split(" ", 1)[0]
+    config = Configuration.from_file(path)
+    assert config.compute_checksum() == checksum
+
+
+def test_error_on_different_chain_ids(tmp_path, deployer, caplog):
+    caplog.set_level(logging.ERROR)
+    rpc_file, artifact = deploy(deployer, tmp_path)
+
+    path = tmp_path / "dummy.state"
+    path.write_text(_DATA)
+    root = get_repo_root()
+    with pytest.raises(CommandFailed):
+        run(
+            beamer.config.commands.read,
+            (
+                "--rpc-file",
+                rpc_file,
+                "--abi-dir",
+                f"{root}/contracts/.build/",
+                "--artifact",
+                artifact,
+                str(path),
+            ),
+        )
+    assert len(caplog.messages) == 1
+    assert "Configuration chain ID differs from the deployment chain ID" in caplog.messages[0]
+
+
+def test_config_read_no_updates_found(tmp_path, deployer, caplog):
+    caplog.set_level(logging.INFO)
+    rpc_file, artifact = deploy(deployer, tmp_path)
+
+    config = read_config_state(rpc_file, artifact)
+    path = tmp_path / "temp.state"
+    config.to_file(path)
+
+    root = get_repo_root()
+    caplog.clear()
+    ape.chain.mine()
+    run(
+        beamer.config.commands.read,
+        (
+            "--rpc-file",
+            rpc_file,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifact",
+            artifact,
+            str(path),
+        ),
+    )
+    assert "No configuration updates found" in caplog.messages[-2]
+
+    # Make sure that the block number has been updated.
+    config_new = Configuration.from_file(path)
+    assert config_new.block > config.block
+    assert config_new.block == ape.chain.blocks.height
