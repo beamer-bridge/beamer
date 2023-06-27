@@ -102,11 +102,21 @@ def test_config_write_request_manager(deployment_objects, deployer):
     assert request_manager.tokens(token_address).ethInToken == 2_000
     assert request_manager.allowedLps(lp)
 
+    # Removal of an LP.
     current = desired.to_config(ape.chain.blocks[-1].number)
     desired.request_manager.whitelist.remove(lp)
 
     _write_config_state(rpc_file, artifact, deployer, current, desired)
     assert not request_manager.allowedLps(lp)
+
+    # Removal of a token.
+    current = desired.to_config(ape.chain.blocks[-1].number)
+    del desired.request_manager.tokens["TST"]
+    del desired.token_addresses["TST"]
+
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+    assert request_manager.tokens(token_address).transferLimit == 0
+    assert request_manager.tokens(token_address).ethInToken == 0
 
 
 def test_config_write_fill_manager(deployment_objects, deployer):
