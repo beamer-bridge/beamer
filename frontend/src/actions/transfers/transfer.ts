@@ -353,6 +353,17 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       return this._requestInformation.setTransactionHash(transactionHash);
     }
 
+    const approvalNeeded = !(await isAllowanceApproved(
+      provider,
+      this.sourceAmount.token.address,
+      this._requestInformation.requestAccount,
+      this.sourceChain.requestManagerAddress,
+      this.sourceAmount.uint256.add(this.fees.uint256),
+    ));
+    if (approvalNeeded) {
+      throw new Error('Not enough tokens approved!');
+    }
+
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
     const internalTransactionHash = await sendRequestTransaction(
@@ -374,7 +385,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       getConfirmationTimeBlocksForChain(this.sourceChain.identifier),
     );
 
-    return this._requestInformation.setTransactionHash(transactionHash);
+    this._requestInformation.setTransactionHash(transactionHash);
   }
 
   protected async waitForRequestEvent(): Promise<void> {
