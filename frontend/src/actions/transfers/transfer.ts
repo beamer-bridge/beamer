@@ -10,7 +10,7 @@ import {
   sendRequestTransaction,
   withdrawRequest,
 } from '@/services/transactions/request-manager';
-import { ensureTokenAllowance } from '@/services/transactions/token';
+import { ensureTokenAllowance, isAllowanceApproved } from '@/services/transactions/token';
 import {
   getConfirmationTimeBlocksForChain,
   getCurrentBlockNumber,
@@ -297,14 +297,14 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       );
     }
 
-    if (!this._allowanceInformation) {
-      let amount: UInt256;
-      if (this.approveInfiniteAmount) {
-        amount = UInt256.max();
-      } else {
-        amount = this.sourceAmount.uint256.add(this.fees.uint256);
-      }
+    let amount: UInt256;
+    if (this.approveInfiniteAmount) {
+      amount = UInt256.max();
+    } else {
+      amount = this.sourceAmount.uint256.add(this.fees.uint256);
+    }
 
+    if (!this._allowanceInformation) {
       const internalTransactionHash = await ensureTokenAllowance(
         provider,
         this.sourceAmount.token.address,
@@ -322,6 +322,17 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       );
 
       this._allowanceInformation.setTransactionHash(transactionHash);
+    }
+
+    const successful = await isAllowanceApproved(
+      provider,
+      this.sourceAmount.token.address,
+      this._requestInformation.requestAccount,
+      this.sourceChain.requestManagerAddress,
+      amount,
+    );
+    if (!successful) {
+      throw new Error('Not enough tokens approved!');
     }
   }
 
