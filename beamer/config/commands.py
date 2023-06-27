@@ -137,6 +137,7 @@ def read(
         _replay_event(w3, deployment, config, event)
 
     config.block = fetcher.synced_block
+    state_path.parent.mkdir(parents=True, exist_ok=True)
     config.to_file(state_path)
     log.info("Stored configuration", path=str(state_path))
 
