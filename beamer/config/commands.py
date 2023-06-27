@@ -30,6 +30,10 @@ log = structlog.get_logger(__name__)
 _CONFIG_UPDATE_EVENTS = frozenset((ChainUpdated, FeesUpdated, TokenUpdated, LpAdded, LpRemoved))
 
 
+def _is_config_update_event(event: Event) -> bool:
+    return type(event) in _CONFIG_UPDATE_EVENTS
+
+
 def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event: Event) -> None:
     assert deployment.chain is not None
     match event:
@@ -133,8 +137,14 @@ def read(
         w3, (request_manager, fill_manager), start_block=start_block, confirmation_blocks=0
     )
     events = fetcher.fetch()
+    events = list(filter(_is_config_update_event, events))
     for event in events:
         _replay_event(w3, deployment, config, event)
+
+    if events:
+        log.info("Found configuration updates", num_events=len(events))
+    else:
+        log.info("No configuration updates found")
 
     config.block = fetcher.synced_block
     state_path.parent.mkdir(parents=True, exist_ok=True)
@@ -269,7 +279,7 @@ def _ensure_no_config_updates_since(
     )
     events = fetcher.fetch()
 
-    if any(type(event) in _CONFIG_UPDATE_EVENTS for event in events):
+    if any(_is_config_update_event(event) for event in events):
         log.error("Found configuration update event since start block", start_block=start_block)
         sys.exit(1)
 
