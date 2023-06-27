@@ -91,6 +91,7 @@ describe('transfer', () => {
 
     Object.defineProperties(tokenUtils, {
       ensureTokenAllowance: { value: vi.fn().mockResolvedValue(undefined) },
+      isAllowanceApproved: { value: vi.fn().mockResolvedValue(true) },
     });
 
     Object.defineProperties(requestManager, {
@@ -261,6 +262,37 @@ describe('transfer', () => {
 
       expect(tokenUtils.ensureTokenAllowance).not.toHaveBeenCalled();
       expect(transfer.allowanceInformation?.transactionHash).toBe(internalTransactionHash);
+    });
+
+    it('throws if the allowance is not correctly set after the executing the transaction', async () => {
+      const data = generateTransferData({
+        fees: generateTokenAmountData({ amount: '2' }),
+        sourceChain: generateChain({ requestManagerAddress: '0xRequestManager' }),
+        sourceAmount: generateTokenAmountData({
+          token: generateToken({ address: '0xSourceToken' }),
+          amount: '1',
+        }),
+      });
+      const transfer = new TestTransfer(data);
+      const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
+      const provider = new MockedEthereumProvider({
+        signer: signer,
+        signerAddress: data.requestInformation?.requestAccount,
+      });
+
+      define(tokenUtils, 'isAllowanceApproved', vi.fn().mockResolvedValue(false));
+
+      await expect(transfer.ensureTokenAllowance(provider)).rejects.toThrow(
+        'Not enough tokens approved!',
+      );
+      expect(tokenUtils.isAllowanceApproved).toHaveBeenCalledTimes(1);
+      expect(tokenUtils.isAllowanceApproved).toHaveBeenLastCalledWith(
+        provider,
+        '0xSourceToken',
+        data.requestInformation?.requestAccount,
+        '0xRequestManager',
+        new UInt256('3'),
+      );
     });
   });
 
