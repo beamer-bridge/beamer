@@ -29,11 +29,15 @@ export async function ensureTokenAllowance(
     signer,
   );
   const signerAddress = await signer.getAddress();
-  const allowance = new UInt256(
-    (await tokenContract.allowance(signerAddress, allowedSpender)).toString(),
-  );
 
-  if (allowance.lt(minimumRequiredAmount)) {
+  const approvalNeeded = !(await isAllowanceApproved(
+    provider,
+    tokenAddress,
+    signerAddress,
+    allowedSpender,
+    minimumRequiredAmount,
+  ));
+  if (approvalNeeded) {
     const transaction = await tokenContract.approve(
       allowedSpender,
       minimumRequiredAmount.asBigNumber,
@@ -41,6 +45,25 @@ export async function ensureTokenAllowance(
 
     return transaction.hash;
   }
+}
+
+export async function isAllowanceApproved(
+  provider: IEthereumProvider,
+  tokenAddress: string,
+  ownerAddress: string,
+  allowedSpender: string,
+  minimumRequiredAmount: UInt256,
+): Promise<boolean> {
+  const tokenContract = getReadOnlyContract<MintableToken>(
+    tokenAddress,
+    MintableTokenDeployment.abi,
+    provider.getProvider(),
+  );
+  const allowance = new UInt256(
+    (await tokenContract.allowance(ownerAddress, allowedSpender)).toString(),
+  );
+
+  return allowance.gte(minimumRequiredAmount);
 }
 
 export async function getTokenBalance(

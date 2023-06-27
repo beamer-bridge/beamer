@@ -4,9 +4,10 @@ import {
   ensureTokenAllowance,
   getTokenAllowance,
   getTokenBalance,
+  isAllowanceApproved,
   listenOnTokenBalanceChange,
 } from '@/services/transactions/token';
-import * as ethersTypes from '@/types/uint-256';
+import { UInt256 } from '@/types/uint-256';
 import { generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 import {
@@ -19,7 +20,11 @@ vi.mock('@ethersproject/providers');
 
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
-const ETHEREUM_PROVIDER = new MockedEthereumProvider({ signer: SIGNER });
+const SIGNER_ADDRESS = getRandomEthereumAddress();
+const ETHEREUM_PROVIDER = new MockedEthereumProvider({
+  signer: SIGNER,
+  signerAddress: SIGNER_ADDRESS,
+});
 
 describe('token', () => {
   beforeEach(() => {
@@ -34,7 +39,7 @@ describe('token', () => {
       it('triggers a token allowance approve transaction', async () => {
         const tokenAddress = getRandomEthereumAddress();
         const spender = getRandomEthereumAddress();
-        const approvalAmount = new ethersTypes.UInt256('1000');
+        const approvalAmount = new UInt256('1000');
         const allowance = '100';
 
         const mockedTokenContract = mockGetERC20Contract();
@@ -53,7 +58,7 @@ describe('token', () => {
       it("doesn't trigger an allowance approve transaction", async () => {
         const tokenAddress = getRandomEthereumAddress();
         const spender = getRandomEthereumAddress();
-        const approvalAmount = new ethersTypes.UInt256('1000');
+        const approvalAmount = new UInt256('1000');
         const allowance = '1100';
 
         const mockedTokenContract = mockGetERC20Contract();
@@ -62,6 +67,52 @@ describe('token', () => {
         await ensureTokenAllowance(ETHEREUM_PROVIDER, tokenAddress, spender, approvalAmount);
 
         expect(mockedTokenContract.approve).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('isAllowanceApproved()', () => {
+    describe("when signer's current token allowance is lower than the required amount", () => {
+      it('returns false', async () => {
+        const tokenAddress = getRandomEthereumAddress();
+        const spender = getRandomEthereumAddress();
+        const approvalAmount = new UInt256('1000');
+        const allowance = '100';
+
+        const mockedTokenContract = mockGetERC20Contract();
+        mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
+
+        const result = await isAllowanceApproved(
+          ETHEREUM_PROVIDER,
+          tokenAddress,
+          SIGNER_ADDRESS,
+          spender,
+          approvalAmount,
+        );
+
+        expect(result).toBe(false);
+      });
+    });
+
+    describe("when signer's current token allowance is higher than the required amount", () => {
+      it('returns true', async () => {
+        const tokenAddress = getRandomEthereumAddress();
+        const spender = getRandomEthereumAddress();
+        const approvalAmount = new UInt256('1000');
+        const allowance = '1100';
+
+        const mockedTokenContract = mockGetERC20Contract();
+        mockedTokenContract.allowance = vi.fn().mockReturnValue(allowance);
+
+        const result = await isAllowanceApproved(
+          ETHEREUM_PROVIDER,
+          tokenAddress,
+          SIGNER_ADDRESS,
+          spender,
+          approvalAmount,
+        );
+
+        expect(result).toBe(true);
       });
     });
   });
