@@ -124,6 +124,13 @@ def read(
 
     if state_path.exists():
         config = Configuration.from_file(state_path)
+        if config.chain_id != chain_id:
+            log.error(
+                "Configuration chain ID differs from the deployment chain ID",
+                config_chain_id=config.chain_id,
+                deployment_chain_id=chain_id,
+            )
+            sys.exit(1)
         start_block = config.block
     else:
         start_block = min(
