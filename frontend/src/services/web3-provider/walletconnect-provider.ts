@@ -11,8 +11,15 @@ export async function createWalletConnectProvider(rpcList: {
   const chains = Object.keys(rpcList).map((chainId) => parseInt(chainId));
 
   const provider = await WalletConnect.init({
-    chains,
+    chains: [chains[0]],
+    optionalChains: chains.slice(1),
     projectId: BEAMER_PROJECT_ID,
+    optionalMethods: [
+      'wallet_switchEthereumChain',
+      'wallet_watchAsset',
+      'wallet_addEthereumChain',
+    ],
+    optionalEvents: ['accountsChanged', 'chainChanged', 'network', 'disconnect'],
     rpcMap: rpcList,
     showQrModal: true,
   });
