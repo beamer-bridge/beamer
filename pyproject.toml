@@ -26,6 +26,7 @@ typing-extensions = "^4.6.3"
 [tool.poetry.dev-dependencies]
 freezegun = "^1.2.2"
 types-pyyaml = "^6.0.12"
+types-python-dateutil = "^2.8.19.13"
 psutil = "^5.9.5"
 eth-ape = "^0.6.11"
 ape-solidity = "^0.6.5"
