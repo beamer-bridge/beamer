@@ -37,7 +37,7 @@ class _ChainInfo:
 
 def _start_ganache(chain_id: ChainId, port: int, is_legacy: bool = True) -> psutil.Popen:
     cmd = [
-        "ganache-cli",
+        "ganache",
         "--chain.vmErrorsOnRPCResponse",
         "true",
         "--server.port",
