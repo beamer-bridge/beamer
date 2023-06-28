@@ -7,7 +7,6 @@ import structlog
 
 import beamer.contracts
 import beamer.deploy.artifacts
-import beamer.deploy.config
 import beamer.util
 from beamer.deploy.util import deploy_beamer, deploy_contract, get_commit_id
 from beamer.typing import ChainId
@@ -90,7 +89,7 @@ def deploy_base(
 
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
     account = beamer.util.account_from_keyfile(keystore_file, password)
     log.info("Loaded keystore file", address=account.address)
 
@@ -166,7 +165,7 @@ def deploy(
     if commit_check:
         _ensure_commit_is_on_remote()
 
-    rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
     log.info("Loaded RPC file")
 
     account = beamer.util.account_from_keyfile(keystore_file, password)

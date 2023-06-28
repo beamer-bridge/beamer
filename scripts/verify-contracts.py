@@ -6,7 +6,7 @@ import structlog
 from eth_utils import to_checksum_address
 
 import beamer.deploy.artifacts
-import beamer.deploy.config
+import beamer.util
 from beamer.typing import URL, ChainId
 
 log = structlog.get_logger(__name__)
@@ -80,7 +80,7 @@ def _verify_contract(
 @click.argument("rpc_file", type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
 def main(artifacts_dir: Path, rpc_file: Path) -> None:
     contract_info = _get_contract_info(artifacts_dir)
-    rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
     for chain_id, contracts in contract_info.items():
         rpc_url = rpc_info[chain_id]
         for contract_name, contract in contracts.items():

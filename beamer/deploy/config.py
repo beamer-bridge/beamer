@@ -8,7 +8,7 @@ from apischema.metadata import validators
 from eth_typing import ChecksumAddress
 from eth_utils import is_checksum_address
 
-from beamer.typing import URL, ChainId
+from beamer.typing import ChainId
 
 
 def _validate_token_address(address: str) -> None:
@@ -74,8 +74,3 @@ class ConfigValidationError(Exception):
     def __str__(self) -> str:
         assert isinstance(self.__cause__, ValidationError)
         return "\n".join(map(str, self.__cause__.errors))  # pylint: disable=no-member
-
-
-def load_rpc_info(path: Path) -> dict[ChainId, URL]:
-    info = json.loads(path.read_text())
-    return {ChainId(int(k)): URL(v) for k, v in info.items()}
