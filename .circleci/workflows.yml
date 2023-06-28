@@ -376,7 +376,34 @@ jobs:
           name: Unit tests
           command: yarn test:unit
 
-  build-and-publish-container-image:
+  check-pipeline:
+    executor: vm
+    environment:
+      PIPELINE_ID: << pipeline.id >>
+    steps:
+      - initialize-environment
+      - run:
+          name: echo id
+          command: echo $PIPELINE_ID
+      - run:
+          name: Check pipeline
+          command: poetry run python scripts/check-pipeline.py $PIPELINE_ID
+
+  publish-container-image:
+    executor: vm
+    environment:
+      IMAGE_NAME: ghcr.io/beamer-bridge/beamer
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Log in to github container registry
+          command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
+      - run:
+          name: Push the image to github container registry
+          command: docker push -a ${IMAGE_NAME}
+
+  test-container-image:
     executor: vm
     environment:
       IMAGE_NAME: ghcr.io/beamer-bridge/beamer
@@ -386,21 +413,8 @@ jobs:
           name: Build a beamer image
           command: make container-image IMAGE_NAME=${IMAGE_NAME}
       - run:
-          name: Compile contracts
-          command: ape compile
-      - run:
           name: Test the container image
           command: bash docker/scripts/test-container-image.sh ${IMAGE_NAME}:sha-$(git rev-parse HEAD)
-      - when:
-          condition:
-             equal: [ main, <<pipeline.git.branch>> ]
-          steps:
-            - run:
-                name: Log in to github container registry
-                command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
-            - run:
-                name: Push the image to github container registry
-                command: docker push -a ${IMAGE_NAME}
   
   deploy-frontend:
     executor: node/default
@@ -475,10 +489,6 @@ workflows:
           requires:
             - install-python
             - install-npm-packages
-      - create-relayers:
-          requires:
-            - checkout
-            - install-npm-packages
       - compile-contracts:
           requires:
             - install-python
@@ -489,30 +499,6 @@ workflows:
       - test-beamer:
           requires:
             - compile-contracts
-      - e2e-test-ethereum:
-          requires:
-            - compile-contracts
-            - create-relayers
-      - e2e-test-optimism:
-          requires:
-            - compile-contracts
-            - create-relayers
-      - e2e-test-arbitrum:
-          requires:
-            - compile-contracts
-            - create-relayers
-      - e2e-test-polygon-zkevm:
-          requires:
-            - compile-contracts
-            - create-relayers
-      - build-and-publish-container-image:
-          requires:
-            - test-contracts
-            - test-beamer
-            - e2e-test-ethereum
-            - e2e-test-optimism
-            - e2e-test-arbitrum
-            - e2e-test-polygon-zkevm
 
   docs:
     when: <<pipeline.parameters.docs-updated>>
@@ -541,21 +527,36 @@ workflows:
     when: <<pipeline.parameters.relayer-updated>>
     jobs:
       - checkout
-      - install-python:
-          requires:
-            - checkout
       - install-npm-packages:
           requires:
             - checkout
       - create-relayers:
           requires:
             - install-npm-packages
+      - test-relayer:
+          requires:
+            - install-npm-packages
+
+  e2e-tests:
+    when: 
+      or: 
+        - equal: [ true, <<pipeline.parameters.backend-updated>> ]
+        - equal: [ true, <<pipeline.parameters.relayer-updated>> ]
+
+    jobs:
+      - checkout
+      - install-npm-packages:
+          requires:
+            - checkout
+      - create-relayers:
+          requires:
+            - install-npm-packages
+      - install-python:
+          requires:
+            - checkout
       - compile-contracts:
           requires:
             - install-python
-            - install-npm-packages
-      - test-relayer:
-          requires:
             - install-npm-packages
       - e2e-test-ethereum:
           requires:
@@ -573,13 +574,31 @@ workflows:
           requires:
             - compile-contracts
             - create-relayers
-      - build-and-publish-container-image:
+      - test-container-image:
           requires:
-            - test-relayer
-            - e2e-test-ethereum
-            - e2e-test-optimism
-            - e2e-test-arbitrum
-            - e2e-test-polygon-zkevm
+            - compile-contracts
+            - create-relayers
+
+  check-and-publish:
+    when: 
+      and:
+        - or: 
+          - equal: [ true, <<pipeline.parameters.backend-updated>> ]
+          - equal: [ true, <<pipeline.parameters.relayer-updated>> ]
+        - equal: [ main, <<pipeline.git.branch>> ]
+
+    jobs:
+      - checkout
+      - install-python:
+          requires:
+            - checkout
+      - check-pipeline:
+          requires:
+            - install-python
+      - publish-container-image:
+          requires:
+            - check-pipeline
+
 
   frontend-deployment:
     unless: 
