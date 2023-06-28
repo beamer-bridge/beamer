@@ -226,3 +226,8 @@ def get_token_balance(token_address: str, wallet_address: str, rpc: str) -> int:
 
 def get_token_amount_in_decimals(amount: int, token: TokenDetails) -> int:
     return amount * 10 ** -token["decimals"]
+
+
+def load_rpc_info(path: Path) -> dict[ChainId, URL]:
+    info = json.loads(path.read_text())
+    return {ChainId(int(k)): URL(v) for k, v in info.items()}

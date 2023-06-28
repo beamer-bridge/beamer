@@ -8,7 +8,6 @@ from eth_typing import ChecksumAddress
 from web3 import Web3
 
 import beamer.contracts
-import beamer.deploy.config
 import beamer.util
 from beamer.config.state import ChainConfig, Configuration, DesiredConfiguration, TokenConfig
 from beamer.deploy.artifacts import Deployment
@@ -122,7 +121,7 @@ def read(
     """Read latest contract configuration state from the chain and store it into STATE_PATH."""
     beamer.util.setup_logging(log_level="DEBUG", log_json=False)
 
-    rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
     deployment = Deployment.from_file(artifact)
 
     assert deployment.chain is not None
@@ -378,7 +377,7 @@ def write(
     account = beamer.util.account_from_keyfile(keystore_file, password)
     log.info("Loaded keystore file", address=account.address)
 
-    rpc_info = beamer.deploy.config.load_rpc_info(rpc_file)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
     deployment = Deployment.from_file(artifact)
 
     assert deployment.chain is not None
