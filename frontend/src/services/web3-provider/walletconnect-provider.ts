@@ -5,6 +5,13 @@ import { WalletConnect } from '@/services/web3-provider/util-export';
 
 const BEAMER_PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || '';
 
+/** A workaround for https://github.com/WalletConnect/walletconnect-monorepo/issues/1144
+ *  Remove when fixed.
+ */
+if (!window.global) {
+  window.global = globalThis;
+}
+
 export async function createWalletConnectProvider(rpcList: {
   [chainId: string]: string;
 }): Promise<WalletConnectProvider | undefined> {
