@@ -54,10 +54,11 @@ export class WalletConnectProvider extends EthereumProvider<WalletConnect> {
       await this.web3Provider.send('wallet_switchEthereumChain', [{ chainId: newChainIdHex }]);
       return true;
     } catch (error: unknown) {
-      if ((error as Error).message.startsWith('Unrecognized chain ID')) {
-        return false;
-      }
-      throw error;
+      console.log(error);
+      // Once https://github.com/WalletConnect/walletconnect-monorepo/issues/2825 has been resolved,
+      // detect an "Unknown  network" exception and return `false in that case.
+      // For the other cases, this function should throw the exception.
+      return false;
     }
   }
 }
