@@ -591,17 +591,20 @@ def _timestamp_is_l1_finalized(
 
 
 def maybe_prove(claim: Claim, context: Context) -> None:
-    # mainnet: 10, goerli: 420, local: 901
-    if context.target_chain.id not in (10, 420, 901):
-        claim.message_proved = True
-        return
-
-    if claim.message_proved:
-        return
-
     request = context.requests.get(claim.request_id)
 
     assert request is not None, "Active claim for non-existent request"
+
+    prove_tx = None
+    if request.fill_tx is not None:
+        prove_tx = request.fill_tx
+    elif claim.invalidation_tx is not None:
+        prove_tx = claim.invalidation_tx
+
+    # mainnet: 10, goerli: 420, local: 901
+    if context.target_chain.id not in (10, 420, 901):
+        claim.proved_tx = prove_tx
+        return
 
     own_challenge_stake = Wei(claim.get_challenger_stake(context.address))
     can_prove = (
@@ -611,12 +614,10 @@ def maybe_prove(claim: Claim, context: Context) -> None:
     if not can_prove:
         return
 
-    if request.fill_tx is not None:
-        proof_tx = request.fill_tx
-    elif claim.invalidation_tx is not None:
-        proof_tx = claim.invalidation_tx
+    if claim.proved_tx is not None or prove_tx in context.l1_resolutions:
+        return
 
-    if proof_tx in context.l1_resolutions:
+    if prove_tx is None:
         return
 
     future = context.task_pool.submit(
@@ -625,7 +626,7 @@ def maybe_prove(claim: Claim, context: Context) -> None:
         context.target_chain.rpc_url,
         context.source_chain.rpc_url,
         context.config.account.key,
-        proof_tx,
+        prove_tx,
         True,
     )
 
@@ -633,16 +634,22 @@ def maybe_prove(claim: Claim, context: Context) -> None:
         try:
             f.result()
         except Exception as ex:
-            context.logger.error("Optimism prove failed", ex=ex, tx_hash=proof_tx)
+            context.logger.error("Optimism prove failed", ex=ex, tx_hash=prove_tx)
         else:
-            claim.message_proved = True
+            assert request is not None
+            claim.proved_tx = prove_tx
+            if request.fill_tx == prove_tx:
+                request.fill_timestamp = Timestamp(int(time.time()))
+            elif claim.invalidation_tx == prove_tx:
+                claim.invalidation_timestamp = Timestamp(int(time.time()))
         finally:
-            context.l1_resolutions.pop(proof_tx, None)
+            assert prove_tx is not None
+            context.l1_resolutions.pop(prove_tx, None)
 
     future.add_done_callback(on_future_done)
-    context.l1_resolutions[proof_tx] = future
+    context.l1_resolutions[prove_tx] = future
 
-    context.logger.info("Initiated Optimism prove", request=request, claim=claim, tx_hash=proof_tx)
+    context.logger.info("Initiated Optimism prove", request=request, claim=claim, tx_hash=prove_tx)
 
 
 def maybe_resolve(claim: Claim, context: Context) -> bool:
@@ -650,7 +657,7 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
 
     assert request is not None, "Active claim for non-existent request"
 
-    if not claim.message_proved:
+    if claim.proved_tx is None or claim.proved_tx in context.l1_resolutions:
         return False
 
     if not _proof_ready_for_l1_relay(request) and not _invalidation_ready_for_l1_relay(claim):
@@ -658,26 +665,26 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
 
     timestamp_finalized = False
 
-    if request.fill_timestamp:
-        timestamp_finalized = _timestamp_is_l1_finalized(
-            request.fill_timestamp, context, request.target_chain_id
-        )
-        assert request.fill_tx is not None
-        proof_tx = request.fill_tx
-    elif claim.invalidation_timestamp:
-        timestamp_finalized = _timestamp_is_l1_finalized(
-            claim.invalidation_timestamp, context, request.target_chain_id
-        )
-        assert claim.invalidation_tx is not None
-        proof_tx = claim.invalidation_tx
+    match claim.proved_tx:
+        case request.fill_tx:
+            assert request.fill_timestamp is not None
+            timestamp_finalized = _timestamp_is_l1_finalized(
+                request.fill_timestamp, context, request.target_chain_id
+            )
+        case claim.invalidation_tx:
+            assert claim.invalidation_timestamp is not None
+            timestamp_finalized = _timestamp_is_l1_finalized(
+                claim.invalidation_timestamp, context, request.target_chain_id
+            )
+        case _:
+            raise ValueError(
+                f"proved transaction is neither a fill nor an invalidation: {claim.proved_tx!r}"
+            )
 
     if not timestamp_finalized:
         return False
 
     if not _l1_resolution_threshold_reached(claim, context):
-        return False
-
-    if proof_tx in context.l1_resolutions:
         return False
 
     future = context.task_pool.submit(
@@ -686,7 +693,7 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
         context.target_chain.rpc_url,
         context.source_chain.rpc_url,
         context.config.account.key,
-        proof_tx,
+        claim.proved_tx,
         False,
     )
 
@@ -694,14 +701,17 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
         try:
             f.result()
         except Exception as ex:
-            context.logger.error("L1 resolution failed", ex=ex, tx_hash=proof_tx)
+            context.logger.error("L1 resolution failed", ex=ex, tx_hash=claim.proved_tx)
         finally:
-            context.l1_resolutions.pop(proof_tx, None)
+            assert claim.proved_tx is not None
+            context.l1_resolutions.pop(claim.proved_tx, None)
 
     future.add_done_callback(on_future_done)
-    context.l1_resolutions[proof_tx] = future
+    context.l1_resolutions[claim.proved_tx] = future
 
-    context.logger.info("Initiated L1 resolution", request=request, claim=claim, tx_hash=proof_tx)
+    context.logger.info(
+        "Initiated L1 resolution", request=request, claim=claim, tx_hash=claim.proved_tx
+    )
 
     return True
 
