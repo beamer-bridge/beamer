@@ -177,6 +177,10 @@ export class OptimismRelayerService extends BaseRelayerService {
       return receipt.transactionReceipt.transactionHash;
     }
 
+    if (status !== MessageStatus.READY_FOR_RELAY) {
+      throw new Error("Message not ready for relaying.");
+    }
+
     // Now we can relay the message to L1.
     console.log("Relaying...");
 
