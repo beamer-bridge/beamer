@@ -28,7 +28,7 @@ class Claim(StateMachine):
         self.transaction_pending = False
         self.invalidation_tx: Optional[HexBytes] = None
         self.invalidation_timestamp: Optional[Timestamp] = None
-        self.message_proved: bool = False
+        self.proved_tx: Optional[HexBytes] = None
         self.unprocessed_claim_made_events: set[ClaimMade] = set()
         super().__init__()
 
