@@ -9,9 +9,9 @@ from web3 import Web3
 
 import beamer.contracts
 import beamer.util
+from beamer.artifacts import Deployment
 from beamer.config.state import ChainConfig, Configuration, DesiredConfiguration, TokenConfig
 from beamer.contracts import obtain_contract
-from beamer.deploy.artifacts import Deployment
 from beamer.events import (
     ChainUpdated,
     Event,

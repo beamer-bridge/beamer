@@ -8,8 +8,8 @@ import pytest
 from apischema.validation.mock import NonTrivialDependency
 
 import beamer.config.commands
+from beamer.artifacts import Deployment
 from beamer.config.state import Configuration
-from beamer.deploy.artifacts import Deployment
 from beamer.tests.config.util import CommandFailed, deploy, read_config_state, run
 from beamer.tests.util import get_repo_root
 

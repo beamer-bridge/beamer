@@ -5,7 +5,7 @@ from typing import Generator, Iterable
 
 from eth_typing import ChecksumAddress
 
-from beamer.deploy.artifacts import DeployedContractInfo, Deployment
+from beamer.artifacts import DeployedContractInfo, Deployment
 from beamer.typing import ChainId
 
 _NAMES = {1: "Ethereum", 10: "Optimism", 288: "Boba", 42161: "Arbitrum", 1101: "Polygon ZkEVM"}

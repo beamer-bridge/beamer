@@ -8,7 +8,7 @@ from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3 import Web3
 
-import beamer.deploy.artifacts
+import beamer.artifacts
 from beamer.contracts import obtain_contract
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3, transact
@@ -86,8 +86,8 @@ def set_chain_on_resolver(
     op_deployment_path = artifacts_dir / "901-optimism.deployment.json"
     base_deployment_path = artifacts_dir / "base.deployment.json"
 
-    base_deployment = beamer.deploy.artifacts.Deployment.from_file(base_deployment_path)
-    op_deployment = beamer.deploy.artifacts.Deployment.from_file(op_deployment_path)
+    base_deployment = beamer.artifacts.Deployment.from_file(base_deployment_path)
+    op_deployment = beamer.artifacts.Deployment.from_file(op_deployment_path)
 
     resolver = obtain_contract(web3_l1, abi_dir, base_deployment, "Resolver")
     request_manager = obtain_contract(web3, abi_dir, op_deployment, "RequestManager")

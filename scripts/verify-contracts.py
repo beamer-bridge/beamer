@@ -5,7 +5,7 @@ import click
 import structlog
 from eth_utils import to_checksum_address
 
-import beamer.deploy.artifacts
+import beamer.artifacts
 import beamer.util
 from beamer.typing import URL, ChainId
 
@@ -19,7 +19,7 @@ def _get_contract_unique_name(contract_name: str, chain_id: ChainId) -> str:
 def _get_contract_info(artifacts_dir: Path) -> dict[ChainId, dict[str, dict[str, str]]]:
     contract_info: dict[ChainId, dict[str, dict[str, str]]] = {}
     for file_path in artifacts_dir.glob("*.deployment.json"):
-        deployment = beamer.deploy.artifacts.Deployment.from_file(file_path)
+        deployment = beamer.artifacts.Deployment.from_file(file_path)
         related_chain_id = (
             deployment.chain.chain_id if deployment.chain else deployment.base.chain_id
         )

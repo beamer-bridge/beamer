@@ -8,8 +8,8 @@ import pytest
 from eth_utils import to_checksum_address
 
 import beamer.config.commands
+from beamer.artifacts import Deployment
 from beamer.config.state import ChainConfig
-from beamer.deploy.artifacts import Deployment
 from beamer.tests.config.util import (
     CommandFailed,
     deploy,
