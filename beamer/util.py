@@ -2,6 +2,7 @@ import json
 import logging
 import pathlib
 import random
+import subprocess
 import sys
 import time
 from collections import defaultdict
@@ -231,3 +232,8 @@ def get_token_amount_in_decimals(amount: int, token: TokenDetails) -> int:
 def load_rpc_info(path: Path) -> dict[ChainId, URL]:
     info = json.loads(path.read_text())
     return {ChainId(int(k)): URL(v) for k, v in info.items()}
+
+
+def get_commit_id() -> str:
+    output = subprocess.check_output(["git", "rev-parse", "HEAD"])
+    return output.decode("utf-8").strip()

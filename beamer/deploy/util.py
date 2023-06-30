@@ -1,5 +1,4 @@
 import json
-import subprocess
 from pathlib import Path
 from typing import Any, Sequence, Union, cast
 
@@ -49,11 +48,6 @@ def make_contract(w3: Web3, name: str, address: ChecksumAddress) -> Contract:
     abi = _CONTRACTS[name][0]
     contract = w3.eth.contract(address, abi=abi, decode_tuples=True)
     return cast(Contract, contract)
-
-
-def get_commit_id() -> str:
-    output = subprocess.check_output(["git", "rev-parse", "HEAD"])
-    return output.decode("utf-8").strip()
 
 
 def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> DeployedContract:

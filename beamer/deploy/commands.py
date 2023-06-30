@@ -8,9 +8,9 @@ import structlog
 import beamer.contracts
 import beamer.deploy.artifacts
 import beamer.util
-from beamer.deploy.util import deploy_beamer, deploy_contract, get_commit_id
+from beamer.deploy.util import deploy_beamer, deploy_contract
 from beamer.typing import ChainId
-from beamer.util import make_web3
+from beamer.util import get_commit_id, make_web3
 
 log = structlog.get_logger(__name__)
 

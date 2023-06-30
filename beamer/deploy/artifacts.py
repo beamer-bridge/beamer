@@ -12,8 +12,9 @@ from eth_utils import is_checksum_address
 from web3 import Web3
 from web3.contract import Contract
 
-from beamer.deploy.util import DeployedContract, get_commit_id, make_contract
+from beamer.deploy.util import DeployedContract, make_contract
 from beamer.typing import BlockNumber, ChainId
+from beamer.util import get_commit_id
 
 
 class ValidationError(Exception):
