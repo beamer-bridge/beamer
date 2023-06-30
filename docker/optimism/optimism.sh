@@ -130,6 +130,7 @@ e2e_test_fallback() {
         "${password}" \
         http://localhost:8545 \
         set-chain-on-resolver \
+        --abi-dir ${ABI_DIR} \
         $ARTIFACTS_DIR \
         $l2_rpc
     ${relayer} relay \
