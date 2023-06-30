@@ -77,7 +77,7 @@ def verify_portal_call(
 )
 @click.argument("l2-rpc", type=str)
 @pass_args
-def set_messenger_on_resolver(
+def set_chain_on_resolver(
     account: LocalAccount, web3_l1: Web3, abi_dir: Path, artifacts_dir: Path, l2_rpc: URL
 ) -> None:
     web3 = make_web3(l2_rpc, account)
