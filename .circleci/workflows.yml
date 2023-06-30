@@ -389,21 +389,7 @@ jobs:
           name: Check pipeline
           command: poetry run python scripts/check-pipeline.py $PIPELINE_ID
 
-  publish-container-image:
-    executor: vm
-    environment:
-      IMAGE_NAME: ghcr.io/beamer-bridge/beamer
-    steps:
-      - attach_workspace:
-          at: /
-      - run:
-          name: Log in to github container registry
-          command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
-      - run:
-          name: Push the image to github container registry
-          command: docker push -a ${IMAGE_NAME}
-
-  test-container-image:
+  build-and-publish-container-image:
     executor: vm
     environment:
       IMAGE_NAME: ghcr.io/beamer-bridge/beamer
@@ -415,7 +401,13 @@ jobs:
       - run:
           name: Test the container image
           command: bash docker/scripts/test-container-image.sh ${IMAGE_NAME}:sha-$(git rev-parse HEAD)
-  
+      - run:
+          name: Log in to github container registry
+          command: echo ${GHCR_PAT} | docker login -u istankovic --password-stdin ghcr.io
+      - run:
+          name: Push the image to github container registry
+          command: docker push -a ${IMAGE_NAME}
+
   deploy-frontend:
     executor: node/default
     working_directory: ~/beamer/frontend
@@ -601,15 +593,11 @@ workflows:
       - check-pipeline:
           requires:
             - install-python
-      - test-container-image:
+      - build-and-publish-container-image:
           requires:
             - check-pipeline
             - compile-contracts
             - create-relayers
-      - publish-container-image:
-          requires:
-            - test-container-image
-
 
   frontend-deployment:
     unless: 
