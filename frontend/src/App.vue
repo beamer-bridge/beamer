@@ -30,10 +30,7 @@
         <br />
         <span>
           If you see this error please report it on our
-          <a
-            href="https://discord.com/invite/YWdStZkz9z"
-            target="_blank"
-            class="inline-block underline"
+          <a href="https://discord.gg/beamerbridge" target="_blank" class="inline-block underline"
             >discord channel.</a
           >
         </span>
