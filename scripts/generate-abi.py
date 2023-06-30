@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generator
 import click
 from psutil import Popen
-from beamer.deploy.artifacts import Deployment
+from beamer.artifacts import Deployment
 
 
 _COMPILE_COMMAND = """

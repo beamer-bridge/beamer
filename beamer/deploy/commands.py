@@ -5,8 +5,8 @@ from typing import Any
 import click
 import structlog
 
+import beamer.artifacts
 import beamer.contracts
-import beamer.deploy.artifacts
 import beamer.util
 from beamer.contracts import obtain_contract
 from beamer.deploy.util import deploy_beamer, deploy_contract, generate_artifacts
@@ -187,7 +187,7 @@ def deploy(
     log.info("Loaded keystore file", address=account.address)
 
     path = artifacts_dir / "base.deployment.json"
-    base_deployment = beamer.deploy.artifacts.Deployment.from_file(path)
+    base_deployment = beamer.artifacts.Deployment.from_file(path)
     log.info(
         "Loaded base chain deployment", path=str(path), chain_id=base_deployment.base.chain_id
     )
