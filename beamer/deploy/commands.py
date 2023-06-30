@@ -8,6 +8,7 @@ import structlog
 import beamer.contracts
 import beamer.deploy.artifacts
 import beamer.util
+from beamer.contracts import obtain_contract
 from beamer.deploy.util import deploy_beamer, deploy_contract, generate_artifacts
 from beamer.typing import ChainId
 from beamer.util import get_commit_id, make_web3
@@ -60,6 +61,12 @@ class _ChainIdParam(click.ParamType):
     help="The password needed to unlock the keystore file.",
 )
 @click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
+@click.option(
     "--artifacts-dir",
     type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
     required=True,
@@ -78,6 +85,7 @@ def deploy_base(
     rpc_file: Path,
     keystore_file: Path,
     password: str,
+    abi_dir: Path,
     artifacts_dir: Path,
     chain_id: ChainId,
     commit_check: bool,
@@ -127,6 +135,12 @@ def deploy_base(
     help="The password needed to unlock the keystore file.",
 )
 @click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
+@click.option(
     "--artifacts-dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     required=True,
@@ -155,6 +169,7 @@ def deploy(
     rpc_file: Path,
     keystore_file: Path,
     password: str,
+    abi_dir: Path,
     artifacts_dir: Path,
     deploy_mintable_token: bool,
     commit_check: bool,
@@ -182,7 +197,7 @@ def deploy(
     assert base_w3.eth.chain_id == base_deployment.base.chain_id
     log.info("Connected to base chain RPC", chain_id=base_deployment.base.chain_id, url=url)
 
-    resolver = base_deployment.obtain_contract(base_w3, "base", "Resolver")
+    resolver = obtain_contract(base_w3, abi_dir, base_deployment, "Resolver")
 
     for path in chains["chain.json"]:
         chain = beamer.deploy.config.Chain.from_file(path)
