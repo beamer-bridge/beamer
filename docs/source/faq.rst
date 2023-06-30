@@ -104,5 +104,5 @@ FAQ
   You can contact the Beamer Team via:
 
   - `Twitter <https://twitter.com/BeamerBridge>`_
-  - `Discord <http://discord.gg/beamerbridge>`_
+  - `Discord <https://discord.gg/beamerbridge>`_
   - Email: hello@beamerbridge.com

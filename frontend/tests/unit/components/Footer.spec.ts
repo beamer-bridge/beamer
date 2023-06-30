@@ -24,7 +24,7 @@ describe('Footer.vue', () => {
   it('renders a link to Discord', () => {
     const wrapper = shallowMount(Footer);
     const link = wrapper.find('[data-test="discord-link"]');
-    expect(link.attributes('href')).toBe('https://discord.gg/YWdStZkz9z');
+    expect(link.attributes('href')).toBe('https://discord.gg/beamerbridge');
   });
 
   it('renders a link to Twitter', () => {
