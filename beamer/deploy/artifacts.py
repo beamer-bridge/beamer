@@ -1,5 +1,4 @@
 import json
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -12,9 +11,8 @@ from eth_utils import is_checksum_address
 from web3 import Web3
 from web3.contract import Contract
 
-from beamer.deploy.util import DeployedContract, make_contract
+from beamer.deploy.util import make_contract
 from beamer.typing import BlockNumber, ChainId
-from beamer.util import get_commit_id
 
 
 class ValidationError(Exception):
@@ -35,17 +33,6 @@ class DeployedContractInfo:
     address: ChecksumAddress = field(metadata=validators(_validate_address))
     deployment_block: BlockNumber = field(metadata=schema(min=0))
     deployment_args: list[str | int]
-
-    @staticmethod
-    def from_deployed_contract(contract: DeployedContract) -> "DeployedContractInfo":
-        beamer_commit = get_commit_id()
-        return DeployedContractInfo(
-            beamer_commit=beamer_commit,
-            tx_hash=contract.deployment_txhash,
-            address=contract.address,
-            deployment_block=contract.deployment_block,
-            deployment_args=contract.deployment_args,
-        )
 
 
 @dataclass(frozen=True)
@@ -80,30 +67,3 @@ class Deployment:
         address = getattr(self, chain).contracts[name].address
         assert w3.eth.chain_id == chain_id
         return make_contract(w3, name, address)
-
-
-def generate(
-    path: Path,
-    deployer: ChecksumAddress,
-    base: Sequence[DeployedContract],
-    chain: Sequence[DeployedContract] = (),
-) -> None:
-    base_contracts = {}
-    for contract in base:
-        base_contracts[contract.name] = DeployedContractInfo.from_deployed_contract(contract)
-
-    chain_contracts = {}
-    for contract in chain:
-        chain_contracts[contract.name] = DeployedContractInfo.from_deployed_contract(contract)
-
-    base_chain_id = ChainId(next(iter(base)).w3.eth.chain_id)
-    base_deployment = ChainDeployment(chain_id=base_chain_id, contracts=base_contracts)
-
-    if chain_contracts:
-        chain_id = ChainId(next(iter(chain)).w3.eth.chain_id)
-        chain_deployment = ChainDeployment(chain_id=chain_id, contracts=chain_contracts)
-    else:
-        chain_deployment = None
-
-    deployment = Deployment(deployer=deployer, base=base_deployment, chain=chain_deployment)
-    deployment.to_file(path)

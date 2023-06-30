@@ -8,7 +8,7 @@ import structlog
 import beamer.contracts
 import beamer.deploy.artifacts
 import beamer.util
-from beamer.deploy.util import deploy_beamer, deploy_contract
+from beamer.deploy.util import deploy_beamer, deploy_contract, generate_artifacts
 from beamer.typing import ChainId
 from beamer.util import get_commit_id, make_web3
 
@@ -100,7 +100,7 @@ def deploy_base(
 
     resolver = deploy_contract(w3, "Resolver")
     path = artifacts_dir / "base.deployment.json"
-    beamer.deploy.artifacts.generate(path, account.address, (resolver,))
+    generate_artifacts(path, account.address, (resolver,))
     log.info("Generated artifact", path=str(path))
 
 
@@ -198,5 +198,5 @@ def deploy(
             l2_contracts += (deploy_contract(w3, ("MintableToken", int(1e18))),)
 
         path = artifacts_dir / f"{chain.chain_id}-{chain.name}.deployment.json"
-        beamer.deploy.artifacts.generate(path, account.address, l1_contracts, l2_contracts)
+        generate_artifacts(path, account.address, l1_contracts, l2_contracts)
         log.info("Generated artifact", path=str(path))
