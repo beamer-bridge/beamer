@@ -56,6 +56,7 @@ def deploy(deployer, destdir):
     rpc_file = destdir / "rpc.json"
     rpc_file.write_text(json.dumps({"1337": "http://localhost:8545"}))
 
+    root = get_repo_root()
     run(
         beamer.deploy.commands.deploy_base,
         (
@@ -65,6 +66,8 @@ def deploy(deployer, destdir):
             keystore_file,
             "--password",
             password,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
             "--artifacts-dir",
             artifacts_dir,
             "--commit-check",
@@ -73,7 +76,6 @@ def deploy(deployer, destdir):
         ),
     )
 
-    root = get_repo_root()
     run(
         beamer.deploy.commands.deploy,
         (
@@ -83,6 +85,8 @@ def deploy(deployer, destdir):
             keystore_file,
             "--password",
             password,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
             "--artifacts-dir",
             artifacts_dir,
             "--commit-check",
