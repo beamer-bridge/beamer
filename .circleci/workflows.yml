@@ -574,10 +574,6 @@ workflows:
           requires:
             - compile-contracts
             - create-relayers
-      - test-container-image:
-          requires:
-            - compile-contracts
-            - create-relayers
 
   check-and-publish:
     when: 
@@ -589,15 +585,30 @@ workflows:
 
     jobs:
       - checkout
+      - install-npm-packages:
+          requires:
+            - checkout
+      - create-relayers:
+          requires:
+            - install-npm-packages
       - install-python:
           requires:
             - checkout
+      - compile-contracts:
+          requires:
+            - install-python
+            - install-npm-packages
       - check-pipeline:
           requires:
             - install-python
-      - publish-container-image:
+      - test-container-image:
           requires:
             - check-pipeline
+            - compile-contracts
+            - create-relayers
+      - publish-container-image:
+          requires:
+            - test-container-image
 
 
   frontend-deployment:
