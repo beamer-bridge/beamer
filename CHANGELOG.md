@@ -1,5 +1,28 @@
 # Changelog
 
+
+## v2.3.0 (2023-06-30)
+* ci: add new e2e test to test relayer fallback for OP
+* agent: adapt agent to use new deployment artifacts
+* docs: update docs regarding new deployment artifacts
+* beamer: introduce new beamer subcommand `write` for `config` command
+* docs: update docs regarding `config` commands
+* agent: add min-source-balance to agent config
+* docs: update docs regarding `min-source-balance` config
+* beamer: add support for USDT & WETH
+* beamer: improved beamer `config read`
+* ci: optimized ci workflows
+* agent: calculate OP finality period correctly by using prove timestamp
+* frontend: add support for Polygon zkEVM (mainnet still not enabled)
+* frontend: tokens/chains visibility can now be controlled easily
+* frontend: fix minor bugs
+* frontend: migrate to WalletConnect v2
+* frontend: users can now fully disconnect from the connected wallets (session removed)
+* frontend: update wallet provider SDKs
+* docker: fix flaky polygon e2e test
+* relayer: prevent submission of failing L1 resolutions
+
+
 ## v2.2.1 (2023-06-20)
 * relayer: Update Arbitrum SDK to 3.1.4
 * relayer: Update Optimism SDK to 2.1.0
