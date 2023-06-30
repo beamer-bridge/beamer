@@ -10,6 +10,7 @@ from web3 import Web3
 import beamer.contracts
 import beamer.util
 from beamer.config.state import ChainConfig, Configuration, DesiredConfiguration, TokenConfig
+from beamer.contracts import obtain_contract
 from beamer.deploy.artifacts import Deployment
 from beamer.events import (
     ChainUpdated,
@@ -131,8 +132,8 @@ def read(
     assert w3.eth.chain_id == chain_id
     log.info("Connected to RPC", url=url)
 
-    request_manager = deployment.obtain_contract(w3, "chain", "RequestManager")
-    fill_manager = deployment.obtain_contract(w3, "chain", "FillManager")
+    request_manager = obtain_contract(w3, abi_dir, deployment, "RequestManager")
+    fill_manager = obtain_contract(w3, abi_dir, deployment, "FillManager")
 
     if state_path.exists():
         config = Configuration.from_file(state_path)
@@ -282,10 +283,10 @@ def _ensure_same_tokens_have_same_addresses(
 
 
 def _ensure_no_config_updates_since(
-    w3: Web3, deployment: Deployment, start_block: BlockNumber
+    w3: Web3, abi_dir: Path, deployment: Deployment, start_block: BlockNumber
 ) -> None:
-    request_manager = deployment.obtain_contract(w3, "chain", "RequestManager")
-    fill_manager = deployment.obtain_contract(w3, "chain", "FillManager")
+    request_manager = obtain_contract(w3, abi_dir, deployment, "RequestManager")
+    fill_manager = obtain_contract(w3, abi_dir, deployment, "FillManager")
 
     fetcher = EventFetcher(
         w3, (request_manager, fill_manager), start_block=start_block, confirmation_blocks=0
@@ -399,11 +400,11 @@ def write(
     # This means we need to make sure that there were no config updates
     # in block range [current_config.block + 1, latest_block].
     start_block = BlockNumber(current_config.block + 1)
-    _ensure_no_config_updates_since(w3, deployment, start_block)
+    _ensure_no_config_updates_since(w3, abi_dir, deployment, start_block)
 
     for contract, function, *args in _generate_updates(current_config, desired_config):
         log.info("Sending transaction", call=f"{contract}.{function}({', '.join(map(str, args))})")
-        contract = deployment.obtain_contract(w3, "chain", contract)
+        contract = obtain_contract(w3, abi_dir, deployment, contract)
         call = getattr(contract.functions, function)(*args)
         try:
             receipt = beamer.util.transact(call)
