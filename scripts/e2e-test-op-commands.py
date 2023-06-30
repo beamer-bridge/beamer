@@ -9,6 +9,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 
 import beamer.deploy.artifacts
+from beamer.contracts import obtain_contract
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3, transact
 from scripts._util import pass_args
@@ -63,6 +64,12 @@ def verify_portal_call(
 
 
 @cli.command("set-chain-on-resolver")
+@click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
 @click.argument(
     "artifacts-dir",
     type=Path,
@@ -71,7 +78,7 @@ def verify_portal_call(
 @click.argument("l2-rpc", type=str)
 @pass_args
 def set_messenger_on_resolver(
-    account: LocalAccount, web3_l1: Web3, artifacts_dir: Path, l2_rpc: URL
+    account: LocalAccount, web3_l1: Web3, abi_dir: Path, artifacts_dir: Path, l2_rpc: URL
 ) -> None:
     web3 = make_web3(l2_rpc, account)
     source_chain_id = ChainId(int(os.environ["SOURCE_CHAIN_ID"]))
@@ -82,9 +89,9 @@ def set_messenger_on_resolver(
     base_deployment = beamer.deploy.artifacts.Deployment.from_file(base_deployment_path)
     op_deployment = beamer.deploy.artifacts.Deployment.from_file(op_deployment_path)
 
-    resolver = base_deployment.obtain_contract(web3_l1, "base", "Resolver")
-    request_manager = op_deployment.obtain_contract(web3, "chain", "RequestManager")
-    l1_messenger = op_deployment.obtain_contract(web3_l1, "base", "OptimismL1Messenger")
+    resolver = obtain_contract(web3_l1, abi_dir, base_deployment, "Resolver")
+    request_manager = obtain_contract(web3, abi_dir, op_deployment, "RequestManager")
+    l1_messenger = obtain_contract(web3_l1, abi_dir, op_deployment, "OptimismL1Messenger")
 
     transact(
         resolver.functions.addRequestManager(
