@@ -10,8 +10,9 @@ from web3.contract import Contract, ContractConstructor
 from web3.contract.contract import ContractFunction
 
 import beamer.deploy.config as config
-from beamer.typing import BlockNumber
-from beamer.util import transact
+from beamer.deploy.artifact import ChainDeployment, DeployedContractInfo, Deployment
+from beamer.typing import BlockNumber, ChainId
+from beamer.util import get_commit_id, transact
 
 log = structlog.get_logger(__name__)
 
@@ -149,3 +150,41 @@ def deploy_beamer(
     l1_contracts = (l1_messenger,)
     l2_contracts = request_manager, fill_manager, l2_messenger
     return l1_contracts, l2_contracts
+
+
+def _make_deployed_contract_info(contract: DeployedContract) -> DeployedContractInfo:
+    beamer_commit = get_commit_id()
+    return DeployedContractInfo(
+        beamer_commit=beamer_commit,
+        tx_hash=contract.deployment_txhash,
+        address=contract.address,
+        deployment_block=contract.deployment_block,
+        deployment_args=contract.deployment_args,
+    )
+
+
+def generate_artifacts(
+    path: Path,
+    deployer: ChecksumAddress,
+    base: Sequence[DeployedContract],
+    chain: Sequence[DeployedContract] = (),
+) -> None:
+    base_contracts = {}
+    for contract in base:
+        base_contracts[contract.name] = _make_deployed_contract_info(contract)
+
+    chain_contracts = {}
+    for contract in chain:
+        chain_contracts[contract.name] = _make_deployed_contract_info(contract)
+
+    base_chain_id = ChainId(next(iter(base)).w3.eth.chain_id)
+    base_deployment = ChainDeployment(chain_id=base_chain_id, contracts=base_contracts)
+
+    if chain_contracts:
+        chain_id = ChainId(next(iter(chain)).w3.eth.chain_id)
+        chain_deployment = ChainDeployment(chain_id=chain_id, contracts=chain_contracts)
+    else:
+        chain_deployment = None
+
+    deployment = Deployment(deployer=deployer, base=base_deployment, chain=chain_deployment)
+    deployment.to_file(path)
