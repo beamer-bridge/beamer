@@ -1,17 +1,13 @@
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
 
 import apischema
 from apischema import properties, schema
 from apischema.metadata import none_as_undefined, validators
 from eth_typing import ChecksumAddress
 from eth_utils import is_checksum_address
-from web3 import Web3
-from web3.contract import Contract
 
-from beamer.deploy.util import make_contract
 from beamer.typing import BlockNumber, ChainId
 
 
@@ -61,9 +57,3 @@ class Deployment:
     def to_file(self, artifact: Path) -> None:
         with open(artifact, "wt") as f:
             json.dump(apischema.serialize(self), f, indent=4)
-
-    def obtain_contract(self, w3: Web3, chain: Literal["base", "chain"], name: str) -> Contract:
-        chain_id = getattr(self, chain).chain_id
-        address = getattr(self, chain).contracts[name].address
-        assert w3.eth.chain_id == chain_id
-        return make_contract(w3, name, address)
