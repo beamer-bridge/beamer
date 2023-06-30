@@ -45,12 +45,6 @@ def _load_contracts_info(build_path: Path) -> dict[str, tuple]:
 _CONTRACTS: dict[str, tuple] = _load_contracts_info(Path("contracts/.build"))
 
 
-def make_contract(w3: Web3, name: str, address: ChecksumAddress) -> Contract:
-    abi = _CONTRACTS[name][0]
-    contract = w3.eth.contract(address, abi=abi, decode_tuples=True)
-    return cast(Contract, contract)
-
-
 def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> DeployedContract:
     # constructor_spec is either
     # 1) a contract name e.g. "Foo", or
