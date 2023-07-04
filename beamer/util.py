@@ -82,7 +82,7 @@ def transact(
         else:
             break
 
-    if receipt.status == 0:  # type: ignore
+    if receipt.status == 0:
         raise TransactionFailed("unknown error")
     return receipt
 

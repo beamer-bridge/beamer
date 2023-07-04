@@ -96,9 +96,10 @@ warn_unused_ignores = true
 strict_equality = true
 disallow_untyped_defs = true
 explicit_package_bases = true
+plugins = "plugins.mypy"
 
 [[tool.mypy.overrides]]
-module = ["beamer.tests.*"]
+module = ["beamer.*"]
 disallow_untyped_defs = false
 disable_error_code = "attr-defined,name-defined"
 

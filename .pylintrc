@@ -3,6 +3,7 @@ jobs=4
 persistent=yes
 suggestion-mode=yes
 unsafe-load-any-extension=no
+load-plugins=plugins.pylint
 
 # Blacklist files or directories (basenames, not paths)
 ignore=
@@ -83,4 +84,4 @@ ignored-classes=
 ignored-modules=
 
 # List of members which are set dynamically and missed by pylint inference system
-generated-members=ape.reverts
+generated-members=ape.reverts,web3.types.TxReceipt.status

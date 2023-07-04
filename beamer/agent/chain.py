@@ -33,7 +33,7 @@ _NewEventsCallback = Callable[[list[Event]], None]
 
 
 def _wrap_thread_func(func: Callable) -> Callable:
-    def wrapper(*args, **kwargs):  # type: ignore
+    def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception:
@@ -464,7 +464,7 @@ def claim_request(request: Request, context: Context) -> None:
     context.logger.info(
         "Claimed request",
         request=request,
-        txn_hash=receipt.transactionHash.hex(),  # type: ignore
+        txn_hash=receipt.transactionHash.hex(),
     )
 
 
@@ -532,7 +532,7 @@ def maybe_challenge(claim: Claim, context: Context) -> bool:
     context.logger.info(
         "Challenged claim",
         claim=claim,
-        txn_hash=receipt.transactionHash.hex(),  # type: ignore
+        txn_hash=receipt.transactionHash.hex(),
     )
 
     return True
@@ -785,9 +785,7 @@ def _withdraw(claim: Claim, context: Context) -> None:
         return
 
     claim.transaction_pending = True
-    context.logger.info(
-        "Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex()  # type: ignore
-    )
+    context.logger.info("Withdrew", claim=claim.id, txn_hash=receipt.transactionHash.hex())
 
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
@@ -805,5 +803,5 @@ def _invalidate(request: Request, claim: Claim, context: Context) -> None:
         request=request.id,
         fill_id=claim.fill_id,
         claim=claim.id,
-        txn_hash=receipt.transactionHash.hex(),  # type: ignore
+        txn_hash=receipt.transactionHash.hex(),
     )
