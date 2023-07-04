@@ -157,6 +157,8 @@ def test_error_on_different_chain_ids(deployment_objects, deployer, caplog):
     caplog.set_level(logging.ERROR)
     rpc_file, artifact, _ = deployment_objects
     current = read_config_state(rpc_file, artifact)
+
+    # Make the chain IDs from current and desired configuration differ.
     desired = current.to_desired_config()
     desired.chain_id = current.chain_id + 1
 
@@ -167,6 +169,16 @@ def test_error_on_different_chain_ids(deployment_objects, deployer, caplog):
         "Chain ID differs between current configuration and desired configuration"
         in caplog.messages[0]
     )
+
+    # Make the chain IDs from current configuration and deployment differ.
+    current.chain_id += 1
+    desired = current.to_desired_config()
+
+    caplog.clear()
+    with pytest.raises(CommandFailed):
+        _write_config_state(rpc_file, artifact, deployer, current, desired)
+    assert len(caplog.messages) == 1
+    assert "Configuration chain ID differs from the deployment chain ID" in caplog.messages[0]
 
 
 def test_error_on_stale_config(deployment_objects, deployer, caplog):
