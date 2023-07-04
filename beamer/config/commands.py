@@ -78,6 +78,19 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
                 raise ValueError(f"event from an unexpected address: {event}")
 
 
+def _ensure_config_chain_id_matches_deployment_chain_id(
+    config: Configuration, deployment: Deployment
+) -> None:
+    assert deployment.chain is not None
+    if config.chain_id != deployment.chain.chain_id:
+        log.error(
+            "Configuration chain ID differs from the deployment chain ID",
+            config_chain_id=config.chain_id,
+            deployment_chain_id=deployment.chain.chain_id,
+        )
+        sys.exit(1)
+
+
 @click.group()
 def config() -> None:
     pass
@@ -124,13 +137,7 @@ def read(
 
     if state_path.exists():
         config = Configuration.from_file(state_path)
-        if config.chain_id != chain_id:
-            log.error(
-                "Configuration chain ID differs from the deployment chain ID",
-                config_chain_id=config.chain_id,
-                deployment_chain_id=chain_id,
-            )
-            sys.exit(1)
+        _ensure_config_chain_id_matches_deployment_chain_id(config, deployment)
         start_block = config.block
     else:
         start_block = min(
@@ -384,6 +391,7 @@ def write(
     current_config = Configuration.from_file(current_state_path)
     desired_config = DesiredConfiguration.from_file(desired_state_path)
 
+    _ensure_config_chain_id_matches_deployment_chain_id(current_config, deployment)
     _ensure_config_block_not_in_future(w3, current_config)
     _ensure_same_tokens_have_same_addresses(current_config, desired_config)
     _ensure_same_chain_ids(current_config, desired_config)
