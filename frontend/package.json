@@ -16,7 +16,7 @@
     "lint:fix": "yarn check-types; yarn eslint:fix",
     "test:unit": "vitest run --dir=./tests/unit",
     "test:coverage": "vitest run --dir=./tests --coverage",
-    "postinstall": "yarn patch-package && yarn generate-types && yarn configure"
+    "postinstall": "yarn generate-types && yarn configure"
   },
   "dependencies": {
     "@beamer-bridge/deployments": "2.0.1",
@@ -27,8 +27,8 @@
     "@metamask/onboarding": "^1.0.1",
     "@safe-global/safe-apps-provider": "0.16.0",
     "@safe-global/safe-apps-sdk": "7.10.0",
-    "@vuelidate/core": "^2.0.0-alpha.43",
-    "@vuelidate/validators": "^2.0.0-alpha.31",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.3",
     "@walletconnect/ethereum-provider": "^2.8.4",
     "@walletconnect/modal": "^2.5.5",
     "autoprefixer": "^10",
@@ -52,7 +52,7 @@
     "@types/lodash.debounce": "^4.0.7",
     "@types/node": "^18.11.9",
     "@types/ua-parser-js": "^0.7.36",
-    "@types/vuelidate": "^0.7.15",
+    "@types/vuelidate": "^0.7.18",
     "@vitejs/plugin-vue": "^4.2.1",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.3",
@@ -68,8 +68,6 @@
     "eslint-plugin-vue": "^8.5.0",
     "jsdom": "^22.0.0",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "patch-package": "^7.0.0",
-    "postinstall-postinstall": "^2.1.0",
     "prettier": "^2.6.0",
     "prettier-plugin-tailwindcss": "^0.2.7",
     "sass": "^1.49.9",
