@@ -23,6 +23,7 @@ export class EthereumRelayerService extends BaseRelayerService {
   relayTxToL1Step = new RelayStep(
     async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
     async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+    async (l2TransactionHash) => await this.recoverL1TransactionHash(l2TransactionHash),
   );
   finalizeStep = undefined;
 
@@ -54,9 +55,7 @@ export class EthereumRelayerService extends BaseRelayerService {
     return keccak256(encodedCall);
   }
 
-  private async isRelayCompleted(
-    l1TransactionHash: TransactionHash,
-  ): Promise<TransactionHash | false> {
+  private async isRelayCompleted(l1TransactionHash: TransactionHash): Promise<boolean> {
     const callParameters = await this.parseFillEventDataFromTxHash(l1TransactionHash);
 
     const l2ChainId = await this.getL2ChainId();
@@ -71,24 +70,34 @@ export class EthereumRelayerService extends BaseRelayerService {
     const storedMessageHashStatus = await this.messenger.messageHashes(messageHash);
     const isMessageRelayed = storedMessageHashStatus == 2;
 
-    if (isMessageRelayed) {
-      console.log("Message has already been relayed..");
+    return isMessageRelayed;
+  }
 
-      const transactionHash = await this.findL1TransactionHashForMessage(
-        ...parameters,
-        BigNumber.from(l2ChainId),
+  private async recoverL1TransactionHash(
+    l1TransactionHash: TransactionHash,
+  ): Promise<TransactionHash> {
+    const callParameters = await this.parseFillEventDataFromTxHash(l1TransactionHash);
+
+    const l2ChainId = await this.getL2ChainId();
+    const parameters = [
+      callParameters.requestId,
+      callParameters.fillId,
+      callParameters.sourceChainId,
+      callParameters.filler,
+    ] as const;
+
+    const transactionHash = await this.findL1TransactionHashForMessage(
+      ...parameters,
+      BigNumber.from(l2ChainId),
+    );
+    if (!transactionHash) {
+      throw new Error(
+        `The L1 transaction hash of the related message cannot be recovered. \n
+        Did you properly configure the EthereumL2Messenger contract address & Resolver's deployed block number?`,
       );
-      if (!transactionHash) {
-        throw new Error(
-          `Message has already been relayed but the related L1 transaction hash cannot be found. \n
-          Did you properly configure the EthereumL2Messenger contract address & Resolver's deployed block number?`,
-        );
-      }
-      console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
-      return transactionHash;
     }
-
-    return false;
+    console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
+    return transactionHash;
   }
 
   private async relayTxToL1(l1TransactionHash: TransactionHash): Promise<TransactionHash> {

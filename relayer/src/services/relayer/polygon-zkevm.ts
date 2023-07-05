@@ -37,6 +37,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
   relayTxToL1Step = new RelayStep(
     async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
     async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+    async (l2TransactionHash) => await this.recoverL1TransactionHash(l2TransactionHash),
   );
   finalizeStep = new FinalizeStep(
     async (l1TransactionHash) => await this.finalize(l1TransactionHash),
@@ -134,9 +135,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     return bridgeEventParameters;
   }
 
-  private async isRelayCompleted(
-    l2TransactionHash: TransactionHash,
-  ): Promise<TransactionHash | false> {
+  private async isRelayCompleted(l2TransactionHash: TransactionHash): Promise<boolean> {
     const relayBridgeEventParameters = await this.getRelayBridgeEventParameters(l2TransactionHash);
     // 2. Fetch message data
     const relayMessage = await this.getMessageInfoSafe(
@@ -149,10 +148,25 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
       console.log(
         `Message already relayed to L1 with transaction hash: ${relayMessage.claim_tx_hash}`,
       );
-      return relayMessage.claim_tx_hash;
+      return true;
     }
 
     return false;
+  }
+
+  private async recoverL1TransactionHash(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash> {
+    const relayBridgeEventParameters = await this.getRelayBridgeEventParameters(l2TransactionHash);
+    const relayMessage = await this.getMessageInfoSafe(
+      relayBridgeEventParameters.depositCount,
+      relayBridgeEventParameters.originNetwork,
+    );
+
+    if (!relayMessage.claim_tx_hash.length) {
+      throw new Error("Message was not relayed yet!");
+    }
+    return relayMessage.claim_tx_hash;
   }
 
   private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string> {
@@ -236,7 +250,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
     return bridgeEventParameters;
   }
 
-  private async isFinalizeCompleted(l1TransactionHash: string): Promise<void | false> {
+  private async isFinalizeCompleted(l1TransactionHash: string): Promise<boolean> {
     const finalizeBridgeEventParameters = await this.getFinalizeBridgeEventParameters(
       l1TransactionHash,
     );
@@ -251,7 +265,7 @@ export class PolygonZKEvmRelayerService extends BaseRelayerService {
       console.log(
         `Message already relayed to L2 with transaction hash: ${finalizeMessage.claim_tx_hash}`,
       );
-      return;
+      return true;
     }
 
     return false;

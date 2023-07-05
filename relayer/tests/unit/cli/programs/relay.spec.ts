@@ -136,7 +136,7 @@ describe("RelayerProgram", () => {
         .mockResolvedValue(getRandomTransactionHash());
       jest.spyOn(relayerFrom.relayTxToL1Step, "isCompleted").mockResolvedValue(false);
       jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
-      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue();
+      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(true);
 
       await program.run();
 
@@ -163,8 +163,9 @@ describe("RelayerProgram", () => {
       jest
         .spyOn(relayerFrom.relayTxToL1Step, "execute")
         .mockResolvedValue(getRandomTransactionHash());
+      jest.spyOn(relayerFrom.relayTxToL1Step, "isCompleted").mockResolvedValue(true);
       jest
-        .spyOn(relayerFrom.relayTxToL1Step, "isCompleted")
+        .spyOn(relayerFrom.relayTxToL1Step, "recoverL1TransactionHash")
         .mockResolvedValue(getRandomTransactionHash());
       jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
       jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
@@ -173,6 +174,7 @@ describe("RelayerProgram", () => {
 
       expect(relayerTo.prepareStep.execute).not.toHaveBeenCalled();
       expect(relayerFrom.relayTxToL1Step.execute).not.toHaveBeenCalled();
+      expect(relayerFrom.relayTxToL1Step.recoverL1TransactionHash).toHaveBeenCalled();
       expect(relayerTo.finalizeStep.execute).toHaveBeenCalled();
     });
   });

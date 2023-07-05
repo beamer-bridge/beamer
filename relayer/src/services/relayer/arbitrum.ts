@@ -43,6 +43,7 @@ export class ArbitrumRelayerService extends BaseRelayerService {
   relayTxToL1Step = new RelayStep(
     async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
     async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+    async (l2TransactionHash) => await this.recoverL1TransactionHash(l2TransactionHash),
   );
   finalizeStep = new FinalizeStep(
     async (l1TransactionHash) => await this.finalize(l1TransactionHash),
@@ -73,17 +74,14 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return deltaSubmissionFee;
   }
 
-  private async isPrepareCompleted(): Promise<void | false> {
+  private async isPrepareCompleted(): Promise<boolean> {
     const deltaSubmissionFee = await this.getDeltaSubmissionFee();
 
     const currentDeposit: BigNumber = await this.arbitrumL1Messenger.deposits(
       this.l1Wallet.address,
     );
 
-    if (currentDeposit.lte(deltaSubmissionFee)) {
-      return false;
-    }
-    console.log("ArbitrumL1Messenger has enough funds to proceed!");
+    return currentDeposit.gte(deltaSubmissionFee);
   }
 
   private async prepare(): Promise<void> {
@@ -135,35 +133,30 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return l2ToL1Msg;
   }
 
-  private async isRelayCompleted(
-    l2TransactionHash: TransactionHash,
-  ): Promise<TransactionHash | false> {
+  private async isRelayCompleted(l2TransactionHash: TransactionHash): Promise<boolean> {
     const l2ToL1Message = await this.getL2ToL1Message(l2TransactionHash);
+    return (await l2ToL1Message.status(this.l2RpcProvider)) === L2ToL1MessageStatus.EXECUTED;
+  }
 
-    /**
-     * Check if already executed
-     */
-    if ((await l2ToL1Message.status(this.l2RpcProvider)) == L2ToL1MessageStatus.EXECUTED) {
-      console.log("Message already executed! Nothing else to do here.");
-
-      const parameters = await this.parseFillEventDataFromTxHash(l2TransactionHash);
-      const transactionHash = await this.findL1TransactionHashForMessage(
-        parameters.requestId,
-        parameters.fillId,
-        parameters.sourceChainId,
-        parameters.filler,
-        BigNumber.from(this.l2ChainId),
+  private async recoverL1TransactionHash(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash> {
+    const parameters = await this.parseFillEventDataFromTxHash(l2TransactionHash);
+    const transactionHash = await this.findL1TransactionHashForMessage(
+      parameters.requestId,
+      parameters.fillId,
+      parameters.sourceChainId,
+      parameters.filler,
+      BigNumber.from(this.l2ChainId),
+    );
+    if (!transactionHash) {
+      throw new Error(
+        `The L1 transaction hash of the related message cannot be recovered. \n
+        Did you properly configure the ArbitrumL2Messenger contract address & Resolver's deployed block number?`,
       );
-      if (!transactionHash) {
-        throw new Error(
-          `Message has already been relayed but the related L1 transaction hash cannot be found. \n
-          Did you properly configure the ArbitrumL2Messenger contract address & Resolver's deployed block number?`,
-        );
-      }
-      console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
-      return transactionHash;
     }
-    return false;
+    console.log(`Message has already been relayed with tx hash: ${transactionHash}.\n`);
+    return transactionHash;
   }
 
   private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<string> {
@@ -211,19 +204,14 @@ export class ArbitrumRelayerService extends BaseRelayerService {
     return message;
   }
 
-  private async isFinalizeCompleted(l1TransactionHash: string): Promise<void | false> {
+  private async isFinalizeCompleted(l1TransactionHash: string): Promise<boolean> {
     const l1ToL2Message = await this.getL1ToL2Message(l1TransactionHash);
 
     console.log("Waiting for L2 side. It may take 10-15 minutes ⏰⏰");
     const messageResult = await l1ToL2Message.waitForStatus();
 
     const status = messageResult.status;
-    if (status === L1ToL2MessageStatus.REDEEMED) {
-      console.log(`L2 retryable txn executed ${messageResult.l2TxReceipt.transactionHash}`);
-      return;
-    }
-    console.log(`L2 retryable txn failed with status ${L1ToL2MessageStatus[status]}`);
-    return false;
+    return status === L1ToL2MessageStatus.REDEEMED;
   }
 
   private async finalize(l1TransactionHash: string): Promise<void> {
