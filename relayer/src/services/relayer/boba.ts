@@ -28,6 +28,7 @@ export class BobaRelayerService extends BaseRelayerService {
   relayTxToL1Step = new RelayStep(
     async (l2TransactionHash) => await this.relayTxToL1(l2TransactionHash),
     async (l2TransactionHash) => await this.isRelayCompleted(l2TransactionHash),
+    async (l2TransactionHash) => await this.recoverL1TransactionHash(l2TransactionHash),
   );
   finalizeStep = undefined;
 
@@ -60,23 +61,26 @@ export class BobaRelayerService extends BaseRelayerService {
     return messages[0];
   }
 
-  private async isRelayCompleted(
-    l2TransactionHash: TransactionHash,
-  ): Promise<TransactionHash | false> {
+  private async isRelayCompleted(l2TransactionHash: TransactionHash): Promise<boolean> {
     const message = await this.getMessage(l2TransactionHash);
-
     const status = await this.messenger.getMessageStatus(message);
-
     console.log(`Message status: ${MessageStatus[status]}`);
-    if (status === MessageStatus.RELAYED) {
-      const receipt = await this.messenger.waitForMessageReceipt(message);
-      console.log(
-        `Message already relayed with tx hash: ${receipt.transactionReceipt.transactionHash}`,
-      );
-      return receipt.transactionReceipt.transactionHash;
-    }
+    return status === MessageStatus.RELAYED;
+  }
 
-    return false;
+  private async recoverL1TransactionHash(
+    l2TransactionHash: TransactionHash,
+  ): Promise<TransactionHash> {
+    const message = await this.getMessage(l2TransactionHash);
+    const status = await this.messenger.getMessageStatus(message);
+    if (status !== MessageStatus.RELAYED) {
+      throw new Error("Message was not relayed yet!");
+    }
+    const receipt = await this.messenger.waitForMessageReceipt(message);
+    console.log(
+      `Message already relayed with tx hash: ${receipt.transactionReceipt.transactionHash}`,
+    );
+    return receipt.transactionReceipt.transactionHash;
   }
 
   private async relayTxToL1(l2TransactionHash: TransactionHash): Promise<TransactionHash> {

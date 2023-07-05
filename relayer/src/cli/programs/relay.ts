@@ -64,18 +64,20 @@ export class RelayerProgram {
     );
     let l1TransactionHash: string;
 
-    if (relayStepCompleted === false) {
+    if (relayStepCompleted) {
+      l1TransactionHash = await this.l2RelayerFrom.relayTxToL1Step.recoverL1TransactionHash(
+        this.l2TransactionHash,
+      );
+    } else {
       if (this.l2RelayerTo.prepareStep) {
         const prepareStepCompleted = await this.l2RelayerTo.prepareStep.isCompleted();
 
-        if (prepareStepCompleted === false) {
+        if (!prepareStepCompleted) {
           await this.l2RelayerTo.prepareStep.execute();
         }
       }
 
       l1TransactionHash = await this.l2RelayerFrom.relayTxToL1Step.execute(this.l2TransactionHash);
-    } else {
-      l1TransactionHash = relayStepCompleted;
     }
 
     if (this.l2RelayerTo.finalizeStep) {
@@ -83,7 +85,7 @@ export class RelayerProgram {
         l1TransactionHash,
       );
 
-      if (finalizeStepCompleted === false) {
+      if (!finalizeStepCompleted) {
         await this.l2RelayerTo.finalizeStep.execute(l1TransactionHash);
       }
     }

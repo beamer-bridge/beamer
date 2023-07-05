@@ -183,10 +183,18 @@ export abstract class BaseRelayerService {
 abstract class Step<T, U> {
   constructor(
     public execute: (arg: T) => Promise<U>,
-    public isCompleted: (arg: T) => Promise<U | false>,
+    public isCompleted: (arg: T) => Promise<boolean>,
   ) {}
 }
 
 export class PrepareStep extends Step<void, void> {}
-export class RelayStep extends Step<TransactionHash, TransactionHash> {}
+export class RelayStep extends Step<TransactionHash, TransactionHash> {
+  constructor(
+    execute: (arg: TransactionHash) => Promise<TransactionHash>,
+    isCompleted: (arg: TransactionHash) => Promise<boolean>,
+    public recoverL1TransactionHash: (arg: TransactionHash) => Promise<TransactionHash>,
+  ) {
+    super(execute, isCompleted);
+  }
+}
 export class FinalizeStep extends Step<TransactionHash, void> {}
