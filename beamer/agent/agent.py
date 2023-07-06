@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from itertools import permutations
 
 import structlog
-from eth_typing import Address, BlockNumber, ChecksumAddress
+from eth_typing import Address, ChecksumAddress
 from web3.middleware import latest_block_based_cache_middleware
 
 import beamer.agent.metrics
@@ -12,24 +12,11 @@ from beamer.agent.config import Config
 from beamer.agent.state_machine import Context
 from beamer.agent.tracker import Tracker
 from beamer.agent.util import BaseChain, Chain
-from beamer.contracts import ContractInfo, make_contracts
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.typing import ChainId, TransferDirection
 from beamer.util import make_web3
 
 log = structlog.get_logger(__name__)
-
-
-def _get_contracts_info(config: Config, chain_id: ChainId) -> dict[str, ContractInfo]:
-    info = config.deployment_info.get(chain_id)
-    if info is None:
-        raise RuntimeError(f"Deployment info for chain ID {chain_id} not available")
-    return info
-
-
-def _get_deployment_block(contract_info: dict[str, ContractInfo]) -> BlockNumber:
-    request_manager_deployment_block = contract_info["RequestManager"].deployment_block
-    fill_manager_deployment_block = contract_info["FillManager"].deployment_block
-    return min(request_manager_deployment_block, fill_manager_deployment_block)
 
 
 class Agent:
@@ -37,6 +24,8 @@ class Agent:
         self._config = config
         self._stopped = threading.Event()
         self._stopped.set()
+        self._abi_manager = ABIManager(config.abi_dir)
+        self._artifacts = beamer.artifacts.load_all(config.artifacts_dir)
         self._init()
 
     def _init_l1_chain(self) -> BaseChain:
@@ -51,14 +40,19 @@ class Agent:
             chain_id = ChainId(w3.eth.chain_id)
             if chain_id in chains:
                 continue
-            contracts_info = _get_contracts_info(self._config, chain_id)
-            contracts = make_contracts(w3, contracts_info)
-            request_manager = contracts["RequestManager"]
-            fill_manager = contracts["FillManager"]
+
+            deployment = self._artifacts.get(chain_id)
+            if deployment is None:
+                raise RuntimeError(f"Deployment artifact for chain ID {chain_id} not available")
+
+            assert deployment.chain is not None
+            request_manager = obtain_contract(w3, self._abi_manager, deployment, "RequestManager")
+            fill_manager = obtain_contract(w3, self._abi_manager, deployment, "FillManager")
+
             self._event_monitors[chain_id] = EventMonitor(
                 web3=w3,
                 contracts=(request_manager, fill_manager),
-                deployment_block=_get_deployment_block(contracts_info),
+                deployment_block=deployment.earliest_block,
                 poll_period=chain_config.poll_period,
                 confirmation_blocks=chain_config.confirmation_blocks,
                 on_new_events=[],
@@ -70,7 +64,8 @@ class Agent:
                 id=chain_id,
                 name=chain_name,
                 tokens=self._config.token_checker.get_tokens_for_chain(chain_id),
-                contracts=contracts,
+                request_manager=request_manager,
+                fill_manager=fill_manager,
             )
         return chains
 
