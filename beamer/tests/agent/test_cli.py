@@ -13,7 +13,8 @@ from beamer.agent.commands import agent
 from beamer.tests.util import get_repo_root
 
 
-def _generate_deployment_dir(deployment_dir, root, contracts):
+def _generate_deployment_dir(deployment_dir, contracts):
+    root = get_repo_root()
     artifacts_dir = deployment_dir / "artifacts"
     abi_dir = deployment_dir / "abis"
     artifacts_dir.mkdir()
@@ -136,12 +137,11 @@ def test_cli(
     obj = eth_account.Account.encrypt(key, "test")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
-    root = get_repo_root()
     deployment_dir = tmp_path / "deployment"
     deployment_dir.mkdir()
     artifacts_dir = deployment_dir / "artifacts"
     abi_dir = deployment_dir / "abis"
-    _generate_deployment_dir(deployment_dir, root, contracts)
+    _generate_deployment_dir(deployment_dir, contracts)
 
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
