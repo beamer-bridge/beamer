@@ -8,9 +8,9 @@ from web3 import Web3
 from web3.contract import Contract, ContractConstructor
 from web3.contract.contract import ContractFunction
 
-import beamer.deploy.config as config
 from beamer.artifacts import ChainDeployment, DeployedContractInfo, Deployment
 from beamer.contracts import ABIManager
+from beamer.deploy import config
 from beamer.typing import BlockNumber, ChainId
 from beamer.util import get_commit_id, transact
 
