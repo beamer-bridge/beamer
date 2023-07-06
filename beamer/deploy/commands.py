@@ -8,7 +8,7 @@ import structlog
 import beamer.artifacts
 import beamer.contracts
 import beamer.util
-from beamer.contracts import obtain_contract
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.deploy.util import deploy_beamer, deploy_contract, generate_artifacts
 from beamer.typing import ChainId
 from beamer.util import get_commit_id, make_web3
@@ -106,7 +106,8 @@ def deploy_base(
     assert w3.eth.chain_id == chain_id
     log.info("Connected to RPC", url=url)
 
-    resolver = deploy_contract(w3, "Resolver")
+    abi_manager = ABIManager(abi_dir)
+    resolver = deploy_contract(w3, abi_manager, "Resolver")
     path = artifacts_dir / "base.deployment.json"
     generate_artifacts(path, account.address, (resolver,))
     log.info("Generated artifact", path=str(path))
@@ -197,6 +198,7 @@ def deploy(
     assert base_w3.eth.chain_id == base_deployment.base.chain_id
     log.info("Connected to base chain RPC", chain_id=base_deployment.base.chain_id, url=url)
 
+    abi_manager = ABIManager(abi_dir)
     resolver = obtain_contract(base_w3, abi_dir, base_deployment, "Resolver")
 
     for path in chains["chain.json"]:
@@ -208,9 +210,9 @@ def deploy(
         assert w3.eth.chain_id == chain.chain_id
         log.info("Connected to chain RPC", chain_id=chain.chain_id, url=url)
 
-        l1_contracts, l2_contracts = deploy_beamer(w3, chain, resolver)
+        l1_contracts, l2_contracts = deploy_beamer(w3, abi_manager, chain, resolver)
         if deploy_mintable_token:
-            l2_contracts += (deploy_contract(w3, ("MintableToken", int(1e18))),)
+            l2_contracts += (deploy_contract(w3, abi_manager, ("MintableToken", int(1e18))),)
 
         path = artifacts_dir / f"{chain.chain_id}-{chain.name}.deployment.json"
         generate_artifacts(path, account.address, l1_contracts, l2_contracts)

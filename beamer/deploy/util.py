@@ -11,6 +11,7 @@ from web3.contract.contract import ContractFunction
 
 import beamer.deploy.config as config
 from beamer.artifacts import ChainDeployment, DeployedContractInfo, Deployment
+from beamer.contracts import ABIManager
 from beamer.typing import BlockNumber, ChainId
 from beamer.util import get_commit_id, transact
 
@@ -45,7 +46,9 @@ def _load_contracts_info(build_path: Path) -> dict[str, tuple]:
 _CONTRACTS: dict[str, tuple] = _load_contracts_info(Path("contracts/.build"))
 
 
-def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> DeployedContract:
+def deploy_contract(
+    web3: Web3, abi_manager: ABIManager, constructor_spec: Union[str, Sequence]
+) -> DeployedContract:
     # constructor_spec is either
     # 1) a contract name e.g. "Foo", or
     # 2) a sequence containing the contract name and
@@ -57,15 +60,17 @@ def deploy_contract(web3: Web3, constructor_spec: Union[str, Sequence]) -> Deplo
         name = constructor_spec[0]
         args = constructor_spec[1:]
 
-    data = _CONTRACTS[name]
+    abi = abi_manager.get_abi(name)
+    bytecode = abi_manager.get_bytecode(name)
+
     log.info("Deploying contract", contract=name)
-    ContractFactory = cast(Contract, web3.eth.contract(abi=data[0], bytecode=data[1]))
+    ContractFactory = cast(Contract, web3.eth.contract(abi=abi, bytecode=bytecode))
 
     receipt = _transact(ContractFactory.constructor(*args))
     txhash = encode_hex(receipt.transactionHash)
 
     address = receipt.contractAddress
-    deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=data[0]))
+    deployed = cast(DeployedContract, web3.eth.contract(address=address, abi=abi))
     deployed.deployment_block = receipt.blockNumber
     deployed.deployment_txhash = txhash
     deployed.deployment_args = list(args)
@@ -87,11 +92,12 @@ def _resolve_constructor_args(
 
 
 def deploy_beamer(
-    w3: Web3, chain: config.Chain, resolver: Contract
+    w3: Web3, abi_manager: ABIManager, chain: config.Chain, resolver: Contract
 ) -> tuple[tuple[DeployedContract, ...], tuple[DeployedContract, ...]]:
     contract_args = {"${resolver}": resolver}
     request_manager = deploy_contract(
         w3,
+        abi_manager,
         (
             "RequestManager",
             to_wei(chain.request_manager_arguments.claim_stake, "ether"),
@@ -102,10 +108,10 @@ def deploy_beamer(
     )
     contract_args["${request_manager}"] = request_manager
     args = _resolve_constructor_args(contract_args, chain.l1_messenger)
-    l1_messenger = deploy_contract(resolver.w3, args)
+    l1_messenger = deploy_contract(resolver.w3, abi_manager, args)
 
     args = _resolve_constructor_args(contract_args, chain.l2_messenger)
-    l2_messenger = deploy_contract(w3, args)
+    l2_messenger = deploy_contract(w3, abi_manager, args)
 
     # Polygon ZkEVM chain ids for networks
     # mainnnet: 1101
@@ -115,7 +121,7 @@ def deploy_beamer(
         _transact(l1_messenger.functions.setRemoteMessenger(l2_messenger.address))
         _transact(l2_messenger.functions.setRemoteMessenger(l1_messenger.address))
 
-    fill_manager = deploy_contract(w3, ("FillManager", l2_messenger.address))
+    fill_manager = deploy_contract(w3, abi_manager, ("FillManager", l2_messenger.address))
     _transact(fill_manager.functions.setResolver(resolver.address))
 
     # Authorize call chain
