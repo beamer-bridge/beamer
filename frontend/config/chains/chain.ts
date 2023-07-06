@@ -9,10 +9,11 @@ export class ChainMetadata {
   readonly explorerUrl: string;
   readonly rpcUrl: string;
   readonly name: string;
-  readonly imageUrl?: string;
   readonly tokenSymbols: Array<string>;
-  readonly nativeCurrency?: NativeCurrency;
   readonly internalRpcUrl: string;
+  readonly feeSubAddress?: string;
+  readonly nativeCurrency?: NativeCurrency;
+  readonly imageUrl?: string;
   readonly disabled?: boolean;
   readonly disabled_reason?: string;
   readonly hidden?: boolean;
@@ -26,6 +27,7 @@ export class ChainMetadata {
     this.tokenSymbols = data.tokenSymbols ?? [];
     this.nativeCurrency = data.nativeCurrency;
     this.internalRpcUrl = data.internalRpcUrl;
+    this.feeSubAddress = data.feeSubAddress;
     this.disabled = data.disabled;
     this.disabled_reason = data.disabled_reason;
     this.hidden = data.hidden;
@@ -65,6 +67,7 @@ export type ChainMetadataData = {
   tokenSymbols: Array<string>;
   internalRpcUrl: string;
   nativeCurrency?: NativeCurrency;
+  feeSubAddress?: string;
   imageUrl?: string;
   disabled?: boolean;
   disabled_reason?: string;

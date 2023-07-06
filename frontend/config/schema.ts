@@ -100,6 +100,12 @@ export const configSchema: JSONSchemaType<BeamerConfig> = {
               minLength: 42,
               maxLength: 42,
             },
+            feeSubAddress: {
+              type: 'string',
+              minLength: 42,
+              maxLength: 42,
+              nullable: true,
+            },
             disabled: {
               type: 'boolean',
               nullable: true,

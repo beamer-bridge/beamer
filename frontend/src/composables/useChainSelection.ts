@@ -35,6 +35,7 @@ export function getChainSelectorOption(
       imageUrl: chains[chainId].imageUrl,
       nativeCurrency: chains[chainId].nativeCurrency,
       internalRpcUrl: chains[chainId].internalRpcUrl,
+      feeSubAddress: chains[chainId].feeSubAddress,
       disabled: chains[chainId].disabled,
       disabled_reason: chains[chainId].disabled_reason,
       hidden: chains[chainId].hidden,
