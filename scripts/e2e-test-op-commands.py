@@ -9,7 +9,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 
 import beamer.artifacts
-from beamer.contracts import obtain_contract
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3, transact
 from scripts._util import pass_args
@@ -89,9 +89,10 @@ def set_chain_on_resolver(
     base_deployment = beamer.artifacts.Deployment.from_file(base_deployment_path)
     op_deployment = beamer.artifacts.Deployment.from_file(op_deployment_path)
 
-    resolver = obtain_contract(web3_l1, abi_dir, base_deployment, "Resolver")
-    request_manager = obtain_contract(web3, abi_dir, op_deployment, "RequestManager")
-    l1_messenger = obtain_contract(web3_l1, abi_dir, op_deployment, "OptimismL1Messenger")
+    abi_manager = ABIManager(abi_dir)
+    resolver = obtain_contract(web3_l1, abi_manager, base_deployment, "Resolver")
+    request_manager = obtain_contract(web3, abi_manager, op_deployment, "RequestManager")
+    l1_messenger = obtain_contract(web3_l1, abi_manager, op_deployment, "OptimismL1Messenger")
 
     transact(
         resolver.functions.addRequestManager(
