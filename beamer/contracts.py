@@ -101,7 +101,7 @@ def contracts_for_web3(web3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[s
 
 
 def obtain_contract(
-    w3: Web3, abi_dir: Path, deployment: beamer.artifacts.Deployment, name: str
+    w3: Web3, abi_manager: ABIManager, deployment: beamer.artifacts.Deployment, name: str
 ) -> Contract:
     chain_id = w3.eth.chain_id
 
@@ -113,6 +113,6 @@ def obtain_contract(
     else:
         raise ValueError(f"{name} not found on chain with ID {chain_id} in {deployment}")
 
-    abi = load_contract_abi(abi_dir, name)
+    abi = abi_manager.get_abi(name)
     contract = w3.eth.contract(address, abi=abi, decode_tuples=True)
     return cast(Contract, contract)
