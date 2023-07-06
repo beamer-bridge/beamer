@@ -14,9 +14,10 @@ export type Chain = {
   requestManagerAddress: EthereumAddress;
   fillManagerAddress: EthereumAddress;
   explorerUrl: string; // TODO: restrict more
+  internalRpcUrl: string;
+  feeSubAddress?: string;
   imageUrl?: string; // TODO: restrict more
   nativeCurrency?: NativeCurrency;
-  internalRpcUrl: string;
   disabled?: boolean;
   disabled_reason?: string;
   hidden?: boolean;
