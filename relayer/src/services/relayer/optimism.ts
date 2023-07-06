@@ -65,17 +65,25 @@ export class OptimismRelayerService extends BaseRelayerService {
     ].includes(messageStatus);
   }
 
-  async proveMessage(l2TransactionHash: TransactionHash) {
+  async getMessageProofTimestamp(message: CrossChainMessage) {
+    const withdrawalHash = await this.getMessageWithdrawalHash(message);
+    const withdrawalProof = await this.messenger.getProvenWithdrawal(withdrawalHash);
+
+    return withdrawalProof.timestamp.toNumber();
+  }
+
+  async proveMessage(l2TransactionHash: TransactionHash): Promise<number> {
     console.log(`\nProving OP message on L1 for L2 Transaction hash: ${l2TransactionHash}`);
 
     await this.l2RpcProvider.waitForTransaction(l2TransactionHash, 1);
     const message = await this.getMessageInTransaction(l2TransactionHash);
     const status = await this.messenger.getMessageStatus(message);
-
+    let proofTimestamp;
     console.log(`Message status: ${MessageStatus[status]}`);
     if (this.isMessageProved(status)) {
+      proofTimestamp = await this.getMessageProofTimestamp(message);
       console.log(`Message already proven.`);
-      return;
+      return proofTimestamp;
     }
 
     if (status !== MessageStatus.READY_TO_PROVE) {
@@ -93,8 +101,9 @@ export class OptimismRelayerService extends BaseRelayerService {
       );
     }
 
+    proofTimestamp = await this.getMessageProofTimestamp(message);
     console.log(`Message successfully proven with L1 transaction hash: ${tx.hash}`);
-    return;
+    return proofTimestamp;
   }
 
   private async getMessageWithdrawalHash(message: CrossChainMessage): Promise<string> {

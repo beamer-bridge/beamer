@@ -45,6 +45,7 @@ export class OPMessageProverProgram {
   }
 
   async run(): Promise<void> {
-    await this.l2RelayerFrom.proveMessage(this.l2TransactionHash);
+    const proofTimestamp = await this.l2RelayerFrom.proveMessage(this.l2TransactionHash);
+    console.log(`Proof timestamp: ${proofTimestamp}`);
   }
 }
