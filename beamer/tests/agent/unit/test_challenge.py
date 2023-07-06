@@ -1,3 +1,5 @@
+import time
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 import pytest
@@ -93,8 +95,10 @@ def test_join_false_claim_challenge_only_when_unfilled(filler):
         assert not claim.transaction_pending
 
 
-@patch("beamer.agent.relayer.run_relayer_for_tx")
-def test_optimism_prove(_mocked_relayer_call):
+@patch("beamer.agent.chain.run_relayer_for_tx")
+def test_optimism_prove(mocked_relayer_call):
+    timestamp = int(time.time())
+    mocked_relayer_call.return_value = str(timestamp)
     op_chain_id = ChainId(901)
     context, _ = make_context()
     context.latest_blocks[op_chain_id] = BlockData(
@@ -104,6 +108,7 @@ def test_optimism_prove(_mocked_relayer_call):
     context.target_chain = Chain(
         MockWeb3(op_chain_id), op_chain_id, "source", [], {}  # type: ignore
     )
+    context.task_pool = ThreadPoolExecutor(max_workers=1)
     request = make_request()
     request.target_chain_id = op_chain_id
     context.requests.add(request.id, request)
@@ -119,5 +124,5 @@ def test_optimism_prove(_mocked_relayer_call):
     )
     context.claims.add(claim.id, claim)
     process_claims(context)
-
     assert request.fill_tx in context.l1_resolutions
+    assert request.fill_timestamp == timestamp
