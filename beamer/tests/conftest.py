@@ -221,3 +221,11 @@ def resolver(contracts):
 @pytest.fixture
 def fill_manager(contracts):
     return contracts.fill_manager
+
+
+@pytest.fixture
+def fee_sub(deployer, request_manager, token):
+    fee_sub = deployer.deploy(ape.project.FeeSub, request_manager.address)
+    fee_sub.setMinimumAmount(token.address, 2)
+    token.transfer(fee_sub.address, 100)
+    return fee_sub
