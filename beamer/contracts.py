@@ -1,4 +1,5 @@
 import json
+from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -49,6 +50,36 @@ def prepare_deployment_infos(
             abi=abi,
         )
     return infos
+
+
+class ABIManager:
+    _CacheEntry = namedtuple("_CacheEntry", ("abi", "bytecode"))
+
+    def __init__(self, abi_dir: Path):
+        self.abi_dir = abi_dir
+        self._cache: dict[str, ABIManager._CacheEntry] = {}
+
+    def get_abi(self, name: str) -> str:
+        entry = self._cache.get(name)
+        if entry is None:
+            entry = self._load_entry(name)
+            self._cache[name] = entry
+        return entry.abi
+
+    def get_bytecode(self, name: str) -> str:
+        entry = self._cache.get(name)
+        if entry is None:
+            entry = self._load_entry(name)
+            self._cache[name] = entry
+        return entry.bytecode
+
+    def _load_entry(self, name: str) -> _CacheEntry:
+        path = self.abi_dir.joinpath(f"{name}.json")
+        with path.open("rt") as f:
+            data = json.load(f)
+        return ABIManager._CacheEntry(
+            abi=data["abi"], bytecode=data["runtimeBytecode"]["bytecode"]
+        )
 
 
 def load_deployment_info(artifacts_dir: Path, abi_dir: Path) -> DeploymentInfo:
