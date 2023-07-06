@@ -9,7 +9,6 @@ from eth_account.signers.local import LocalAccount
 from eth_utils import to_wei
 
 from beamer.agent.util import TokenChecker
-from beamer.contracts import DeploymentInfo, load_deployment_info
 from beamer.typing import URL
 from beamer.util import account_from_keyfile
 
@@ -29,7 +28,8 @@ class ChainConfig:
 @dataclass
 class Config:
     account: LocalAccount
-    deployment_info: DeploymentInfo
+    abi_dir: Path
+    artifacts_dir: Path
     base_chain_rpc_url: URL
     token_checker: TokenChecker
     fill_wait_time: int
@@ -139,12 +139,12 @@ def load(config_path: Path, options: dict[str, Any]) -> Config:
     password = _get_value(config, "account.password")
     account = account_from_keyfile(path, password)
 
-    deployment_info = load_deployment_info(Path(config["artifacts-dir"]), Path(config["abi-dir"]))
     token_checker = TokenChecker(list(config["tokens"].values()))
 
     return Config(
         account=account,
-        deployment_info=deployment_info,
+        abi_dir=Path(config["abi-dir"]),
+        artifacts_dir=Path(config["artifacts-dir"]),
         token_checker=token_checker,
         base_chain_rpc_url=config["base-chain"]["rpc-url"],
         fill_wait_time=config["fill-wait-time"],

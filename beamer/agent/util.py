@@ -26,15 +26,8 @@ class BaseChain:
 class Chain(BaseChain):
     name: str
     tokens: list[tuple[ChainId, ChecksumAddress]]
-    contracts: dict[str, Contract]
-
-    @property
-    def request_manager(self) -> Contract:
-        return self.contracts["RequestManager"]
-
-    @property
-    def fill_manager(self) -> Contract:
-        return self.contracts["FillManager"]
+    request_manager: Contract
+    fill_manager: Contract
 
 
 @dataclass(frozen=True)
