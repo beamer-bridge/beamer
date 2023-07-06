@@ -1,12 +1,12 @@
+import re
 import subprocess
 import sys
-
 from pathlib import Path
+
 import structlog
 from hexbytes import HexBytes
 
 from beamer.typing import URL
-
 
 log = structlog.get_logger(__name__)
 
@@ -30,7 +30,7 @@ def run_relayer_for_tx(
     privkey: HexBytes,
     tx_hash: HexBytes,
     prove_tx: bool = False,
-) -> None:
+) -> str | None:
     relayer = get_relayer_executable()
 
     if not relayer.exists():
@@ -60,9 +60,17 @@ def run_relayer_for_tx(
             ]
         )
 
-    subprocess.run(
+    result = subprocess.run(
         command_args,
         capture_output=True,
         encoding="utf-8",
         check=True,  # check throws an error right away
     )
+
+    if prove_tx:
+        timestamp_match = re.search(r"Proof timestamp: (\d+)", result.stdout)
+        if timestamp_match is not None:
+            return timestamp_match.group(1)
+        raise RuntimeError("relayer failed to provide proof timestamp")
+
+    return None
