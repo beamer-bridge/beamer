@@ -1,9 +1,10 @@
-import { Transfer } from '@/actions/transfers';
+import { SubsidizedTransfer, Transfer } from '@/actions/transfers';
 import { transferHistorySerializer } from '@/stores/transfer-history/serializer';
-import { generateStepData, generateTransferData } from '~/utils/data_generators';
+import { generateChain, generateStepData, generateTransferData } from '~/utils/data_generators';
 
 vi.mock('@/actions/transfers', () => ({
   Transfer: vi.fn().mockImplementation((data) => ({ data })),
+  SubsidizedTransfer: vi.fn().mockImplementation((data) => ({ data })),
 }));
 
 describe('transfer history serializer', () => {
@@ -58,6 +59,23 @@ describe('transfer history serializer', () => {
       expect(Transfer).toHaveBeenCalledTimes(2);
       expect(Transfer).toHaveBeenCalledWith('transfer one data');
       expect(Transfer).toHaveBeenCalledWith('transfer two data');
+    });
+
+    it('is able to detect and create instances of subsidized and non-subsidized transfers accordingly', () => {
+      const subsidizedTransferData = generateTransferData({
+        sourceChain: generateChain({ feeSubAddress: '0x123' }),
+        feeSubAddress: '0x123',
+      });
+      const unsubsidizedTransferData = generateTransferData();
+
+      const state = transferHistorySerializer.deserialize(
+        JSON.stringify({
+          transfers: [subsidizedTransferData, unsubsidizedTransferData],
+        }),
+      );
+
+      expect(state.transfers[0]).toBeInstanceOf(SubsidizedTransfer);
+      expect(state.transfers[1]).toBeInstanceOf(Transfer);
     });
 
     it('returns filled state with transfers from parsed data', () => {
