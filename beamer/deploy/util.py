@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Any, Sequence, Union, cast
 
@@ -27,23 +26,6 @@ class DeployedContract(Contract):
 
 def _transact(func: Union[ContractConstructor, ContractFunction]) -> Any:
     return transact(func, timeout=600, poll_latency=1)
-
-
-def _load_contracts_info(build_path: Path) -> dict[str, tuple]:
-    contracts: dict[str, tuple] = {}
-    for path in build_path.glob("*.json"):
-        if path.name == "__local__.json":
-            continue
-        with path.open() as fp:
-            info = json.load(fp)
-        contracts[info["contractName"]] = (
-            info["abi"],
-            info["runtimeBytecode"].get("bytecode", ""),
-        )
-    return contracts
-
-
-_CONTRACTS: dict[str, tuple] = _load_contracts_info(Path("contracts/.build"))
 
 
 def deploy_contract(
