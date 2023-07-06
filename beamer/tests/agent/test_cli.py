@@ -1,51 +1,13 @@
 import json
-import shutil
 import signal
 
-import ape
 import eth_account
 import pytest
 from click.testing import CliRunner
-from web3.constants import ADDRESS_ZERO
 
 from beamer.agent.commands import agent
 
-from beamer.tests.util import get_repo_root
-
-
-def _generate_deployment_dir(deployment_dir, contracts):
-    root = get_repo_root()
-    artifacts_dir = deployment_dir / "artifacts"
-    abi_dir = deployment_dir / "abis"
-    artifacts_dir.mkdir()
-    abi_dir.mkdir()
-    data = {
-        "deployer": ADDRESS_ZERO,
-        "base": {"chain_id": ape.chain.chain_id},
-        "chain": {
-            "chain_id": ape.chain.chain_id,
-            "RequestManager": {
-                "beamer_commit": "0" * 40,
-                "tx_hash": contracts.request_manager.txn_hash,
-                "address": contracts.request_manager.address,
-                "deployment_block": 1,
-                "deployment_args": [],
-            },
-            "FillManager": {
-                "beamer_commit": "0" * 40,
-                "tx_hash": contracts.fill_manager.txn_hash,
-                "address": contracts.fill_manager.address,
-                "deployment_block": 1,
-                "deployment_args": [],
-            },
-        },
-    }
-    with artifacts_dir.joinpath("1337-ethereum.deployment.json").open("wt") as f:
-        json.dump(data, f)
-
-    src = root / "contracts/.build"
-    shutil.copy(src / "RequestManager.json", abi_dir)
-    shutil.copy(src / "FillManager.json", abi_dir)
+from beamer.tests.agent.utils import generate_abi_files, generate_artifacts
 
 
 _CONFIG_FILE = """
@@ -137,11 +99,10 @@ def test_cli(
     obj = eth_account.Account.encrypt(key, "test")
     keyfile = tmp_path / f"{acc.address}.json"
     keyfile.write_text(json.dumps(obj))
-    deployment_dir = tmp_path / "deployment"
-    deployment_dir.mkdir()
-    artifacts_dir = deployment_dir / "artifacts"
-    abi_dir = deployment_dir / "abis"
-    _generate_deployment_dir(deployment_dir, contracts)
+    abi_dir = tmp_path / "abis"
+    artifacts_dir = tmp_path / "artifacts"
+    generate_abi_files(abi_dir)
+    generate_artifacts(artifacts_dir, contracts)
 
     signal.signal(signal.SIGALRM, lambda *_unused: signal.raise_signal(signal.SIGINT))
     signal.setitimer(signal.ITIMER_REAL, 2)
