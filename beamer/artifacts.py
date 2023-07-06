@@ -57,3 +57,12 @@ class Deployment:
     def to_file(self, artifact: Path) -> None:
         with open(artifact, "wt") as f:
             json.dump(apischema.serialize(self), f, indent=4)
+
+
+def load_all(artifacts_dir: Path) -> dict[ChainId, Deployment]:
+    artifacts = {}
+    for path in artifacts_dir.glob("*.deployment.json"):
+        deployment = Deployment.from_file(path)
+        if deployment.chain is not None:
+            artifacts[deployment.chain.chain_id] = deployment
+    return artifacts
