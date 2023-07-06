@@ -199,7 +199,7 @@ def deploy(
     log.info("Connected to base chain RPC", chain_id=base_deployment.base.chain_id, url=url)
 
     abi_manager = ABIManager(abi_dir)
-    resolver = obtain_contract(base_w3, abi_dir, base_deployment, "Resolver")
+    resolver = obtain_contract(base_w3, abi_manager, base_deployment, "Resolver")
 
     for path in chains["chain.json"]:
         chain = beamer.deploy.config.Chain.from_file(path)
