@@ -7,16 +7,15 @@ from typing import DefaultDict, TypedDict, cast
 
 import requests
 import toml
-from eth_typing import BlockNumber
 from eth_utils import to_checksum_address
 from typing_extensions import NotRequired
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 
-import beamer.agent.chain
-import beamer.contracts
+import beamer.artifacts
 import beamer.events
 from beamer.agent.config import _merge_dicts
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.events import ClaimMade, DepositWithdrawn, RequestCreated, RequestFilled
 from beamer.health.notify import Message, NotificationConfig, NotificationState, Notify
 from beamer.typing import URL, ChainId
@@ -199,22 +198,24 @@ def cleanup_transfers(transfers: TransferMap) -> None:
 
 
 def fetch_events() -> ChainEventMap:
-    deployment_info = beamer.contracts.load_deployment_info(
-        get_config()["artifacts_dir"], get_config()["abi_dir"]
-    )
-    events = {}
+    config = get_config()
+    abi_manager = ABIManager(config["abi_dir"])
+    artifacts = beamer.artifacts.load_all(config["artifacts_dir"])
 
+    events = {}
     for chain_id, (rpc) in get_config()["rpcs"].items():
         web3 = make_web3(URL(rpc))
         assert chain_id == ChainId(web3.eth.chain_id)
 
-        info = deployment_info[ChainId(chain_id)]
-        contracts = beamer.contracts.make_contracts(web3, info)
+        deployment = artifacts[ChainId(chain_id)]
+        assert deployment.chain is not None
+        request_manager = obtain_contract(web3, abi_manager, deployment, "RequestManager")
+        fill_manager = obtain_contract(web3, abi_manager, deployment, "FillManager")
 
         ef = beamer.events.EventFetcher(
             web3,
-            (contracts["RequestManager"], contracts["FillManager"]),
-            BlockNumber(info["RequestManager"].deployment_block),
+            (request_manager, fill_manager),
+            deployment.earliest_block,
             0,
         )
         try:
