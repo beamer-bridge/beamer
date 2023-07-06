@@ -632,16 +632,16 @@ def maybe_prove(claim: Claim, context: Context) -> None:
 
     def on_future_done(f: Future) -> None:
         try:
-            f.result()
+            timestamp = f.result()
         except Exception as ex:
             context.logger.error("Optimism prove failed", ex=ex, tx_hash=prove_tx)
         else:
             assert request is not None
             claim.proved_tx = prove_tx
             if request.fill_tx == prove_tx:
-                request.fill_timestamp = Timestamp(int(time.time()))
+                request.fill_timestamp = Timestamp(int(timestamp))
             elif claim.invalidation_tx == prove_tx:
-                claim.invalidation_timestamp = Timestamp(int(time.time()))
+                claim.invalidation_timestamp = Timestamp(int(timestamp))
         finally:
             assert prove_tx is not None
             context.l1_resolutions.pop(prove_tx, None)
