@@ -4,6 +4,7 @@ import { getNetworkId } from "@/common/network";
 import { OptimismRelayerService } from "@/services";
 import { SERVICES } from "@/services/relayer/map";
 import {
+  getRandomNumber,
   getRandomPrivateKey,
   getRandomTransactionHash,
   getRandomUrl,
@@ -87,7 +88,7 @@ describe("OPMessageProverProgram", () => {
 
       const program = await OPMessageProverProgram.createFromArgs(validOptions);
 
-      jest.spyOn(program.l2RelayerFrom, "proveMessage").mockResolvedValue(undefined);
+      jest.spyOn(program.l2RelayerFrom, "proveMessage").mockResolvedValue(getRandomNumber());
 
       await program.run();
 
