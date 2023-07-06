@@ -58,6 +58,11 @@ class Deployment:
         with open(artifact, "wt") as f:
             json.dump(apischema.serialize(self), f, indent=4)
 
+    @property
+    def earliest_block(self) -> BlockNumber:
+        assert self.chain is not None
+        return min(info.deployment_block for info in self.chain.contracts.values())
+
 
 def load_all(artifacts_dir: Path) -> dict[ChainId, Deployment]:
     artifacts = {}
