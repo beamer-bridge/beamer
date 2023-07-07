@@ -40,17 +40,19 @@ deploy_beamer() {
     artifacts_dir=$3
     base_chain_id=$4
     pushd "${ROOT}"
-    rm -rf "${output_dir}" &&
+    rm -rf "${output_dir}"
     poetry run beamer deploy-base \
         --keystore-file $keyfile \
         --password '' \
+        --abi-dir $ABI_DIR \
         --artifacts-dir $artifacts_dir \
         --rpc-file $RPC_FILE \
         --commit-check false \
-        $base_chain_id &&
+        $base_chain_id
     poetry run beamer deploy \
         --keystore-file $keyfile \
         --password '' \
+        --abi-dir $ABI_DIR \
         --artifacts-dir $artifacts_dir \
         --rpc-file $RPC_FILE \
         --deploy-mintable-token \
