@@ -94,10 +94,19 @@ def load_deployment_info(artifacts_dir: Path, abi_dir: Path) -> DeploymentInfo:
     return deployment_info
 
 
-def contracts_for_web3(web3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[str, Contract]:
-    deployment_info = load_deployment_info(artifacts_dir, abi_dir)
-    chain_id = ChainId(web3.eth.chain_id)
-    return make_contracts(web3, deployment_info[chain_id])
+def contracts_for_web3(w3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[str, Contract]:
+    abi_manager = ABIManager(abi_dir)
+    artifacts = beamer.artifacts.load_all(artifacts_dir)
+
+    chain_id = ChainId(w3.eth.chain_id)
+    deployment = artifacts[chain_id]
+    assert deployment.chain is not None
+    assert deployment.chain.chain_id == chain_id
+
+    contracts = {}
+    for name in deployment.chain.contracts:
+        contracts[name] = obtain_contract(w3, abi_manager, deployment, name)
+    return contracts
 
 
 def obtain_contract(
