@@ -1,55 +1,13 @@
 import json
 from collections import namedtuple
-from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-import web3
 from web3 import Web3
 from web3.contract import Contract
 
 import beamer.artifacts
-from beamer.typing import BlockNumber, ChainId, ChecksumAddress
-
-
-@dataclass
-class ContractInfo:
-    address: ChecksumAddress
-    deployment_block: BlockNumber
-    abi: list
-
-
-def make_contracts(w3: web3.Web3, contracts_info: dict[str, ContractInfo]) -> dict[str, Contract]:
-    return {
-        name: cast(Contract, w3.eth.contract(info.address, abi=info.abi, decode_tuples=True))
-        for name, info in contracts_info.items()
-    }
-
-
-def load_contract_abi(abi_dir: Path, contract_name: str) -> list:
-    with abi_dir.joinpath(f"{contract_name}.json").open("rt") as f:
-        data = json.load(f)
-    return data["abi"]
-
-
-DeploymentInfo = dict[ChainId, dict[str, ContractInfo]]
-
-
-def prepare_deployment_infos(
-    abi_dir: Path, contracts: dict[str, beamer.artifacts.DeployedContractInfo]
-) -> dict[str, ContractInfo]:
-    abis = {}
-    infos = {}
-    for name, contract in contracts.items():
-        if name not in abis:
-            abis[name] = load_contract_abi(abi_dir, name)
-        abi = abis[name]
-        infos[name] = ContractInfo(
-            address=contract.address,
-            deployment_block=contract.deployment_block,
-            abi=abi,
-        )
-    return infos
+from beamer.typing import ChainId
 
 
 class ABIManager:
@@ -80,18 +38,6 @@ class ABIManager:
         return ABIManager._CacheEntry(
             abi=data["abi"], bytecode=data["runtimeBytecode"]["bytecode"]
         )
-
-
-def load_deployment_info(artifacts_dir: Path, abi_dir: Path) -> DeploymentInfo:
-    deployment_info = {}
-    for artifact_path in artifacts_dir.glob("*.deployment.json"):
-        deployment = beamer.artifacts.Deployment.from_file(artifact_path)
-        if deployment.chain is None:
-            continue
-        deployment_info[deployment.chain.chain_id] = prepare_deployment_infos(
-            abi_dir, deployment.chain.contracts
-        )
-    return deployment_info
 
 
 def contracts_for_web3(w3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[str, Contract]:
