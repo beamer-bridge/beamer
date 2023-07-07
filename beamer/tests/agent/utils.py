@@ -25,11 +25,12 @@ def make_tx_hash() -> HexBytes:
 
 
 def generate_artifacts(artifacts_dir, contracts):
+    chain_id = ape.chain.chain_id
     data = {
         "deployer": ADDRESS_ZERO,
-        "base": {"chain_id": ape.chain.chain_id},
+        "base": {"chain_id": chain_id},
         "chain": {
-            "chain_id": ape.chain.chain_id,
+            "chain_id": chain_id,
             "RequestManager": {
                 "beamer_commit": "0" * 40,
                 "tx_hash": contracts.request_manager.txn_hash,
@@ -46,14 +47,15 @@ def generate_artifacts(artifacts_dir, contracts):
             },
         },
     }
-    artifacts_dir.mkdir()
-    with artifacts_dir.joinpath("1337-ethereum.deployment.json").open("wt") as f:
+    artifacts_dir.mkdir(exist_ok=True)
+    path = artifacts_dir / f"{chain_id}-ethereum.deployment.json"
+    with path.open("wt") as f:
         json.dump(data, f)
 
 
 def generate_abi_files(abi_dir):
     root = get_repo_root()
     src = root / "contracts/.build"
-    abi_dir.mkdir()
+    abi_dir.mkdir(exist_ok=True)
     shutil.copy(src / "RequestManager.json", abi_dir)
     shutil.copy(src / "FillManager.json", abi_dir)
