@@ -1,38 +1,29 @@
 import stat
-from typing import cast
 
 import ape
 import eth_account
 import pytest
 
-import beamer.agent.chain
 import beamer.agent.metrics
 from beamer.agent.agent import Agent
 from beamer.agent.config import ChainConfig, Config
 from beamer.agent.relayer import get_relayer_executable
 from beamer.agent.util import TokenChecker
-from beamer.contracts import ContractInfo, DeploymentInfo
-from beamer.typing import URL, BlockNumber, ChainId, TransferDirection
+from beamer.tests.agent.utils import generate_abi_files, generate_artifacts
+from beamer.typing import URL, ChainId, TransferDirection
 
 
 @pytest.fixture
-def config(request_manager, fill_manager, token, token_list, local_account):
-    contracts_info = dict(
-        RequestManager=ContractInfo(
-            deployment_block=BlockNumber(1),
-            address=request_manager.address,
-            abi=[abi.dict() for abi in request_manager.contract_type.abi],
-        ),
-        FillManager=ContractInfo(
-            deployment_block=BlockNumber(1),
-            address=fill_manager.address,
-            abi=[abi.dict() for abi in fill_manager.contract_type.abi],
-        ),
-    )
-    deployment_info = cast(DeploymentInfo, {ape.chain.chain_id: contracts_info})
+def config(tmp_path, contracts, token, token_list, local_account):
+    abi_dir = tmp_path / "abis"
+    artifacts_dir = tmp_path / "artifacts"
+    generate_abi_files(abi_dir)
+    generate_artifacts(artifacts_dir, contracts)
+
     account = eth_account.Account.from_key(local_account.private_key)
     token.mint(account.address, 300)
     url = URL(ape.config.provider.uri)
+
     chains = {}
     for chain_name in ("l2a", "l2b"):
         chains[chain_name] = ChainConfig(
@@ -43,7 +34,8 @@ def config(request_manager, fill_manager, token, token_list, local_account):
         )
 
     config = Config(
-        deployment_info=deployment_info,
+        abi_dir=abi_dir,
+        artifacts_dir=artifacts_dir,
         token_checker=TokenChecker(token_list),
         account=account,
         fill_wait_time=0,

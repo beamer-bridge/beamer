@@ -1,6 +1,6 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from eth_typing import BlockNumber
@@ -106,7 +106,12 @@ def test_optimism_prove(mocked_relayer_call):
     )
     context.finality_periods[op_chain_id] = 1
     context.target_chain = Chain(
-        MockWeb3(op_chain_id), op_chain_id, "source", [], {}  # type: ignore
+        MockWeb3(op_chain_id),  # type: ignore
+        op_chain_id,
+        "source",
+        [],
+        fill_manager=MagicMock(),
+        request_manager=MagicMock(),
     )
     context.task_pool = ThreadPoolExecutor(max_workers=1)
     request = make_request()

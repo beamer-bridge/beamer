@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Tuple
 from unittest.mock import MagicMock
 
@@ -146,7 +147,8 @@ def make_context() -> Tuple[Context, Config]:
 
     config = Config(
         account=ACCOUNT,
-        deployment_info={},
+        abi_dir=Path(),
+        artifacts_dir=Path(),
         base_chain_rpc_url=URL(""),
         token_checker=checker,
         fill_wait_time=1,
@@ -156,8 +158,6 @@ def make_context() -> Tuple[Context, Config]:
         chains=chains,
     )
 
-    mock_contracts = {"RequestManager": MagicMock(), "FillManager": MagicMock()}
-
     context = Context(
         requests=Tracker(),
         claims=Tracker(),
@@ -166,14 +166,16 @@ def make_context() -> Tuple[Context, Config]:
             SOURCE_CHAIN_ID,
             "source",
             [],
-            mock_contracts,  # type: ignore
+            fill_manager=MagicMock(),
+            request_manager=MagicMock(),
         ),
         target_chain=Chain(
             MockWeb3(TARGET_CHAIN_ID),  # type: ignore
             TARGET_CHAIN_ID,
             "target",
             [],
-            mock_contracts,  # type: ignore
+            fill_manager=MagicMock(),
+            request_manager=MagicMock(),
         ),
         token_checker=checker,
         address=config.account.address,
