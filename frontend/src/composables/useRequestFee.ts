@@ -40,6 +40,7 @@ export function useRequestFee(
     try {
       const canBeSubsdized = await amountCanBeSubsidized(
         sourceChain.value,
+        targetChain.value,
         requestAmount.value.token,
         requestAmount.value,
       );

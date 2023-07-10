@@ -59,5 +59,5 @@ export class MockedFillManagerContract {
   removeAllListeners = vi.fn();
 }
 export class MockedFeeSubContract {
-  minimumAmounts = vi.fn();
+  tokenAmountCanBeSubsidized = vi.fn();
 }

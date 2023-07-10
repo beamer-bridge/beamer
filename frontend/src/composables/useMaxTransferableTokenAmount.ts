@@ -20,7 +20,12 @@ export function useMaxTransferableTokenAmount(
     targetChain: Chain,
   ) {
     try {
-      const canBeSubsidized = await amountCanBeSubsidized(sourceChain, balance.token, balance);
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        balance.token,
+        balance,
+      );
 
       let transferableAmount;
       if (canBeSubsidized) {
