@@ -100,6 +100,29 @@ contract FeeSub is Ownable {
         token.safeTransfer(recipient, amount);
     }
 
+    function tokenAmountCanBeSubsidized(
+        uint256 targetChainId,
+        address tokenAddress,
+        uint256 amount
+    ) public view returns(bool) {
+        uint256 minimumAmount = minimumAmounts[tokenAddress];
+
+        if(minimumAmount == 0 || minimumAmount > amount){
+            return false;
+        }
+
+        uint256 tokenBalance = IERC20(tokenAddress).balanceOf(address(this));
+        uint256 totalFee = requestManager.totalFee(targetChainId, tokenAddress, amount);
+
+        if(
+            tokenBalance < totalFee
+        ){
+            return false;
+        }
+
+        return true;
+    }
+
     function setMinimumAmount(
         address tokenAddress,
         uint256 amount
