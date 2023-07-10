@@ -3,6 +3,7 @@ import type { Ref } from 'vue';
 import { ref } from 'vue';
 
 import { useMaxTransferableTokenAmount } from '@/composables/useMaxTransferableTokenAmount';
+import * as feeSubService from '@/services/transactions/fee-sub';
 import * as requestManagerService from '@/services/transactions/request-manager';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -16,6 +17,7 @@ const TARGET_CHAIN_REF = ref(TARGET_CHAIN);
 const TOKEN_AMOUNT = ref(new TokenAmount({ amount: '1000', token: TOKEN })) as Ref<TokenAmount>;
 
 vi.mock('@/services/transactions/request-manager');
+vi.mock('@/services/transactions/fee-sub');
 
 describe('useMaxTransferableTokenAmount', () => {
   beforeEach(() => {
@@ -49,27 +51,52 @@ describe('useMaxTransferableTokenAmount', () => {
       expect(maxTransferableTokenAmount.value).toBeUndefined();
     });
 
-    it('holds the actual transferable amount derived from the provided total amount', async () => {
-      const totalAmount = ref(
-        new TokenAmount({ amount: '1000', token: TOKEN }),
-      ) as Ref<TokenAmount>;
+    describe('if transfer can be subsidized', () => {
+      it('holds the full token balance as a transferable amount', async () => {
+        const totalAmount = ref(
+          new TokenAmount({ amount: '1000', token: TOKEN }),
+        ) as Ref<TokenAmount>;
 
-      const mockedAmountBeforeFees = totalAmount.value.uint256.subtract(new UInt256('100'));
-      Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
-        value: vi.fn().mockReturnValue(mockedAmountBeforeFees),
+        Object.defineProperty(feeSubService, 'amountCanBeSubsidized', {
+          value: vi.fn().mockReturnValue(true),
+        });
+
+        const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+          totalAmount,
+          SOURCE_CHAIN_REF,
+          TARGET_CHAIN_REF,
+        );
+        await flushPromises();
+
+        expect(maxTransferableTokenAmount.value).not.toBeUndefined();
+        expect(maxTransferableTokenAmount.value?.uint256.asString).toBe(
+          totalAmount.value.uint256.asString,
+        );
       });
+    });
+    describe('if transfer cannot be subsidized', () => {
+      it('holds the actual transferable amount derived from the provided total amount', async () => {
+        const totalAmount = ref(
+          new TokenAmount({ amount: '1000', token: TOKEN }),
+        ) as Ref<TokenAmount>;
 
-      const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
-        totalAmount,
-        SOURCE_CHAIN_REF,
-        TARGET_CHAIN_REF,
-      );
-      await flushPromises();
+        const mockedAmountBeforeFees = totalAmount.value.uint256.subtract(new UInt256('100'));
+        Object.defineProperty(requestManagerService, 'getAmountBeforeFees', {
+          value: vi.fn().mockReturnValue(mockedAmountBeforeFees),
+        });
 
-      expect(maxTransferableTokenAmount.value).not.toBeUndefined();
-      expect(maxTransferableTokenAmount.value?.uint256.asString).toBe(
-        mockedAmountBeforeFees.asString,
-      );
+        const { maxTransferableTokenAmount } = useMaxTransferableTokenAmount(
+          totalAmount,
+          SOURCE_CHAIN_REF,
+          TARGET_CHAIN_REF,
+        );
+        await flushPromises();
+
+        expect(maxTransferableTokenAmount.value).not.toBeUndefined();
+        expect(maxTransferableTokenAmount.value?.uint256.asString).toBe(
+          mockedAmountBeforeFees.asString,
+        );
+      });
     });
 
     it('is undefined when calculation fails with an exception', async () => {

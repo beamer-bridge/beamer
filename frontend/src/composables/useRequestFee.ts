@@ -2,14 +2,17 @@ import type { Ref } from 'vue';
 import { ref, watch } from 'vue';
 
 import { useDebouncedTask } from '@/composables/useDebouncedTask';
+import { amountCanBeSubsidized } from '@/services/transactions/fee-sub';
 import { getRequestFee } from '@/services/transactions/request-manager';
 import type { Chain } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
+import { UInt256 } from '@/types/uint-256';
 
 export function useRequestFee(
   rpcUrl: Ref<string | undefined>,
   requestManagerAddress: Ref<string | undefined>,
   requestAmount: Ref<TokenAmount | undefined>,
+  sourceChain: Ref<Chain | undefined>,
   targetChain: Ref<Chain | undefined>,
   debounced?: boolean,
   debouncedDelay = 500,
@@ -26,7 +29,8 @@ export function useRequestFee(
       !rpcUrl.value ||
       !requestManagerAddress.value ||
       !requestAmount.value ||
-      !targetChain.value
+      !targetChain.value ||
+      !sourceChain.value
     ) {
       amount.value = undefined;
       loading.value = false;
@@ -34,12 +38,22 @@ export function useRequestFee(
     }
 
     try {
-      const requestFee = await getRequestFee(
-        rpcUrl.value,
-        requestManagerAddress.value,
+      const canBeSubsdized = await amountCanBeSubsidized(
+        sourceChain.value,
+        requestAmount.value.token,
         requestAmount.value,
-        targetChain.value.identifier,
       );
+      let requestFee;
+      if (canBeSubsdized) {
+        requestFee = new UInt256(0);
+      } else {
+        requestFee = await getRequestFee(
+          rpcUrl.value,
+          requestManagerAddress.value,
+          requestAmount.value,
+          targetChain.value.identifier,
+        );
+      }
       amount.value = TokenAmount.new(requestFee, requestAmount.value.token);
     } catch (exception: unknown) {
       const errorMessage = (exception as { message?: string }).message;

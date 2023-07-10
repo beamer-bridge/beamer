@@ -1,7 +1,9 @@
 import { reactive } from 'vue';
 
 import { Transfer } from '@/actions/transfers';
+import { SubsidizedTransfer } from '@/actions/transfers/subsidized-transfer';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
+import { amountCanBeSubsidized } from '@/services/transactions/fee-sub';
 import { getRequestFee } from '@/services/transactions/request-manager';
 import type {
   Eip1193Provider,
@@ -39,21 +41,29 @@ export function useTransferRequest() {
     );
     const fees = TokenAmount.new(requestFee, sourceTokenAmount.token);
 
-    const transfer = reactive(
-      Transfer.new(
-        options.sourceChain,
-        sourceTokenAmount,
-        options.targetChain,
-        targetTokenAmount,
-        options.toAddress,
-        validityPeriod,
-        fees,
-        options.approveInfiniteAmount,
-        options.requestCreatorAddress,
-      ),
-    ) as Transfer;
+    const transferData = [
+      options.sourceChain,
+      sourceTokenAmount,
+      options.targetChain,
+      targetTokenAmount,
+      options.toAddress,
+      validityPeriod,
+      fees,
+      options.approveInfiniteAmount,
+      options.requestCreatorAddress,
+    ] as const;
 
-    return transfer;
+    let transfer;
+    if (
+      options.sourceChain.feeSubAddress &&
+      (await amountCanBeSubsidized(options.sourceChain, options.sourceToken, sourceTokenAmount))
+    ) {
+      transfer = SubsidizedTransfer.new(...transferData);
+    } else {
+      transfer = Transfer.new(...transferData);
+    }
+
+    return reactive(transfer) as Transfer;
   };
 
   const execute = async (provider: IEthereumProvider, transfer: Transfer): Promise<void> => {

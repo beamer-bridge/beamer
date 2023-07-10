@@ -1,7 +1,11 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 import * as transactionUtils from '@/services/transactions/utils';
-import { MockedFillManagerContract, MockedRequestManagerContract } from '~/utils/mocks/beamer';
+import {
+  MockedFeeSubContract,
+  MockedFillManagerContract,
+  MockedRequestManagerContract,
+} from '~/utils/mocks/beamer';
 import { MockedERC20TokenContract } from '~/utils/mocks/ethers';
 
 export function mockGetSafeEventHandler() {
@@ -66,6 +70,20 @@ export function mockGetRequestManagerContract() {
 
 export function mockGetFillManagerContract() {
   const contract = new MockedFillManagerContract();
+
+  Object.defineProperties(transactionUtils, {
+    getReadOnlyContract: {
+      value: vi.fn().mockReturnValue(contract),
+    },
+    getReadWriteContract: {
+      value: vi.fn().mockReturnValue(contract),
+    },
+  });
+
+  return contract;
+}
+export function mockGetFeeSubContract() {
+  const contract = new MockedFeeSubContract();
 
   Object.defineProperties(transactionUtils, {
     getReadOnlyContract: {

@@ -3,6 +3,7 @@ import type { Ref } from 'vue';
 import { ref } from 'vue';
 
 import { useRequestFee } from '@/composables/useRequestFee';
+import * as feeSubService from '@/services/transactions/fee-sub';
 import * as requestManagerService from '@/services/transactions/request-manager';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -14,17 +15,21 @@ import {
 } from '~/utils/data_generators';
 
 vi.mock('@/services/transactions/request-manager');
+vi.mock('@/services/transactions/fee-sub');
 
 const RPC_URL = ref('https://test.rpc');
 const REQUEST_MANAGER_ADDRESS = ref(getRandomEthereumAddress());
 const REQUEST_AMOUNT = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
 const TARGET_CHAIN = ref(generateChain());
+const SOURCE_CHAIN = ref(generateChain());
 describe('useRequestFee', () => {
   beforeEach(() => {
     Object.defineProperty(requestManagerService, 'getRequestFee', {
       value: vi.fn().mockResolvedValue(new UInt256(generateUInt256Data())),
     });
-
+    Object.defineProperty(feeSubService, 'amountCanBeSubsidized', {
+      value: vi.fn().mockResolvedValue(false),
+    });
     global.console.error = vi.fn();
   });
 
@@ -34,6 +39,7 @@ describe('useRequestFee', () => {
         ref(undefined),
         REQUEST_MANAGER_ADDRESS,
         REQUEST_AMOUNT,
+        SOURCE_CHAIN,
         TARGET_CHAIN,
       );
 
@@ -41,7 +47,13 @@ describe('useRequestFee', () => {
     });
 
     it('should be undefined if the request manager address is missing', () => {
-      const { amount } = useRequestFee(RPC_URL, ref(undefined), REQUEST_AMOUNT, TARGET_CHAIN);
+      const { amount } = useRequestFee(
+        RPC_URL,
+        ref(undefined),
+        REQUEST_AMOUNT,
+        SOURCE_CHAIN,
+        TARGET_CHAIN,
+      );
 
       expect(amount.value).toBeUndefined();
     });
@@ -50,6 +62,19 @@ describe('useRequestFee', () => {
       const { amount } = useRequestFee(
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
+        ref(undefined),
+        SOURCE_CHAIN,
+        TARGET_CHAIN,
+      );
+
+      expect(amount.value).toBeUndefined();
+    });
+
+    it('should be undefined if the source chain is missing', () => {
+      const { amount } = useRequestFee(
+        RPC_URL,
+        REQUEST_MANAGER_ADDRESS,
+        REQUEST_AMOUNT,
         ref(undefined),
         TARGET_CHAIN,
       );
@@ -62,29 +87,57 @@ describe('useRequestFee', () => {
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         REQUEST_AMOUNT,
+        SOURCE_CHAIN,
         ref(undefined),
       );
 
       expect(amount.value).toBeUndefined();
     });
 
-    it('should be fetched from request manager', async () => {
-      Object.defineProperty(requestManagerService, 'getRequestFee', {
-        value: vi.fn().mockResolvedValue(new UInt256('99999')),
+    describe('if transfer can be subsidized', () => {
+      it('fees should be zero', async () => {
+        Object.defineProperty(feeSubService, 'amountCanBeSubsidized', {
+          value: vi.fn().mockResolvedValue(true),
+        });
+        const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
+
+        const { amount } = useRequestFee(
+          RPC_URL,
+          REQUEST_MANAGER_ADDRESS,
+          requestAmount,
+          SOURCE_CHAIN,
+          TARGET_CHAIN,
+        );
+        await flushPromises();
+
+        expect(amount.value).toEqual(
+          new TokenAmount({ token: requestAmount.value.token, amount: '0' }),
+        );
       });
-      const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
+    });
+    describe('if transfer cannot be subsidized', () => {
+      it('should be fetched from request manager', async () => {
+        Object.defineProperty(feeSubService, 'amountCanBeSubsidized', {
+          value: vi.fn().mockResolvedValue(false),
+        });
+        Object.defineProperty(requestManagerService, 'getRequestFee', {
+          value: vi.fn().mockResolvedValue(new UInt256('99999')),
+        });
+        const requestAmount = ref(new TokenAmount(generateTokenAmountData())) as Ref<TokenAmount>;
 
-      const { amount } = useRequestFee(
-        RPC_URL,
-        REQUEST_MANAGER_ADDRESS,
-        requestAmount,
-        TARGET_CHAIN,
-      );
-      await flushPromises();
+        const { amount } = useRequestFee(
+          RPC_URL,
+          REQUEST_MANAGER_ADDRESS,
+          requestAmount,
+          SOURCE_CHAIN,
+          TARGET_CHAIN,
+        );
+        await flushPromises();
 
-      expect(amount.value).toEqual(
-        new TokenAmount({ token: requestAmount.value.token, amount: '99999' }),
-      );
+        expect(amount.value).toEqual(
+          new TokenAmount({ token: requestAmount.value.token, amount: '99999' }),
+        );
+      });
     });
 
     it('should update itself when the request amount changes', async () => {
@@ -94,6 +147,7 @@ describe('useRequestFee', () => {
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         requestAmount,
+        SOURCE_CHAIN,
         TARGET_CHAIN,
       );
       await flushPromises();
@@ -120,6 +174,7 @@ describe('useRequestFee', () => {
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         REQUEST_AMOUNT,
+        SOURCE_CHAIN,
         TARGET_CHAIN,
       );
       await flushPromises();
@@ -132,6 +187,7 @@ describe('useRequestFee', () => {
         RPC_URL,
         REQUEST_MANAGER_ADDRESS,
         REQUEST_AMOUNT,
+        SOURCE_CHAIN,
         TARGET_CHAIN,
       );
       await flushPromises();
@@ -147,6 +203,7 @@ describe('useRequestFee', () => {
       REQUEST_MANAGER_ADDRESS,
       REQUEST_AMOUNT,
       TARGET_CHAIN,
+      SOURCE_CHAIN,
       true,
       delayInMillis,
     );
