@@ -56,7 +56,12 @@ export function useTransferRequest() {
     let transfer;
     if (
       options.sourceChain.feeSubAddress &&
-      (await amountCanBeSubsidized(options.sourceChain, options.sourceToken, sourceTokenAmount))
+      (await amountCanBeSubsidized(
+        options.sourceChain,
+        options.targetChain,
+        options.sourceToken,
+        sourceTokenAmount,
+      ))
     ) {
       transfer = SubsidizedTransfer.new(...transferData);
     } else {
