@@ -1,6 +1,16 @@
 # Changelog
 
 
+## v2.4.0 (2023-07-10)
+* ci: Build the image for publish
+* contracts: Add FeeSub contract
+* beamer: `config` command: Ensure chain IDs from config and deployment match
+* relayer: Recover L1 transaction hash in Arbitrum relayer
+* relayer: Improved architecture and typing
+* relayer: Return proof timestamp from Optimism relayer to agent
+* frontend: Detect and provide better error messages when token allowance is too low
+
+
 ## v2.3.0 (2023-06-30)
 * ci: add new e2e test to test relayer fallback for OP
 * agent: adapt agent to use new deployment artifacts
