@@ -58,3 +58,6 @@ export class MockedFillManagerContract {
   on = vi.fn();
   removeAllListeners = vi.fn();
 }
+export class MockedFeeSubContract {
+  minimumAmounts = vi.fn();
+}

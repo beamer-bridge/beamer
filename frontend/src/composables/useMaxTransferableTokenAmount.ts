@@ -1,6 +1,7 @@
 import type { Ref } from 'vue';
 import { ref, watch } from 'vue';
 
+import { amountCanBeSubsidized } from '@/services/transactions/fee-sub';
 import { getAmountBeforeFees } from '@/services/transactions/request-manager';
 import type { Chain } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
@@ -19,12 +20,19 @@ export function useMaxTransferableTokenAmount(
     targetChain: Chain,
   ) {
     try {
-      const transferableAmount = await getAmountBeforeFees(
-        balance,
-        sourceChain.internalRpcUrl,
-        sourceChain.requestManagerAddress,
-        targetChain.identifier,
-      );
+      const canBeSubsidized = await amountCanBeSubsidized(sourceChain, balance.token, balance);
+
+      let transferableAmount;
+      if (canBeSubsidized) {
+        transferableAmount = balance.uint256;
+      } else {
+        transferableAmount = await getAmountBeforeFees(
+          balance,
+          sourceChain.internalRpcUrl,
+          sourceChain.requestManagerAddress,
+          targetChain.identifier,
+        );
+      }
       maxTransferableTokenAmount.value = TokenAmount.new(transferableAmount, balance.token);
     } catch (e) {
       maxTransferableTokenAmount.value = undefined;

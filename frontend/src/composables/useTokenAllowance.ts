@@ -23,7 +23,7 @@ export function useTokenAllowance(
         provider.value,
         token.value,
         signerAddress.value,
-        sourceChain.value.requestManagerAddress,
+        sourceChain.value.feeSubAddress || sourceChain.value.requestManagerAddress,
       );
     } else {
       allowance.value = undefined;

@@ -90,4 +90,31 @@ describe('useTokenAllowance', () => {
       expect(allowanceBelowMax.value).toBe(false);
     });
   });
+
+  describe('if a fee subsidy contract is defined', () => {
+    it('checks the allowance for the fee sub contract', () => {
+      const sourceChain = ref(generateChain({ feeSubAddress: '0x123' }));
+      useTokenAllowance(PROVIDER, TOKEN, sourceChain);
+
+      expect(tokenService.getTokenAllowance).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(String),
+        sourceChain.value.feeSubAddress,
+      );
+    });
+  });
+  describe('if a fee subsidy contract is not defined', () => {
+    it('checks the allowance for the request manager contract', () => {
+      const sourceChain = ref(generateChain({ feeSubAddress: undefined }));
+      useTokenAllowance(PROVIDER, TOKEN, sourceChain);
+
+      expect(tokenService.getTokenAllowance).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Object),
+        expect.any(String),
+        sourceChain.value.requestManagerAddress,
+      );
+    });
+  });
 });
