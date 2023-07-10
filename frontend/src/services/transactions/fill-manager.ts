@@ -5,9 +5,8 @@ import {
   getSafeEventHandler,
 } from '@/services/transactions/utils';
 import type { Cancelable } from '@/types/async';
-import type { FillManager } from '@/types/ethers-contracts';
 import { FillManager__factory } from '#contract-factories/FillManager__factory.ts';
-import type { RequestFilledEvent } from '#contracts/FillManager.ts';
+import type { FillManager, RequestFilledEvent } from '#contracts/FillManager.ts';
 
 import { fetchFirstMatchingEvent } from '../events/filter-utils';
 

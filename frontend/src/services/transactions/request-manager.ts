@@ -2,10 +2,10 @@ import type { Listener, TransactionResponse } from '@ethersproject/providers';
 
 import type { Cancelable } from '@/types/async';
 import type { EthereumAddress, TransactionHash } from '@/types/data';
-import type { RequestManager } from '@/types/ethers-contracts';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 import { RequestManager__factory } from '#contract-factories/RequestManager__factory.ts';
+import type { RequestManager } from '#contracts/RequestManager.ts';
 
 import type { IEthereumProvider } from '../web3-provider';
 import {
