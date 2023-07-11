@@ -25,7 +25,6 @@ class Agent:
         self._stopped = threading.Event()
         self._stopped.set()
         self._abi_manager = ABIManager(config.abi_dir)
-        self._artifacts = beamer.artifacts.load_all(config.artifacts_dir)
         self._init()
 
     def _init_l1_chain(self) -> BaseChain:
@@ -41,7 +40,7 @@ class Agent:
             if chain_id in chains:
                 continue
 
-            deployment = self._artifacts.get(chain_id)
+            deployment = beamer.artifacts.load(self._config.artifacts_dir, chain_id)
             if deployment is None:
                 raise RuntimeError(f"Deployment artifact for chain ID {chain_id} not available")
 
