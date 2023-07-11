@@ -7,7 +7,6 @@ from web3 import Web3
 from web3.contract import Contract
 
 import beamer.artifacts
-from beamer.typing import ChainId
 
 
 class ABIManager:
@@ -38,21 +37,6 @@ class ABIManager:
         return ABIManager._CacheEntry(
             abi=data["abi"], bytecode=data["runtimeBytecode"]["bytecode"]
         )
-
-
-def contracts_for_web3(w3: Web3, artifacts_dir: Path, abi_dir: Path) -> dict[str, Contract]:
-    abi_manager = ABIManager(abi_dir)
-    artifacts = beamer.artifacts.load_all(artifacts_dir)
-
-    chain_id = ChainId(w3.eth.chain_id)
-    deployment = artifacts[chain_id]
-    assert deployment.chain is not None
-    assert deployment.chain.chain_id == chain_id
-
-    contracts = {}
-    for name in deployment.chain.contracts:
-        contracts[name] = obtain_contract(w3, abi_manager, deployment, name)
-    return contracts
 
 
 def obtain_contract(
