@@ -5,7 +5,9 @@ from pathlib import Path
 import eth_utils
 from web3 import HTTPProvider, Web3
 
-from beamer.contracts import contracts_for_web3
+import beamer.artifacts
+from beamer.contracts import ABIManager, obtain_contract
+from beamer.typing import ChainId
 
 
 def main() -> None:
@@ -17,8 +19,9 @@ def main() -> None:
     request_id = sys.argv[5]
 
     web3 = Web3(HTTPProvider(l2_rpc))
-    l2_contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
-    request_manager = l2_contracts["RequestManager"]
+    abi_manager = ABIManager(abi_dir)
+    deployment = beamer.artifacts.load(artifacts_dir, ChainId(web3.eth.chain_id))
+    request_manager = obtain_contract(web3, abi_manager, deployment, "RequestManager")
 
     print("Waiting for resolution data...", flush=True, end="")
     for _ in range(60):
