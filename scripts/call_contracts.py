@@ -8,7 +8,8 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract
 
-from beamer.contracts import contracts_for_web3
+import beamer.artifacts
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.typing import URL, Address, ChainId, TokenAmount
 from beamer.util import account_from_keyfile, make_web3, setup_logging, transact
 from scripts._util import pass_args, validate_address, validate_bytes
@@ -51,7 +52,13 @@ def cli(
 
     account = account_from_keyfile(keystore_file, password)
     web3 = make_web3(eth_rpc, account)
-    contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
+
+    abi_manager = ABIManager(abi_dir)
+    deployment = beamer.artifacts.load(artifacts_dir, ChainId(web3.eth.chain_id))
+
+    contracts = {}
+    for name in ("RequestManager", "FillManager", "MintableToken"):
+        contracts[name] = obtain_contract(web3, abi_manager, deployment, name)
 
     ctx.ensure_object(dict)
     ctx.obj["web3"] = web3

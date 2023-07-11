@@ -3,7 +3,8 @@ import random
 import sys
 from pathlib import Path
 
-from beamer.contracts import contracts_for_web3
+import beamer.artifacts
+from beamer.contracts import ABIManager, obtain_contract
 from beamer.tests.util import create_request_id
 from beamer.typing import URL, ChainId
 from beamer.util import account_from_keyfile, make_web3
@@ -20,15 +21,17 @@ def main() -> None:
     deployer = account_from_keyfile(keystore_file, password)
     web3 = make_web3(l2_rpc, deployer)
 
-    l2_contracts = contracts_for_web3(web3, artifacts_dir, abi_dir)
+    abi_manager = ABIManager(abi_dir)
+    deployment = beamer.artifacts.load(artifacts_dir, ChainId(web3.eth.chain_id))
+
     overriden_chain_id = os.getenv("SOURCE_CHAIN_ID")
     if overriden_chain_id is None:
         source_chain_id = ChainId(web3.eth.chain_id)
     else:
         source_chain_id = ChainId(int(overriden_chain_id))
 
-    fill_manager = l2_contracts["FillManager"]
-    token = l2_contracts["MintableToken"]
+    fill_manager = obtain_contract(web3, abi_manager, deployment, "FillManager")
+    token = obtain_contract(web3, abi_manager, deployment, "MintableToken")
 
     nonce = random.randint(1, sys.maxsize)
     request_amount = 123
