@@ -1290,17 +1290,17 @@ test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-x
 
 [[package]]
 name = "eth-ape"
-version = "0.6.12"
+version = "0.6.13"
 description = "Ape Ethereum Framework"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "eth-ape-0.6.12.tar.gz", hash = "sha256:162c930540257ef158bc05f98e1b50faceb4e85fc828ace5ed4a1c34d2b18779"},
-    {file = "eth_ape-0.6.12-py3-none-any.whl", hash = "sha256:38e4e392010ad5bfa22ef774da552c1e1a6cad82cabe178b0d7be6f01019ccfe"},
+    {file = "eth-ape-0.6.13.tar.gz", hash = "sha256:fbe61109131a06247ceb4e4ac7dd1f889779c72af30df4c680084c1da5033079"},
+    {file = "eth_ape-0.6.13-py3-none-any.whl", hash = "sha256:58e9d0ad87d0c33f7692b779e021fd2e45c4db29a6aa3c55f6806200f31b69ff"},
 ]
 
 [package.dependencies]
-click = ">=8.1.3,<9"
+click = ">=8.1.3,<8.1.4"
 eip712 = ">=0.2.1,<0.3"
 eth-abi = ">=4.0.0,<5"
 eth-account = ">=0.8,<0.9"
@@ -1331,9 +1331,9 @@ watchdog = ">=2.1.9,<3.0"
 web3 = {version = ">=6.5.0,<7", extras = ["tester"]}
 
 [package.extras]
-dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.3.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
+dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.3.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=0.991,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=6.1.3,<7)", "myst-parser (>=1.0.0,<2)", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)"]
-lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
+lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=0.991,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
 recommended-plugins = ["ape-alchemy", "ape-ens", "ape-etherscan", "ape-foundry", "ape-hardhat", "ape-infura", "ape-solidity", "ape-template", "ape-tokens", "ape-vyper"]
 release = ["setuptools", "twine (==3.8.0)", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-xdist"]
@@ -4728,4 +4728,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "c496a4d98b673dd359e7b75125650019a8760b62818f96fe8a17df7f7b748aa8"
+content-hash = "6e892901bd47eff5613598275511ec21ad821c32d019b6496564c09d9876682d"
