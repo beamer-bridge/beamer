@@ -64,15 +64,6 @@ class Deployment:
         return min(info.deployment_block for info in self.chain.contracts.values())
 
 
-def load_all(artifacts_dir: Path) -> dict[ChainId, Deployment]:
-    artifacts = {}
-    for path in artifacts_dir.glob("*.deployment.json"):
-        deployment = Deployment.from_file(path)
-        if deployment.chain is not None:
-            artifacts[deployment.chain.chain_id] = deployment
-    return artifacts
-
-
 def load(artifacts_dir: Path, chain_id: ChainId) -> Deployment:
     path = next(artifacts_dir.glob(f"{chain_id}-*.deployment.json"))
     deployment = Deployment.from_file(path)
