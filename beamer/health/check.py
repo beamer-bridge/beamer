@@ -200,14 +200,13 @@ def cleanup_transfers(transfers: TransferMap) -> None:
 def fetch_events() -> ChainEventMap:
     config = get_config()
     abi_manager = ABIManager(config["abi_dir"])
-    artifacts = beamer.artifacts.load_all(config["artifacts_dir"])
 
     events = {}
     for chain_id, (rpc) in get_config()["rpcs"].items():
         web3 = make_web3(URL(rpc))
         assert chain_id == ChainId(web3.eth.chain_id)
 
-        deployment = artifacts[ChainId(chain_id)]
+        deployment = beamer.artifacts.load(config["artifacts_dir"], ChainId(chain_id))
         assert deployment.chain is not None
         request_manager = obtain_contract(web3, abi_manager, deployment, "RequestManager")
         fill_manager = obtain_contract(web3, abi_manager, deployment, "FillManager")
