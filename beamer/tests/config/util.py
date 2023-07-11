@@ -2,12 +2,12 @@ import json
 import pathlib
 import tempfile
 
+import ape
 import eth_account
 from click.testing import CliRunner
 
 import beamer.deploy.commands
 from beamer.config.state import Configuration
-
 from beamer.tests.util import get_repo_root
 
 
@@ -53,8 +53,9 @@ def deploy(deployer, destdir):
     artifacts_dir = destdir / "artifacts"
     artifacts_dir.mkdir()
 
+    chain_id = ape.chain.chain_id
     rpc_file = destdir / "rpc.json"
-    rpc_file.write_text(json.dumps({"1337": "http://localhost:8545"}))
+    rpc_file.write_text(json.dumps({f"{chain_id}": "http://localhost:8545"}))
 
     root = get_repo_root()
     run(
@@ -72,7 +73,7 @@ def deploy(deployer, destdir):
             artifacts_dir,
             "--commit-check",
             "no",
-            "1337",
+            f"{chain_id}",
         ),
     )
 
@@ -92,9 +93,9 @@ def deploy(deployer, destdir):
             "--commit-check",
             "no",
             "--deploy-mintable-token",
-            f"{root}/deployments/config/local/1337-ethereum.json",
+            f"{root}/deployments/config/local/{chain_id}-ethereum.json",
         ),
     )
 
-    artifact = f"{artifacts_dir}/1337-ethereum.deployment.json"
+    artifact = f"{artifacts_dir}/{chain_id}-ethereum.deployment.json"
     return rpc_file, artifact
