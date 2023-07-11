@@ -27,7 +27,7 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     assert not config.request_manager.tokens
     assert not config.request_manager.whitelist
     address = deployment.chain.contracts["RequestManager"].address
-    request_manager: Any = ape.project.RequestManager.at(address)  # type: ignore
+    request_manager: Any = ape.project.RequestManager.at(address)
 
     # check fee update
     request_manager.updateFees(1, 2, 3)
@@ -83,7 +83,7 @@ def test_config_read_fill_manager(tmp_path, deployer):
     config = read_config_state(rpc_file, artifact)
     assert not config.fill_manager.whitelist
     address = deployment.chain.contracts["FillManager"].address
-    fill_manager: Any = ape.project.FillManager.at(address)  # type: ignore
+    fill_manager: Any = ape.project.FillManager.at(address)
 
     # check LP addition
     lp = ape.accounts.test_accounts[0].address
@@ -105,7 +105,7 @@ def test_config_read_checksum_mismatch(tmp_path, deployer):
     assert deployment.chain is not None
 
     address = deployment.chain.contracts["RequestManager"].address
-    request_manager: Any = ape.project.RequestManager.at(address)  # type: ignore
+    request_manager: Any = ape.project.RequestManager.at(address)
 
     request_manager.updateFees(1, 2, 3)
 

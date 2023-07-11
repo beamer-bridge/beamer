@@ -64,7 +64,7 @@ def deployment_objects(tmp_deployment_path, deployer, token):
 
     # Call updateToken so that the eventual 'config read' command can pick up the token.
     address = deployment.chain.contracts["RequestManager"].address
-    request_manager: Any = ape.project.RequestManager.at(address)  # type: ignore
+    request_manager: Any = ape.project.RequestManager.at(address)
     request_manager.updateToken(token.address, 0, 0)
 
     return rpc_file, artifact, deployment
@@ -91,7 +91,7 @@ def test_config_write_request_manager(deployment_objects, deployer):
 
     token_address = desired.token_addresses["TST"]
     address = deployment.chain.contracts["RequestManager"].address
-    request_manager: Any = ape.project.RequestManager.at(address)  # type: ignore
+    request_manager: Any = ape.project.RequestManager.at(address)
     assert request_manager.minFeePPM() == 77
     assert request_manager.lpFeePPM() == 88
     assert request_manager.protocolFeePPM() == 99
@@ -130,7 +130,7 @@ def test_config_write_fill_manager(deployment_objects, deployer):
     _write_config_state(rpc_file, artifact, deployer, current, desired)
 
     address = deployment.chain.contracts["FillManager"].address
-    fill_manager: Any = ape.project.FillManager.at(address)  # type: ignore
+    fill_manager: Any = ape.project.FillManager.at(address)
     assert fill_manager.allowedLps(lp)
 
     current = desired.to_config(ape.chain.blocks[-1].number)
@@ -188,7 +188,7 @@ def test_error_on_stale_config(deployment_objects, deployer, caplog):
     desired = current.to_desired_config()
 
     address = deployment.chain.contracts["RequestManager"].address
-    request_manager: Any = ape.project.RequestManager.at(address)  # type: ignore
+    request_manager: Any = ape.project.RequestManager.at(address)
 
     # Call updateFees so that current becomes stale.
     request_manager.updateFees(1, 2, 3)
