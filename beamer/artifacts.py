@@ -71,3 +71,11 @@ def load_all(artifacts_dir: Path) -> dict[ChainId, Deployment]:
         if deployment.chain is not None:
             artifacts[deployment.chain.chain_id] = deployment
     return artifacts
+
+
+def load(artifacts_dir: Path, chain_id: ChainId) -> Deployment:
+    path = next(artifacts_dir.glob(f"{chain_id}-*.deployment.json"))
+    deployment = Deployment.from_file(path)
+    chain = deployment.chain or deployment.base
+    assert chain.chain_id == chain_id
+    return deployment
