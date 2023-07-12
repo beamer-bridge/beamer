@@ -7,12 +7,12 @@ import type { StepData } from '@/actions/steps';
 import type {
   AllowanceInformationData,
   RequestInformationData,
+  SubsidizedTransferData,
   TransactionInformationData,
   TransferData,
 } from '@/actions/transfers';
 import { Transfer } from '@/actions/transfers';
 import type { RequestFulfillmentData } from '@/actions/transfers/request-fulfillment';
-import type { ExtendedTransferData } from '@/actions/transfers/types';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { SelectorOption } from '@/types/form';
@@ -153,7 +153,7 @@ export function generateAllowanceInformationData(
 }
 
 export function generateTransferData(
-  partialTransferData?: Partial<ExtendedTransferData>,
+  partialTransferData?: Partial<TransferData | SubsidizedTransferData>,
 ): TransferData {
   return {
     sourceChain: generateChain(),
