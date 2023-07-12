@@ -2,9 +2,8 @@ import type { StateTree } from 'pinia';
 import type { Serializer } from 'pinia-plugin-persistedstate';
 
 import type { StepData } from '@/actions/steps';
-import type { TransferData } from '@/actions/transfers';
-import { SubsidizedTransfer, Transfer } from '@/actions/transfers';
-import type { ExtendedTransferData } from '@/actions/transfers/types';
+import type { SubsidizedTransferData, TransferData } from '@/actions/transfers';
+import { isSubsidizedTransferData, SubsidizedTransfer, Transfer } from '@/actions/transfers';
 
 import type { TransferHistoryState } from './types';
 
@@ -23,8 +22,8 @@ export const transferHistorySerializer: Serializer = {
     } else {
       const { transfers = [] } = encodedState;
       const inactiveTransfers = transfers.map(markTransferInactive);
-      state.transfers = inactiveTransfers.map((data: ExtendedTransferData) => {
-        if (data.feeSubAddress) {
+      state.transfers = inactiveTransfers.map((data: TransferData | SubsidizedTransferData) => {
+        if (isSubsidizedTransferData(data)) {
           return new SubsidizedTransfer(data);
         } else {
           return new Transfer(data);

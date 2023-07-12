@@ -2,10 +2,14 @@ import { SubsidizedTransfer, Transfer } from '@/actions/transfers';
 import { transferHistorySerializer } from '@/stores/transfer-history/serializer';
 import { generateChain, generateStepData, generateTransferData } from '~/utils/data_generators';
 
-vi.mock('@/actions/transfers', () => ({
-  Transfer: vi.fn().mockImplementation((data) => ({ data })),
-  SubsidizedTransfer: vi.fn().mockImplementation((data) => ({ data })),
-}));
+vi.mock('@/actions/transfers', async (importOriginal) => {
+  const mod: object = await importOriginal();
+  return {
+    ...mod,
+    Transfer: vi.fn().mockImplementation((data) => ({ data })),
+    SubsidizedTransfer: vi.fn().mockImplementation((data) => ({ data })),
+  };
+});
 
 describe('transfer history serializer', () => {
   describe('serialize()', () => {

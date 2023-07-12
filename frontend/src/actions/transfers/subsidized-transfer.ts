@@ -47,3 +47,15 @@ export type SubsidizedTransferData = TransferData & {
   feeSubAddress: string;
   originalRequestManagerAddress: string;
 };
+
+export function isSubsidizedTransferData(
+  data: TransferData | SubsidizedTransferData,
+): data is SubsidizedTransferData {
+  return !!(data as SubsidizedTransferData).feeSubAddress;
+}
+
+export function isSubsidizedTransfer(
+  transfer: Transfer | SubsidizedTransfer,
+): transfer is SubsidizedTransfer {
+  return !!(transfer as SubsidizedTransfer).feeSubAddress;
+}
