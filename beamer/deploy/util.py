@@ -9,6 +9,7 @@ from web3.contract import Contract, ContractConstructor
 from web3.contract.contract import ContractFunction
 
 from beamer.artifacts import ChainDeployment, DeployedContractInfo, Deployment
+from beamer.chains import get_chain_descriptor
 from beamer.contracts import ABIManager
 from beamer.deploy import config
 from beamer.typing import BlockNumber, ChainId
@@ -95,11 +96,10 @@ def deploy_beamer(
     args = _resolve_constructor_args(contract_args, chain.l2_messenger)
     l2_messenger = deploy_contract(w3, abi_manager, args)
 
-    # Polygon ZkEVM chain ids for networks
-    # mainnnet: 1101
-    # goerli: 1442
-    # local: 1001
-    if chain.chain_id in [1442, 1101, 1001]:
+    chain_descriptor = get_chain_descriptor(chain.chain_id)
+    assert chain_descriptor is not None
+
+    if chain_descriptor.ecosystem_name == "polygon_zkevm":
         _transact(l1_messenger.functions.setRemoteMessenger(l2_messenger.address))
         _transact(l2_messenger.functions.setRemoteMessenger(l1_messenger.address))
 

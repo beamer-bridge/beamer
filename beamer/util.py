@@ -29,6 +29,7 @@ from web3.types import GasPriceStrategy, TxParams, TxReceipt
 from web3.utils.caching import SimpleCache
 
 import beamer.middleware
+from beamer.chains import get_chain_descriptor
 from beamer.typing import URL, ChainId
 
 log = structlog.get_logger(__name__)
@@ -162,8 +163,9 @@ def make_web3(
     chain_id = ChainId(w3.eth.chain_id)
 
     # Apply type 2 transaction middleware for ETH2 PoS chains
-    # Currently Mainnet and Goerli
-    if chain_id in [1, 5]:
+    chain_descriptor = get_chain_descriptor(chain_id)
+    assert chain_descriptor is not None, "Chain not supported"
+    if chain_descriptor.type2 and not chain_descriptor.local:
         w3.middleware_onion.add(
             beamer.middleware.generate_middleware_with_cache(
                 middleware=beamer.middleware.max_fee_setter,
