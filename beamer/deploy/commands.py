@@ -214,6 +214,7 @@ def deploy(
         if deploy_mintable_token:
             l2_contracts += (deploy_contract(w3, abi_manager, ("MintableToken", int(1e18))),)
 
-        path = artifacts_dir / f"{chain.chain_id}-{chain.name}.deployment.json"
+        name = chain.name.lower().replace(" ", "-")
+        path = artifacts_dir / f"{chain.chain_id}-{name}.deployment.json"
         generate_artifacts(path, account.address, l1_contracts, l2_contracts)
         log.info("Generated artifact", path=str(path))
