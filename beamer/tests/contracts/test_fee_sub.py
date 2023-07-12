@@ -151,6 +151,40 @@ def test_withdrawn_from_request_manager(fee_sub, token, request_manager):
     assert fee_sub.senders(request_id) == ADDRESS_ZERO
 
 
+def test_amount_can_be_subsidized(fee_sub, token, request_manager):
+    transfer_amount = 95_000_000
+    token_address = token.address
+    target_chain_id = ape.chain.chain_id
+
+    # token subsidy is not activated for the token address
+    fee_sub.setMinimumAmount(token.address, 0)
+    can_be_subsidized = fee_sub.tokenAmountCanBeSubsidized(
+        target_chain_id, token_address, transfer_amount
+    )
+    assert can_be_subsidized is False
+
+    # transfer_amount is lower than the defined minimumAmount threshold
+    fee_sub.setMinimumAmount(token.address, 95_000_001)
+    can_be_subsidized = fee_sub.tokenAmountCanBeSubsidized(
+        target_chain_id, token_address, transfer_amount
+    )
+    assert can_be_subsidized is False
+
+    # fee amount is higher than the contracts token balance
+    fee_sub.setMinimumAmount(token.address, 95_000_000)
+    request_manager.updateFees(300_000, 15_000, 14_000)
+    can_be_subsidized = fee_sub.tokenAmountCanBeSubsidized(
+        target_chain_id, token_address, transfer_amount
+    )
+    assert can_be_subsidized is False
+
+    token.transfer(fee_sub.address, 100_000_000)
+    can_be_subsidized = fee_sub.tokenAmountCanBeSubsidized(
+        target_chain_id, token_address, transfer_amount
+    )
+    assert can_be_subsidized is True
+
+
 def test_enable_disable_token(fee_sub, deployer, request_manager):
     token2 = deployer.deploy(ape.project.MintableToken, request_manager.address)
     fee_sub.setMinimumAmount(token2.address, 5)
