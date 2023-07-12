@@ -7,7 +7,7 @@
 <script lang="ts" setup>
 import { computed, toRef } from 'vue';
 
-import { Transfer } from '@/actions/transfers';
+import { isSubsidizedTransfer, Transfer } from '@/actions/transfers';
 
 const props = defineProps({
   transfer: Transfer,
@@ -25,16 +25,32 @@ const isShareable = computed(() => {
 });
 
 const tweetText = computed(() => {
-  const sourceToken = transfer.value?.sourceAmount.token;
-  const sourceChain = transfer.value?.sourceChain;
-  const targetChain = transfer.value?.targetChain;
-  const transferTime = transfer.value?.transferTimeSeconds;
+  if (!transfer.value) {
+    return '';
+  }
+  const sourceToken = transfer.value.sourceAmount.token;
+  const sourceChain = transfer.value.sourceChain;
+  const targetChain = transfer.value.targetChain;
+  const transferTime = transfer.value.transferTimeSeconds;
 
-  return `I just used @beamerbridge to seamlessly and securely transfer #${sourceToken?.symbol} from ${sourceChain?.name} to ${targetChain?.name} in ${transferTime} seconds! 🔥
+  const defaultText = `I just used @beamerbridge to seamlessly and securely transfer #${sourceToken.symbol} from ${sourceChain.name} to ${targetChain.name} in ${transferTime} seconds! 🔥
 
 Unlock lightning-fast and secure bridging with Beamer today 💪💫  Now also live on Polygon zkEVM!
 https://app.beamerbridge.com/
 `;
+
+  const subsidizedTransferText = `Unbelievable! @beamerbridge just unlocked 🦓 - it won't last, so don't miss out! 👀
+
+Sent #${sourceToken.symbol} from ${sourceChain.name} to ${targetChain.name} securely in ${transferTime} seconds using 🦓. You can do it too! 🔥
+
+Get lightning-fast and secure bridging with Beamer now 💪💫
+https://app.beamerbridge.com/
+`;
+
+  if (isSubsidizedTransfer(transfer.value) && transfer.value.fees.uint256.isZero()) {
+    return subsidizedTransferText;
+  }
+  return defaultText;
 });
 
 const shareUrl = computed(

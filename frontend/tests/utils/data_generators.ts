@@ -11,7 +11,7 @@ import type {
   TransactionInformationData,
   TransferData,
 } from '@/actions/transfers';
-import { Transfer } from '@/actions/transfers';
+import { isSubsidizedTransferData, SubsidizedTransfer, Transfer } from '@/actions/transfers';
 import type { RequestFulfillmentData } from '@/actions/transfers/request-fulfillment';
 import type { BeamerConfig, ChainWithTokens } from '@/types/config';
 import type { Chain, EthereumAddress, Token, TransactionHash } from '@/types/data';
@@ -208,6 +208,9 @@ export function generateTransfer(options?: {
 
   const data = generateTransferData({ ...transferData, steps });
 
+  if (isSubsidizedTransferData(data)) {
+    return new SubsidizedTransfer(data);
+  }
   return new Transfer(data);
 }
 
