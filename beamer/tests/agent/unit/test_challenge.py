@@ -9,6 +9,7 @@ from web3.types import BlockData, Wei
 
 from beamer.agent.agent import Chain
 from beamer.agent.chain import process_claims
+from beamer.chains import search
 from beamer.tests.agent.unit.utils import (
     ADDRESS1,
     CLAIMER_STAKE,
@@ -21,7 +22,7 @@ from beamer.tests.agent.unit.utils import (
 )
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
-from beamer.typing import ChainId, FillId, Termination
+from beamer.typing import FillId, Termination
 
 
 @pytest.mark.parametrize("fill_id", [FILL_ID, FillId(b"cafebabe")])
@@ -99,7 +100,7 @@ def test_join_false_claim_challenge_only_when_unfilled(filler):
 def test_optimism_prove(mocked_relayer_call):
     timestamp = int(time.time())
     mocked_relayer_call.return_value = str(timestamp)
-    op_chain_id = ChainId(901)
+    op_chain_id = next(iter(search(bedrock=True, local=True))).id
     context, _ = make_context()
     context.latest_blocks[op_chain_id] = BlockData(
         {"number": BlockNumber(30), "timestamp": TIMESTAMP}

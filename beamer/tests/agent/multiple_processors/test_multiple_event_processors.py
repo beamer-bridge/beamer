@@ -19,6 +19,7 @@ from yaml.loader import SafeLoader
 from beamer.agent.agent import Agent
 from beamer.agent.config import ChainConfig, Config
 from beamer.agent.util import TokenChecker
+from beamer.chains import ChainDescriptor, register
 from beamer.tests.agent.utils import generate_abi_files
 from beamer.tests.util import Sleeper
 from beamer.typing import URL, ChainId
@@ -103,7 +104,11 @@ def _new_networks(chain_port_map: dict[ChainId, _ChainInfo]):
 
 def _get_chain_map() -> dict[ChainId, _ChainInfo]:
     number_of_chains = 4
-    return {ChainId(i): _ChainInfo(i, True) for i in range(8546, 8546 + number_of_chains)}
+    chains = {}
+    for i in range(8546, 8546 + number_of_chains):
+        chains[ChainId(i)] = _ChainInfo(i, True)
+        register(ChainId(i), ChainDescriptor(ChainId(i), "ethereum", "testnet"))
+    return chains
 
 
 def _get_config(
@@ -274,6 +279,7 @@ def test_l1_base_fees(
     tmp_path: Path, token: ape.project.MintableToken, local_account: TestAccount
 ):
     chain_map = {ChainId(1): _ChainInfo(9545, False), ChainId(2): _ChainInfo(9546, True)}
+    register(ChainId(2), ChainDescriptor(ChainId(2), "ethereum", "testnet"))
     artifacts_dir = tmp_path / "artifacts"
     with _new_networks(chain_map):
         slave_test_procs = []

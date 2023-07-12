@@ -16,6 +16,7 @@ from beamer.agent.models.request import Request
 from beamer.agent.state_machine import Context
 from beamer.agent.tracker import Tracker
 from beamer.agent.util import TokenChecker
+from beamer.chains import ChainDescriptor, register, search
 from beamer.events import ClaimMade
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
@@ -135,6 +136,13 @@ def make_claim_challenged(
 
 def make_context() -> Tuple[Context, Config]:
     checker = TokenChecker([])
+
+    target_descriptor = search(id=TARGET_CHAIN_ID)
+    source_descriptor = search(id=SOURCE_CHAIN_ID)
+    if not target_descriptor:
+        register(TARGET_CHAIN_ID, ChainDescriptor(TARGET_CHAIN_ID, "ethereum", "testnet"))
+    if not source_descriptor:
+        register(SOURCE_CHAIN_ID, ChainDescriptor(SOURCE_CHAIN_ID, "ethereum", "testnet"))
 
     chains = {}
     for chain_name in ("l2a", "l2b"):
