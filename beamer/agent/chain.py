@@ -17,10 +17,10 @@ from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.agent.relayer import run_relayer_for_tx
 from beamer.agent.state_machine import Context, process_event
+from beamer.chains import get_chain_descriptor
 from beamer.events import Event, EventFetcher
 from beamer.typing import BlockNumber, ChainId
 from beamer.util import TransactionFailed, get_ERC20_abi, transact
-
 
 # The time we're waiting for our thread in stop(), in seconds.
 # This is also the maximum time a call to stop() would block.
@@ -601,8 +601,10 @@ def maybe_prove(claim: Claim, context: Context) -> None:
     elif claim.invalidation_tx is not None:
         prove_tx = claim.invalidation_tx
 
-    # mainnet: 10, goerli: 420, local: 901
-    if context.target_chain.id not in (10, 420, 901):
+    chain_descriptor = get_chain_descriptor(context.target_chain.id)
+
+    assert chain_descriptor is not None, "Chain is not supported"
+    if not chain_descriptor.bedrock:
         claim.proved_tx = prove_tx
         return
 
