@@ -10,5 +10,6 @@
     "symbol": "ETH",
     "decimals": 18
   },
-  "internalRpcUrl": "https://eth-mainnet.g.alchemy.com/v2/D8tfo1OggmNMe2Ck_AAuwaR6MQSNnXvw"
+  "internalRpcUrl": "https://eth-mainnet.g.alchemy.com/v2/D8tfo1OggmNMe2Ck_AAuwaR6MQSNnXvw",
+  "feeSubAddress": "0x1c6C57412D447bA4a048b14Da42b097A50FC1003"
 }
