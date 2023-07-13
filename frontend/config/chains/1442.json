@@ -1,6 +1,6 @@
 {
   "identifier": 1442,
-  "explorerUrl": "https://explorer.public.zkevm-test.net",
+  "explorerUrl": "https://testnet-zkevm.polygonscan.com",
   "rpcUrl": "https://rpc.public.zkevm-test.net",
   "name": "Polygon zkEVM Testnet",
   "imageUrl": "/images/polygon_zkevm.svg",
