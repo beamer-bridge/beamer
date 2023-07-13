@@ -60,4 +60,5 @@ export class MockedFillManagerContract {
 }
 export class MockedFeeSubContract {
   tokenAmountCanBeSubsidized = vi.fn();
+  minimumAmounts = vi.fn();
 }

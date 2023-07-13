@@ -7,6 +7,7 @@ export class MockedBigNumber {
   toString = vi.fn().mockImplementation(() => this.value);
   isNegative = vi.fn();
   lt = vi.fn();
+  gt = vi.fn();
   isZero = vi.fn();
 }
 
