@@ -75,8 +75,7 @@ describe('ShareTweet.vue', () => {
     const ctaEl = wrapper.find('[data-test="cta"]');
     const defaultText = `I just used @beamerbridge to seamlessly and securely transfer #${transfer.sourceAmount.token.symbol} from ${transfer.sourceChain.name} to ${transfer.targetChain.name} in ${transfer.transferTimeSeconds} seconds! 🔥
 
-Unlock lightning-fast and secure bridging with Beamer today 💪💫 and don't miss out on Beamer's #layerupfest! #beam2L2
-
+Unlock lightning-fast and secure bridging with Beamer today 💪💫  Now also live on Polygon zkEVM!
 https://app.beamerbridge.com/`;
     expect(ctaEl.attributes('href')).toContain(encodeURIComponent(defaultText));
   });
