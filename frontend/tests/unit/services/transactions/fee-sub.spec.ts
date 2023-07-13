@@ -1,10 +1,21 @@
-import { amountCanBeSubsidized } from '@/services/transactions/fee-sub';
+import {
+  amountCanBeSubsidized,
+  contract_amountCanBeSubsidized,
+} from '@/services/transactions/fee-sub';
+import * as requestManagerService from '@/services/transactions/request-manager';
+import * as transactionUtils from '@/services/transactions/utils';
 import type { Chain, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
-import { generateChain, generateToken } from '~/utils/data_generators';
-import { mockGetFeeSubContract } from '~/utils/mocks/services/transactions/utils';
+import { UInt256 } from '@/types/uint-256';
+import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
+import { MockedBigNumber } from '~/utils/mocks/ethers';
+import {
+  mockGetERC20Contract,
+  mockGetFeeSubContract,
+} from '~/utils/mocks/services/transactions/utils';
 
 vi.mock('@/services/transactions/utils');
+vi.mock('@/services/transactions/request-manager');
 vi.mock('@ethersproject/providers');
 
 function createConfig(options?: {
@@ -30,13 +41,13 @@ describe('fee-sub', () => {
   beforeEach(() => {
     mockGetFeeSubContract();
   });
-  describe('amountCanBeSubsidized', () => {
+  describe('contract_amountCanBeSubsidized', () => {
     it('returns false when a feeSubAddress is not defined for the chain', async () => {
       const { sourceChain, targetChain, token, tokenAmount } = createConfig({
         sourceChain: generateChain({ feeSubAddress: undefined }),
       });
 
-      const canBeSubsidized = await amountCanBeSubsidized(
+      const canBeSubsidized = await contract_amountCanBeSubsidized(
         sourceChain,
         targetChain,
         token,
@@ -54,7 +65,7 @@ describe('fee-sub', () => {
       const contract = mockGetFeeSubContract();
       contract.tokenAmountCanBeSubsidized = vi.fn().mockResolvedValue(true);
 
-      const canBeSubsdized = await amountCanBeSubsidized(
+      const canBeSubsdized = await contract_amountCanBeSubsidized(
         sourceChain,
         targetChain,
         token,
@@ -68,6 +79,126 @@ describe('fee-sub', () => {
         tokenAmount.uint256.asBigNumber,
       );
       expect(canBeSubsdized).toEqual(true);
+    });
+  });
+
+  describe('amountCanBeSubsidized', () => {
+    it('returns false when a feeSubAddress is not defined for the chain', async () => {
+      const { sourceChain, targetChain, token, tokenAmount } = createConfig({
+        sourceChain: generateChain({ feeSubAddress: undefined }),
+      });
+
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        token,
+        tokenAmount,
+      );
+      expect(canBeSubsidized).toEqual(false);
+    });
+
+    it('returns false when the defined min threshold in the contract is set to 0', async () => {
+      const { sourceChain, targetChain, token, tokenAmount } = createConfig({
+        sourceChain: generateChain({ feeSubAddress: getRandomEthereumAddress() }),
+      });
+
+      const feeSubContract = mockGetFeeSubContract();
+      const mockedMinThreshold = new MockedBigNumber('0');
+      mockedMinThreshold.isZero = vi.fn().mockReturnValue(true);
+      feeSubContract.minimumAmounts = vi.fn().mockResolvedValue(mockedMinThreshold);
+
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        token,
+        tokenAmount,
+      );
+      expect(canBeSubsidized).toEqual(false);
+    });
+
+    it('returns false if the amount to be sent is lower than the threshold', async () => {
+      const { sourceChain, targetChain, token, tokenAmount } = createConfig({
+        sourceChain: generateChain({ feeSubAddress: getRandomEthereumAddress() }),
+        amount: '10',
+      });
+
+      const feeSubContract = mockGetFeeSubContract();
+      const mockedMinThreshold = new MockedBigNumber('100');
+      mockedMinThreshold.isZero = vi.fn().mockReturnValue(false);
+      mockedMinThreshold.gt = vi.fn().mockReturnValue(true);
+      feeSubContract.minimumAmounts = vi.fn().mockResolvedValue(mockedMinThreshold);
+
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        token,
+        tokenAmount,
+      );
+      expect(canBeSubsidized).toEqual(false);
+    });
+
+    it('returns false if the contract has not enough funds to subsidize the fees for the specified amount', async () => {
+      const { sourceChain, targetChain, token, tokenAmount } = createConfig({
+        sourceChain: generateChain({ feeSubAddress: getRandomEthereumAddress() }),
+        amount: '10',
+      });
+
+      const feeSubContract = mockGetFeeSubContract();
+      const mockTokenContract = mockGetERC20Contract();
+      const mockedMinThreshold = new MockedBigNumber('100');
+      const mockedContractTokenBalance = new MockedBigNumber('500');
+      const totalFees = new UInt256('1000');
+      feeSubContract.minimumAmounts = vi.fn().mockResolvedValue(mockedMinThreshold);
+      mockedMinThreshold.isZero = vi.fn().mockReturnValue(false);
+      mockedMinThreshold.gt = vi.fn().mockReturnValue(false);
+      mockedContractTokenBalance.lt = vi.fn().mockReturnValue(true);
+      mockTokenContract.balanceOf = vi.fn().mockResolvedValue(mockedContractTokenBalance);
+
+      vi.spyOn(transactionUtils, 'getReadOnlyContract')
+        .mockReturnValueOnce(feeSubContract)
+        .mockReturnValueOnce(mockTokenContract);
+
+      vi.spyOn(requestManagerService, 'getRequestFee').mockResolvedValue(totalFees);
+
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        token,
+        tokenAmount,
+      );
+      expect(canBeSubsidized).toEqual(false);
+    });
+
+    it('returns true if the contract can subsidize the transfer', async () => {
+      const { sourceChain, targetChain, token, tokenAmount } = createConfig({
+        sourceChain: generateChain({ feeSubAddress: getRandomEthereumAddress() }),
+        amount: '10',
+      });
+
+      const feeSubContract = mockGetFeeSubContract();
+      const mockTokenContract = mockGetERC20Contract();
+      const mockedMinThreshold = new MockedBigNumber('100');
+      const mockedContractTokenBalance = new MockedBigNumber('500');
+      const totalFees = new UInt256('1');
+      feeSubContract.minimumAmounts = vi.fn().mockResolvedValue(mockedMinThreshold);
+      mockedMinThreshold.isZero = vi.fn().mockReturnValue(false);
+      mockedMinThreshold.gt = vi.fn().mockReturnValue(false);
+      mockedContractTokenBalance.lt = vi.fn().mockReturnValue(false);
+      mockTokenContract.balanceOf = vi.fn().mockResolvedValue(mockedContractTokenBalance);
+
+      vi.spyOn(transactionUtils, 'getReadOnlyContract')
+        .mockReturnValueOnce(feeSubContract)
+        .mockReturnValueOnce(mockTokenContract);
+
+      vi.spyOn(requestManagerService, 'getRequestFee').mockResolvedValue(totalFees);
+
+      const canBeSubsidized = await amountCanBeSubsidized(
+        sourceChain,
+        targetChain,
+        token,
+        tokenAmount,
+      );
+      expect(canBeSubsidized).toEqual(true);
     });
   });
 });
