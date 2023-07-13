@@ -35,7 +35,8 @@ const tweetText = computed(() => {
 
   const defaultText = `I just used @beamerbridge to seamlessly and securely transfer #${sourceToken.symbol} from ${sourceChain.name} to ${targetChain.name} in ${transferTime} seconds! 🔥
 
-Unlock lightning-fast and secure bridging with Beamer today 💪💫  Now also live on Polygon zkEVM!
+Unlock lightning-fast and secure bridging with Beamer today 💪💫 and don't miss out on Beamer's #layerupfest! #beam2L2
+
 https://app.beamerbridge.com/
 `;
 
