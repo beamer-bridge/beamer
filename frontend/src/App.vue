@@ -3,9 +3,9 @@
     class="app-content flex min-h-screen w-full flex-col bg-gradient-to-b from-black to-teal font-sans text-white antialiased"
   >
     <div
-      class="flex h-16 w-full flex-col justify-center bg-fire text-center text-xl font-semibold text-rosa lg:text-2xl"
+      class="flex h-16 w-full flex-col justify-center bg-fire text-center text-2xl font-semibold text-rosa lg:text-3xl"
     >
-      ✦ Layer up! You can now bridge from Ethereum L1 to rollups ✦
+      ✦ &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; ✦
     </div>
     <div class="container mx-auto max-w-5xl">
       <a href="https://beamerbridge.com" target="_blank">
