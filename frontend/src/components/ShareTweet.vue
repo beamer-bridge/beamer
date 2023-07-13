@@ -35,18 +35,15 @@ const tweetText = computed(() => {
 
   const defaultText = `I just used @beamerbridge to seamlessly and securely transfer #${sourceToken.symbol} from ${sourceChain.name} to ${targetChain.name} in ${transferTime} seconds! 🔥
 
-Unlock lightning-fast and secure bridging with Beamer today 💪💫 and don't miss out on Beamer's #layerupfest! #beam2L2
-
-https://app.beamerbridge.com/
-`;
+Unlock lightning-fast and secure bridging with Beamer today 💪💫  Now also live on Polygon zkEVM!
+https://app.beamerbridge.com/`;
 
   const subsidizedTransferText = `Unbelievable! @beamerbridge just unlocked 🦓 - it won't last, so don't miss out! 👀
 
 Sent #${sourceToken.symbol} from ${sourceChain.name} to ${targetChain.name} securely in ${transferTime} seconds using 🦓. You can do it too! 🔥
 
 Get lightning-fast and secure bridging with Beamer now 💪💫
-https://app.beamerbridge.com/
-`;
+https://app.beamerbridge.com/`;
 
   if (isSubsidizedTransfer(transfer.value) && transfer.value.fees.uint256.isZero()) {
     return subsidizedTransferText;
