@@ -63,9 +63,11 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
 
         case LpAdded():
             if event.event_address == deployment.chain.contracts["RequestManager"].address:
-                config.request_manager.whitelist.append(event.lp)
+                if event.lp not in config.request_manager.whitelist:
+                    config.request_manager.whitelist.append(event.lp)
             elif event.event_address == deployment.chain.contracts["FillManager"].address:
-                config.fill_manager.whitelist.append(event.lp)
+                if event.lp not in config.fill_manager.whitelist:
+                    config.fill_manager.whitelist.append(event.lp)
             else:
                 raise ValueError(f"event from an unexpected address: {event}")
 
