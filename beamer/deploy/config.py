@@ -56,7 +56,6 @@ class Chain:
     target_weight_ppm: int = field(metadata=schema(min=0))
     request_manager_arguments: _RequestManagerArgs
     fees: _Fees
-    tokens: tuple[_Token, ...] = field(metadata=schema(min_items=1))
 
     @staticmethod
     def from_file(config_file: Path) -> "Chain":
