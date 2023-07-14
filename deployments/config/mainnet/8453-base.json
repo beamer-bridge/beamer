@@ -1,0 +1,23 @@
+{
+    "name": "Base",
+    "chain_id": 8453,
+    "l1_messenger": [
+        "OptimismL1Messenger",
+        "0x866E82a600A1414e583f7F13623F1aC5d58b0Afa"
+    ],
+    "l2_messenger": "OptimismL2Messenger",
+    "finality_period": 604800,
+    "transfer_cost": 1000000000000000,
+    "target_weight_ppm": 500000,
+    "request_manager_arguments": {
+        "claim_stake": 0.0015,
+        "claim_request_extension": 86400,
+        "claim_period": 86400,
+        "challenge_period_extension": 86400
+    },
+    "fees": {
+        "min_fee_ppm": 300000,
+        "lp_fee_ppm": 3000,
+        "protocol_fee_ppm": 0
+    }
+}
