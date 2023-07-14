@@ -68,11 +68,26 @@ _DESCRIPTORS = {
         id=ChainId(1001), ecosystem_name="polygon_zkevm", name="local", local=True
     ),
     # Base
+    ChainId(8453): ChainDescriptor(
+        id=ChainId(8453),
+        ecosystem_name="base",
+        name="mainnet",
+        bedrock=True,
+        type2=True,
+    ),
     ChainId(84531): ChainDescriptor(
         id=ChainId(84531),
         ecosystem_name="base",
         name="goerli",
         testnet=True,
+        bedrock=True,
+        type2=True,
+    ),
+    # Public Goods Network
+    ChainId(424): ChainDescriptor(
+        id=ChainId(424),
+        ecosystem_name="public_goods_network",
+        name="mainnet",
         bedrock=True,
         type2=True,
     ),
