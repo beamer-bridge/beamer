@@ -257,13 +257,16 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       return; // For now we must bail out here so the page can reload.
     }
 
-    await withdrawRequest(
-      provider,
-      this.sourceChain.requestManagerAddress,
-      this._requestInformation.identifier,
-    );
+    await this.callWithdrawRequest(provider, this._requestInformation.identifier);
 
     this._withdrawn = true;
+  }
+
+  protected async callWithdrawRequest(
+    provider: IEthereumProvider,
+    requestIdentifier: string,
+  ): Promise<void> {
+    await withdrawRequest(provider, this.sourceChain.requestManagerAddress, requestIdentifier);
   }
 
   public encode(): TransferData {
@@ -305,10 +308,9 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     }
 
     if (!this._allowanceInformation) {
-      const internalTransactionHash = await ensureTokenAllowance(
+      const internalTransactionHash = await this.callEnsureTokenAllowance(
         provider,
         this.sourceAmount.token.address,
-        this.sourceChain.requestManagerAddress,
         amount,
       );
 
@@ -324,16 +326,43 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       this._allowanceInformation.setTransactionHash(transactionHash);
     }
 
-    const successful = await isAllowanceApproved(
+    const successful = await this.callIsAllowanceApproved(
       provider,
       this.sourceAmount.token.address,
       this._requestInformation.requestAccount,
-      this.sourceChain.requestManagerAddress,
       amount,
     );
     if (!successful) {
       throw new Error('Not enough tokens approved!');
     }
+  }
+
+  protected async callEnsureTokenAllowance(
+    provider: IEthereumProvider,
+    tokenAddress: string,
+    amount: UInt256,
+  ): Promise<string | undefined> {
+    return await ensureTokenAllowance(
+      provider,
+      tokenAddress,
+      this.sourceChain.requestManagerAddress,
+      amount,
+    );
+  }
+
+  protected async callIsAllowanceApproved(
+    provider: IEthereumProvider,
+    tokenAddress: string,
+    ownerAddress: string,
+    amount: UInt256,
+  ): Promise<boolean> {
+    return await isAllowanceApproved(
+      provider,
+      tokenAddress,
+      ownerAddress,
+      this.sourceChain.requestManagerAddress,
+      amount,
+    );
   }
 
   protected async sendRequestTransaction(provider: IEthereumProvider): Promise<void> {
@@ -353,11 +382,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
       return this._requestInformation.setTransactionHash(transactionHash);
     }
 
-    const approvalNeeded = !(await isAllowanceApproved(
+    const approvalNeeded = !(await this.callIsAllowanceApproved(
       provider,
       this.sourceAmount.token.address,
       this._requestInformation.requestAccount,
-      this.sourceChain.requestManagerAddress,
       this.sourceAmount.uint256.add(this.fees.uint256),
     ));
     if (approvalNeeded) {
@@ -366,11 +394,10 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
 
     const blockNumberOnTargetChain = await getCurrentBlockNumber(this.targetChain.internalRpcUrl);
 
-    const internalTransactionHash = await sendRequestTransaction(
+    const internalTransactionHash = await this.callSendRequestTransaction(
       provider,
       this.sourceAmount.uint256,
       this.targetChain.identifier,
-      this.sourceChain.requestManagerAddress,
       this.sourceAmount.token.address,
       this.targetAmount.token.address,
       this.targetAccount,
@@ -386,6 +413,27 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     );
 
     this._requestInformation.setTransactionHash(transactionHash);
+  }
+
+  protected async callSendRequestTransaction(
+    provider: IEthereumProvider,
+    amount: UInt256,
+    targetChainIdentifier: number,
+    sourceTokenAddress: EthereumAddress,
+    targetTokenAddress: EthereumAddress,
+    targetAccount: EthereumAddress,
+    validityPeriod: UInt256,
+  ): Promise<string> {
+    return await sendRequestTransaction(
+      provider,
+      amount,
+      targetChainIdentifier,
+      this.sourceChain.requestManagerAddress,
+      sourceTokenAddress,
+      targetTokenAddress,
+      targetAccount,
+      validityPeriod,
+    );
   }
 
   protected async waitForRequestEvent(): Promise<void> {
