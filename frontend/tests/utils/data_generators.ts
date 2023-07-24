@@ -152,9 +152,7 @@ export function generateAllowanceInformationData(
   };
 }
 
-export function generateTransferData(
-  partialTransferData?: Partial<TransferData | SubsidizedTransferData>,
-): TransferData {
+export function generateTransferData(partialTransferData?: Partial<TransferData>): TransferData {
   return {
     sourceChain: generateChain(),
     sourceAmount: generateTokenAmountData(),
@@ -166,6 +164,17 @@ export function generateTransferData(
     date: Date.now(),
     claimCount: getRandomNumber(),
     requestInformation: generateRequestInformationData(),
+    ...partialTransferData,
+  };
+}
+
+export function generateSubsidizedTransferData(
+  partialTransferData?: Partial<SubsidizedTransferData>,
+): SubsidizedTransferData {
+  const feeSubAddress = partialTransferData?.feeSubAddress ?? getRandomEthereumAddress();
+  return {
+    ...generateTransferData({ sourceChain: generateChain({ feeSubAddress }) }),
+    feeSubAddress: feeSubAddress,
     ...partialTransferData,
   };
 }

@@ -1,6 +1,11 @@
 import { SubsidizedTransfer, Transfer } from '@/actions/transfers';
 import { transferHistorySerializer } from '@/stores/transfer-history/serializer';
-import { generateChain, generateStepData, generateTransferData } from '~/utils/data_generators';
+import {
+  generateChain,
+  generateStepData,
+  generateSubsidizedTransferData,
+  generateTransferData,
+} from '~/utils/data_generators';
 
 vi.mock('@/actions/transfers', async (importOriginal) => {
   const mod: object = await importOriginal();
@@ -66,7 +71,7 @@ describe('transfer history serializer', () => {
     });
 
     it('is able to detect and create instances of subsidized and non-subsidized transfers accordingly', () => {
-      const subsidizedTransferData = generateTransferData({
+      const subsidizedTransferData = generateSubsidizedTransferData({
         sourceChain: generateChain({ feeSubAddress: '0x123' }),
         feeSubAddress: '0x123',
       });

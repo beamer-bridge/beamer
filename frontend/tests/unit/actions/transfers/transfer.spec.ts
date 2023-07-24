@@ -85,7 +85,7 @@ function define(object: unknown, property: string, value: unknown): void {
   Object.defineProperty(object, property, { value });
 }
 
-describe('transfer', () => {
+describe('Transfer', () => {
   beforeEach(() => {
     global.Date.now = vi.fn();
 

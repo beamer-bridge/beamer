@@ -6,6 +6,7 @@ import {
   generateChain,
   generateRequestFulfillmentData,
   generateRequestInformationData,
+  generateSubsidizedTransferData,
   generateTokenAmountData,
   generateTransfer,
   generateTransferData,
@@ -83,7 +84,7 @@ https://app.beamerbridge.com/`;
   it('uses the zebra campaign text when the transfer was subsidized', () => {
     const feeSubAddress = getRandomEthereumAddress();
     const transfer = generateTransfer({
-      transferData: generateTransferData({
+      transferData: generateSubsidizedTransferData({
         requestInformation: generateRequestInformationData({ timestamp: 1 }),
         requestFulfillment: generateRequestFulfillmentData({ timestamp: 100 }),
         sourceChain: generateChain({ feeSubAddress }),
