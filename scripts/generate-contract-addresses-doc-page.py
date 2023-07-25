@@ -8,7 +8,15 @@ from eth_typing import ChecksumAddress
 from beamer.artifacts import DeployedContractInfo, Deployment
 from beamer.typing import ChainId
 
-_NAMES = {1: "Ethereum", 10: "Optimism", 288: "Boba", 42161: "Arbitrum", 1101: "Polygon ZkEVM"}
+_NAMES = {
+    1: "Ethereum",
+    10: "Optimism",
+    288: "Boba",
+    42161: "Arbitrum",
+    1101: "Polygon ZkEVM",
+    8453: "Base",
+    424: "Public Goods Network",
+}
 
 _EXPLORERS = {
     1: "https://etherscan.io/address/{address}",
@@ -16,6 +24,8 @@ _EXPLORERS = {
     288: "https://bobascan.com/address/{address}",
     42161: "https://arbiscan.io/address/{address}",
     1101: "https://zkevm.polygonscan.com/address/{address}",
+    8453: "https://basescan.org/address/{address}",
+    424: "https://explorer.publicgoods.network/{address}",
 }
 
 _CONTRACT_INFO: dict[ChainId, dict[tuple[str, ChainId], ChecksumAddress]] = {}
