@@ -1,0 +1,15 @@
+{
+  "identifier": 8453,
+  "explorerUrl": "https://basescan.org",
+  "rpcUrl": "https://developer-access-mainnet.base.org/",
+  "name": "Base",
+  "imageUrl": "/images/base.svg",
+  "tokenSymbols": ["USDC", "USDT", "DAI", "WETH"],
+  "nativeCurrency": {
+    "name": "Ether",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  "internalRpcUrl": "https://base-mainnet.blastapi.io/4ce13fbe-7b55-42ef-a1a1-6e9be8006083",
+  "hidden": true
+}
