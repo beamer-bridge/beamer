@@ -2,11 +2,7 @@
   <div
     class="app-content flex min-h-screen w-full flex-col bg-gradient-to-b from-black to-teal font-sans text-white antialiased"
   >
-    <div
-      class="flex h-16 w-full flex-col justify-center bg-fire text-center text-2xl font-semibold text-rosa lg:text-3xl"
-    >
-      ✦ &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; &#129427; ✦
-    </div>
+    <Banner></Banner>
     <div class="container mx-auto max-w-5xl">
       <a href="https://beamerbridge.com" target="_blank">
         <img class="mt-6 ml-6 w-[10rem] md:w-[15rem]" src="@/assets/images/logo.svg" alt="logo"
@@ -54,6 +50,7 @@ import { onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Footer from '@/components/Footer.vue';
+import Banner from '@/components/layout/Banner.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
