@@ -58,7 +58,7 @@ describe('ShareTweet.vue', () => {
     });
   });
 
-  it('uses the default text by default', () => {
+  it('renders some text with a link to beamer website when transfer is shareable', () => {
     const transfer = generateTransfer({
       transferData: generateTransferData({
         requestInformation: generateRequestInformationData({ timestamp: 1 }),
@@ -73,11 +73,9 @@ describe('ShareTweet.vue', () => {
     });
 
     const ctaEl = wrapper.find('[data-test="cta"]');
-    const defaultText = `I just used @beamerbridge to seamlessly and securely transfer #${transfer.sourceAmount.token.symbol} from ${transfer.sourceChain.name} to ${transfer.targetChain.name} in ${transfer.transferTimeSeconds} seconds! 🔥
-
-Unlock lightning-fast and secure bridging with Beamer today 💪💫  Now also live on Polygon zkEVM!
-https://app.beamerbridge.com/`;
-    expect(ctaEl.attributes('href')).toContain(encodeURIComponent(defaultText));
+    expect(ctaEl.attributes('href')).toContain(
+      encodeURIComponent('https://app.beamerbridge.com/'),
+    );
   });
 
   it('uses the zebra campaign text when the transfer was subsidized', () => {
@@ -99,12 +97,6 @@ https://app.beamerbridge.com/`;
     });
 
     const ctaEl = wrapper.find('[data-test="cta"]');
-    const subsidizedTransferText = `Unbelievable! @beamerbridge just unlocked 🦓 - it won't last, so don't miss out! 👀
-
-Sent #${transfer.sourceAmount.token.symbol} from ${transfer.sourceChain.name} to ${transfer.targetChain.name} securely in ${transfer.transferTimeSeconds} seconds using 🦓. You can do it too! 🔥
-
-Get lightning-fast and secure bridging with Beamer now 💪💫
-https://app.beamerbridge.com/`;
-    expect(ctaEl.attributes('href')).toContain(encodeURIComponent(subsidizedTransferText));
+    expect(ctaEl.attributes('href')).toContain(encodeURIComponent('and with 0 fees'));
   });
 });
