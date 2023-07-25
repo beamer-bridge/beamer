@@ -32,9 +32,10 @@ class _BlockCache:
     def add_block(self, key: tuple[str, bool], data: RPCResponse) -> None:
         with self._lock:
             self._block_cache[key] = data
-            if self._latest_block_number < data["result"].number:
+            block_number = int(data["result"].number, 16)
+            if self._latest_block_number < block_number:
                 self._latest_key = key
-                self._latest_block_number = data["result"].number
+                self._latest_block_number = block_number
 
     def get_block(self, key: tuple[str, bool]) -> RPCResponse:
         return self._block_cache.get(key)
@@ -77,7 +78,7 @@ def cache_get_block_by_number(
         if params[0] == "latest":
             response = make_request(method, params)
             if _result_ok(response):
-                key = hex(response["result"].number), params[1]
+                key = response["result"].number, params[1]
                 cache.add_block(key, response)
         elif params[0].startswith("0x"):
             response = cache.get_block(params)
