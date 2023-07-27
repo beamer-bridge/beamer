@@ -139,12 +139,18 @@ def config() -> None:
     required=True,
     help="Path to the deployment artifact.",
 )
+@click.option(
+    "--log-level",
+    type=click.Choice(("debug", "info", "warning", "error", "critical")),
+    default="debug",
+    help="The log level. Default: info",
+)
 @click.argument("state_path", type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
 def read(
-    rpc_file: Path, abi_dir: Path, artifact: Path, state_path: Path
+    rpc_file: Path, abi_dir: Path, artifact: Path, log_level: str, state_path: Path
 ) -> None:  # pylint: disable=unused-argument
     """Read latest contract configuration state from the chain and store it into STATE_PATH."""
-    beamer.util.setup_logging(log_level="DEBUG", log_json=False)
+    beamer.util.setup_logging(log_level=log_level.upper(), log_json=False)
 
     rpc_info = beamer.util.load_rpc_info(rpc_file)
     deployment = Deployment.from_file(artifact)
