@@ -1449,13 +1449,13 @@ test = ["eth-hash[pycryptodome]", "pytest (>=6.2.5,<7)", "pytest-xdist", "tox (=
 
 [[package]]
 name = "eth-tester"
-version = "0.9.0b1"
+version = "0.9.1b1"
 description = "Tools for testing Ethereum applications."
 optional = false
 python-versions = ">=3.6.8,<4"
 files = [
-    {file = "eth-tester-0.9.0b1.tar.gz", hash = "sha256:d7db78d21bb33bc645d6172dd5ad259eab52399f2b62d4e9fcab075baf8a6877"},
-    {file = "eth_tester-0.9.0b1-py3-none-any.whl", hash = "sha256:9cf8742896e26c53e03a79ca6c3a008bf64527f042659bcad306d87fbf2fa79a"},
+    {file = "eth-tester-0.9.1b1.tar.gz", hash = "sha256:b9cbc93d0b17a6e8acbb52294dad214ee223cf88209fa5be66ead353937d274c"},
+    {file = "eth_tester-0.9.1b1-py3-none-any.whl", hash = "sha256:0e4367d99ae242efdb8c1d18ed99d1ff3f03149abb0a4c2427bc6d333ebef13b"},
 ]
 
 [package.dependencies]
@@ -1467,17 +1467,17 @@ eth-hash = [
 ]
 eth-keys = ">=0.4.0,<0.5.0"
 eth-utils = ">=2.0.0,<3.0.0"
-py-evm = {version = "0.7.0a2", optional = true, markers = "extra == \"py-evm\""}
+py-evm = {version = "0.7.0a4", optional = true, markers = "extra == \"py-evm\""}
 rlp = ">=3.0.0,<4"
 semantic-version = ">=2.6.0,<3.0.0"
 
 [package.extras]
-dev = ["black (>=22,<23)", "bumpversion (>=0.5.3,<1.0.0)", "eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "flake8 (>=3.5.0,<4.0.0)", "py-evm (==0.7.0a2)", "pytest (>=6.2.5,<7)", "pytest-xdist (>=2.0.0,<3)", "towncrier (>=21,<22)", "tox (>=2.9.1,<3.0.0)", "wheel (>=0.30.0,<1.0.0)"]
+dev = ["black (>=22,<23)", "bumpversion (>=0.5.3,<1.0.0)", "eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "flake8 (>=3.5.0,<4.0.0)", "py-evm (==0.7.0a4)", "pytest (>=7.0.0)", "pytest-xdist (>=2.0.0,<3)", "towncrier (>=21,<22)", "tox (>=2.9.1,<3.0.0)", "wheel (>=0.30.0,<1.0.0)"]
 docs = ["towncrier (>=21,<22)"]
 lint = ["black (>=22,<23)", "flake8 (>=3.5.0,<4.0.0)"]
-py-evm = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "py-evm (==0.7.0a2)"]
-pyevm = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "py-evm (==0.7.0a2)"]
-test = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "pytest (>=6.2.5,<7)", "pytest-xdist (>=2.0.0,<3)"]
+py-evm = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "py-evm (==0.7.0a4)"]
+pyevm = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "eth-hash[pysha3] (>=0.1.4,<1.0.0)", "py-evm (==0.7.0a4)"]
+test = ["eth-hash[pycryptodome] (>=0.1.4,<1.0.0)", "pytest (>=7.0.0)", "pytest-xdist (>=2.0.0,<3)"]
 
 [[package]]
 name = "eth-typing"
@@ -1546,20 +1546,20 @@ test = ["PyGithub (>=1.54,<2.0)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsons
 
 [[package]]
 name = "evm-trace"
-version = "0.1.0a21"
+version = "0.1.0a22"
 description = "evm-trace: Ethereum Virtual Machine transaction tracing tool"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "evm-trace-0.1.0a21.tar.gz", hash = "sha256:836a7d9ce4614ec06aff7f714a0f95ddf565d0fd5650322e9d373f4f99a7245a"},
-    {file = "evm_trace-0.1.0a21-py3-none-any.whl", hash = "sha256:caaf938198d9bc724c4a9fe943515f2763b0240741f28d553867298f993898b4"},
+    {file = "evm-trace-0.1.0a22.tar.gz", hash = "sha256:5a1bc4ba6024b6311b757a130ee2a59741224bdc05186a8f768798cbcf40d6bc"},
+    {file = "evm_trace-0.1.0a22-py3-none-any.whl", hash = "sha256:f4db4ba993289c46d059511f1f4be1cae8452900704d8581b0b83f0bbd9624d1"},
 ]
 
 [package.dependencies]
 eth-utils = ">=2.1,<3"
 ethpm-types = ">=0.5.0,<0.6"
 msgspec = ">=0.8"
-py-evm = "0.7.0a2"
+py-evm = ">=0.7.0a3,<0.8"
 pydantic = ">=1.10.1,<2"
 
 [package.extras]
@@ -2548,12 +2548,13 @@ reports = ["lxml"]
 
 [[package]]
 name = "mypy-extensions"
-version = "0.4.4"
-description = "Experimental type system extensions for programs checked with the mypy typechecker."
+version = "1.0.0"
+description = "Type system extensions for programs checked with the mypy type checker."
 optional = false
-python-versions = ">=2.7"
+python-versions = ">=3.5"
 files = [
-    {file = "mypy_extensions-0.4.4.tar.gz", hash = "sha256:c8b707883a96efe9b4bb3aaf0dcc07e7e217d7d8368eec4db4049ee9e142f4fd"},
+    {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
+    {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
 ]
 
 [[package]]
@@ -2923,13 +2924,13 @@ test = ["pytest (==6.2.5)", "pytest-xdist (==1.26.0)"]
 
 [[package]]
 name = "py-evm"
-version = "0.7.0a2"
+version = "0.7.0a4"
 description = "Python implementation of the Ethereum Virtual Machine"
 optional = false
 python-versions = "*"
 files = [
-    {file = "py-evm-0.7.0a2.tar.gz", hash = "sha256:5d23d441a5afe8543e0a90966c61bcce8c6d9d1c9303a536f85d237a264b8e4d"},
-    {file = "py_evm-0.7.0a2-py3-none-any.whl", hash = "sha256:844f1858f9c92633a862de8b466313174fb4d5a67c6e62d3cad3be34587ebddc"},
+    {file = "py-evm-0.7.0a4.tar.gz", hash = "sha256:d40b6ac950485111dc7ad7bd29e3f61e00d5f81dc919e8c2b3afca30f228dc05"},
+    {file = "py_evm-0.7.0a4-py3-none-any.whl", hash = "sha256:1bf7b293faa70c03727358ae3e5cb0abf7282391461d9b52b82decd6ed18c2f7"},
 ]
 
 [package.dependencies]
@@ -2939,7 +2940,7 @@ eth-keys = ">=0.4.0,<0.5.0"
 eth-typing = ">=3.3.0,<4.0.0"
 eth-utils = ">=2.0.0,<3.0.0"
 lru-dict = ">=1.1.6"
-mypy-extensions = ">=0.4.1,<1.0.0"
+mypy-extensions = ">=1.0.0"
 py-ecc = ">=1.4.7,<7.0.0"
 pyethash = ">=0.1.27,<1.0.0"
 rlp = ">=3,<4"
@@ -2947,11 +2948,11 @@ trie = ">=2.0.0,<3"
 
 [package.extras]
 benchmark = ["termcolor (>=1.1.0,<2.0.0)", "web3 (>=4.1.0,<5.0.0)"]
-dev = ["Sphinx (>=1.5.5,<2)", "black (>=23)", "bumpversion (>=0.5.3,<1)", "cached-property (>=1.5.1,<2)", "eth-bloom (>=1.0.3)", "eth-keys (>=0.4.0,<0.5.0)", "eth-typing (>=3.3.0,<4.0.0)", "eth-utils (>=2.0.0,<3.0.0)", "factory-boy (==2.11.1)", "flake8 (==3.8.2)", "flake8-bugbear (==20.1.4)", "hypothesis (>=5,<6)", "idna (==2.7)", "importlib-metadata (<5.0)", "isort (>=5.10.1)", "jinja2 (>=3.0.0,<3.1.0)", "lru-dict (>=1.1.6)", "mypy (==0.910)", "mypy-extensions (>=0.4.1,<1.0.0)", "pexpect (>=4.6,<5)", "py-ecc (>=1.4.7,<7.0.0)", "py-evm (>=0.2.0-a.14)", "pydocstyle (>=6.0.0)", "pyethash (>=0.1.27,<1.0.0)", "pysha3 (>=1.0.0,<2.0.0)", "pytest (>=6.2.4,<7)", "pytest-asyncio (>=0.10.0,<0.11)", "pytest-cov (==2.5.1)", "pytest-timeout (>=1.4.2,<2)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist (==2.3.0)", "requests (>=2.20,<3)", "rlp (>=3,<4)", "setuptools (>=36.2.0)", "sphinx-rtd-theme (>=0.1.9)", "sphinxcontrib-asyncio (>=0.2.0,<0.4)", "towncrier (>=21,<22)", "tox (==2.7.0)", "trie (>=2.0.0,<3)", "twine", "types-setuptools", "wheel"]
-doc = ["Sphinx (>=1.5.5,<2)", "jinja2 (>=3.0.0,<3.1.0)", "py-evm (>=0.2.0-a.14)", "pysha3 (>=1.0.0,<2.0.0)", "sphinx-rtd-theme (>=0.1.9)", "sphinxcontrib-asyncio (>=0.2.0,<0.4)", "towncrier (>=21,<22)"]
-eth = ["cached-property (>=1.5.1,<2)", "eth-bloom (>=1.0.3)", "eth-keys (>=0.4.0,<0.5.0)", "eth-typing (>=3.3.0,<4.0.0)", "eth-utils (>=2.0.0,<3.0.0)", "lru-dict (>=1.1.6)", "mypy-extensions (>=0.4.1,<1.0.0)", "py-ecc (>=1.4.7,<7.0.0)", "pyethash (>=0.1.27,<1.0.0)", "rlp (>=3,<4)", "trie (>=2.0.0,<3)"]
+dev = ["Sphinx (>=1.5.5,<2)", "black (>=23)", "bumpversion (>=0.5.3,<1)", "cached-property (>=1.5.1,<2)", "eth-bloom (>=1.0.3)", "eth-keys (>=0.4.0,<0.5.0)", "eth-typing (>=3.3.0,<4.0.0)", "eth-utils (>=2.0.0,<3.0.0)", "factory-boy (==2.11.1)", "flake8 (==6.0.0)", "flake8-bugbear (==23.3.23)", "hypothesis (>=5,<6)", "idna (==2.7)", "importlib-metadata (<5.0)", "isort (>=5.10.1)", "jinja2 (>=3.0.0,<3.1.0)", "lru-dict (>=1.1.6)", "mypy (==1.4.0)", "mypy-extensions (>=1.0.0)", "pexpect (>=4.6,<5)", "py-ecc (>=1.4.7,<7.0.0)", "py-evm (>=0.2.0-a.14)", "pydocstyle (>=6.0.0)", "pyethash (>=0.1.27,<1.0.0)", "pysha3 (>=1.0.0,<2.0.0)", "pytest (>=6.2.4,<7)", "pytest-asyncio (>=0.10.0,<0.11)", "pytest-cov (==2.5.1)", "pytest-timeout (>=1.4.2,<2)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist (==2.3.0)", "requests (>=2.20,<3)", "rlp (>=3,<4)", "setuptools (>=36.2.0)", "sphinx-rtd-theme (>=0.1.9)", "sphinxcontrib-asyncio (>=0.2.0,<0.4)", "towncrier (>=21,<22)", "tox (>=4.0.0)", "trie (>=2.0.0,<3)", "twine", "types-setuptools", "wheel"]
+docs = ["Sphinx (>=1.5.5,<2)", "jinja2 (>=3.0.0,<3.1.0)", "py-evm (>=0.2.0-a.14)", "pysha3 (>=1.0.0,<2.0.0)", "sphinx-rtd-theme (>=0.1.9)", "sphinxcontrib-asyncio (>=0.2.0,<0.4)", "towncrier (>=21,<22)"]
+eth = ["cached-property (>=1.5.1,<2)", "eth-bloom (>=1.0.3)", "eth-keys (>=0.4.0,<0.5.0)", "eth-typing (>=3.3.0,<4.0.0)", "eth-utils (>=2.0.0,<3.0.0)", "lru-dict (>=1.1.6)", "mypy-extensions (>=1.0.0)", "py-ecc (>=1.4.7,<7.0.0)", "pyethash (>=0.1.27,<1.0.0)", "rlp (>=3,<4)", "trie (>=2.0.0,<3)"]
 eth-extra = ["blake2b-py (>=0.1.4,<0.2)", "coincurve (>=13.0.0,<14.0.0)", "eth-hash[pycryptodome]", "eth-hash[pysha3]", "plyvel (>=1.2.0,<2)"]
-lint = ["black (>=23)", "flake8 (==3.8.2)", "flake8-bugbear (==20.1.4)", "importlib-metadata (<5.0)", "isort (>=5.10.1)", "mypy (==0.910)", "pydocstyle (>=6.0.0)", "types-setuptools"]
+lint = ["black (>=23)", "flake8 (==6.0.0)", "flake8-bugbear (==23.3.23)", "importlib-metadata (<5.0)", "isort (>=5.10.1)", "mypy (==1.4.0)", "pydocstyle (>=6.0.0)", "types-setuptools"]
 test = ["factory-boy (==2.11.1)", "hypothesis (>=5,<6)", "importlib-metadata (<5.0)", "pexpect (>=4.6,<5)", "pytest (>=6.2.4,<7)", "pytest-asyncio (>=0.10.0,<0.11)", "pytest-cov (==2.5.1)", "pytest-timeout (>=1.4.2,<2)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist (==2.3.0)"]
 
 [[package]]
@@ -3380,6 +3381,16 @@ python-versions = "*"
 files = [
     {file = "pytz-2023.3-py2.py3-none-any.whl", hash = "sha256:a151b3abb88eda1d4e34a9814df37de2a80e301e68ba0fd856fb9b46bfbbbffb"},
     {file = "pytz-2023.3.tar.gz", hash = "sha256:1d8ce29db189191fb55338ee6d0387d82ab59f3d00eac103412d64e0ebd0c588"},
+]
+
+[[package]]
+name = "pyunormalize"
+version = "15.0.0"
+description = "Unicode normalization forms (NFC, NFKC, NFD, NFKD). A library independent from the Python core Unicode database."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pyunormalize-15.0.0.tar.gz", hash = "sha256:e63fdba0d85ea04579dde2fc29a072dba773dcae600b04faf6cc90714c8b1302"},
 ]
 
 [[package]]
@@ -4406,13 +4417,13 @@ files = [
 
 [[package]]
 name = "web3"
-version = "6.5.0"
+version = "6.7.0"
 description = "web3.py"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "web3-6.5.0-py3-none-any.whl", hash = "sha256:a6e9f6e4e13d75a5a3726d10b1be91cde5951446e8a6f0efdaee1695b5011472"},
-    {file = "web3-6.5.0.tar.gz", hash = "sha256:ebbce3caa0b50015d15a07f17d2a280abbb94a52c6994babb90f3a5482c97712"},
+    {file = "web3-6.7.0-py3-none-any.whl", hash = "sha256:efceb098dc7fd9cf01a20b3c7197fc4808292d5752956b26a15a0e34392c7556"},
+    {file = "web3-6.7.0.tar.gz", hash = "sha256:dc05e4130ed2e1e67a18a6f012cd3095440f37c0b8334038071d5510176debb5"},
 ]
 
 [package.dependencies]
@@ -4420,7 +4431,7 @@ aiohttp = ">=3.7.4.post0"
 eth-abi = ">=4.0.0"
 eth-account = ">=0.8.0"
 eth-hash = {version = ">=0.5.1", extras = ["pycryptodome"]}
-eth-tester = {version = "v0.9.0-b.1", extras = ["py-evm"], optional = true, markers = "extra == \"tester\""}
+eth-tester = {version = "v0.9.1-b.1", extras = ["py-evm"], optional = true, markers = "extra == \"tester\""}
 eth-typing = ">=3.0.0"
 eth-utils = ">=2.1.0"
 hexbytes = ">=0.1.0"
@@ -4428,16 +4439,18 @@ jsonschema = ">=4.0.0"
 lru-dict = ">=1.1.6"
 protobuf = ">=4.21.6"
 py-geth = {version = ">=3.11.0", optional = true, markers = "extra == \"tester\""}
+pyunormalize = ">=15.0.0"
 pywin32 = {version = ">=223", markers = "platform_system == \"Windows\""}
 requests = ">=2.16.0"
+typing-extensions = ">=4.0.1"
 websockets = ">=10.0.0"
 
 [package.extras]
-dev = ["black (>=22.1.0)", "build (>=0.9.0)", "bumpversion", "eth-tester[py-evm] (==v0.9.0-b.1)", "flake8 (==3.8.3)", "flaky (>=3.7.0)", "hypothesis (>=3.31.2)", "importlib-metadata (<5.0)", "ipfshttpclient (==0.8.0a2)", "isort (>=5.11.0)", "mypy (==0.910)", "py-geth (>=3.11.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.18.1)", "pytest-mock (>=1.10)", "pytest-watch (>=4.2)", "pytest-xdist (>=1.29)", "setuptools (>=38.6.0)", "sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)", "tox (>=3.18.0)", "tqdm (>4.32)", "twine (>=1.13)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)", "when-changed (>=0.3.0)"]
+dev = ["black (>=22.1.0)", "build (>=0.9.0)", "bumpversion", "eth-tester[py-evm] (==v0.9.1-b.1)", "flake8 (==3.8.3)", "flaky (>=3.7.0)", "hypothesis (>=3.31.2)", "importlib-metadata (<5.0)", "ipfshttpclient (==0.8.0a2)", "isort (>=5.11.0)", "mypy (>=1.0.0)", "py-geth (>=3.11.0)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.18.1)", "pytest-mock (>=1.10)", "pytest-watch (>=4.2)", "pytest-xdist (>=1.29)", "setuptools (>=38.6.0)", "sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)", "tox (>=3.18.0)", "tqdm (>4.32)", "twine (>=1.13)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)", "when-changed (>=0.3.0)"]
 docs = ["sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)"]
 ipfs = ["ipfshttpclient (==0.8.0a2)"]
-linter = ["black (>=22.1.0)", "flake8 (==3.8.3)", "isort (>=5.11.0)", "mypy (==0.910)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)"]
-tester = ["eth-tester[py-evm] (==v0.9.0-b.1)", "py-geth (>=3.11.0)"]
+linter = ["black (>=22.1.0)", "flake8 (==3.8.3)", "isort (>=5.11.0)", "mypy (>=1.0.0)", "types-protobuf (==3.19.13)", "types-requests (>=2.26.1)", "types-setuptools (>=57.4.4)"]
+tester = ["eth-tester[py-evm] (==v0.9.1-b.1)", "py-geth (>=3.11.0)"]
 
 [[package]]
 name = "websockets"
@@ -4728,4 +4741,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "f908a4ee0dfce25ae1202883b3e8a580e40c6f04b498ed2fa8fefb7a11cca440"
+content-hash = "865ced05e2359751e1f97b46ead019f8db134da937b52cf9c7c022ef6c5cf8c4"
