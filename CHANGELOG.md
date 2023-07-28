@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.5.0 (2023-07-28)
+
+* beamer: config: don't add duplicate entries to whitelists
+* beamer: fix handling of quantities in JSON-RPC responses
+* frontend: implement subsidized transfers
+* frontend: change twitter share text
+* frontend: enable polygon zkevm
+* frontend: minor bug fixes
+* frontend: add support for Base (still not enabled)
+* relayer: add support for Base
 
 ## v2.4.0 (2023-07-10)
 * ci: Build the image for publish
