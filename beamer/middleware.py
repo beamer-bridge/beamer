@@ -329,7 +329,7 @@ def max_fee_setter(
             return make_request(method, params)
         priority_fee_response = make_request(RPCEndpoint("eth_maxPriorityFeePerGas"), [])
         if _result_ok(priority_fee_response):
-            priority_fee = priority_fee_response["result"]
+            priority_fee = int(priority_fee_response["result"], 16)
         else:
             return priority_fee_response
 
@@ -342,7 +342,7 @@ def max_fee_setter(
                 latest_block = latest_block_response
             else:
                 return latest_block_response
-        base_fee = latest_block["result"].baseFeePerGas
+        base_fee = int(latest_block["result"].baseFeePerGas, 16)
         max_fee = 2 * base_fee + priority_fee
         params[0]["maxPriorityFeePerGas"] = priority_fee
         params[0]["maxFeePerGas"] = max_fee
