@@ -71,7 +71,7 @@ class _HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         self.server: HTTPProxy  # make mypy happy
 
-        content_len = int(self.headers.get("Content-Length"))
+        content_len = int(self.headers.get("Content-Length") or 0)
         post_body = self.rfile.read(content_len)
         url = self.server.target_address
         self.server.do_post(self, url, post_body)
