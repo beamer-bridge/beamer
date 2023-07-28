@@ -73,7 +73,7 @@ def _generate_section(section_name: str, explorer: str, contracts: dict) -> None
         yield "Contract", "Address"
         for name, address in contracts.items():
             url = explorer.format(address=address)
-            yield name[0], f"`{address} <{url}>`_"
+            yield name[0], f"`{address} <{url}>`__"
 
     section_marker = "-" * len(section_name)
     print(f"\n{section_name}")
