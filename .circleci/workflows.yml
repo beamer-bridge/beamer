@@ -89,6 +89,9 @@ parameters:
   deployment-package-json-updated:
     type: boolean
     default: false
+  publish-container-image:
+    type: boolean
+    default: false
   trigger-frontend-deployment:
     type: enum
     enum: [none, mainnet, testnet, shadow]
@@ -573,6 +576,7 @@ workflows:
         - or: 
           - equal: [ true, <<pipeline.parameters.backend-updated>> ]
           - equal: [ true, <<pipeline.parameters.relayer-updated>> ]
+          - equal: [ true, <<pipeline.parameters.publish-container-image>> ]
         - equal: [ main, <<pipeline.git.branch>> ]
 
     jobs:
