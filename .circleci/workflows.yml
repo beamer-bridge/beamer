@@ -66,7 +66,7 @@ commands:
 parameters:
   action:
     type: enum
-    enum: [default, frontend-mainnet-deployment, frontend-testnet-deployment, frontend-shadow-deployment]
+    enum: [default, frontend-mainnet-deployment, frontend-testnet-deployment, frontend-shadow-deployment, publish-container-image]
     default: default
   docs-updated:
     type: boolean
@@ -87,6 +87,9 @@ parameters:
     type: boolean
     default: false
   deployment-package-json-updated:
+    type: boolean
+    default: false
+  publish-container-image:
     type: boolean
     default: false
   trigger-frontend-deployment:
@@ -573,6 +576,7 @@ workflows:
         - or: 
           - equal: [ true, <<pipeline.parameters.backend-updated>> ]
           - equal: [ true, <<pipeline.parameters.relayer-updated>> ]
+          - equal: [ true, <<pipeline.parameters.publish-container-image>> ]
         - equal: [ main, <<pipeline.git.branch>> ]
 
     jobs:
