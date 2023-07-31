@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.1 (2023-07-31)
+
+* deployments: add PGN and Base artifacts
+* agent: support PGN and Base chains
+
 ## v2.5.0 (2023-07-28)
 
 * beamer: config: don't add duplicate entries to whitelists
