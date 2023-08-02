@@ -256,24 +256,24 @@ test = ["ape-alchemy", "ape-ens", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "p
 
 [[package]]
 name = "ape-infura"
-version = "0.6.2"
+version = "0.6.3"
 description = "ape-infura: Infura Provider plugins for Ethereum-based networks"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-infura-0.6.2.tar.gz", hash = "sha256:4e601b2661a9fc52a75b87af904da5bcd43fbb516a963410312c9b32f88b0acb"},
-    {file = "ape_infura-0.6.2-py3-none-any.whl", hash = "sha256:191b2abda978ce687454b017f5dcfd3bc87573c9b0dac589c07ddad280186aeb"},
+    {file = "ape-infura-0.6.3.tar.gz", hash = "sha256:7737278379e019907c9783d69f5c6918fef63e1d8830a0937789e83c37a63eb6"},
+    {file = "ape_infura-0.6.3-py3-none-any.whl", hash = "sha256:b9a80c7187ea9daafb761041a86f10ec8e066d2d0170f47b2c3ad3c2af419d16"},
 ]
 
 [package.dependencies]
 eth-ape = ">=0.6.5,<0.7"
 
 [package.extras]
-dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-optimism", "ape-polygon", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-setuptools", "wheel"]
+dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=3.4.3,<4)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
 lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine", "wheel"]
-test = ["ape-arbitrum", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
+test = ["ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
 
 [[package]]
 name = "ape-optimism"
@@ -4726,4 +4726,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "bfd2c1fe47b6c25b240df789f3d2834d985e2a2bd0ae05658c98c8801b4a7051"
+content-hash = "29840f109672d069e773836b47e7421c460283297af1795657519f749b50455a"
