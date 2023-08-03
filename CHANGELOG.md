@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.2 (2023-08-03)
+
+* frontend: switch to a differernt RPC for Polygon zkEVM
+* frontend: increase request validity period to 24h
+* agent: emit a log entry when an OP proof is successful
+* agent: take the fill mutex before doing anything else when filling
+
 ## v2.5.1 (2023-07-31)
 
 * deployments: add PGN and Base artifacts
