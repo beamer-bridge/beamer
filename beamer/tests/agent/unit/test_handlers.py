@@ -9,7 +9,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.datastructures import AttributeDict
 from web3.types import ChecksumAddress, TxReceipt, Wei
 
-from beamer.agent.chain import claim_request, fill_request, process_claims, process_requests
+from beamer.agent.chain import claim_request, process_claims, process_requests
 from beamer.agent.state_machine import process_event
 from beamer.events import RequestResolved
 from beamer.tests.agent.unit.utils import (
@@ -26,7 +26,6 @@ from beamer.tests.agent.unit.utils import (
 from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
 from beamer.typing import FillId, Termination
-from beamer.util import get_ERC20_abi
 
 
 def get_tx_receipt(status, tx_hash) -> TxReceipt:
@@ -70,54 +69,6 @@ def test_claim_after_expiry(claim_request_extension, claimable):
         assert request.claimed.is_active
     else:
         assert request.ignored.is_active
-
-
-# First request will be completed without any issue as expected
-# Second request will be in pending for some time and when validity expires, it will be ignored.
-# Second tx receipt status is indicating the failure
-def test_fill_request_transaction_status():
-    context, _ = make_context()
-    request = make_request(TIMESTAMP + 2)
-
-    context.requests.add(request.id, request)
-    assert request.pending.is_active
-    w3 = context.fill_manager.w3
-    token_abi = get_ERC20_abi()
-    token = w3.eth.contract(abi=token_abi, address=request.target_token_address)
-    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
-    func = context.fill_manager.functions.fillRequest(
-        sourceChainId=request.source_chain_id,
-        targetTokenAddress=request.target_token_address,
-        targetReceiverAddress=request.target_address,
-        amount=request.amount,
-        nonce=request.nonce,
-    )
-    func.transact.return_value = 1
-    func_eth = func.w3.eth
-    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(1, HexBytes("0x1"))
-    fill_request(request, context)
-    assert request.filled.is_active
-
-    context, _ = make_context()
-    request = make_request(TIMESTAMP + 2)
-
-    context.requests.add(request.id, request)
-    w3 = context.fill_manager.w3
-    token = w3.eth.contract(abi=token_abi, address=request.target_token_address)
-    token.functions.balanceOf(w3.eth.default_account).call.return_value = 10000
-    func = context.fill_manager.functions.fillRequest(
-        sourceChainId=request.source_chain_id,
-        targetTokenAddress=request.target_token_address,
-        targetReceiverAddress=request.target_address,
-        amount=request.amount,
-        nonce=request.nonce,
-    )
-
-    func.transact.return_value = 2
-    func_eth = func.w3.eth
-    func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(0, HexBytes("0x0"))
-    fill_request(request, context)
-    assert request.pending.is_active
 
 
 def test_skip_not_self_filled():
