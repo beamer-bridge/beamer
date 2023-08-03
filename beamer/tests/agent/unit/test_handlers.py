@@ -80,7 +80,7 @@ def test_fill_request_transaction_status():
     request = make_request(TIMESTAMP + 2)
 
     context.requests.add(request.id, request)
-    assert request.pending
+    assert request.pending.is_active
     w3 = context.fill_manager.w3
     token_abi = get_ERC20_abi()
     token = w3.eth.contract(abi=token_abi, address=request.target_token_address)
@@ -96,7 +96,7 @@ def test_fill_request_transaction_status():
     func_eth = func.w3.eth
     func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(1, HexBytes("0x1"))
     fill_request(request, context)
-    assert request.filled
+    assert request.filled.is_active
 
     context, _ = make_context()
     request = make_request(TIMESTAMP + 2)
@@ -117,7 +117,7 @@ def test_fill_request_transaction_status():
     func_eth = func.w3.eth
     func_eth.wait_for_transaction_receipt.return_value = get_tx_receipt(0, HexBytes("0x0"))
     fill_request(request, context)
-    assert request.pending
+    assert request.pending.is_active
 
 
 def test_skip_not_self_filled():
