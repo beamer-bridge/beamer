@@ -337,6 +337,21 @@ def process_claims(context: Context) -> None:
 
 
 def fill_request(request: Request, context: Context) -> None:
+    chain_id = ChainId(context.fill_manager.w3.eth.chain_id)
+    token_address = request.target_token_address
+    mutex = context.fill_mutexes[(chain_id, token_address)]
+    t = time.time()
+    with mutex:
+        wait_time = time.time() - t
+        if wait_time > 0.01:
+            context.logger.debug(
+                "Fill mutex wait time too long", wait_time=wait_time, request=request
+            )
+
+        _fill_request_exclusive(request, context)
+
+
+def _fill_request_exclusive(request: Request, context: Context) -> None:
     block = context.latest_blocks[request.target_chain_id]
     unsafe_time = request.valid_until - context.config.unsafe_fill_time
     if time.time() >= unsafe_time:
@@ -386,41 +401,38 @@ def fill_request(request: Request, context: Context) -> None:
             request_amount=request.amount,
         )
         return
-    chain_id = ChainId(target_web3.eth.chain_id)
-    token_address = token.address
-    mutex = context.fill_mutexes[(chain_id, token_address)]
-    with mutex:
-        if (
-            token.functions.allowance(context.address, context.fill_manager.address).call()
-            < request.amount
-        ):
-            func = token.functions.approve(context.fill_manager.address, allowance)
-            try:
-                transact(func)
-            except TransactionFailed as exc:
-                context.logger.error("approve failed", request_id=request.id, exc=exc)
-                return
 
-        func = context.fill_manager.functions.fillRequest(
-            sourceChainId=request.source_chain_id,
-            targetTokenAddress=request.target_token_address,
-            targetReceiverAddress=request.target_address,
-            amount=request.amount,
-            nonce=request.nonce,
-        )
+    if (
+        token.functions.allowance(context.address, context.fill_manager.address).call()
+        < request.amount
+    ):
+        func = token.functions.approve(context.fill_manager.address, allowance)
         try:
-            receipt = transact(func)
+            transact(func)
         except TransactionFailed as exc:
-            context.logger.error("fillRequest failed", request_id=request.id, exc=exc)
+            context.logger.error("approve failed", request_id=request.id, exc=exc)
             return
 
-        request.try_to_fill()
-        context.logger.info(
-            "Filled request",
-            request=request,
-            txn_hash=receipt.transactionHash.hex(),  # type: ignore
-            token=token.functions.symbol().call(),
-        )
+    func = context.fill_manager.functions.fillRequest(
+        sourceChainId=request.source_chain_id,
+        targetTokenAddress=request.target_token_address,
+        targetReceiverAddress=request.target_address,
+        amount=request.amount,
+        nonce=request.nonce,
+    )
+    try:
+        receipt = transact(func)
+    except TransactionFailed as exc:
+        context.logger.error("fillRequest failed", request_id=request.id, exc=exc)
+        return
+
+    request.try_to_fill()
+    context.logger.info(
+        "Filled request",
+        request=request,
+        txn_hash=receipt.transactionHash.hex(),  # type: ignore
+        token=token.functions.symbol().call(),
+    )
 
 
 def claim_request(request: Request, context: Context) -> None:
