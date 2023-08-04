@@ -39,6 +39,7 @@ workflows:
             deployments/artifacts/.* deployment-artifacts-updated true
             deployments/artifacts/.* docs-updated true
             deployments-npm-package/package.json deployment-package-json-updated true
+            deployments-npm-package/scripts/create-package.sh deployment-artifacts-updated true
             frontend/.* frontend-updated true
             subgraph/.* subgraph-updated true
             .circleci/.* frontend-updated true             
