@@ -238,6 +238,18 @@ jobs:
       - run: bash $OPTIMISM_FOLDER/optimism.sh e2e-test-fallback
       - run: bash $OPTIMISM_FOLDER/optimism.sh down
 
+  e2e-test-base:
+    executor: vm
+    environment:
+      BASE_FOLDER: "docker/base"
+    steps:
+      - initialize-environment
+      - run: bash $BASE_FOLDER/base.sh up
+      - run: bash $BASE_FOLDER/base.sh deploy-beamer
+      - run: bash $BASE_FOLDER/base.sh e2e-test
+      - run: bash $BASE_FOLDER/base.sh e2e-test-fallback
+      - run: bash $BASE_FOLDER/base.sh down
+
   e2e-test-arbitrum:
     executor: vm
     environment:
@@ -558,6 +570,10 @@ workflows:
             - compile-contracts
             - create-relayers
       - e2e-test-optimism:
+          requires:
+            - compile-contracts
+            - create-relayers
+      - e2e-test-base:
           requires:
             - compile-contracts
             - create-relayers
