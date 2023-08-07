@@ -75,15 +75,25 @@ def verify_portal_call(
     type=Path,
     required=True,
 )
+@click.argument(
+    "artifact-name",
+    type=str,
+    required=True,
+)
 @click.argument("l2-rpc", type=str)
 @pass_args
 def set_chain_on_resolver(
-    account: LocalAccount, web3_l1: Web3, abi_dir: Path, artifacts_dir: Path, l2_rpc: URL
+    account: LocalAccount,
+    web3_l1: Web3,
+    abi_dir: Path,
+    artifacts_dir: Path,
+    artifact_name: str,
+    l2_rpc: URL,
 ) -> None:
     web3 = make_web3(l2_rpc, account)
     source_chain_id = ChainId(int(os.environ["SOURCE_CHAIN_ID"]))
 
-    op_deployment_path = artifacts_dir / "901-optimism.deployment.json"
+    op_deployment_path = artifacts_dir / artifact_name
     base_deployment_path = artifacts_dir / "base.deployment.json"
 
     base_deployment = beamer.artifacts.Deployment.from_file(base_deployment_path)
