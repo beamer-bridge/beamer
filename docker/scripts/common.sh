@@ -107,6 +107,22 @@ e2e_test_relayer() {
                         do sleep 1s; done"
 }
 
+e2e_test_op_proof(){
+    local l1_rpc=$1
+    local l2_rpc=$2
+    local privkey=$3
+    local txhash=$4
+    local relayer=$(get_relayer_binary)
+
+    echo Starting OP relayer message prover...
+    timeout 5m bash -c "until ${relayer} prove-op-message \
+                                         --l1-rpc-url $l1_rpc \
+                                         --l2-rpc-url $l2_rpc \
+                                         --wallet-private-key $privkey \
+                                         --l2-transaction-hash $txhash; \
+    do sleep 1s; done"
+}
+
 e2e_test_verify() {
     local artifacts_dir=$1
     local l2_rpc=$2
