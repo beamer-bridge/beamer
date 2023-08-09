@@ -70,3 +70,13 @@ def setup_relayer_executable():
     relayer.chmod(relayer.stat().st_mode | stat.S_IEXEC)
     yield
     relayer.unlink()
+
+
+@pytest.fixture
+def setup_relayer_executable_with_error():
+    relayer = get_relayer_executable()
+    relayer.parent.mkdir(parents=True, exist_ok=True)
+    relayer.write_text("#!/bin/sh\nsleep 5\nexit 1")
+    relayer.chmod(relayer.stat().st_mode | stat.S_IEXEC)
+    yield
+    relayer.unlink()
