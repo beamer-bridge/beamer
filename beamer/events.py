@@ -296,13 +296,13 @@ class EventFetcher:
             from_block=from_block,
             to_block=to_block,
         )
+
+        before_query = time.monotonic()
+        params: FilterParams = dict(
+            fromBlock=from_block, toBlock=to_block, address=self._contract_addresses
+        )
         try:
-            before_query = time.monotonic()
-            params: FilterParams = dict(
-                fromBlock=from_block, toBlock=to_block, address=self._contract_addresses
-            )
             logs = self._web3.eth.get_logs(params)
-            after_query = time.monotonic()
 
         # Boba limits the range to 5000 blocks
         # 'ValueError: {'code': -32000, 'message': 'exceed maximum block range: 5000'}'
@@ -330,6 +330,7 @@ class EventFetcher:
             raise exc
 
         else:
+            after_query = time.monotonic()
             duration = after_query - before_query
             if duration < EventFetcher._ETH_GET_LOGS_THRESHOLD_FAST:
                 self._blocks_to_fetch = min(EventFetcher._MAX_BLOCKS, self._blocks_to_fetch * 2)
