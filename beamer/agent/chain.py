@@ -644,7 +644,7 @@ def maybe_prove(claim: Claim, context: Context) -> None:
         context.config.base_chain_rpc_url,
         context.target_chain.rpc_url,
         context.source_chain.rpc_url,
-        context.config.account.key,
+        context.config.account,
         prove_tx,
         True,
     )
@@ -712,7 +712,7 @@ def maybe_resolve(claim: Claim, context: Context) -> bool:
         context.config.base_chain_rpc_url,
         context.target_chain.rpc_url,
         context.source_chain.rpc_url,
-        context.config.account.key,
+        context.config.account,
         claim.proved_tx,
         False,
     )
