@@ -1,0 +1,57 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: RequestManager
+    source:
+      abi: RequestManager
+      address: "0x7faEa6562a6cE991149F0167baF283E9aAc7Dc50"
+      startBlock: 16946579
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Claim
+        - Request
+      abis:
+        - name: RequestManager
+          file: ./node_modules/@beamer-bridge/deployments/dist/abis/mainnet/RequestManager.json
+      eventHandlers:
+        - event: ClaimMade(indexed
+            bytes32,uint96,address,uint96,address,uint96,uint256,bytes32)
+          handler: handleClaimMade
+        - event: DepositWithdrawn(bytes32,address)
+          handler: handleDepositWithdrawn
+        - event: RequestCreated(indexed bytes32,uint256,address,address,indexed
+            address,address,uint256,uint96,uint32,uint256,uint256)
+          handler: handleRequestCreated
+        - event: FillInvalidatedResolved(bytes32,bytes32)
+          handler: handleFillInvalidatedResolved
+        - event: RequestResolved(bytes32,address,bytes32)
+          handler: handleRequestResolved
+      file: ./src/mappings/request-manager.ts
+    network: mainnet
+  - kind: ethereum
+    name: FillManager
+    source:
+      abi: FillManager
+      address: "0xD5EF34B499b6d64817CC70C3b0B8D9f807F06C29"
+      startBlock: 16946583
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Fill
+      abis:
+        - name: FillManager
+          file: ./node_modules/@beamer-bridge/deployments/dist/abis/mainnet/FillManager.json
+      eventHandlers:
+        - event: RequestFilled(indexed bytes32,bytes32,indexed uint256,indexed
+            address,address,uint256)
+          handler: handleRequestFilled
+          receipt: true
+      file: ./src/mappings/fill-manager.ts
+    network: mainnet

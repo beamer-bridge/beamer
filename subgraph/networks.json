@@ -1,0 +1,42 @@
+{
+  "mainnet": {
+    "RequestManager": {
+      "address": "0x7faEa6562a6cE991149F0167baF283E9aAc7Dc50",
+      "startBlock": 16946579
+    },
+    "FillManager": {
+      "address": "0xD5EF34B499b6d64817CC70C3b0B8D9f807F06C29",
+      "startBlock": 16946583
+    }
+  },
+  "optimism": {
+    "RequestManager": {
+      "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
+      "startBlock": 85123605
+    },
+    "FillManager": {
+      "address": "0x889aa3c5b5298d70613373F25Ef66Fede25B4de1",
+      "startBlock": 85123654
+    }
+  },
+  "arbitrum": {
+    "RequestManager": {
+      "address": "0x13bAF73f48FCF6A8aAb8431CA3A38c624cdfd8F3",
+      "startBlock": 75564388
+    },
+    "FillManager": {
+      "address": "0x27f72B9745CDE0fbAFe0A0d1119D75f4082bFc47",
+      "startBlock": 75564424
+    }
+  },
+  "polygon-zkevm": {
+    "RequestManager": {
+      "address": "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
+        "startBlock": 578936
+    },
+    "FillManager": {
+      "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
+        "startBlock": 578946
+    }
+  }
+}

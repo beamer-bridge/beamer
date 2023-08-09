@@ -1,78 +1,84 @@
-type HashInvalidated @entity {
-  id: ID!
-  requestHash: Bytes! # bytes32
+type Transaction @entity(immutable: true) {
+  # txn hash
+  id: Bytes!
+  from: Bytes
+  to: Bytes
+  value: BigInt
+  gasLimit: BigInt
+  gasPrice: BigInt
+  input: Bytes
+  nonce: BigInt
+  block: Block
+}
+
+type Block @entity(immutable: true) {
+  id: Bytes!
+  number: BigInt!
+  gasUsed: BigInt!
+  gasLimit: BigInt!
+  timestamp: BigInt!
+}
+
+type Request @entity {
+  id: Bytes!
+  sender: Bytes! # address
+  sourceTokenAddress: Bytes! # address
+  targetTokenAddress: Bytes! # address
+  targetChainId: BigInt! # uint256
+  amount: BigInt! # uint256
+  validUntil: BigInt! # uint256
+  lpFee: BigInt! # uint256
+  protocolFee: BigInt! # uint256
+  activeClaims: BigInt! # uint256
+  withdrawClaimId: BigInt! # uint256
+  filler: Bytes! # address
   fillId: Bytes! # bytes32
-  fillHash: Bytes! # bytes32
+  invalidFills: [FillState!]! # FillState[]
+  targetAddress: Bytes! # address
+  nonce: BigInt! # uint256
+  claims: [Claim!]! # Claim[]
+  transaction: Transaction!
+  contractAddress: Bytes! # address
+  emittedAt: BigInt! # uint256
+  emittedByTx: Bytes! # bytes32
 }
 
-type LPAdded @entity {
-  id: ID!
-  lp: Bytes! # address
+type FillState @entity {
+  id: Bytes!
+  invalid: Boolean!
 }
 
-type LPRemoved @entity {
-  id: ID!
-  lp: Bytes! # address
-}
-
-type FillManagerOwnershipTransferred @entity {
-  id: ID!
-  previousOwner: Bytes! # address
-  newOwner: Bytes! # address
-}
-type RequestFilled @entity {
-  id: ID!
-  requestId: BigInt! # uint256
-  fillId: Bytes! # bytes32
+type Fill @entity {
+  id: Bytes!
+  requestId: Bytes! # bytes32
   sourceChainId: BigInt! # uint256
   targetTokenAddress: Bytes! # address
   filler: Bytes! # address
   amount: BigInt! # uint256
+  receiver: Bytes! # address
+  transaction: Transaction!
+  contractAddress: Bytes! # address
+  emittedAt: BigInt! # uint256
+  emittedByTx: Bytes! # bytes32
 }
-type ClaimMade @entity {
-  id: ID!
-  requestId: BigInt! # uint256
-  claimId: BigInt! # uint256
+
+type Stake @entity {
+  id: Bytes!
+  challenger: Bytes! # address
+  stake: BigInt! # uint96
+}
+
+type Claim @entity {
+  id: String! # uint256
+  request: Request!
   claimer: Bytes! # address
-  claimerStake: BigInt! # uint256
+  claimerStake: BigInt! # uint96
   lastChallenger: Bytes! # address
-  challengerStakeTotal: BigInt! # uint256
+  challengerStakeTotal: BigInt! # uint96
   termination: BigInt! # uint256
   fillId: Bytes! # bytes32
-}
-
-type ClaimStakeWithdrawn @entity {
-  id: ID!
-  claimId: BigInt! # uint256
-  requestId: BigInt! # uint256
-  claimReceiver: Bytes! # address
-}
-
-type DepositWithdrawn @entity {
-  id: ID!
-  requestId: BigInt! # uint256
-  receiver: Bytes! # address
-}
-
-type FinalityPeriodUpdated @entity {
-  id: ID!
-  targetChainId: BigInt! # uint256
-  finalityPeriod: BigInt! # uint256
-}
-
-type OwnershipTransferred @entity {
-  id: ID!
-  previousOwner: Bytes! # address
-  newOwner: Bytes! # address
-}
-
-type RequestCreated @entity {
-  id: ID!
-  requestId: BigInt! # uint256
-  targetChainId: BigInt! # uint256
-  sourceTokenAddress: Bytes! # address
-  targetTokenAddress: Bytes! # address
-  targetAddress: Bytes! # address
-  amount: BigInt! # uint256
-  validUntil: BigInt! # uint256
+  transaction: Transaction!
+  contractAddress: Bytes! # address
+  emittedAt: BigInt! # uint256
+  emittedByTx: Bytes! # bytes32
 }
