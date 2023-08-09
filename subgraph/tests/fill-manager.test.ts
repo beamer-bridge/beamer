@@ -9,7 +9,7 @@ import {
 import { Bytes, Address, BigInt } from "@graphprotocol/graph-ts"
 import { HashInvalidated } from "../generated/schema"
 import { HashInvalidated as HashInvalidatedEvent } from "../generated/FillManager/FillManager"
-import { handleHashInvalidated } from "../src/fill-manager"
+import { handleHashInvalidated } from "../src/mappings/fill-manager"
 import { createHashInvalidatedEvent } from "./fill-manager-utils"
 
 // Tests structure (matchstick-as >=0.5.0)

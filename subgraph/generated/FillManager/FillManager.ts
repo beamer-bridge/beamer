@@ -10,42 +10,38 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
-export class HashInvalidated extends ethereum.Event {
-  get params(): HashInvalidated__Params {
-    return new HashInvalidated__Params(this);
+export class FillInvalidated extends ethereum.Event {
+  get params(): FillInvalidated__Params {
+    return new FillInvalidated__Params(this);
   }
 }
 
-export class HashInvalidated__Params {
-  _event: HashInvalidated;
+export class FillInvalidated__Params {
+  _event: FillInvalidated;
 
-  constructor(event: HashInvalidated) {
+  constructor(event: FillInvalidated) {
     this._event = event;
   }
 
-  get requestHash(): Bytes {
+  get requestId(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
   get fillId(): Bytes {
     return this._event.parameters[1].value.toBytes();
   }
+}
 
-  get fillHash(): Bytes {
-    return this._event.parameters[2].value.toBytes();
+export class LpAdded extends ethereum.Event {
+  get params(): LpAdded__Params {
+    return new LpAdded__Params(this);
   }
 }
 
-export class LPAdded extends ethereum.Event {
-  get params(): LPAdded__Params {
-    return new LPAdded__Params(this);
-  }
-}
+export class LpAdded__Params {
+  _event: LpAdded;
 
-export class LPAdded__Params {
-  _event: LPAdded;
-
-  constructor(event: LPAdded) {
+  constructor(event: LpAdded) {
     this._event = event;
   }
 
@@ -54,16 +50,16 @@ export class LPAdded__Params {
   }
 }
 
-export class LPRemoved extends ethereum.Event {
-  get params(): LPRemoved__Params {
-    return new LPRemoved__Params(this);
+export class LpRemoved extends ethereum.Event {
+  get params(): LpRemoved__Params {
+    return new LpRemoved__Params(this);
   }
 }
 
-export class LPRemoved__Params {
-  _event: LPRemoved;
+export class LpRemoved__Params {
+  _event: LpRemoved;
 
-  constructor(event: LPRemoved) {
+  constructor(event: LpRemoved) {
     this._event = event;
   }
 
@@ -72,16 +68,16 @@ export class LPRemoved__Params {
   }
 }
 
-export class FillManagerOwnershipTransferred extends ethereum.Event {
-  get params(): FillManagerOwnershipTransferred__Params {
-    return new FillManagerOwnershipTransferred__Params(this);
+export class OwnershipTransferred extends ethereum.Event {
+  get params(): OwnershipTransferred__Params {
+    return new OwnershipTransferred__Params(this);
   }
 }
 
-export class FillManagerOwnershipTransferred__Params {
-  _event: FillManagerOwnershipTransferred;
+export class OwnershipTransferred__Params {
+  _event: OwnershipTransferred;
 
-  constructor(event: FillManagerOwnershipTransferred) {
+  constructor(event: OwnershipTransferred) {
     this._event = event;
   }
 
@@ -107,8 +103,8 @@ export class RequestFilled__Params {
     this._event = event;
   }
 
-  get requestId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
+  get requestId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
   }
 
   get fillId(): Bytes {
@@ -137,17 +133,17 @@ export class FillManager extends ethereum.SmartContract {
     return new FillManager("FillManager", address);
   }
 
-  allowedLPs(param0: Address): boolean {
-    let result = super.call("allowedLPs", "allowedLPs(address):(bool)", [
-      ethereum.Value.fromAddress(param0)
+  allowedLps(lp: Address): boolean {
+    let result = super.call("allowedLps", "allowedLps(address):(bool)", [
+      ethereum.Value.fromAddress(lp)
     ]);
 
     return result[0].toBoolean();
   }
 
-  try_allowedLPs(param0: Address): ethereum.CallResult<boolean> {
-    let result = super.tryCall("allowedLPs", "allowedLPs(address):(bool)", [
-      ethereum.Value.fromAddress(param0)
+  try_allowedLps(lp: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall("allowedLps", "allowedLps(address):(bool)", [
+      ethereum.Value.fromAddress(lp)
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -157,21 +153,21 @@ export class FillManager extends ethereum.SmartContract {
   }
 
   fillRequest(
-    requestId: BigInt,
     sourceChainId: BigInt,
     targetTokenAddress: Address,
     targetReceiverAddress: Address,
-    amount: BigInt
+    amount: BigInt,
+    nonce: BigInt
   ): Bytes {
     let result = super.call(
       "fillRequest",
-      "fillRequest(uint256,uint256,address,address,uint256):(bytes32)",
+      "fillRequest(uint256,address,address,uint256,uint96):(bytes32)",
       [
-        ethereum.Value.fromUnsignedBigInt(requestId),
         ethereum.Value.fromUnsignedBigInt(sourceChainId),
         ethereum.Value.fromAddress(targetTokenAddress),
         ethereum.Value.fromAddress(targetReceiverAddress),
-        ethereum.Value.fromUnsignedBigInt(amount)
+        ethereum.Value.fromUnsignedBigInt(amount),
+        ethereum.Value.fromUnsignedBigInt(nonce)
       ]
     );
 
@@ -179,21 +175,21 @@ export class FillManager extends ethereum.SmartContract {
   }
 
   try_fillRequest(
-    requestId: BigInt,
     sourceChainId: BigInt,
     targetTokenAddress: Address,
     targetReceiverAddress: Address,
-    amount: BigInt
+    amount: BigInt,
+    nonce: BigInt
   ): ethereum.CallResult<Bytes> {
     let result = super.tryCall(
       "fillRequest",
-      "fillRequest(uint256,uint256,address,address,uint256):(bytes32)",
+      "fillRequest(uint256,address,address,uint256,uint96):(bytes32)",
       [
-        ethereum.Value.fromUnsignedBigInt(requestId),
         ethereum.Value.fromUnsignedBigInt(sourceChainId),
         ethereum.Value.fromAddress(targetTokenAddress),
         ethereum.Value.fromAddress(targetReceiverAddress),
-        ethereum.Value.fromUnsignedBigInt(amount)
+        ethereum.Value.fromUnsignedBigInt(amount),
+        ethereum.Value.fromUnsignedBigInt(nonce)
       ]
     );
     if (result.reverted) {
@@ -203,17 +199,17 @@ export class FillManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
-  fills(param0: Bytes): Bytes {
+  fills(requestID: Bytes): Bytes {
     let result = super.call("fills", "fills(bytes32):(bytes32)", [
-      ethereum.Value.fromFixedBytes(param0)
+      ethereum.Value.fromFixedBytes(requestID)
     ]);
 
     return result[0].toBytes();
   }
 
-  try_fills(param0: Bytes): ethereum.CallResult<Bytes> {
+  try_fills(requestID: Bytes): ethereum.CallResult<Bytes> {
     let result = super.tryCall("fills", "fills(bytes32):(bytes32)", [
-      ethereum.Value.fromFixedBytes(param0)
+      ethereum.Value.fromFixedBytes(requestID)
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -237,6 +233,21 @@ export class FillManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  messenger(): Address {
+    let result = super.call("messenger", "messenger():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_messenger(): ethereum.CallResult<Address> {
+    let result = super.tryCall("messenger", "messenger():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   owner(): Address {
     let result = super.call("owner", "owner():(address)", []);
 
@@ -245,25 +256,6 @@ export class FillManager extends ethereum.SmartContract {
 
   try_owner(): ethereum.CallResult<Address> {
     let result = super.tryCall("owner", "owner():(address)", []);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
-  proofSubmitter(): Address {
-    let result = super.call("proofSubmitter", "proofSubmitter():(address)", []);
-
-    return result[0].toAddress();
-  }
-
-  try_proofSubmitter(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "proofSubmitter",
-      "proofSubmitter():(address)",
-      []
-    );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -289,12 +281,8 @@ export class ConstructorCall__Inputs {
     this._call = call;
   }
 
-  get _l1Resolver(): Address {
+  get _messenger(): Address {
     return this._call.inputValues[0].value.toAddress();
-  }
-
-  get _proofSubmitter(): Address {
-    return this._call.inputValues[1].value.toAddress();
   }
 }
 
@@ -306,32 +294,32 @@ export class ConstructorCall__Outputs {
   }
 }
 
-export class AddAllowedLPCall extends ethereum.Call {
-  get inputs(): AddAllowedLPCall__Inputs {
-    return new AddAllowedLPCall__Inputs(this);
+export class AddAllowedLpCall extends ethereum.Call {
+  get inputs(): AddAllowedLpCall__Inputs {
+    return new AddAllowedLpCall__Inputs(this);
   }
 
-  get outputs(): AddAllowedLPCall__Outputs {
-    return new AddAllowedLPCall__Outputs(this);
+  get outputs(): AddAllowedLpCall__Outputs {
+    return new AddAllowedLpCall__Outputs(this);
   }
 }
 
-export class AddAllowedLPCall__Inputs {
-  _call: AddAllowedLPCall;
+export class AddAllowedLpCall__Inputs {
+  _call: AddAllowedLpCall;
 
-  constructor(call: AddAllowedLPCall) {
+  constructor(call: AddAllowedLpCall) {
     this._call = call;
   }
 
-  get newLP(): Address {
+  get newLp(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 }
 
-export class AddAllowedLPCall__Outputs {
-  _call: AddAllowedLPCall;
+export class AddAllowedLpCall__Outputs {
+  _call: AddAllowedLpCall;
 
-  constructor(call: AddAllowedLPCall) {
+  constructor(call: AddAllowedLpCall) {
     this._call = call;
   }
 }
@@ -353,23 +341,23 @@ export class FillRequestCall__Inputs {
     this._call = call;
   }
 
-  get requestId(): BigInt {
+  get sourceChainId(): BigInt {
     return this._call.inputValues[0].value.toBigInt();
   }
 
-  get sourceChainId(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
   get targetTokenAddress(): Address {
-    return this._call.inputValues[2].value.toAddress();
+    return this._call.inputValues[1].value.toAddress();
   }
 
   get targetReceiverAddress(): Address {
-    return this._call.inputValues[3].value.toAddress();
+    return this._call.inputValues[2].value.toAddress();
   }
 
   get amount(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
+
+  get nonce(): BigInt {
     return this._call.inputValues[4].value.toBigInt();
   }
 }
@@ -403,7 +391,7 @@ export class InvalidateFillCall__Inputs {
     this._call = call;
   }
 
-  get requestHash(): Bytes {
+  get requestId(): Bytes {
     return this._call.inputValues[0].value.toBytes();
   }
 
@@ -424,32 +412,32 @@ export class InvalidateFillCall__Outputs {
   }
 }
 
-export class RemoveAllowedLPCall extends ethereum.Call {
-  get inputs(): RemoveAllowedLPCall__Inputs {
-    return new RemoveAllowedLPCall__Inputs(this);
+export class RemoveAllowedLpCall extends ethereum.Call {
+  get inputs(): RemoveAllowedLpCall__Inputs {
+    return new RemoveAllowedLpCall__Inputs(this);
   }
 
-  get outputs(): RemoveAllowedLPCall__Outputs {
-    return new RemoveAllowedLPCall__Outputs(this);
+  get outputs(): RemoveAllowedLpCall__Outputs {
+    return new RemoveAllowedLpCall__Outputs(this);
   }
 }
 
-export class RemoveAllowedLPCall__Inputs {
-  _call: RemoveAllowedLPCall;
+export class RemoveAllowedLpCall__Inputs {
+  _call: RemoveAllowedLpCall;
 
-  constructor(call: RemoveAllowedLPCall) {
+  constructor(call: RemoveAllowedLpCall) {
     this._call = call;
   }
 
-  get oldLP(): Address {
+  get oldLp(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 }
 
-export class RemoveAllowedLPCall__Outputs {
-  _call: RemoveAllowedLPCall;
+export class RemoveAllowedLpCall__Outputs {
+  _call: RemoveAllowedLpCall;
 
-  constructor(call: RemoveAllowedLPCall) {
+  constructor(call: RemoveAllowedLpCall) {
     this._call = call;
   }
 }
@@ -476,6 +464,36 @@ export class RenounceOwnershipCall__Outputs {
   _call: RenounceOwnershipCall;
 
   constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SetResolverCall extends ethereum.Call {
+  get inputs(): SetResolverCall__Inputs {
+    return new SetResolverCall__Inputs(this);
+  }
+
+  get outputs(): SetResolverCall__Outputs {
+    return new SetResolverCall__Outputs(this);
+  }
+}
+
+export class SetResolverCall__Inputs {
+  _call: SetResolverCall;
+
+  constructor(call: SetResolverCall) {
+    this._call = call;
+  }
+
+  get _l1Resolver(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class SetResolverCall__Outputs {
+  _call: SetResolverCall;
+
+  constructor(call: SetResolverCall) {
     this._call = call;
   }
 }

@@ -13,6 +13,8 @@ services:
       - postgres
     extra_hosts:
       - host.docker.internal:host-gateway
+    env_file:
+      - .env
     environment:
       postgres_host: postgres
       postgres_user: graph-node
@@ -28,7 +30,7 @@ services:
     volumes:
       - ./data/ipfs:/data/ipfs
   postgres:
-    image: postgres
+    image: postgres:14
     ports:
       - '5432:5432'
     command:
@@ -41,5 +43,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PW}
       POSTGRES_DB: graph-node
       PGDATA: "/data/postgres"
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data

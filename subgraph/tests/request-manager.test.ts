@@ -9,7 +9,7 @@ import {
 import { BigInt, Address, Bytes } from "@graphprotocol/graph-ts"
 import { ExampleEntity } from "../generated/schema"
 import { ClaimMade } from "../generated/RequestManager/RequestManager"
-import { handleClaimMade } from "../src/request-manager"
+import { handleClaimMade } from "../src/mappings/request-manager"
 import { createClaimMadeEvent } from "./request-manager-utils"
 
 // Tests structure (matchstick-as >=0.5.0)
