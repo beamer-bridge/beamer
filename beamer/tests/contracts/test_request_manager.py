@@ -1096,6 +1096,44 @@ def test_challenge_after_l1_resolution(request_manager, token, claim_stake, cont
         request_manager.challengeClaim(claim_id)
 
 
+def test_claim_invalidated_withdraw(request_manager, token, claim_stake, contracts):
+    (requester, challenger) = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, [request_manager])
+    transfer_amount = 23
+    web3 = ape.chain.provider.web3
+
+    token.mint(requester, transfer_amount, sender=requester)
+    request_id = make_request(request_manager, token, requester, requester, transfer_amount)
+    claimer_balance = web3.eth.get_balance(claimer.address)
+    challenger_balance = web3.eth.get_balance(challenger.address)
+
+    # Claim
+    fill_id = HexBytes(b"123")
+    claim_tx = request_manager.claimRequest(request_id, fill_id, sender=claimer, value=claim_stake)
+    claim_id = claim_tx.return_value
+
+    request_manager.challengeClaim(claim_id, sender=challenger, value=claim_stake + 1)
+    request_manager.challengeClaim(claim_id, sender=claimer, value=claim_stake + 1)
+
+    # Malicious claimer has the highest stake now
+    # The invalidation lets the challenger win though
+    request_manager.invalidateFill(
+        request_id, fill_id, ape.chain.chain_id, sender=contracts.l1_messenger
+    )
+    # Assert that invalidation works
+    assert request_manager.isInvalidFill(request_id, fill_id)
+
+    # Timetravel after claim expires
+    # Timetravel is used to prove that if the algorithm was wrong, the
+    # malicious claimer would get the money
+    ape.chain.mine(deltatime=request_manager.claims(claim_id).termination)
+
+    request_manager.withdraw(claim_id, sender=challenger)
+
+    assert web3.eth.get_balance(claimer.address) == claimer_balance - 2 * claim_stake - 1
+    assert web3.eth.get_balance(challenger.address) == challenger_balance + 2 * claim_stake + 1
+
+
 def test_withdraw_on_behalf(
     request_manager, token, claim_stake, finality_period, challenge_period_extension
 ):
