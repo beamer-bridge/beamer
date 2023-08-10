@@ -1,4 +1,4 @@
-import {BigInt} from '@graphprotocol/graph-ts';
+import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
   ClaimMade,
   DepositWithdrawn,
@@ -8,7 +8,7 @@ import {
   RequestResolved,
 } from '../../generated/RequestManager/RequestManager';
 import {Claim, FillState, Request} from '../../generated/schema';
-import {ADDRESS_ZERO_BYTES, ZERO_BI, ZERO_BYTES} from '../utils/constants';
+import {ADDRESS_ZERO_BYTES, ZERO_BI, ZERO_BYTES, CLAIM_ID_EXPIRED_REQUEST} from '../utils/constants';
 import { loadTransaction } from "../utils";
 
 export function handleClaimMade(event: ClaimMade): void {
@@ -38,17 +38,25 @@ export function handleClaimMade(event: ClaimMade): void {
 }
 
 export function handleDepositWithdrawn(event: DepositWithdrawn): void {
-  const request = Request.load(event.params.requestId);
+  const requestId = event.params.requestId;
+  const receiver = event.params.receiver;
+  const request = Request.load(requestId);
 
   if (request) {
-    const claims = request.claims;
-    // iterate over claims and find the one with claimer event.params.receiver
-    // if found, set the withdrawClaimId to that claim.id
-    for (let i = 0; i < claims.length; i++) {
-      const claim = Claim.load(claims[i]);
-      if (claim && claim.claimer == event.params.receiver) {
-        request.withdrawClaimId = BigInt.fromString(claim.id);
-        break;
+   // If the receiver is the request sender, then the user is withdrawing
+    // because the request has expired with no fill
+    if(request.sender.toHexString() == receiver.toHexString()) {
+      request.withdrawClaimId = (CLAIM_ID_EXPIRED_REQUEST);
+    } else {
+      const claims = request.claims;
+      // iterate over claims and find the one with claimer event.params.receiver
+      // if found, set the withdrawClaimId to that claim.id
+      for (let i = 0; i < claims.length; i++) {
+        const claim = Claim.load(claims[i]);
+        if (claim && claim.claimer == event.params.receiver) {
+          request.withdrawClaimId = BigInt.fromString(claim.id);
+          break;
+        }
       }
     }
 
@@ -58,7 +66,7 @@ export function handleDepositWithdrawn(event: DepositWithdrawn): void {
 
 export function handleRequestCreated(event: RequestCreated): void {
   let request = new Request(event.params.requestId);
-  request.sender = event.transaction.from;
+  request.sender = event.params.sourceAddress;
   request.sourceTokenAddress = event.params.sourceTokenAddress;
   request.targetTokenAddress = event.params.targetTokenAddress;
   request.targetChainId = event.params.targetChainId;
