@@ -385,7 +385,10 @@ def _fill_request_exclusive(request: Request, context: Context) -> None:
     balance = token.functions.balanceOf(address).call()
     if balance < request.amount:
         context.logger.info(
-            "Unable to fill request", balance=balance, request_amount=request.amount
+            "Unable to fill request",
+            balance=balance,
+            request_amount=request.amount,
+            request_id=request.id,
         )
         return
 
@@ -401,6 +404,8 @@ def _fill_request_exclusive(request: Request, context: Context) -> None:
             request_amount=request.amount,
         )
         return
+
+    context.logger.debug("fillRequest started", request_id=request.id)
 
     if (
         token.functions.allowance(context.address, context.fill_manager.address).call()
