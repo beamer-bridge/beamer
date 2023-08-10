@@ -726,7 +726,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         if (filler != address(0)) {
             // Claim resolution via 1)
             claimValid = filler == claimer && fillId == claim.fillId;
-        } else if (request.invalidFillIds[fillId]) {
+        } else if (request.invalidFillIds[claim.fillId]) {
             // Claim resolution via 2)
             claimValid = false;
         } else if (withdrawClaimId != 0) {
