@@ -4,7 +4,8 @@ import { getNetworkId } from "@/common/network";
 import type { ArbitrumRelayerService, PolygonZKEvmRelayerService } from "@/services";
 import { SERVICES } from "@/services/relayer/map";
 import {
-  getRandomPrivateKey,
+  getAccountPassword,
+  getKeystoreFilePath,
   getRandomTransactionHash,
   getRandomUrl,
 } from "~/utils/data_generators";
@@ -16,7 +17,8 @@ const validOptions: ProgramOptions = {
   l1RpcUrl: getRandomUrl("l1"),
   l2RelayFromRpcUrl: getRandomUrl("l2.from"),
   l2RelayToRpcUrl: getRandomUrl("l2.to"),
-  walletPrivateKey: getRandomPrivateKey(),
+  keystoreFile: getKeystoreFilePath(),
+  password: getAccountPassword(),
   l2TransactionHash: getRandomTransactionHash(),
 };
 

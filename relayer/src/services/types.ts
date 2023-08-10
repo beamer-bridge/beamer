@@ -1,6 +1,7 @@
 import type { Provider } from "@ethersproject/providers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { BigNumber, Wallet } from "ethers";
+import fs from "fs";
 
 import { Resolver__factory } from "../../types-gen/contracts";
 import type { TypedEvent, TypedEventFilter } from "../../types-gen/contracts/common";
@@ -63,7 +64,8 @@ export abstract class BaseRelayerService {
   constructor(
     l1RpcURL: string,
     l2RpcURL: string,
-    privateKey: string,
+    keystoreFile: string,
+    password: string,
     l1ChainId: number,
     l2ChainId: number,
     destinationChainId?: number,
@@ -71,8 +73,10 @@ export abstract class BaseRelayerService {
   ) {
     this.l1RpcUrl = l1RpcURL;
     this.l2RpcUrl = l2RpcURL;
-    this.l1Wallet = new Wallet(privateKey, new ExtendedJsonRpcProvider(l1RpcURL));
-    this.l2Wallet = new Wallet(privateKey, new JsonRpcProvider(l2RpcURL));
+    const encryptedWalletJson = fs.readFileSync(keystoreFile, { encoding: "utf-8" });
+    const wallet = Wallet.fromEncryptedJsonSync(encryptedWalletJson, password);
+    this.l1Wallet = wallet.connect(new ExtendedJsonRpcProvider(l1RpcURL));
+    this.l2Wallet = wallet.connect(new JsonRpcProvider(l2RpcURL));
     this.l1ChainId = l1ChainId;
     this.l2ChainId = l2ChainId;
     this.destinationChainId = destinationChainId ?? undefined;

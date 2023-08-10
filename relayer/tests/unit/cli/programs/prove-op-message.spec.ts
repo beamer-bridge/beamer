@@ -4,8 +4,9 @@ import { getNetworkId } from "@/common/network";
 import { OptimismRelayerService } from "@/services";
 import { SERVICES } from "@/services/relayer/map";
 import {
+  getAccountPassword,
+  getKeystoreFilePath,
   getRandomNumber,
-  getRandomPrivateKey,
   getRandomTransactionHash,
   getRandomUrl,
 } from "~/utils/data_generators";
@@ -16,7 +17,8 @@ jest.mock("@eth-optimism/sdk");
 const validOptions: ProgramOptions = {
   l1RpcUrl: getRandomUrl("l1"),
   l2RpcUrl: getRandomUrl("l2.from"),
-  walletPrivateKey: getRandomPrivateKey(),
+  keystoreFile: getKeystoreFilePath(),
+  password: getAccountPassword(),
   l2TransactionHash: getRandomTransactionHash(),
 };
 
