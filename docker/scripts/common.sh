@@ -91,7 +91,7 @@ e2e_test_relayer() {
     local l1_rpc=$1
     local l2_rpc=$2
     local network_config=$3
-    local privkey=$4
+    local keystore_path=$4
     local txhash=$5
     local relayer=$(get_relayer_binary)
     
@@ -102,15 +102,16 @@ e2e_test_relayer() {
                                          --l2-relay-from-rpc-url $l2_rpc \
                                          --network-to $network_config \
                                          --network-from $network_config \
-                                         --wallet-private-key $privkey \
+                                         --keystore-file $keystore_path \
+                                         --password '' \
                                          --l2-transaction-hash $txhash; \
                         do sleep 1s; done"
 }
 
-e2e_test_op_proof(){
+e2e_test_op_proof() {
     local l1_rpc=$1
     local l2_rpc=$2
-    local privkey=$3
+    local keystore_path=$3
     local txhash=$4
     local relayer=$(get_relayer_binary)
 
@@ -118,7 +119,8 @@ e2e_test_op_proof(){
     timeout 5m bash -c "until ${relayer} prove-op-message \
                                          --l1-rpc-url $l1_rpc \
                                          --l2-rpc-url $l2_rpc \
-                                         --wallet-private-key $privkey \
+                                         --keystore-file $keystore_path \
+                                         --password '' \
                                          --l2-transaction-hash $txhash; \
     do sleep 1s; done"
 }

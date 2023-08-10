@@ -98,7 +98,7 @@ e2e_test() {
     }
 EOF
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
-    e2e_test_relayer http://localhost:8545 $l2_rpc $network_file $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_relayer http://localhost:8545 $l2_rpc $network_file $KEYFILE $e2e_test_l2_txhash
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
