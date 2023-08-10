@@ -75,7 +75,7 @@ def test_check_if_request_has_fill_with_no_fill_and_request_created_not_expired(
     analyze_transfer(transfer, ctx)
 
     assert ctx.stats.fills == 0
-    assert ctx.stats.expired_requests == 0
+    assert ctx.stats.unfilled_requests == 1
 
 
 def test_check_if_request_has_fill_with_no_fill_and_request_created_has_expired(
@@ -112,7 +112,8 @@ def test_check_if_claim_is_made_for_fill_no_fill(transfer_request):
 
     analyze_transfer(transfer, ctx)
 
-    assert len(ctx.notifications) == 0
+    assert len(ctx.notifications) == 1
+    assert ctx.notifications[0]["meta"]["message_type"] == NotificationTypes.REQUEST_UNFILLED
 
 
 def test_check_if_claim_is_made_for_fill_no_there_is_a_claim(
