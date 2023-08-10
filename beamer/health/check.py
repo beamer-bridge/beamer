@@ -30,6 +30,7 @@ from beamer.util import (
 
 class NotificationTypes:
     REQUEST_EXPIRED = "RequestExpired"
+    REQUEST_UNFILLED = "RequestUnfilled"
     DEPOSIT_WITHDRAWN = "DepositWithdrawn"
     UNCLAIMED_FILL = "UnclaimedFill"
     CHALLENGE_GAME = "ChallengeGame"
@@ -93,6 +94,7 @@ class TransferStats:
     withdrawals: int = 0
     claims: int = 0
     expired_requests: int = 0
+    unfilled_requests: int = 0
     expired_requests_volume: TokenVolume = field(default_factory=TokenVolume)
 
 
@@ -343,6 +345,14 @@ def _check_if_request_has_fill(transfer: Transfer, ctx: Context) -> None:
                 request.request_id.hex(), NotificationTypes.REQUEST_EXPIRED
             ):
                 ctx.add_notification(create_expired_request_notification(request, ctx))
+        else:
+            request = transfer["created"]
+            ctx.stats.unfilled_requests += 1
+
+            if not ctx.notification_state.is_set(
+                request.request_id.hex(), NotificationTypes.REQUEST_UNFILLED
+            ):
+                ctx.add_notification(create_unfilled_request_notification(request, ctx))
 
 
 def _check_if_claim_is_made_for_fill(transfer: Transfer, ctx: Context) -> None:
@@ -543,6 +553,27 @@ def create_expired_request_notification(request: RequestCreated, ctx: Context) -
         },
         "body": f"""
 {config["notification_message_prefix"]}: Request expired with no fill {request.request_id.hex()}
+Request: `{request.request_id.hex()}`
+Value: `{transfer_value}`
+Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_until)
+        .strftime("%d.%m.%Y %H:%M:%S")}`
+TX_Hash `{request.tx_hash.hex()}`
+        """,
+    }
+
+
+def create_unfilled_request_notification(request: RequestCreated, ctx: Context) -> Notification:
+    transfer_value = get_transfer_value_formatted(request, ctx.token_deployments, ctx.tokens)
+    config = get_config()
+
+    return {
+        "meta": {
+            "request_id": request.request_id.hex(),
+            "message_type": NotificationTypes.REQUEST_UNFILLED,
+            "message_link": link_to_explorer(request.event_chain_id, request.tx_hash.hex()),
+        },
+        "body": f"""
+{config["notification_message_prefix"]}: Request has no fill {request.request_id.hex()}
 Request: `{request.request_id.hex()}`
 Value: `{transfer_value}`
 Valid_until: {request.valid_until} | `{datetime.fromtimestamp(request.valid_until)
