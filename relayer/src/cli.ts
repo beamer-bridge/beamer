@@ -23,7 +23,8 @@ program
   .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
   .requiredOption("--l2-relay-to-rpc-url <URL>", "RPC Provider URL for relay destination rollup")
   .requiredOption("--l2-relay-from-rpc-url <URL>", "RPC Provider URL for relay source rollup")
-  .requiredOption("--wallet-private-key <hash>", "Private key for the layer 1 wallet")
+  .requiredOption("--keystore-file <file_path>", "Keystore file for the layer 1 wallet")
+  .requiredOption("--password <str>", "Password of keystore file for the layer 1 wallet")
   .requiredOption(
     "--l2-transaction-hash <hash>",
     "Layer 2 transaction hash that needs to be relayed",
@@ -46,7 +47,8 @@ program
   .description("Prove an OP message on L1")
   .requiredOption("--l1-rpc-url <URL>", "RPC Provider URL for layer 1")
   .requiredOption("--l2-rpc-url <URL>", "RPC Provider URL for relay source rollup")
-  .requiredOption("--wallet-private-key <hash>", "Private key for the layer 1 wallet")
+  .requiredOption("--keystore-file <file_path>", "Keystore file for the layer 1 wallet")
+  .requiredOption("--password <str>", "Password of keystore file for the layer 1 wallet")
   .requiredOption(
     "--l2-transaction-hash <hash>",
     "Layer 2 transaction hash that needs to be proved",

@@ -6,7 +6,7 @@ import {
 } from "@/services/relayer";
 import { createRelayer } from "@/services/relayer/map";
 import type { BaseRelayerService } from "@/services/types";
-import { getRandomPrivateKey, getRandomUrl } from "~/utils/data_generators";
+import { getAccountPassword, getKeystoreFilePath, getRandomUrl } from "~/utils/data_generators";
 
 jest.mock("@eth-optimism/sdk");
 
@@ -18,7 +18,8 @@ function createTestArgs(
   return [
     getRandomUrl("l1"),
     getRandomUrl("l2"),
-    getRandomPrivateKey(),
+    getKeystoreFilePath(),
+    getAccountPassword(),
     l1ChainId,
     l2ChainId,
     destinationChainId,

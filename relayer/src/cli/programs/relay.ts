@@ -6,7 +6,8 @@ export type ProgramOptions = {
   l1RpcUrl: string;
   l2RelayFromRpcUrl: string;
   l2RelayToRpcUrl: string;
-  walletPrivateKey: string;
+  keystoreFile: string;
+  password: string;
   l2TransactionHash: TransactionHash;
   networkFrom?: string;
   networkTo?: string;
@@ -39,7 +40,8 @@ export class RelayerProgram {
     const relayerFrom = createRelayer(fromL2ChainId, [
       options.l1RpcUrl,
       options.l2RelayFromRpcUrl,
-      options.walletPrivateKey,
+      options.keystoreFile,
+      options.password,
       l1ChainId,
       fromL2ChainId,
       toL2ChainId,
@@ -48,7 +50,8 @@ export class RelayerProgram {
     const relayerTo = createRelayer(toL2ChainId, [
       options.l1RpcUrl,
       options.l2RelayToRpcUrl,
-      options.walletPrivateKey,
+      options.keystoreFile,
+      options.password,
       l1ChainId,
       toL2ChainId,
       fromL2ChainId,

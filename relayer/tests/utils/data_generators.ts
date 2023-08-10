@@ -1,3 +1,5 @@
+import path from "path";
+
 import type { TransactionHash } from "@/services/types";
 
 const HEXADECIMAL_CHARACTERS = "0123456789abcdefABCDEF";
@@ -17,8 +19,12 @@ export function getRandomTransactionHash(): TransactionHash {
   return getRandomString(HEXADECIMAL_CHARACTERS, 64, "0x");
 }
 
-export function getRandomPrivateKey(): TransactionHash {
-  return getRandomString(HEXADECIMAL_CHARACTERS, 64);
+export function getKeystoreFilePath(): TransactionHash {
+  return path.join(__dirname, "test_account.json");
+}
+
+export function getAccountPassword(): TransactionHash {
+  return "test";
 }
 
 export function getRandomUrl(subDomain: string): string {
