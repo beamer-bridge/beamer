@@ -83,7 +83,7 @@ def transact(
             break
 
     if receipt.status == 0:  # type: ignore
-        raise TransactionFailed("unknown error")
+        raise TransactionFailed(f"{txn_hash!r} failed with unknown error")
     return receipt
 
 
