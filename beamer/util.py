@@ -9,6 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Optional, TypedDict, Union, cast
 
+import click
 import lru
 import requests
 import structlog
@@ -239,3 +240,14 @@ def load_rpc_info(path: Path) -> dict[ChainId, URL]:
 def get_commit_id() -> str:
     output = subprocess.check_output(["git", "rev-parse", "HEAD"])
     return output.decode("utf-8").strip()
+
+
+class ChainIdParam(click.ParamType):
+    def convert(self, value: Any, param: click.Parameter | None, ctx: click.Context | None) -> Any:
+        try:
+            chain_id = ChainId(int(value))
+            if chain_id <= 0:
+                raise ValueError("chain ID must be positive")
+        except ValueError as exc:
+            self.fail(str(exc), param, ctx)
+        return chain_id

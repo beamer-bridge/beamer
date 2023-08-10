@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import Any
 
 import click
 import structlog
@@ -11,7 +10,7 @@ import beamer.util
 from beamer.contracts import ABIManager, obtain_contract
 from beamer.deploy.util import deploy_beamer, deploy_contract, generate_artifacts
 from beamer.typing import ChainId
-from beamer.util import get_commit_id, make_web3
+from beamer.util import ChainIdParam, get_commit_id, make_web3
 
 log = structlog.get_logger(__name__)
 
@@ -24,18 +23,6 @@ def _ensure_commit_is_on_remote() -> None:
         branch == "origin/main" or branch.startswith("origin/release/") for branch in branches
     ):
         raise RuntimeError("could not find commit %s on the remote" % commit_id)
-
-
-class _ChainIdParam(click.ParamType):
-    def convert(self, value: Any, param: click.Parameter | None, ctx: click.Context | None) -> Any:
-        try:
-            chain_id = ChainId(int(value))
-            if chain_id <= 0:
-                raise ValueError("chain ID must be positive")
-        except ValueError as exc:
-            self.fail(str(exc), param, ctx)
-        else:
-            return chain_id
 
 
 @click.command("deploy-base")
@@ -80,7 +67,7 @@ class _ChainIdParam(click.ParamType):
     show_default=True,
     help="Whether to check for commit on the remote.",
 )
-@click.argument("chain_id", type=_ChainIdParam())
+@click.argument("chain_id", type=ChainIdParam())
 def deploy_base(
     rpc_file: Path,
     keystore_file: Path,
