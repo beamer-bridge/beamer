@@ -65,13 +65,14 @@ e2e_test() {
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
     echo Sending Proof
     
-    e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $KEYFILE $e2e_test_l2_txhash
     echo L1 Resolve
     timeout 1m bash -c "until ${relayer} relay \
                                          --l1-rpc-url http://localhost:8545 \
                                          --l2-relay-to-rpc-url $l2_rpc \
                                          --l2-relay-from-rpc-url $l2_rpc \
-                                         --wallet-private-key $PRIVKEY \
+                                         --keystore-file $KEYFILE \
+                                         --password '' \
                                          --l2-transaction-hash $e2e_test_l2_txhash; \
                         do sleep 1s; done"
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
@@ -87,7 +88,7 @@ e2e_test_fallback() {
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
     echo Sending Proof
     
-    e2e_test_op_proof http://localhost:8545 $l2_rpc $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_op_proof http://localhost:8545 $l2_rpc $KEYFILE $e2e_test_l2_txhash
     echo L1 Resolve
     sleep 15
     # we need this relay call to fail
@@ -95,7 +96,8 @@ e2e_test_fallback() {
         --l1-rpc-url http://localhost:8545 \
         --l2-relay-to-rpc-url $l2_rpc \
         --l2-relay-from-rpc-url $l2_rpc \
-        --wallet-private-key $PRIVKEY \
+        --keystore-file $KEYFILE \
+        --password '' \
         --l2-transaction-hash $e2e_test_l2_txhash; then 
         echo Relayer failed to fail
         exit 1
@@ -122,7 +124,8 @@ e2e_test_fallback() {
         --l1-rpc-url http://localhost:8545 \
         --l2-relay-to-rpc-url $l2_rpc \
         --l2-relay-from-rpc-url $l2_rpc \
-        --wallet-private-key $PRIVKEY \
+        --keystore-file $KEYFILE \
+        --password '' \
         --l2-transaction-hash $e2e_test_l2_txhash
     poetry run python $ROOT/scripts/e2e-test-op-commands.py \
         ${KEYFILE} \

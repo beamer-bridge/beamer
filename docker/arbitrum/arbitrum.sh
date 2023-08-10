@@ -123,7 +123,7 @@ e2e_test() {
     export ARBITRUM_L1_MESSENGER=$l1_messenger
     export RESOLVER=$resolver
 
-    e2e_test_relayer http://0.0.0.0:8545 $l2_rpc $network_config $PRIVKEY $e2e_test_l2_txhash
+    e2e_test_relayer http://0.0.0.0:8545 $l2_rpc $network_config $KEYFILE $e2e_test_l2_txhash
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
 
