@@ -665,10 +665,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
     ) public validClaimId(claimId) returns (address) {
         Claim storage claim = claims[claimId];
         address claimer = claim.claimer;
-        require(
-            participant == claimer || claim.challengersStakes[participant] > 0,
-            "Not an active participant in this claim"
-        );
         bytes32 requestId = claim.requestId;
         Request storage request = requests[requestId];
 
