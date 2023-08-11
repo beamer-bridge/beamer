@@ -268,6 +268,15 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         return lpFee(targetChainId, tokenAddress, amount) + protocolFee(amount);
     }
 
+    /// Return the transferable amount excluding fees.
+    ///
+    /// It takes the given amount and calculates the actual transferable amount without fees
+    /// based on the token address and its current fees.
+    ///
+    /// @param targetChainId ID of the target chain.
+    /// @param tokenAddress Address of the token contract on the source chain.
+    /// @param amount Amount of tokens to transfer including fees.
+    /// @return transferable amount excluding fees.
     function transferableAmount(
         uint256 targetChainId,
         address tokenAddress,
