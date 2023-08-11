@@ -506,6 +506,7 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         );
         require(request.withdrawClaimId == 0, "Deposit already withdrawn");
         require(msg.value == claimStake, "Invalid stake amount");
+        require(claimer != address(0), "Claimer can't be zero address");
         require(fillId != bytes32(0), "FillId must not be 0x0");
 
         request.activeClaims += 1;
