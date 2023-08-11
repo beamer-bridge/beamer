@@ -884,7 +884,6 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         uint256 transferCost,
         uint256 targetWeightPPM
     ) external onlyOwner {
-        require(finalityPeriod > 0, "Finality period must be greater than 0");
         require(targetWeightPPM <= 999_999, "Maximum PPM of 999999 exceeded");
 
         Chain storage chain = chains[chainId];
