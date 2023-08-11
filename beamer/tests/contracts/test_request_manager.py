@@ -1436,3 +1436,19 @@ def test_transfer_limit_requests(request_manager, token):
     make_request(request_manager, token, requester, requester, transfer_limit + 1)
 
     assert token.balanceOf(requester) == 0
+
+
+def test_remove_chain_support(request_manager, chain_params, token):
+    (requester,) = alloc_accounts(1)
+
+    new_chain_id = 1234
+    # first add the support
+    request_manager.updateChain(new_chain_id, *chain_params)
+
+    make_request(request_manager, token, requester, requester, 1, target_chain_id=new_chain_id)
+
+    # remove support
+    request_manager.updateChain(new_chain_id, 0, 0, 0)
+
+    with ape.reverts("Target rollup not supported"):
+        make_request(request_manager, token, requester, requester, 1, target_chain_id=new_chain_id)
