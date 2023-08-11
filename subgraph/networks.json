@@ -11,7 +11,7 @@
   },
   "optimism": {
     "RequestManager": {
-      "address": "0xe236d136aD9f6dB125e9ba95eDc1d1A19423Ff0F",
+      "address": "0x124198789EF8d82050E620De2b73332C3c6C2eD4",
       "startBlock": 85123605
     },
     "FillManager": {
