@@ -189,8 +189,12 @@ def _generate_chain_updates(
     current_chains = current_config.request_manager.chains
     desired_chains = desired_config.request_manager.chains
 
-    # We don't support chain removals yet.
-    assert set(current_chains).issubset(desired_chains)
+    # First check for removed chains.
+    for chain_id in current_chains:
+        if chain_id not in desired_chains:
+            # The chain is disabled by setting its finality_period to zero.
+            # At the same time, set target_weight_ppm and transfer_cost to zero too.
+            yield ("RequestManager", "updateChain", chain_id, 0, 0, 0)
 
     for chain_id, desired_chain in desired_chains.items():
         current_chain = current_chains.get(chain_id)
