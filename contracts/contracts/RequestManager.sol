@@ -729,12 +729,11 @@ contract RequestManager is Ownable, LpWhitelist, RestrictedCalls, Pausable {
         // 2) FillId is true in request's invalidFillIds, claim is invalid
         // 3) The withdrawer's claim matches exactly this claim (same claimer address, same fillId)
         // 4) Claim properties, claim terminated and claimer has the highest stake
-        address filler = request.filler;
-        bytes32 fillId = request.fillId;
-
-        if (filler != address(0)) {
+        if (request.filler != address(0)) {
             // Claim resolution via 1)
-            claimValid = filler == claimer && fillId == claim.fillId;
+            claimValid =
+                request.filler == claimer &&
+                request.fillId == claim.fillId;
         } else if (request.invalidFillIds[claim.fillId]) {
             // Claim resolution via 2)
             claimValid = false;
