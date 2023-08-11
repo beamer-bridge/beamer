@@ -1173,7 +1173,7 @@ def test_withdraw_on_behalf(
 
     # After the stakes are withdrawn for the second challenger
     # he is not an active participant anymore
-    with ape.reverts("Not an active participant in this claim"):
+    with ape.reverts("Challenger has nothing to withdraw"):
         request_manager.withdraw(claim_id, sender=second_challenger)
 
     request_manager.withdraw(first_challenger, claim_id, sender=other)
@@ -1258,7 +1258,7 @@ def test_withdraw_two_challengers(
             request_manager.withdraw(claim_id)
 
             # Challenger cannot withdraw twice
-            with ape.reverts("Not an active participant in this claim"):
+            with ape.reverts("Challenger has nothing to withdraw"):
                 request_manager.withdraw(claim_id)
         with ape.reverts("Challenger has nothing to withdraw"):
             request_manager.withdraw(claim_id, sender=claimer)
@@ -1452,3 +1452,29 @@ def test_remove_chain_support(request_manager, chain_params, token):
 
     with ape.reverts("Target rollup not supported"):
         make_request(request_manager, token, requester, requester, 1, target_chain_id=new_chain_id)
+
+
+def test_withdraw_invalid_fill_no_challenger(
+    request_manager, token, claim_stake, contracts, deployer, claim_period
+):
+    (requester, withdraw_requester) = alloc_accounts(2)
+    (claimer,) = alloc_whitelisted_accounts(1, [request_manager])
+    web3 = ape.chain.provider.web3
+
+    request_id = make_request(request_manager, token, requester, requester, 1)
+
+    claim_tx = request_manager.claimRequest(request_id, FILL_ID, sender=claimer, value=claim_stake)
+
+    request_manager.invalidateFill(
+        request_id, FILL_ID, ape.chain.chain_id, sender=contracts.l1_messenger
+    )
+
+    old_balance = web3.eth.get_balance(deployer.address)
+
+    ape.chain.mine(deltatime=claim_period)
+
+    request_manager.withdraw(claim_tx.return_value, sender=withdraw_requester)
+
+    new_balance = web3.eth.get_balance(deployer.address)
+
+    assert old_balance + claim_stake == new_balance
