@@ -34,7 +34,7 @@ class TokenConfig:
 
 @dataclass
 class ChainConfig:
-    finality_period: int = field(metadata=schema(min=1))
+    finality_period: int = field(metadata=schema(min=0))
     target_weight_ppm: int = field(metadata=schema(min=0, max=999_999))
     transfer_cost: int = field(metadata=schema(min=0))
 
