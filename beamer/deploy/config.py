@@ -4,23 +4,7 @@ from pathlib import Path
 
 import apischema
 from apischema import ValidationError, schema
-from apischema.metadata import validators
-from eth_typing import ChecksumAddress
-from eth_utils import is_checksum_address
-
 from beamer.typing import ChainId
-
-
-def _validate_token_address(address: str) -> None:
-    if address != "mintable_token" and not is_checksum_address(address):
-        raise ValidationError(f"expected either 'mintable_token' or a checksum address: {address}")
-
-
-@dataclass
-class _BaseChain:
-    name: str
-    rpc: str
-    chain_id: ChainId = field(metadata=schema(min=1))
 
 
 @dataclass
@@ -36,13 +20,6 @@ class _Fees:
     min_fee_ppm: int = field(metadata=schema(min=0))
     lp_fee_ppm: int = field(metadata=schema(min=0))
     protocol_fee_ppm: int = field(metadata=schema(min=0))
-
-
-@dataclass
-class _Token:
-    token_address: str | ChecksumAddress = field(metadata=validators(_validate_token_address))
-    transfer_limit: int = field(metadata=schema(min=0))
-    eth_in_token: float = field(metadata=schema(min=0))
 
 
 @dataclass
