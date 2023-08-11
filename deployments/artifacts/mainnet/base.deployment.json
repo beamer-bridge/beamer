@@ -1,12 +1,12 @@
 {
-    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "deployer": "0x068053f77E321C8828f5fEA91b6917011b1a77fe",
     "base": {
         "chain_id": 1,
         "Resolver": {
-            "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
-            "tx_hash": "0x36b3d7b31f01e263bb07519a710692b1b0a1d367c3526401567dba1567b7bab9",
-            "address": "0xCb60516819a28431233195A8b7E0227C288B61AD",
-            "deployment_block": 16946576,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xf3512a02d9b8ffc603a2b701d3bebf24324bb7ff4c352d7c44e0eecad4bac24e",
+            "address": "0xD64c58A150545cb2B1985aFa7D3774617E40292E",
+            "deployment_block": 17913929,
             "deployment_args": []
         }
     }

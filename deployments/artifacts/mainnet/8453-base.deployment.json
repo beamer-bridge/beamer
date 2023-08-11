@@ -1,12 +1,12 @@
 {
-    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "deployer": "0x068053f77E321C8828f5fEA91b6917011b1a77fe",
     "base": {
         "chain_id": 1,
         "OptimismL1Messenger": {
-            "beamer_commit": "d3253f5ee377ac73f9fd24f92c0db8738af2dae8",
-            "tx_hash": "0x10897152e12fe4a29eca01b7f15a94cf1b967315e973d6faf26272bc3f030394",
-            "address": "0xb446096b4B2607840138D612464809C58CAC0df4",
-            "deployment_block": 17690667,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xdf94156f7640131985368084f00e57fb35d5d53ee70508fcfdf215df19d6b8cb",
+            "address": "0x1c546fD7CA57066d966275e76Acc5A39E816B340",
+            "deployment_block": 17914006,
             "deployment_args": [
                 "0x866E82a600A1414e583f7F13623F1aC5d58b0Afa"
             ]
@@ -15,10 +15,10 @@
     "chain": {
         "chain_id": 8453,
         "RequestManager": {
-            "beamer_commit": "d3253f5ee377ac73f9fd24f92c0db8738af2dae8",
-            "tx_hash": "0x87d38709e3e9a7bd97956e5ebdb5a86f659321f501d3828fa6fd2531d58fb266",
-            "address": "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F",
-            "deployment_block": 1267896,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x8e68543d2a49065198fa7cb2f456de4056ac0b000db823e11467ab8879e6ad8a",
+            "address": "0x1c7dfaa422CACaA5b368fE22dB84B8329cf88e12",
+            "deployment_block": 2618918,
             "deployment_args": [
                 1500000000000000,
                 86400,
@@ -27,20 +27,29 @@
             ]
         },
         "FillManager": {
-            "beamer_commit": "d3253f5ee377ac73f9fd24f92c0db8738af2dae8",
-            "tx_hash": "0xd7fb5c3544df4b54011de4b8dfc77d0f00b7bcea7fbea6d2c8c3b35f54531882",
-            "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
-            "deployment_block": 1267913,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x542b53175711a4d564bee65f878017da1ce8cad1e4ab410ca72e3953f6968472",
+            "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+            "deployment_block": 2618928,
             "deployment_args": [
-                "0xF9e693fC08C3Cb2db5b1EeB987612460B40e3e2b"
+                "0xc2f48bC4D8A42B82F801315696a92141f6F3413f"
             ]
         },
         "OptimismL2Messenger": {
-            "beamer_commit": "d3253f5ee377ac73f9fd24f92c0db8738af2dae8",
-            "tx_hash": "0xfd225a6d2d1b95383357e81d7a357b11bbf77cd5c8ba9419b63878dc31d07c65",
-            "address": "0xF9e693fC08C3Cb2db5b1EeB987612460B40e3e2b",
-            "deployment_block": 1267911,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x6dbc9466f046450739f83af7fbdf948846b88edcc22c6fe73671d7c096341a2e",
+            "address": "0xc2f48bC4D8A42B82F801315696a92141f6F3413f",
+            "deployment_block": 2618926,
             "deployment_args": []
+        },
+        "MintableToken": {
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xcef99a53d6e9d6e9cf2d0e80ae06f65760f6ae33dbf97af4d37e64d7f62220cf",
+            "address": "0xacb08C35F015CDDaA7588cF29DbfF935eC56943D",
+            "deployment_block": 2618952,
+            "deployment_args": [
+                1000000000000000000
+            ]
         }
     }
 }

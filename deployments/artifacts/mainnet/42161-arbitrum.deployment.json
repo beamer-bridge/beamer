@@ -1,25 +1,25 @@
 {
-    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "deployer": "0x068053f77E321C8828f5fEA91b6917011b1a77fe",
     "base": {
         "chain_id": 1,
         "ArbitrumL1Messenger": {
-            "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
-            "tx_hash": "0x27a8f63a2cc20d1d8512d30de0600abc1f35a07417a103251a66681f583d4e0c",
-            "address": "0x5911621aF8826d1AAA5B8B28d63c1e0096f7c0e3",
-            "deployment_block": 16946592,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xc5a98b71c90875056b39069e51958101ea2f844f7273fa4a941875dd9370febd",
+            "address": "0xb0545DF5C69D7dB3F82768C0605b5C8d67cAaF8D",
+            "deployment_block": 17913953,
             "deployment_args": [
-              "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a",
-              "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f"
+                "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a",
+                "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f"
             ]
         }
     },
     "chain": {
         "chain_id": 42161,
         "RequestManager": {
-            "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
-            "tx_hash": "0x24aa3d7b9bf2b0bcc9186b8de3bf86a59065b9f8a6752d5c005f71cb72a6ffa5",
-            "address": "0x13bAF73f48FCF6A8aAb8431CA3A38c624cdfd8F3",
-            "deployment_block": 75564388,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x38dadcf092cd397e23e7562de7a9f03b9d8ec42a8c064ad952d8e39744d9479a",
+            "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+            "deployment_block": 121351107,
             "deployment_args": [
                 1500000000000000,
                 86400,
@@ -28,20 +28,29 @@
             ]
         },
         "FillManager": {
-            "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
-            "tx_hash": "0x627a2fe5339faaf95cee947dc97f3714a2b16551910644b0df4821889d5ab48c",
-            "address": "0x27f72B9745CDE0fbAFe0A0d1119D75f4082bFc47",
-            "deployment_block": 75564424,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x09e4f4784b3fd2e15c941518b6d72f80c467bb560fda197900d3936b9cfdd989",
+            "address": "0xeF169821403D13345E2b24450601567Cd1d781A7",
+            "deployment_block": 121351146,
             "deployment_args": [
-                "0x8868eDed0b126f0C9bd3388a3003F13FB91c31Bb"
+                "0x8E3823e77492182eA7D3baf6b240c16a446fd863"
             ]
         },
         "ArbitrumL2Messenger": {
-            "beamer_commit": "be79f87d5e8f124ab5774dc4424757f3dfa26ce4",
-            "tx_hash": "0x1bb6280adc474b1fc132b0ac7d262519de282c5c28c2a1e029fd74c52fadfa78",
-            "address": "0x8868eDed0b126f0C9bd3388a3003F13FB91c31Bb",
-            "deployment_block": 75564378,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xb860fc2e50fd210232fa2b9294c0837869a104eb7203e3fe129ca3f1d8c4b436",
+            "address": "0x8E3823e77492182eA7D3baf6b240c16a446fd863",
+            "deployment_block": 121351136,
             "deployment_args": []
+        },
+        "MintableToken": {
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xa28221e86d74cfc1c623a4f2dc83799ecef76bf044e42d369c6030fc2f81a504",
+            "address": "0x121777041Dd7D2FB097993401e77284D37eD48b6",
+            "deployment_block": 121351337,
+            "deployment_args": [
+                1000000000000000000
+            ]
         }
     }
 }

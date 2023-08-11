@@ -1,15 +1,15 @@
 {
-    "deployer": "0x42405d66fdA09dbDaC90Ff25fC5a4C2353f43E70",
+    "deployer": "0x068053f77E321C8828f5fEA91b6917011b1a77fe",
     "base": {
         "chain_id": 1,
         "PolygonZkEVMMessenger": {
-            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
-            "tx_hash": "0xce41bc8d28fb33916f1215fc0e722595fea609048bbfee8d72a78804d58e7b7d",
-            "address": "0xA0f99747DF0DfC38d5c08f032ecBF87caD2bF8d4",
-            "deployment_block": 17385667,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x5b23e995d4f29eddca07bacf284dee023b2857a118004825334dcd44199bb894",
+            "address": "0x6D2dE76A62c81cfD4E8854cC07C8eA74a81479F9",
+            "deployment_block": 17913969,
             "deployment_args": [
                 "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",
-                "0xCb60516819a28431233195A8b7E0227C288B61AD",
+                "0xD64c58A150545cb2B1985aFa7D3774617E40292E",
                 1
             ]
         }
@@ -17,10 +17,10 @@
     "chain": {
         "chain_id": 1101,
         "RequestManager": {
-            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
-            "tx_hash": "0x0aa31a8f0824ac50bd562fb8bdf52791d7f9378ba47720c2cbe0bc02db6139a0",
-            "address": "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
-            "deployment_block": 578936,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xffff104b01552caca88fb6926731f41299d44d941fa2b09fbb17d1e5aab953af",
+            "address": "0xc2f48bC4D8A42B82F801315696a92141f6F3413f",
+            "deployment_block": 4463667,
             "deployment_args": [
                 1500000000000000,
                 86400,
@@ -29,23 +29,32 @@
             ]
         },
         "FillManager": {
-            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
-            "tx_hash": "0x4fd1f2f77963ef8bc2799a2f60cf5562c7f92179e0403a1c2f63ea7177acd9f3",
-            "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
-            "deployment_block": 578946,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0x79615a79ff3c480251056ce13731f8f52eb934e22e3ae934a9c38975020418e7",
+            "address": "0xeF169821403D13345E2b24450601567Cd1d781A7",
+            "deployment_block": 4463703,
             "deployment_args": [
-                "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F"
+                "0x9208242FC2148A21737d73de036C6A5B1e934dB5"
             ]
         },
         "PolygonZkEVMMessenger": {
-            "beamer_commit": "f64fed9a16349ecfc1dcd336797d6d111f479ef7",
-            "tx_hash": "0x5cdb7364b5419bcce5aa68eb2ccb8dd602f736371afad5a7a9fe332a4d42fedf",
-            "address": "0x62249Fcb288F0a4734072Ab899b926ef9845BC8F",
-            "deployment_block": 578943,
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xc3c2686490cfc300d6600e7a1265ee6324a2618ee2131a4df933197750de47ed",
+            "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+            "deployment_block": 4463681,
             "deployment_args": [
                 "0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe",
-                "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
+                "0xc2f48bC4D8A42B82F801315696a92141f6F3413f",
                 0
+            ]
+        },
+        "MintableToken": {
+            "beamer_commit": "7ccea7e3cb3b740ea6be7ccdea3464ad2feb12f9",
+            "tx_hash": "0xf23d56fca3c6b30dbcb29ad374ba60bbbbf504dc0fd5e33f15a568aab6548bcb",
+            "address": "0x121777041Dd7D2FB097993401e77284D37eD48b6",
+            "deployment_block": 4463752,
+            "deployment_args": [
+                1000000000000000000
             ]
         }
     }
