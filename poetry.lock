@@ -3344,13 +3344,13 @@ six = ">=1.5"
 
 [[package]]
 name = "python-statemachine"
-version = "2.1.0"
+version = "2.1.1"
 description = "Python Finite State Machines made easy."
 optional = false
 python-versions = ">=3.7,<3.12"
 files = [
-    {file = "python_statemachine-2.1.0-py3-none-any.whl", hash = "sha256:195d8a1059ea22e94effce35d5fd9352362391e07ed248e04e27fadb49b41726"},
-    {file = "python_statemachine-2.1.0.tar.gz", hash = "sha256:aded5878526f5249465ce5aec3fb8babc9e08261bba4a4e0d147403e73335c34"},
+    {file = "python_statemachine-2.1.1-py3-none-any.whl", hash = "sha256:1ef93e467dd3be9949ac81052a35159af04de14650bb053873a0e5d7406b1385"},
+    {file = "python_statemachine-2.1.1.tar.gz", hash = "sha256:5aabafa4b98a0b65a1d3d400707f7c86eae62f0ad1f233d7858f1bc4cef5dae0"},
 ]
 
 [[package]]
@@ -4721,4 +4721,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "e13d98ebd35aa70cfb2647b6bb72f5d25dbea0bbaccfe948e17ac5fe43d3a5e6"
+content-hash = "84731551b4872b4f5db1c5a5a58bc9859febb1582e2f2c394c3460dd4ca6cf96"
