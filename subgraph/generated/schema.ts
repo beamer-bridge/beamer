@@ -1065,4 +1065,17 @@ export class Claim extends Entity {
   set emittedByTx(value: Bytes) {
     this.set("emittedByTx", Value.fromBytes(value));
   }
+
+  get resolved(): boolean {
+    let value = this.get("resolved");
+    if (!value || value.kind == ValueKind.NULL) {
+      return false;
+    } else {
+      return value.toBoolean();
+    }
+  }
+
+  set resolved(value: boolean) {
+    this.set("resolved", Value.fromBoolean(value));
+  }
 }
