@@ -81,4 +81,5 @@ type Claim @entity {
   contractAddress: Bytes! # address
   emittedAt: BigInt! # uint256
   emittedByTx: Bytes! # bytes32
+  resolved: Boolean!
 }

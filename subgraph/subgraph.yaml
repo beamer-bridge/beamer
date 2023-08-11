@@ -6,8 +6,8 @@ dataSources:
     name: RequestManager
     source:
       abi: RequestManager
-      address: "0x7faEa6562a6cE991149F0167baF283E9aAc7Dc50"
-      startBlock: 16946579
+      address: "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A"
+      startBlock: 578936
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -31,14 +31,16 @@ dataSources:
           handler: handleFillInvalidatedResolved
         - event: RequestResolved(bytes32,address,bytes32)
           handler: handleRequestResolved
+        - event: ClaimStakeWithdrawn(uint96,indexed bytes32,address)
+          handler: handleClaimStakeWithdrawn
       file: ./src/mappings/request-manager.ts
-    network: mainnet
+    network: polygon-zkevm
   - kind: ethereum
     name: FillManager
     source:
       abi: FillManager
-      address: "0xD5EF34B499b6d64817CC70C3b0B8D9f807F06C29"
-      startBlock: 16946583
+      address: "0x21F359D1869314175d84A18A6F5DEb94672C4996"
+      startBlock: 578946
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -54,4 +56,4 @@ dataSources:
           handler: handleRequestFilled
           receipt: true
       file: ./src/mappings/fill-manager.ts
-    network: mainnet
+    network: polygon-zkevm

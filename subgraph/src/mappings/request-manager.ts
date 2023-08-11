@@ -1,12 +1,12 @@
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
-  ClaimMade,
+  ClaimMade, ClaimStakeWithdrawn,
   DepositWithdrawn,
   FillInvalidatedResolved,
   OwnershipTransferred,
   RequestCreated,
-  RequestResolved,
-} from '../../generated/RequestManager/RequestManager';
+  RequestResolved
+} from "../../generated/RequestManager/RequestManager";
 import {Claim, FillState, Request} from '../../generated/schema';
 import {ADDRESS_ZERO_BYTES, ZERO_BI, ZERO_BYTES, CLAIM_ID_EXPIRED_REQUEST} from '../utils/constants';
 import { loadTransaction } from "../utils";
@@ -24,6 +24,7 @@ export function handleClaimMade(event: ClaimMade): void {
   claim.emittedAt = event.block.timestamp
   claim.emittedByTx = event.transaction.hash
   claim.contractAddress = event.address
+  claim.resolved = false;
 
   const request = Request.load(event.params.requestId);
 
@@ -33,10 +34,28 @@ export function handleClaimMade(event: ClaimMade): void {
 
     const claims = request.claims;
     request.claims = claims && claims.length > 0 ? claims.concat([claim.id]) : [claim.id];
+    if(claim.lastChallenger == ADDRESS_ZERO_BYTES) {
+      request.activeClaims = request.activeClaims.plus(BigInt.fromI32(1));
+    }
     request.save();
   }
 }
 
+export function handleClaimStakeWithdrawn(event: ClaimStakeWithdrawn): void {
+  const claimId = event.params.claimId;
+  const requestId = event.params.requestId;
+  const stakeRecipient = event.params.stakeRecipient;
+
+  const claim = Claim.load(claimId.toString());
+  const request = Request.load(requestId);
+
+  if(claim && request && claim.resolved == false) {
+    claim.resolved = true;
+    request.activeClaims = request.activeClaims.minus(BigInt.fromI32(1));
+    claim.save();
+    request.save();
+  }
+}
 export function handleDepositWithdrawn(event: DepositWithdrawn): void {
   const requestId = event.params.requestId;
   const receiver = event.params.receiver;
