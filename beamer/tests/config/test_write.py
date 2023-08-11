@@ -118,6 +118,15 @@ def test_config_write_request_manager(deployment_objects, deployer):
     assert request_manager.tokens(token_address).transferLimit == 0
     assert request_manager.tokens(token_address).ethInToken == 0
 
+    # Removal of a chain
+    current = desired.to_config(ape.chain.blocks[-1].number)
+    del desired.request_manager.chains[1]
+
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+    assert request_manager.chains(1).finalityPeriod == 0
+    assert request_manager.chains(1).targetWeightPPM == 0
+    assert request_manager.chains(1).transferCost == 0
+
 
 def test_config_write_fill_manager(deployment_objects, deployer):
     rpc_file, artifact, deployment = deployment_objects
