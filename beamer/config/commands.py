@@ -6,6 +6,7 @@ import click
 import structlog
 from eth_typing import ChecksumAddress
 from web3 import Web3
+from web3.exceptions import ContractLogicError
 
 import beamer.contracts
 import beamer.util
@@ -51,10 +52,16 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
 
         case TokenUpdated():
             token = w3.eth.contract(address=event.token_address, abi=get_ERC20_abi())
-            symbol = token.functions.symbol().call()
+            try:
+                symbol = token.functions.symbol().call()
+            except ContractLogicError:
+                # If token symbol is not available, use address instead
+                symbol = event.token_address
+
             config.request_manager.tokens[symbol] = TokenConfig(
                 transfer_limit=event.transfer_limit, eth_in_token=event.eth_in_token
             )
+
             address = config.token_addresses.get(symbol)
             if address is None:
                 config.token_addresses[symbol] = event.token_address
