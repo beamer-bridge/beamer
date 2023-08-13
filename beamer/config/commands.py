@@ -60,19 +60,19 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
                 # If token symbol is not available, use address instead
                 symbol = event.token_address
 
+            # If the symbol already exists for a different token address,
+            # default to use token address as a symbol
+            if config.token_addresses.get(symbol, event.token_address) != event.token_address:
+                symbol = event.token_address
+
             if removal:
-                config.request_manager.tokens.pop(symbol)
-                config.token_addresses.pop(symbol)
+                config.request_manager.tokens.pop(symbol, None)
+                config.token_addresses.pop(symbol, None)
             else:
                 config.request_manager.tokens[symbol] = TokenConfig(
                     transfer_limit=event.transfer_limit, eth_in_token=event.eth_in_token
                 )
-
-                address = config.token_addresses.get(symbol)
-                if address is None:
-                    config.token_addresses[symbol] = event.token_address
-                else:
-                    assert address == event.token_address
+                config.token_addresses[symbol] = event.token_address
 
         case LpAdded():
             if event.event_address == deployment.chain.contracts["RequestManager"].address:
