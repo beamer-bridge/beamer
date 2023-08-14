@@ -797,7 +797,12 @@ def _withdraw(claim: Claim, context: Context) -> None:
 
 def _invalidate(request: Request, claim: Claim, context: Context) -> None:
     func = context.fill_manager.functions.invalidateFill(
-        request.id, claim.fill_id, request.source_chain_id
+        request.source_chain_id,
+        request.target_token_address,
+        request.target_address,
+        request.amount,
+        request.nonce,
+        claim.fill_id,
     )
     try:
         receipt = transact(func)
