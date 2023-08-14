@@ -24,6 +24,9 @@ dependencies:
   - name: Polygon-ZkEVM
     local: ./contracts/contracts/chains/
     contracts_folder: ./polygon_zkevm
+  - name: ZkSync
+    local: ./contracts/contracts/chains/
+    contracts_folder: ./zksync
 
 default_ecosystem: ethereum
 
@@ -35,6 +38,7 @@ solidity:
     - 'interfaces=Interfaces'
     - 'optimism=Optimism'
     - 'polygon_zkevm=Polygon-ZkEVM'
+    - 'zksync=ZkSync'
 
 ganache:
   server:
