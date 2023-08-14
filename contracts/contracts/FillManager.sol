@@ -135,16 +135,30 @@ contract FillManager is Ownable, LpWhitelist {
     /// the dishonest claimer is guaranteed to lose as soon as the information about the invalid
     /// fill (so called "non-fill proof") is propagated to the source chain via L1 resolution.
     ///
-    /// @param requestId The request ID.
-    /// @param fillId The fill ID.
     /// @param sourceChainId The source chain ID.
+    /// @param targetTokenAddress Address of the token contract on the target chain.
+    /// @param targetReceiverAddress Recipient address on the target chain.
+    /// @param amount Amount of tokens to transfer. Does not include fees.
+    /// @param nonce The nonce used to create the request ID.
+    /// @param fillId The fill ID.
     function invalidateFill(
-        bytes32 requestId,
-        bytes32 fillId,
-        uint256 sourceChainId
+        uint256 sourceChainId,
+        address targetTokenAddress,
+        address targetReceiverAddress,
+        uint256 amount,
+        uint96 nonce,
+        bytes32 fillId
     ) external {
         address _l1Resolver = l1Resolver;
         require(_l1Resolver != address(0), "Resolver address not set");
+        bytes32 requestId = BeamerUtils.createRequestId(
+            sourceChainId,
+            block.chainid,
+            targetTokenAddress,
+            targetReceiverAddress,
+            amount,
+            nonce
+        );
         require(fills[requestId] != fillId, "Fill valid");
         require(
             fillId != generateFillId(),
