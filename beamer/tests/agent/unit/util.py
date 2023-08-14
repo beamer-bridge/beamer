@@ -18,8 +18,8 @@ from beamer.agent.tracker import Tracker
 from beamer.agent.util import TokenChecker
 from beamer.chains import ChainDescriptor, register, search
 from beamer.events import ClaimMade
-from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
+from beamer.tests.util import make_address
 from beamer.typing import URL, ChainId, ClaimId, FillId, Nonce, RequestId, Termination, TokenAmount
 
 SOURCE_CHAIN_ID = ChainId(2)

@@ -9,7 +9,7 @@ from web3.constants import ADDRESS_ZERO
 from beamer.agent.chain import process_claims
 from beamer.agent.state_machine import process_event
 from beamer.events import FillInvalidated, FillInvalidatedResolved
-from beamer.tests.agent.unit.utils import (
+from beamer.tests.agent.unit.util import (
     ACCOUNT,
     ADDRESS1,
     BLOCK_NUMBER,
@@ -19,8 +19,9 @@ from beamer.tests.agent.unit.utils import (
     make_context,
     make_request,
 )
-from beamer.tests.agent.utils import make_address, make_tx_hash
+from beamer.tests.agent.util import make_tx_hash
 from beamer.tests.constants import FILL_ID
+from beamer.tests.util import make_address
 from beamer.typing import ClaimId, FillId, Termination
 
 

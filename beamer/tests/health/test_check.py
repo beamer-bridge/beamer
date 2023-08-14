@@ -12,9 +12,9 @@ from beamer.health.check import (
     analyze_transfer,
     create_transfers_object,
 )
-from beamer.tests.agent.unit.utils import CLAIM_ID, REQUEST_ID
-from beamer.tests.agent.utils import make_address
+from beamer.tests.agent.unit.util import CLAIM_ID, REQUEST_ID
 from beamer.tests.health.conftest import SOURCE_CHAIN_ID, TARGET_CHAIN_ID
+from beamer.tests.util import make_address
 from beamer.typing import Termination
 
 

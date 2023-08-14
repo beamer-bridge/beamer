@@ -14,7 +14,7 @@ from beamer.agent.chain import maybe_challenge
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
 from beamer.events import ClaimMade, RequestFilled
-from beamer.tests.agent.unit.utils import BLOCK_NUMBER
+from beamer.tests.agent.unit.util import BLOCK_NUMBER
 from beamer.tests.util import Sleeper, Timeout, alloc_accounts, make_request
 from beamer.typing import (
     BlockNumber,

@@ -1,8 +1,12 @@
 import ape
 from hexbytes import HexBytes
 
-from beamer.tests.agent.utils import make_address
-from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, create_request_id
+from beamer.tests.util import (
+    alloc_accounts,
+    alloc_whitelisted_accounts,
+    create_request_id,
+    make_address,
+)
 
 
 def test_fill_request(fill_manager, token):

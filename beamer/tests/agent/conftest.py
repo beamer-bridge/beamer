@@ -9,7 +9,7 @@ from beamer.agent.agent import Agent
 from beamer.agent.config import ChainConfig, Config
 from beamer.agent.relayer import get_relayer_executable
 from beamer.agent.util import TokenChecker
-from beamer.tests.agent.utils import generate_abi_files, generate_artifacts
+from beamer.tests.agent.util import generate_abi_files, generate_artifacts
 from beamer.typing import URL, ChainId, TransferDirection
 
 
