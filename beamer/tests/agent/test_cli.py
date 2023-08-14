@@ -7,7 +7,7 @@ from click.testing import CliRunner
 
 from beamer.agent.commands import agent
 
-from beamer.tests.agent.utils import generate_abi_files, generate_artifacts
+from beamer.tests.agent.util import generate_abi_files, generate_artifacts
 
 
 _CONFIG_FILE = """

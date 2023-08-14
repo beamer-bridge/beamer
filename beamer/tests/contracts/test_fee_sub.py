@@ -2,8 +2,12 @@ import ape
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 
-from beamer.tests.agent.utils import make_address
-from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, make_request
+from beamer.tests.util import (
+    alloc_accounts,
+    alloc_whitelisted_accounts,
+    make_address,
+    make_request,
+)
 
 
 def test_fee_sub(fee_sub, token, request_manager):

@@ -20,7 +20,7 @@ from beamer.agent.agent import Agent
 from beamer.agent.config import ChainConfig, Config
 from beamer.agent.util import TokenChecker
 from beamer.chains import ChainDescriptor, register
-from beamer.tests.agent.utils import generate_abi_files
+from beamer.tests.agent.util import generate_abi_files
 from beamer.tests.util import Sleeper
 from beamer.typing import URL, ChainId
 from beamer.util import make_web3, transact

@@ -10,7 +10,7 @@ from web3.types import BlockData, Wei
 from beamer.agent.agent import Chain
 from beamer.agent.chain import process_claims
 from beamer.chains import search
-from beamer.tests.agent.unit.utils import (
+from beamer.tests.agent.unit.util import (
     ADDRESS1,
     CLAIMER_STAKE,
     TIMESTAMP,
@@ -20,8 +20,8 @@ from beamer.tests.agent.unit.utils import (
     make_context,
     make_request,
 )
-from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
+from beamer.tests.util import make_address
 from beamer.typing import FillId, Termination
 
 

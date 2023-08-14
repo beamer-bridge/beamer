@@ -12,7 +12,7 @@ from web3.types import ChecksumAddress, TxReceipt, Wei
 from beamer.agent.chain import claim_request, process_claims, process_requests
 from beamer.agent.state_machine import process_event
 from beamer.events import RequestResolved
-from beamer.tests.agent.unit.utils import (
+from beamer.tests.agent.unit.util import (
     ACCOUNT,
     ADDRESS1,
     BLOCK_NUMBER,
@@ -23,8 +23,8 @@ from beamer.tests.agent.unit.utils import (
     make_context,
     make_request,
 )
-from beamer.tests.agent.utils import make_address
 from beamer.tests.constants import FILL_ID
+from beamer.tests.util import make_address
 from beamer.typing import FillId, Termination
 
 

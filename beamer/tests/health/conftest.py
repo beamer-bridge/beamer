@@ -9,14 +9,14 @@ from web3.types import Wei
 from beamer.events import ClaimMade, RequestCreated, RequestFilled
 from beamer.health.check import Context, TokenMap
 from beamer.health.notify import NotificationState
-from beamer.tests.agent.unit.utils import (
+from beamer.tests.agent.unit.util import (
     ADDRESS1,
     BLOCK_NUMBER,
     CLAIM_ID,
     CLAIMER_STAKE,
     REQUEST_ID,
 )
-from beamer.tests.agent.utils import make_address
+from beamer.tests.util import make_address
 from beamer.typing import ChainId, FillId, Nonce, Termination, TokenAmount
 from beamer.util import TokenDetails
 

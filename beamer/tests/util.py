@@ -1,11 +1,14 @@
 import contextlib
 import pathlib
+import random
 import socket
+import string
 import threading
 import time
 from datetime import datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from typing import Any, List, Optional, cast
 
 import ape
@@ -14,7 +17,8 @@ import web3
 from ape.api.providers import Web3Provider
 from ape.contracts import ContractInstance
 from eth_abi.packed import encode_packed
-from eth_utils import keccak, to_canonical_address
+from eth_typing import ChecksumAddress
+from eth_utils import keccak, to_canonical_address, to_checksum_address
 from freezegun import freeze_time
 from web3.types import FilterParams
 
@@ -268,3 +272,11 @@ def create_request_id(
 def jump_to_challenge_phase(proof_timestamp, finality_period):
     with freeze_time(datetime.fromtimestamp(proof_timestamp + finality_period + 1), tick=True):
         yield
+
+
+def make_bytes(length: int) -> bytes:
+    return bytes("".join(random.choice(string.printable) for _ in range(length)), encoding="utf-8")
+
+
+def make_address() -> ChecksumAddress:
+    return to_checksum_address(make_bytes(20))

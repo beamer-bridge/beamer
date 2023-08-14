@@ -6,7 +6,7 @@ from pathlib import Path
 
 import ape
 
-from beamer.tests.agent.utils import generate_artifacts
+from beamer.tests.agent.util import generate_artifacts
 from beamer.tests.util import alloc_accounts, make_request
 
 
