@@ -53,11 +53,16 @@ def test_l1_resolution_correct_id(request_manager, fill_manager, token, amount):
 
 @pytest.mark.parametrize("forward_state", [True])
 def test_l1_non_fill_proof(fill_manager, request_manager):
-    request_id = HexBytes("1234" + "00" * 30)
-    fill_id = HexBytes("5678" + "00" * 30)
     chain_id = ape.chain.chain_id
+    token_address = make_address()
+    receiver_address = make_address()
+    amount = nonce = 1
+    fill_id = HexBytes("5678" + "00" * 30)
 
-    fill_manager.invalidateFill(request_id, fill_id, chain_id)
+    request_id = create_request_id(
+        chain_id, chain_id, token_address, receiver_address, amount, nonce
+    )
+    fill_manager.invalidateFill(chain_id, token_address, receiver_address, amount, nonce, fill_id)
     assert request_manager.isInvalidFill(request_id, fill_id)
 
 

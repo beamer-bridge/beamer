@@ -76,23 +76,31 @@ def test_invalidate_valid_fill(fill_manager, token):
             nonce,
         )
     fill_id = tx.return_value
-    request_id = create_request_id(
-        chain_id, chain_id, token.address, receiver.address, amount, nonce
-    )
+
     with ape.reverts("Fill valid"):
-        fill_manager.invalidateFill(request_id, fill_id, chain_id)
+        fill_manager.invalidateFill(
+            chain_id, token.address, receiver.address, amount, nonce, fill_id
+        )
 
 
 def test_fill_invalidated_event(fill_manager):
-    request_id = "1234" + "00" * 30
-    fill_id = "5678" + "00" * 30
     chain_id = ape.chain.chain_id
+    token_address = make_address()
+    receiver_address = make_address()
+    amount = nonce = 1
 
-    tx = fill_manager.invalidateFill(HexBytes(request_id), HexBytes(fill_id), chain_id)
+    request_id = create_request_id(
+        chain_id, chain_id, token_address, receiver_address, amount, nonce
+    )
+    fill_id = "5678" + "00" * 30
+
+    tx = fill_manager.invalidateFill(
+        chain_id, token_address, receiver_address, amount, nonce, HexBytes(fill_id)
+    )
 
     assert tx.events.filter(
         fill_manager.FillInvalidated,
-        requestId=HexBytes("0x" + request_id),
+        requestId=HexBytes("0x" + request_id.hex()),
         fillId=HexBytes("0x" + fill_id),
     )
 
@@ -121,10 +129,8 @@ def test_unset_resolver(deployer, token):
                 1,
             )
 
-    request_id = create_request_id(chain_id, chain_id, token.address, receiver.address, amount, 1)
-
     with ape.reverts("Resolver address not set"):
-        new_fill_manager.invalidateFill(request_id, b"1", chain_id)
+        new_fill_manager.invalidateFill(chain_id, token.address, receiver.address, amount, 1, b"1")
 
     with ape.reverts("Ownable: caller is not the owner"):
         new_fill_manager.setResolver(make_address(), sender=filler)
@@ -143,16 +149,24 @@ def test_unset_resolver(deployer, token):
         sender=filler,
     )
 
-    new_fill_manager.invalidateFill(request_id, b"1", chain_id)
+    new_fill_manager.invalidateFill(chain_id, token.address, receiver.address, amount, 1, b"1")
 
 
 def test_invalidate_previous_block_hash(fill_manager):
     chain_id = ape.chain.chain_id
+    token_address = make_address()
+    receiver_address = make_address()
+    amount = nonce = 1
+
     current_block = ape.chain.blocks[-1]
     with ape.reverts("Cannot invalidate fills of current block"):
-        fill_manager.invalidateFill(b"1", current_block.hash, chain_id)
+        fill_manager.invalidateFill(
+            chain_id, token_address, receiver_address, amount, nonce, current_block.hash
+        )
 
     assert current_block.hash != ape.chain.blocks[-1].hash
 
     # We proceeded one block so invalidating the fill id should work now
-    fill_manager.invalidateFill(b"1", current_block.hash, chain_id)
+    fill_manager.invalidateFill(
+        chain_id, token_address, receiver_address, amount, nonce, current_block.hash
+    )
