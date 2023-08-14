@@ -65,7 +65,7 @@ def deployment_objects(tmp_deployment_path, deployer, token):
     # Call updateToken so that the eventual 'config read' command can pick up the token.
     address = deployment.chain.contracts["RequestManager"].address
     request_manager: Any = ape.project.RequestManager.at(address)
-    request_manager.updateToken(token.address, 0, 0)
+    request_manager.updateToken(token.address, 999, 1999)
 
     return rpc_file, artifact, deployment
 
