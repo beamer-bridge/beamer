@@ -10,8 +10,8 @@ from apischema.validation.mock import NonTrivialDependency
 import beamer.config.commands
 from beamer.artifacts import Deployment
 from beamer.config.state import Configuration
-from beamer.tests.config.util import CommandFailed, deploy, read_config_state, run
-from beamer.tests.util import get_repo_root
+from beamer.tests.config.util import read_config_state
+from beamer.tests.util import CommandFailed, deploy, get_repo_root, run_command
 
 
 def test_config_read_request_manager(tmp_path, token, deployer):
@@ -164,7 +164,7 @@ def test_error_on_different_chain_ids(tmp_path, deployer, caplog):
     path.write_text(_DATA)
     root = get_repo_root()
     with pytest.raises(CommandFailed):
-        run(
+        run_command(
             beamer.config.commands.read,
             (
                 "--rpc-file",
@@ -191,7 +191,7 @@ def test_config_read_no_updates_found(tmp_path, deployer, caplog):
     root = get_repo_root()
     caplog.clear()
     ape.chain.mine()
-    run(
+    run_command(
         beamer.config.commands.read,
         (
             "--rpc-file",
