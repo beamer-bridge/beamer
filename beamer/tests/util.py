@@ -1,4 +1,5 @@
 import contextlib
+import json
 import pathlib
 import random
 import socket
@@ -8,20 +9,22 @@ import time
 from datetime import datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-
 from typing import Any, List, Optional, cast
 
 import ape
+import eth_account
 import requests
 import web3
 from ape.api.providers import Web3Provider
 from ape.contracts import ContractInstance
+from click.testing import CliRunner
 from eth_abi.packed import encode_packed
 from eth_typing import ChecksumAddress
 from eth_utils import keccak, to_canonical_address, to_checksum_address
 from freezegun import freeze_time
 from web3.types import FilterParams
 
+import beamer.deploy.commands
 from beamer.typing import RequestId
 
 FUNDER = ape.accounts.test_accounts[0]
@@ -280,3 +283,74 @@ def make_bytes(length: int) -> bytes:
 
 def make_address() -> ChecksumAddress:
     return to_checksum_address(make_bytes(20))
+
+
+class CommandFailed(Exception):
+    pass
+
+
+def run_command(*args):
+    runner = CliRunner()
+    result = runner.invoke(*args)
+    if result.exit_code:
+        raise CommandFailed(result)
+
+
+def write_keystore_file(path, private_key, password):
+    obj = eth_account.Account.encrypt(private_key, password)
+    path.write_text(json.dumps(obj))
+
+
+def deploy(deployer, destdir):
+    password = "test"
+    keystore_file = destdir / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+    artifacts_dir = destdir / "artifacts"
+    artifacts_dir.mkdir()
+
+    chain_id = ape.chain.chain_id
+    rpc_file = destdir / "rpc.json"
+    rpc_file.write_text(json.dumps({f"{chain_id}": "http://localhost:8545"}))
+
+    root = get_repo_root()
+    run_command(
+        beamer.deploy.commands.deploy_base,
+        (
+            "--rpc-file",
+            rpc_file,
+            "--keystore-file",
+            keystore_file,
+            "--password",
+            password,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifacts-dir",
+            artifacts_dir,
+            "--commit-check",
+            "no",
+            f"{chain_id}",
+        ),
+    )
+
+    run_command(
+        beamer.deploy.commands.deploy,
+        (
+            "--rpc-file",
+            rpc_file,
+            "--keystore-file",
+            keystore_file,
+            "--password",
+            password,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifacts-dir",
+            artifacts_dir,
+            "--commit-check",
+            "no",
+            "--deploy-mintable-token",
+            f"{root}/deployments/config/local/{chain_id}-ethereum.json",
+        ),
+    )
+
+    artifact = f"{artifacts_dir}/{chain_id}-ethereum.deployment.json"
+    return rpc_file, artifact

@@ -10,14 +10,15 @@ from eth_utils import to_checksum_address
 import beamer.config.commands
 from beamer.artifacts import Deployment
 from beamer.config.state import ChainConfig
-from beamer.tests.config.util import (
+
+from beamer.tests.config.util import read_config_state
+from beamer.tests.util import (
     CommandFailed,
     deploy,
-    read_config_state,
-    run,
+    get_repo_root,
+    run_command,
     write_keystore_file,
 )
-from beamer.tests.util import get_repo_root
 
 
 def _write_config_state(rpc_file, artifact, account, current_config, desired_config):
@@ -32,7 +33,7 @@ def _write_config_state(rpc_file, artifact, account, current_config, desired_con
         write_keystore_file(keystore_file, account.private_key, "test")
 
         root = get_repo_root()
-        run(
+        run_command(
             beamer.config.commands.write,
             (
                 "--rpc-file",
