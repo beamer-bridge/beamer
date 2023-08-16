@@ -18,9 +18,8 @@ import web3
 from ape.api.providers import Web3Provider
 from ape.contracts import ContractInstance
 from click.testing import CliRunner
-from eth_abi.packed import encode_packed
 from eth_typing import ChecksumAddress
-from eth_utils import keccak, to_canonical_address, to_checksum_address
+from eth_utils import to_checksum_address
 from freezegun import freeze_time
 from web3.types import FilterParams
 
@@ -251,24 +250,6 @@ def make_request(
                 validity_period,
             )
     return RequestId(request_tx.return_value)
-
-
-def create_request_id(
-    source_chain_id, target_chain_id, target_token_address, receiver_address, amount, nonce
-):
-    return keccak(
-        encode_packed(
-            ["uint256", "uint256", "address", "address", "uint256", "uint96"],
-            [
-                source_chain_id,
-                target_chain_id,
-                to_canonical_address(target_token_address),
-                to_canonical_address(receiver_address),
-                amount,
-                nonce,
-            ],
-        )
-    )
 
 
 @contextlib.contextmanager
