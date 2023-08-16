@@ -1,6 +1,6 @@
 import type { SafeInfo } from '@safe-global/safe-apps-sdk';
 
-import { BasicEthereumProvider } from '@/services/web3-provider/ethereum-provider';
+import { BasicEthereumWallet } from '@/services/web3-provider/ethereum-provider';
 import { SafeAppProvider, SafeAppsSDK } from '@/services/web3-provider/util-export';
 
 export async function createSafeProvider(): Promise<SafeProvider | undefined> {
@@ -23,7 +23,7 @@ export async function createSafeProvider(): Promise<SafeProvider | undefined> {
   return safeProvider;
 }
 
-export class SafeProvider extends BasicEthereumProvider<SafeAppProvider> {
+export class SafeProvider extends BasicEthereumWallet<SafeAppProvider> {
   disconnectable = false;
   isContractWallet = true;
 

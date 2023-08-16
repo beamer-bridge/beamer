@@ -9,7 +9,7 @@ import {
 } from '@/services/transactions/token';
 import { UInt256 } from '@/types/uint-256';
 import { generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 import {
   mockGetERC20Contract,
   mockGetSafeEventHandler,
@@ -21,7 +21,7 @@ vi.mock('@ethersproject/providers');
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const SIGNER_ADDRESS = getRandomEthereumAddress();
-const ETHEREUM_PROVIDER = new MockedEthereumProvider({
+const ETHEREUM_PROVIDER = new MockedEthereumWallet({
   signer: SIGNER,
   signerAddress: SIGNER_ADDRESS,
 });
@@ -125,7 +125,7 @@ describe('token', () => {
       const mockedTokenContract = mockGetERC20Contract();
       mockedTokenContract.balanceOf = vi.fn().mockReturnValue('1000');
 
-      const result = await getTokenBalance(new MockedEthereumProvider(), token, accountAddress);
+      const result = await getTokenBalance(new MockedEthereumWallet(), token, accountAddress);
 
       expect(mockedTokenContract.balanceOf).toHaveBeenCalled();
       expect(result.uint256.asString).toBe('1000');
@@ -142,7 +142,7 @@ describe('token', () => {
       mockedTokenContract.allowance = vi.fn().mockReturnValue('99');
 
       const result = await getTokenAllowance(
-        new MockedEthereumProvider(),
+        new MockedEthereumWallet(),
         token,
         ownerAddress,
         spenderAddress,
@@ -159,7 +159,7 @@ describe('token', () => {
       const addressToListen = getRandomEthereumAddress();
 
       const options = {
-        provider: new MockedEthereumProvider(),
+        provider: new MockedEthereumWallet(),
         token: generateToken(),
         addressToListen,
         onReduce: vi.fn(),
@@ -180,7 +180,7 @@ describe('token', () => {
       const addressToListen = getRandomEthereumAddress();
 
       const options = {
-        provider: new MockedEthereumProvider(),
+        provider: new MockedEthereumWallet(),
         token: generateToken(),
         addressToListen,
         onReduce: onReduce,

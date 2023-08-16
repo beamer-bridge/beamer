@@ -4,9 +4,9 @@ import { ref } from 'vue';
 import ConnectionError from '@/components/wallet/ConnectionError.vue';
 import Disconnect from '@/components/wallet/Disconnect.vue';
 import WalletConnectionDetails from '@/components/WalletConnectionDetails.vue';
-import * as useEthereumProviderComposable from '@/stores/ethereum-provider';
+import * as useEthereumWalletComposable from '@/stores/ethereum-wallet';
 
-vi.mock('@/stores/ethereum-provider');
+vi.mock('@/stores/ethereum-wallet');
 
 function createWrapper() {
   return mount(WalletConnectionDetails, {
@@ -30,7 +30,7 @@ describe('WalletConnectionDetails.vue', () => {
 
   describe('when wallet provider is connected', () => {
     beforeEach(() => {
-      Object.defineProperty(useEthereumProviderComposable, 'useEthereumProvider', {
+      Object.defineProperty(useEthereumWalletComposable, 'useEthereumWallet', {
         value: vi.fn().mockReturnValue({
           signer: ref('fake-signer'),
         }),

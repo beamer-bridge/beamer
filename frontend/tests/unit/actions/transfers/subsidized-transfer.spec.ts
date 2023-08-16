@@ -6,7 +6,7 @@ import { SubsidizedTransfer } from '@/actions/transfers';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
 import * as transactionUtils from '@/services/transactions/utils';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import { UInt256 } from '@/types/uint-256';
 import {
   generateChain,
@@ -20,7 +20,7 @@ import {
   getRandomNumber,
   getRandomString,
 } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 vi.mock('@/services/transactions/token');
@@ -28,11 +28,11 @@ vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestSubsidizedTransfer extends SubsidizedTransfer {
-  public ensureTokenAllowance(provider: IEthereumProvider) {
+  public ensureTokenAllowance(provider: IEthereumWallet) {
     return super.ensureTokenAllowance(provider);
   }
 
-  public sendRequestTransaction(provider: IEthereumProvider) {
+  public sendRequestTransaction(provider: IEthereumWallet) {
     return super.sendRequestTransaction(provider);
   }
 }
@@ -78,7 +78,7 @@ describe('SubsidizedTransfer', () => {
       });
       const transfer = new TestSubsidizedTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -124,7 +124,7 @@ describe('SubsidizedTransfer', () => {
       });
       const transfer = new TestSubsidizedTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -162,7 +162,7 @@ describe('SubsidizedTransfer', () => {
       });
       const transfer = new TestSubsidizedTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({ chainId: 1, signer });
+      const provider = new MockedEthereumWallet({ chainId: 1, signer });
 
       await transfer.withdraw(provider);
 

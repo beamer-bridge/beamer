@@ -14,10 +14,10 @@ import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { useWallet } from '@/composables/useWallet';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { useSettings } from '@/stores/settings';
 
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const { provider } = storeToRefs(ethereumProvider);
 const { connectedWallet } = storeToRefs(useSettings());
 

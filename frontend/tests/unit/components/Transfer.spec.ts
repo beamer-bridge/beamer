@@ -9,7 +9,7 @@ import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
 import * as transferRequestComposable from '@/composables/useTransferRequest';
-import * as ethereumProviderComposable from '@/stores/ethereum-provider';
+import * as ethereumWalletComposable from '@/stores/ethereum-wallet';
 import {
   generateChain,
   generateRequestInformationData,
@@ -21,7 +21,7 @@ import {
 } from '~/utils/data_generators';
 
 vi.mock('@/composables/useTransferRequest');
-vi.mock('@/stores/ethereum-provider');
+vi.mock('@/stores/ethereum-wallet');
 
 function createWrapper(options?: { transfer?: Transfer }) {
   return mount(TransferComponent, {
@@ -53,7 +53,7 @@ describe('Transfer.vue', () => {
       }),
     });
 
-    Object.defineProperty(ethereumProviderComposable, 'useEthereumProvider', {
+    Object.defineProperty(ethereumWalletComposable, 'useEthereumWallet', {
       value: vi.fn().mockReturnValue({ provider: ref(undefined) }),
     });
   });
@@ -189,7 +189,7 @@ describe('Transfer.vue', () => {
         }),
       });
 
-      Object.defineProperty(ethereumProviderComposable, 'useEthereumProvider', {
+      Object.defineProperty(ethereumWalletComposable, 'useEthereumWallet', {
         value: vi.fn().mockReturnValue({
           provider: ref(provider),
         }),

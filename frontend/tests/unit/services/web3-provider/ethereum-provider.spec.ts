@@ -2,10 +2,7 @@ import * as providers from '@ethersproject/providers';
 import type { Mock } from 'vitest';
 
 import type { Eip1193Provider } from '@/services/web3-provider';
-import {
-  BasicEthereumProvider,
-  EthereumProvider,
-} from '@/services/web3-provider/ethereum-provider';
+import { BasicEthereumWallet, EthereumWallet } from '@/services/web3-provider/ethereum-provider';
 import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedEip1193Provider, MockedWeb3Provider } from '~/utils/mocks/ethereum-provider';
 import { MockedTransactionReceipt } from '~/utils/mocks/ethers';
@@ -13,13 +10,13 @@ import { MockedTransactionReceipt } from '~/utils/mocks/ethers';
 vi.mock('@ethersproject/providers');
 vi.mock('ethers');
 
-class TestBasicEthereumProvider extends BasicEthereumProvider<Eip1193Provider> {
+class TestBasicEthereumWallet extends BasicEthereumWallet<Eip1193Provider> {
   constructor(_provider: Eip1193Provider = new MockedEip1193Provider()) {
     super(_provider);
   }
 }
 
-class TestEthereumProvider extends EthereumProvider<Eip1193Provider> {
+class TestEthereumProvider extends EthereumWallet<Eip1193Provider> {
   constructor(_provider: Eip1193Provider = new MockedEip1193Provider()) {
     super(_provider);
   }
@@ -54,7 +51,7 @@ describe('BasicEthereumProvider', () => {
       web3Provider.listAccounts = vi.fn().mockReturnValue([signerAddress]);
       web3Provider.getSigner = vi.fn().mockReturnValue(signer);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
 
       expect(ethereumProvider.signer.value).toBeUndefined();
       expect(ethereumProvider.signerAddress.value).toBeUndefined();
@@ -75,7 +72,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.getBlock = vi.fn().mockReturnValue(latestBlock);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       const result = await ethereumProvider.getLatestBlock();
 
       expect(web3Provider.getBlock).toHaveBeenNthCalledWith(1, 'latest');
@@ -87,7 +84,7 @@ describe('BasicEthereumProvider', () => {
     it('returns the attached web3 provider object', () => {
       const web3Provider = mockWeb3Provider();
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       const result = ethereumProvider.getProvider();
 
       expect(result).toBe(web3Provider);
@@ -101,7 +98,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.getNetwork = vi.fn().mockReturnValue({ chainId: connectedChainId });
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       const result = await ethereumProvider.getChainId();
 
       expect(result).toBe(connectedChainId);
@@ -113,7 +110,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.listAccounts = vi.fn().mockReturnValue([]);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       await ethereumProvider.tryAccessingDefaultSigner();
 
       expect(ethereumProvider.signer.value).toBe(undefined);
@@ -128,7 +125,7 @@ describe('BasicEthereumProvider', () => {
         .mockReturnValue([firstAddress, getRandomEthereumAddress()]);
       web3Provider.getSigner = vi.fn().mockReturnValue('fake-signer');
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       await ethereumProvider.tryAccessingDefaultSigner();
 
       expect(ethereumProvider.signer.value).toBe('fake-signer');
@@ -142,7 +139,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.waitForTransaction = vi.fn().mockReturnValue(receipt);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       const transactionHash = await ethereumProvider.waitForTransaction(receipt.transactionHash);
 
       expect(transactionHash).toBe(receipt.transactionHash);
@@ -152,7 +149,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.waitForTransaction = vi.fn().mockReturnValue(receipt);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       expect(() => ethereumProvider.waitForTransaction(receipt.transactionHash)).rejects.toThrow(
         `Transaction ${receipt.transactionHash} reverted on chain.`,
       );
@@ -165,7 +162,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.getSigner = vi.fn().mockReturnValue('fake-signer');
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       ethereumProvider.setSigner(signerAddrees);
 
       expect(ethereumProvider.signer.value).toBe('fake-signer');
@@ -178,7 +175,7 @@ describe('BasicEthereumProvider', () => {
       const web3Provider = mockWeb3Provider();
       web3Provider.getSigner = vi.fn().mockImplementation((signer) => signer);
 
-      const ethereumProvider = new TestBasicEthereumProvider();
+      const ethereumProvider = new TestBasicEthereumWallet();
       ethereumProvider.setSigner(getRandomEthereumAddress());
 
       expect(ethereumProvider.signer.value).not.toBeUndefined();
@@ -194,7 +191,7 @@ describe('BasicEthereumProvider', () => {
   describe('listenToEvents()', () => {
     it('attaches necessary event listeners for the wallet provider', () => {
       const eipProvider = new MockedEip1193Provider();
-      const ethereumProvider = new TestBasicEthereumProvider(eipProvider);
+      const ethereumProvider = new TestBasicEthereumWallet(eipProvider);
 
       ethereumProvider.listenToEvents();
 
@@ -214,7 +211,7 @@ describe('BasicEthereumProvider', () => {
         value: { replace: mockReplace },
       });
       const eipProvider = new MockedEip1193Provider();
-      const ethereumProvider = new TestBasicEthereumProvider(eipProvider);
+      const ethereumProvider = new TestBasicEthereumWallet(eipProvider);
       ethereumProvider.listenToEvents();
 
       let networkEventCallback;

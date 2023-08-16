@@ -1,6 +1,6 @@
 import { sendRequestTransaction, withdrawRequest } from '@/services/transactions/request-manager';
 import { ensureTokenAllowance, isAllowanceApproved } from '@/services/transactions/token';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import type { EthereumAddress } from '@/types/data';
 import { UInt256 } from '@/types/uint-256';
 
@@ -19,14 +19,14 @@ export class SubsidizedTransfer extends Transfer {
   }
 
   protected async callWithdrawRequest(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     requestIdentifier: string,
   ): Promise<void> {
     await withdrawRequest(provider, this.feeSubAddress, requestIdentifier);
   }
 
   protected async callEnsureTokenAllowance(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     tokenAddress: string,
     amount: UInt256,
   ): Promise<string | undefined> {
@@ -34,7 +34,7 @@ export class SubsidizedTransfer extends Transfer {
   }
 
   protected async callIsAllowanceApproved(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     tokenAddress: string,
     ownerAddress: string,
     amount: UInt256,
@@ -49,7 +49,7 @@ export class SubsidizedTransfer extends Transfer {
   }
 
   protected async callSendRequestTransaction(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     amount: UInt256,
     targetChainIdentifier: number,
     sourceTokenAddress: EthereumAddress,

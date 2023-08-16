@@ -11,7 +11,7 @@ import {
   generateTransferData,
   getRandomString,
 } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/transactions/request-manager');
 vi.mock('@ethersproject/providers');
@@ -124,7 +124,7 @@ describe('useClaimCountListeners', () => {
       },
     });
     const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-    const provider = new MockedEthereumProvider({
+    const provider = new MockedEthereumWallet({
       chainId: transfer.value.sourceChain.identifier,
       signer,
     });

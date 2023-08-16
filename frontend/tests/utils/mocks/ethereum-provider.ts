@@ -3,12 +3,7 @@ import type { Mock } from 'vitest';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef } from 'vue';
 
-import type {
-  Eip1193Provider,
-  EventEmitter,
-  IEthereumProvider,
-  ISigner,
-} from '@/services/web3-provider';
+import type { Eip1193Provider, EventEmitter, IEthereumWallet } from '@/services/web3-provider';
 
 export class MockedWeb3Provider {
   send = vi.fn();
@@ -62,7 +57,7 @@ export class MockedSafeAppsSDK {
 
 export class MockedSafeAppProvider extends MockedEip1193Provider {}
 
-export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
+export class MockedEthereumWallet implements IEthereumWallet, EventEmitter {
   readonly signer: ShallowRef<JsonRpcSigner | undefined>;
   readonly signerAddress: ShallowRef<string | undefined>;
   readonly chainId: Ref<number>;
@@ -90,7 +85,7 @@ export class MockedEthereumProvider implements IEthereumProvider, EventEmitter {
   closeExternalConnection = vi.fn();
 }
 
-export class MockedMetaMaskProvider extends MockedEthereumProvider implements ISigner {
+export class MockedMetaMaskProvider extends MockedEthereumWallet {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
@@ -98,20 +93,20 @@ export class MockedMetaMaskProvider extends MockedEthereumProvider implements IS
   requestSigner = vi.fn();
 }
 
-export class MockedWalletConnectProvider extends MockedEthereumProvider {
+export class MockedWalletConnectProvider extends MockedEthereumWallet {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
 }
 
-export class MockedCoinbaseProvider extends MockedEthereumProvider {
+export class MockedCoinbaseProvider extends MockedEthereumWallet {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
 
   closeExternalConnection = vi.fn();
 }
-export class MockedInjectedProvider extends MockedEthereumProvider {
+export class MockedInjectedProvider extends MockedEthereumWallet {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }
@@ -119,7 +114,7 @@ export class MockedInjectedProvider extends MockedEthereumProvider {
   requestSigner = vi.fn();
 }
 
-export class MockedSafeProvider extends MockedEthereumProvider {
+export class MockedSafeProvider extends MockedEthereumWallet {
   constructor(options?: { chainId?: number; signer?: JsonRpcSigner; signerAddress?: string }) {
     super(options);
   }

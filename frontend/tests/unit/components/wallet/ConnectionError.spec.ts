@@ -8,7 +8,7 @@ import {
   generateChainWithTokens,
   getRandomNumber,
 } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 function createWrapper(options?: { connectedChainId?: number; config?: BeamerConfig }) {
   return mount(ConnectionError, {
@@ -17,8 +17,8 @@ function createWrapper(options?: { connectedChainId?: number; config?: BeamerCon
       plugins: [
         createTestingPinia({
           initialState: {
-            ethereumProvider: {
-              provider: new MockedEthereumProvider({
+            ethereumWallet: {
+              provider: new MockedEthereumWallet({
                 chainId: options?.connectedChainId ?? getRandomNumber(),
               }),
             },

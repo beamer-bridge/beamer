@@ -55,7 +55,7 @@ import Spinner from '@/components/Spinner.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { useTransferHistory } from '@/stores/transfer-history';
 
 import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
@@ -66,7 +66,7 @@ const { setConfiguration } = useConfiguration();
 const { loadConfiguration, configurationLoaded, configurationError } =
   useLoadConfiguration(setConfiguration);
 
-const { provider, isBlacklistedWallet } = storeToRefs(useEthereumProvider());
+const { provider, isBlacklistedWallet } = storeToRefs(useEthereumWallet());
 
 const { transfers, loaded: transferHistoryLoaded } = storeToRefs(useTransferHistory());
 useTransferNotifications(transfers as Ref<Array<Transfer>>);

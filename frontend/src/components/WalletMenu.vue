@@ -56,11 +56,11 @@ import { onMounted, ref, watch } from 'vue';
 import Spinner from '@/components/Spinner.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { useSettings } from '@/stores/settings';
 import { isMobile } from '@/utils/userAgent';
 
-const { provider, signer } = storeToRefs(useEthereumProvider());
+const { provider, signer } = storeToRefs(useEthereumWallet());
 const { rpcUrls } = storeToRefs(useConfiguration());
 const { connectedWallet } = storeToRefs(useSettings());
 const {

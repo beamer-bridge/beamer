@@ -9,9 +9,9 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const configuration = useConfiguration();
 const { chainId } = storeToRefs(ethereumProvider);
 

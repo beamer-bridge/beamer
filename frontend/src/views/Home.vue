@@ -41,12 +41,12 @@ import WalletConnectionDetails from '@/components/WalletConnectionDetails.vue';
 import WalletMenu from '@/components/WalletMenu.vue';
 import { useWallet } from '@/composables/useWallet';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { usePortals } from '@/stores/portals';
 import { useSettings } from '@/stores/settings';
 
 const configuration = useConfiguration();
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const { signer } = storeToRefs(ethereumProvider);
 const { actionButtonPortalVisible } = storeToRefs(usePortals());
 const { hideActionButton, showActionButton } = usePortals();

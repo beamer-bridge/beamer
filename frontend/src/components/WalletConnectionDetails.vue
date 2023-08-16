@@ -16,8 +16,8 @@ import { storeToRefs } from 'pinia';
 
 import ConnectionError from '@/components/wallet/ConnectionError.vue';
 import Disconnect from '@/components/wallet/Disconnect.vue';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const { signer } = storeToRefs(ethereumProvider);
 </script>

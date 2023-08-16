@@ -29,7 +29,7 @@ import {
   getRandomUrl,
 } from '~/utils/data_generators';
 import { MockedRequest, MockedToken } from '~/utils/mocks/beamer';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 import {
   MockedBigNumber,
   MockedTransaction,
@@ -50,7 +50,7 @@ const RPC_URL = getRandomUrl('rpc');
 const PROVIDER = new JsonRpcProvider();
 const SIGNER = new JsonRpcSigner(undefined, PROVIDER);
 const DEFAULT_REQUEST_IDENTIFIER = '1';
-const ETHEREUM_PROVIDER = new MockedEthereumProvider({ signer: SIGNER });
+const ETHEREUM_PROVIDER = new MockedEthereumWallet({ signer: SIGNER });
 
 describe('request-manager', () => {
   beforeEach(() => {

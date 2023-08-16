@@ -1,26 +1,28 @@
-import type { Block, JsonRpcSigner, Web3Provider } from '@ethersproject/providers';
+import type { Block, JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import type { Ref, ShallowRef } from 'vue';
 
 import type { Chain, Token, TransactionHash } from '@/types/data';
 
 export interface IEthereumProvider {
-  signer: ShallowRef<JsonRpcSigner | undefined>;
-  signerAddress: ShallowRef<string | undefined>;
   chainId: Ref<number>;
-  disconnectable: boolean;
-  isContractWallet: boolean;
 
   init(): Promise<void>;
   getLatestBlock(): Promise<Block>;
-  getProvider(): Web3Provider;
-  disconnect(): void;
+  getProvider(): JsonRpcProvider;
   getChainId(): Promise<number>;
   waitForTransaction(
     transactionHash: TransactionHash,
     confirmations?: number,
     timeout?: number,
   ): Promise<TransactionHash>;
+}
 
+export interface IEthereumWallet extends IEthereumProvider {
+  signer: ShallowRef<JsonRpcSigner | undefined>;
+  signerAddress: ShallowRef<string | undefined>;
+  disconnectable: boolean;
+  isContractWallet: boolean;
+  disconnect(): void;
   switchChainSafely?(newChain: Chain): Promise<boolean>;
   addToken?(token: Token): Promise<boolean>;
   getActualTransactionHash?(internalTransactionHash: string): Promise<string>;
@@ -30,10 +32,6 @@ export interface IEthereumProvider {
 export interface EventEmitter {
   on(eventName: string, listener: (...args: unknown[]) => void): void;
   emit(eventName: string): void;
-}
-
-export interface ISigner {
-  requestSigner(): Promise<void>;
 }
 
 interface RequestArguments {

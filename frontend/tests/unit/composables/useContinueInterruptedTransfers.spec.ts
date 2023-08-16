@@ -6,9 +6,9 @@ import {
   continueInterruptedTransfers,
   useContinueInterruptedTransfers,
 } from '@/composables/useContinueInterruptedTransfers';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import { generateTransfer } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 function generateSpyTransfer(options?: { completed?: boolean; failed?: boolean }): Transfer {
   const transfer = generateTransfer(options);
@@ -20,7 +20,7 @@ function generateSpyTransfer(options?: { completed?: boolean; failed?: boolean }
   return transfer;
 }
 
-const PROVIDER = new MockedEthereumProvider();
+const PROVIDER = new MockedEthereumWallet();
 
 describe('useContinueInterruptedTransfers', () => {
   describe('continueInterruptedTransfer()', () => {
@@ -118,7 +118,7 @@ describe('useContinueInterruptedTransfers', () => {
     it('waits until provider is available until continues interrupted transfers', async () => {
       const transfer = generateSpyTransfer({ completed: false, failed: false });
       const transfers = ref([transfer]) as Ref<Array<Transfer>>;
-      const provider = shallowRef(undefined) as Ref<IEthereumProvider | undefined>;
+      const provider = shallowRef(undefined) as Ref<IEthereumWallet | undefined>;
 
       useContinueInterruptedTransfers(transfers, ref(true), provider);
 

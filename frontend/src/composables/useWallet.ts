@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import {
   createCoinbaseProvider,
   createInjectedProvider,
@@ -13,7 +13,7 @@ import {
 import { WalletType } from '@/types/settings';
 
 export function useWallet(
-  provider: Ref<IEthereumProvider | undefined>,
+  provider: Ref<IEthereumWallet | undefined>,
   connectedWallet: Ref<WalletType | undefined>,
   rpcUrls: Ref<{ [chainId: number]: string }>,
 ) {

@@ -7,14 +7,14 @@ import {
   getReadWriteContract,
   getSafeEventHandler,
 } from '@/services/transactions/utils';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumProvider, IEthereumWallet } from '@/services/web3-provider';
 import type { EthereumAddress, Token, TransactionHash } from '@/types/data';
 import type { MintableToken } from '@/types/ethers-contracts/goerli';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export async function ensureTokenAllowance(
-  provider: IEthereumProvider,
+  provider: IEthereumWallet,
   tokenAddress: string,
   allowedSpender: string,
   minimumRequiredAmount: UInt256,

@@ -5,13 +5,13 @@ import { useTokenBalance } from '@/composables/useTokenBalance';
 import * as tokenService from '@/services/transactions/token';
 import { TokenAmount } from '@/types/token-amount';
 import { generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/transactions/token');
 
 const ACCOUNT_ADDRESS = ref(getRandomEthereumAddress());
 const PROVIDER = shallowRef(
-  new MockedEthereumProvider({
+  new MockedEthereumWallet({
     signerAddress: getRandomEthereumAddress(),
   }),
 );

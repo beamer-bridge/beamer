@@ -66,14 +66,14 @@ import TransferComponent from '@/components/Transfer.vue';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTransferGrouping } from '@/composables/useTransferGrouping';
 import { switchToRequestDialog } from '@/router/navigation';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { useTransferHistory } from '@/stores/transfer-history';
 
 const { activated: newTransferButtonVisible } = useToggleOnActivation();
 const listElement = ref();
 const transferHistory = useTransferHistory();
 const { transfers } = storeToRefs(transferHistory);
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const { signer } = storeToRefs(ethereumProvider);
 
 const timeWindows = ref([

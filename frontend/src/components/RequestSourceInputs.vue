@@ -146,7 +146,7 @@ import { useTokenMinLpFee } from '@/composables/useTokenMinLpFee';
 import { useTokenSelection } from '@/composables/useTokenSelection';
 import { useTokenTransferLimit } from '@/composables/useTokenTransferLimit';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { usePortals } from '@/stores/portals';
 import type { Chain, Token } from '@/types/data';
 import type { RequestSource, SelectorOption } from '@/types/form';
@@ -169,10 +169,9 @@ const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
 const { getTokensForChain } = useConfiguration();
-const ethereumProvider = useEthereumProvider();
 const { hideActionButton, showActionButton } = usePortals();
 
-const { provider, signerAddress } = storeToRefs(ethereumProvider);
+const { provider, signerAddress } = storeToRefs(useEthereumWallet());
 const { chains } = storeToRefs(configuration);
 
 const selectedAmount = ref('');
@@ -331,7 +330,7 @@ defineExpose({ v$ });
 const isSelectedAmountValid = computed(() => {
   return !v$.value.$validationGroups?.amount || !v$.value.$validationGroups.amount.$error;
 });
-
+provider;
 const setMaxTokenAmount = async () => {
   if (maxTransferableTokenBalance.value) {
     if (

@@ -7,7 +7,7 @@
 import type { CoinbaseWalletProvider } from '@coinbase/wallet-sdk';
 import { hexValue } from 'ethers/lib/utils';
 
-import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
+import { EthereumWallet } from '@/services/web3-provider/ethereum-provider';
 import { CoinbaseWalletSDK } from '@/services/web3-provider/util-export';
 
 const APP_NAME = 'Beamer Bridge';
@@ -56,7 +56,7 @@ export async function createCoinbaseProvider(rpcList: {
   return undefined;
 }
 
-export class CoinbaseProvider extends EthereumProvider<CoinbaseWalletProvider> {
+export class CoinbaseProvider extends EthereumWallet<CoinbaseWalletProvider> {
   constructor(_provider: CoinbaseWalletProvider) {
     super(_provider);
   }
