@@ -4,23 +4,19 @@ from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 
 from beamer.tests.constants import FILL_ID, FILL_ID_EMPTY
-from beamer.tests.util import (
-    alloc_accounts,
-    alloc_whitelisted_accounts,
-    create_request_id,
-    make_address,
-)
-from beamer.typing import RequestId
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, make_address
+from beamer.typing import ChainId, RequestId, TokenAmount
+from beamer.util import create_request_id
 
 
 @pytest.mark.parametrize("amount", [100, 99, 101])
 @pytest.mark.parametrize("forward_state", [True])
 def test_l1_resolution_correct_id(request_manager, fill_manager, token, amount):
-    requested_amount = 100
+    requested_amount = TokenAmount(100)
     nonce = 23
     (receiver,) = alloc_accounts(1)
     (filler,) = alloc_whitelisted_accounts(1, [fill_manager])
-    chain_id = ape.chain.chain_id
+    chain_id = ChainId(ape.chain.chain_id)
 
     with ape.accounts.test_accounts.use_sender(filler):
         token.mint(filler, amount)
@@ -53,10 +49,11 @@ def test_l1_resolution_correct_id(request_manager, fill_manager, token, amount):
 
 @pytest.mark.parametrize("forward_state", [True])
 def test_l1_non_fill_proof(fill_manager, request_manager):
-    chain_id = ape.chain.chain_id
+    chain_id = ChainId(ape.chain.chain_id)
     token_address = make_address()
     receiver_address = make_address()
-    amount = nonce = 1
+    amount = TokenAmount(1)
+    nonce = 1
     fill_id = HexBytes("5678" + "00" * 30)
 
     request_id = create_request_id(

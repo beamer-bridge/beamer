@@ -1,12 +1,9 @@
 import ape
 from hexbytes import HexBytes
 
-from beamer.tests.util import (
-    alloc_accounts,
-    alloc_whitelisted_accounts,
-    create_request_id,
-    make_address,
-)
+from beamer.tests.util import alloc_accounts, alloc_whitelisted_accounts, make_address
+from beamer.typing import ChainId, TokenAmount
+from beamer.util import create_request_id
 
 
 def test_fill_request(fill_manager, token):
@@ -84,10 +81,11 @@ def test_invalidate_valid_fill(fill_manager, token):
 
 
 def test_fill_invalidated_event(fill_manager):
-    chain_id = ape.chain.chain_id
+    chain_id = ChainId(ape.chain.chain_id)
     token_address = make_address()
     receiver_address = make_address()
-    amount = nonce = 1
+    amount = TokenAmount(1)
+    nonce = 1
 
     request_id = create_request_id(
         chain_id, chain_id, token_address, receiver_address, amount, nonce
@@ -100,7 +98,7 @@ def test_fill_invalidated_event(fill_manager):
 
     assert tx.events.filter(
         fill_manager.FillInvalidated,
-        requestId=HexBytes("0x" + request_id.hex()),
+        requestId=request_id,
         fillId=HexBytes("0x" + fill_id),
     )
 

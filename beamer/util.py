@@ -13,9 +13,10 @@ import click
 import lru
 import requests
 import structlog
+from eth_abi.packed import encode_packed
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
-from eth_utils import to_checksum_address
+from eth_utils import keccak, to_canonical_address, to_checksum_address
 from web3 import HTTPProvider, Web3
 from web3.contract import ContractConstructor
 from web3.contract.contract import ContractFunction
@@ -31,7 +32,7 @@ from web3.utils.caching import SimpleCache
 
 import beamer.middleware
 from beamer.chains import get_chain_descriptor
-from beamer.typing import URL, ChainId
+from beamer.typing import URL, ChainId, ChecksumAddress, RequestId, TokenAmount
 
 log = structlog.get_logger(__name__)
 
@@ -251,3 +252,28 @@ class ChainIdParam(click.ParamType):
         except ValueError as exc:
             self.fail(str(exc), param, ctx)
         return chain_id
+
+
+def create_request_id(
+    source_chain_id: ChainId,
+    target_chain_id: ChainId,
+    target_token_address: ChecksumAddress,
+    receiver_address: ChecksumAddress,
+    amount: TokenAmount,
+    nonce: int,
+) -> RequestId:
+    return RequestId(
+        keccak(
+            encode_packed(
+                ["uint256", "uint256", "address", "address", "uint256", "uint96"],
+                [
+                    source_chain_id,
+                    target_chain_id,
+                    to_canonical_address(target_token_address),
+                    to_canonical_address(receiver_address),
+                    amount,
+                    nonce,
+                ],
+            )
+        )
+    )

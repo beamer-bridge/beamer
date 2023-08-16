@@ -5,9 +5,8 @@ from pathlib import Path
 
 import beamer.artifacts
 from beamer.contracts import ABIManager, obtain_contract
-from beamer.tests.util import create_request_id
-from beamer.typing import URL, ChainId
-from beamer.util import account_from_keyfile, make_web3
+from beamer.typing import URL, ChainId, TokenAmount
+from beamer.util import account_from_keyfile, create_request_id, make_web3
 
 
 def main() -> None:
@@ -34,12 +33,17 @@ def main() -> None:
     token = obtain_contract(web3, abi_manager, deployment, "MintableToken")
 
     nonce = random.randint(1, sys.maxsize)
-    request_amount = 123
+    request_amount = TokenAmount(123)
 
     request_id = create_request_id(
-        source_chain_id, web3.eth.chain_id, token.address, deployer.address, request_amount, nonce
+        source_chain_id,
+        ChainId(web3.eth.chain_id),
+        token.address,
+        deployer.address,
+        request_amount,
+        nonce,
     )
-    print("Request ID:", "0x%s" % request_id.hex())
+    print("Request ID:", request_id.hex())
 
     tx_hash = token.functions.mint(deployer.address, request_amount).transact()
     web3.eth.wait_for_transaction_receipt(tx_hash)
