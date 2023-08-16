@@ -7,19 +7,19 @@ import WalletMenu from '@/components/WalletMenu.vue';
 import type { useWallet } from '@/composables/useWallet';
 import * as useWalletComposable from '@/composables/useWallet';
 import * as userAgent from '@/utils/userAgent';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 
-function createWrapper(options?: { provider: MockedEthereumProvider }) {
+function createWrapper(options?: { provider: MockedEthereumWallet }) {
   return mount(WalletMenu, {
     shallow: true,
     global: {
       plugins: [
         createTestingPinia({
           initialState: {
-            ethereumProvider: {
-              provider: options?.provider ?? new MockedEthereumProvider(),
+            ethereumWallet: {
+              provider: options?.provider ?? new MockedEthereumWallet(),
             },
           },
         }),
@@ -110,7 +110,7 @@ describe('WalletMenu.vue', () => {
   });
 
   it('closes when signer is available', async () => {
-    const provider = new MockedEthereumProvider();
+    const provider = new MockedEthereumWallet();
     const wrapper = createWrapper({ provider });
 
     provider.signer.value = new JsonRpcSigner(undefined, new JsonRpcProvider());

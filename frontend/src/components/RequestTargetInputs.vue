@@ -71,7 +71,7 @@ import { useChainSelection } from '@/composables/useChainSelection';
 import { useRequestTargetInputValidations } from '@/composables/useRequestTargetInputValidations';
 import { SafeProvider } from '@/services/web3-provider';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { usePortals } from '@/stores/portals';
 import type { Chain, Token } from '@/types/data';
 import type { RequestTarget, SelectorOption } from '@/types/form';
@@ -91,7 +91,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const configuration = useConfiguration();
-const ethereumProvider = useEthereumProvider();
+const ethereumProvider = useEthereumWallet();
 const { hideActionButton, showActionButton } = usePortals();
 
 const { provider, signerAddress } = storeToRefs(ethereumProvider);

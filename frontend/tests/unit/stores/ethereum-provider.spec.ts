@@ -1,7 +1,7 @@
 import type { JsonRpcSigner } from '@ethersproject/providers';
 import { createPinia, setActivePinia } from 'pinia';
 
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { BLACKLIST_ADDRESSES } from '@/utils/addressBlacklist';
 import { MockedMetaMaskProvider } from '~/utils/mocks/ethereum-provider';
 
@@ -13,14 +13,14 @@ describe('configuration store', () => {
 
   describe('signer getter', () => {
     it('is undefined is provider state is undefined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = undefined;
 
       expect(ethereumProvider.signer).toBeUndefined();
     });
 
     it('mirrors the value of the providers property if state is defined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       // TODO: Creating a mocked signer is not trivial. It will help to remove
       // 3rd party types from our own types. Therefore use this ugly hack here.
       const signer = { fake: 'signer' } as unknown as JsonRpcSigner;
@@ -32,14 +32,14 @@ describe('configuration store', () => {
 
   describe('signerAddress getter', () => {
     it('is an empty string if provider state is undefined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = undefined;
 
       expect(ethereumProvider.signerAddress).toBe('');
     });
 
     it('mirrors the value of the providers property if state is defined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = new MockedMetaMaskProvider({
         signerAddress: '0xSignerAddress',
       });
@@ -50,14 +50,14 @@ describe('configuration store', () => {
 
   describe('chainId getter', () => {
     it('is -1 if provider state is undefined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = undefined;
 
       expect(ethereumProvider.chainId).toBe(-1);
     });
 
     it('mirrors the value of the providers property if state is defined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = new MockedMetaMaskProvider({ chainId: 5 });
 
       expect(ethereumProvider.chainId).toBe(5);
@@ -65,13 +65,13 @@ describe('configuration store', () => {
   });
   describe('isBlacklistedWallet getter', () => {
     it('is false when signer is not defined', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = undefined;
 
       expect(ethereumProvider.isBlacklistedWallet).toBe(false);
     });
     it('is false when signer is defined but signer address is not blacklisted', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       // TODO: switch to `getRandomEthereumAddress` function once it is fixed to return correct checksum addresses
       const signerAddress = '0x0b789C16c313164DD27B8b751D8e7320c838BC47';
       ethereumProvider.$state.provider = new MockedMetaMaskProvider({
@@ -80,7 +80,7 @@ describe('configuration store', () => {
       expect(ethereumProvider.isBlacklistedWallet).toBe(false);
     });
     it('is true when signer is defined and signer address is blacklisted', () => {
-      const ethereumProvider = useEthereumProvider();
+      const ethereumProvider = useEthereumWallet();
       ethereumProvider.$state.provider = new MockedMetaMaskProvider({
         signerAddress: BLACKLIST_ADDRESSES[0],
       });

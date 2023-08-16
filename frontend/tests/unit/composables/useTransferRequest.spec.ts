@@ -15,7 +15,7 @@ import {
   generateUInt256Data,
   getRandomEthereumAddress,
 } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 vi.mock('@/services/transactions/request-manager');
@@ -23,7 +23,7 @@ vi.mock('@/service/transactions/fee-sub');
 
 const SIGNER = new JsonRpcSigner(undefined, new JsonRpcProvider());
 const SIGNER_ADDRESS = '0xSigner';
-const PROVIDER = new MockedEthereumProvider({ signer: SIGNER, signerAddress: SIGNER_ADDRESS });
+const PROVIDER = new MockedEthereumWallet({ signer: SIGNER, signerAddress: SIGNER_ADDRESS });
 
 function createConfig(options?: {
   sourceChain?: Chain;

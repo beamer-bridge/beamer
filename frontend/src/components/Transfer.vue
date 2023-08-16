@@ -40,7 +40,7 @@ import TransferStatus from '@/components/TransferStatus.vue';
 import TransferSummary from '@/components/TransferSummary.vue';
 import TransferWithdrawer from '@/components/TransferWithdrawer.vue';
 import { useTransferRequest } from '@/composables/useTransferRequest';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 
 interface Props {
   transfer: Transfer;
@@ -86,7 +86,7 @@ const statusBackgroundColorClass = computed(() => {
   return failed ? 'bg-red' : completed ? 'bg-green' : active ? 'bg-lime' : 'bg-grey';
 });
 
-const { provider } = storeToRefs(useEthereumProvider());
+const { provider } = storeToRefs(useEthereumWallet());
 const {
   withdraw: runWithdrawTransfer,
   withdrawError: withdrawTransferError,

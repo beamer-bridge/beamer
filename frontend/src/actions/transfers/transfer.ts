@@ -15,7 +15,7 @@ import {
   getConfirmationTimeBlocksForChain,
   getCurrentBlockNumber,
 } from '@/services/transactions/utils';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import type { Chain, EthereumAddress } from '@/types/data';
 import type { Encodable } from '@/types/encoding';
 import type { TokenAmountData } from '@/types/token-amount';
@@ -197,7 +197,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     return Number(seconds.toFixed(1));
   }
 
-  protected getStepMethods(provider: IEthereumProvider): Record<string, CallableFunction> {
+  protected getStepMethods(provider: IEthereumWallet): Record<string, CallableFunction> {
     // For backwards compatibility, never remove an entry, only add new ones.
     return {
       ensureTokenAllowance: () => this.ensureTokenAllowance(provider),
@@ -207,12 +207,12 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  public async execute(provider: IEthereumProvider): Promise<void> {
+  public async execute(provider: IEthereumWallet): Promise<void> {
     const methods = this.getStepMethods(provider);
     return super.executeSteps(methods);
   }
 
-  public async withdraw(provider: IEthereumProvider): Promise<void> {
+  public async withdraw(provider: IEthereumWallet): Promise<void> {
     if (!this._expired) {
       throw new Error('Can only withdraw transfer funds after request expired!');
     }
@@ -263,7 +263,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async callWithdrawRequest(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     requestIdentifier: string,
   ): Promise<void> {
     await withdrawRequest(provider, this.sourceChain.requestManagerAddress, requestIdentifier);
@@ -290,7 +290,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     };
   }
 
-  protected async ensureTokenAllowance(provider: IEthereumProvider): Promise<void> {
+  protected async ensureTokenAllowance(provider: IEthereumWallet): Promise<void> {
     if (this._requestInformation === undefined) {
       throw new Error('Request is missing information!');
     }
@@ -338,7 +338,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async callEnsureTokenAllowance(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     tokenAddress: string,
     amount: UInt256,
   ): Promise<string | undefined> {
@@ -351,7 +351,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async callIsAllowanceApproved(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     tokenAddress: string,
     ownerAddress: string,
     amount: UInt256,
@@ -365,7 +365,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
     );
   }
 
-  protected async sendRequestTransaction(provider: IEthereumProvider): Promise<void> {
+  protected async sendRequestTransaction(provider: IEthereumWallet): Promise<void> {
     if (this._requestInformation === undefined) {
       throw new Error('Request is missing information!');
     }
@@ -416,7 +416,7 @@ export class Transfer extends MultiStepAction implements Encodable<TransferData>
   }
 
   protected async callSendRequestTransaction(
-    provider: IEthereumProvider,
+    provider: IEthereumWallet,
     amount: UInt256,
     targetChainIdentifier: number,
     sourceTokenAddress: EthereumAddress,

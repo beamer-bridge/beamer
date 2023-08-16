@@ -78,7 +78,7 @@ import { useTokenAllowance } from '@/composables/useTokenAllowance';
 import { useTransferRequest } from '@/composables/useTransferRequest';
 import { switchToActivities } from '@/router/navigation';
 import { useConfiguration } from '@/stores/configuration';
-import { useEthereumProvider } from '@/stores/ethereum-provider';
+import { useEthereumWallet } from '@/stores/ethereum-wallet';
 import { useTransferHistory } from '@/stores/transfer-history';
 import type {
   RequestSource,
@@ -97,8 +97,7 @@ const EMPTY_TARGET_DATA: RequestTarget = {
   toAddress: '',
 };
 
-const ethereumProvider = useEthereumProvider();
-const { signer, signerAddress, provider } = storeToRefs(ethereumProvider);
+const { signer, signerAddress, provider } = storeToRefs(useEthereumWallet());
 const transferHistory = useTransferHistory();
 const { activated: transferFundsButtonVisible } = useToggleOnActivation();
 const {
@@ -199,7 +198,7 @@ function resetFormValidation() {
 }
 
 watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
-  // Contract wallets should not prefill the target address as they need to be deployed separately per chain
+  // Contract providers should not prefill the target address as they need to be deployed separately per chain
   if (provider.value && provider.value.isContractWallet) {
     return;
   }

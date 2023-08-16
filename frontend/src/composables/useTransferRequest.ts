@@ -5,11 +5,7 @@ import { SubsidizedTransfer } from '@/actions/transfers/subsidized-transfer';
 import { useAsynchronousTask } from '@/composables/useAsynchronousTask';
 import { amountCanBeSubsidized } from '@/services/transactions/fee-sub';
 import { getRequestFee } from '@/services/transactions/request-manager';
-import type {
-  Eip1193Provider,
-  EthereumProvider,
-  IEthereumProvider,
-} from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import type { Chain, EthereumAddress, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
@@ -71,17 +67,14 @@ export function useTransferRequest() {
     return reactive(transfer) as Transfer;
   };
 
-  const execute = async (provider: IEthereumProvider, transfer: Transfer): Promise<void> => {
+  const execute = async (provider: IEthereumWallet, transfer: Transfer): Promise<void> => {
     if (!provider?.signer.value) {
       throw new Error('No signer available!');
     }
     await transfer.execute(provider);
   };
 
-  const withdraw = async (
-    transfer: Transfer,
-    provider: EthereumProvider<Eip1193Provider>,
-  ): Promise<void> => {
+  const withdraw = async (transfer: Transfer, provider: IEthereumWallet): Promise<void> => {
     await transfer.withdraw(provider);
   };
 

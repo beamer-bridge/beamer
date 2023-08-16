@@ -2,11 +2,11 @@ import type { Ref } from 'vue';
 import { watch } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 
 export function continueInterruptedTransfers(
   transfers: Array<Transfer>,
-  provider: IEthereumProvider,
+  provider: IEthereumWallet,
 ) {
   for (const transfer of transfers) {
     const wasInterrupted = !transfer.completed && !transfer.failed;
@@ -27,7 +27,7 @@ export function continueInterruptedTransfers(
 export function useContinueInterruptedTransfers(
   transfers: Ref<Array<Transfer>>,
   transfersAreLoaded: Ref<boolean>,
-  provider: Ref<IEthereumProvider | undefined>,
+  provider: Ref<IEthereumWallet | undefined>,
 ) {
   if (transfersAreLoaded.value && provider.value) {
     continueInterruptedTransfers(transfers.value, provider.value);

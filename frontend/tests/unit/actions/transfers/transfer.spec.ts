@@ -8,7 +8,7 @@ import { RequestExpiredError } from '@/services/transactions/request-manager';
 import * as requestManager from '@/services/transactions/request-manager';
 import * as tokenUtils from '@/services/transactions/token';
 import * as transactionUtils from '@/services/transactions/utils';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import type { Cancelable } from '@/types/async';
 import { UInt256 } from '@/types/uint-256';
 import {
@@ -25,7 +25,7 @@ import {
   getRandomString,
   getRandomTransactionHash,
 } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@ethersproject/providers');
 vi.mock('@/services/transactions/token');
@@ -33,15 +33,15 @@ vi.mock('@/services/transactions/fill-manager');
 vi.mock('@/services/transactions/request-manager');
 
 class TestTransfer extends Transfer {
-  public getStepMethods(provider: IEthereumProvider) {
+  public getStepMethods(provider: IEthereumWallet) {
     return super.getStepMethods(provider);
   }
 
-  public ensureTokenAllowance(provider: IEthereumProvider) {
+  public ensureTokenAllowance(provider: IEthereumWallet) {
     return super.ensureTokenAllowance(provider);
   }
 
-  public sendRequestTransaction(provider: IEthereumProvider) {
+  public sendRequestTransaction(provider: IEthereumWallet) {
     return super.sendRequestTransaction(provider);
   }
 
@@ -55,10 +55,10 @@ class TestTransfer extends Transfer {
 }
 
 const RPC_PROVIDER = new JsonRpcProvider();
-const PROVIDER = new MockedEthereumProvider();
+const PROVIDER = new MockedEthereumWallet();
 const SIGNER = new JsonRpcSigner(undefined, RPC_PROVIDER);
 const SIGNER_ADDRESS = '0xSigner';
-const PROVIDER_WITH_SIGNER = new MockedEthereumProvider({
+const PROVIDER_WITH_SIGNER = new MockedEthereumWallet({
   signer: SIGNER,
   signerAddress: SIGNER_ADDRESS,
 });
@@ -149,7 +149,7 @@ describe('Transfer', () => {
     it('triggers all protocol relevant functions', async () => {
       const transfer = new TestTransfer(TRANSFER_DATA);
 
-      const providerWithSigner = new MockedEthereumProvider({
+      const providerWithSigner = new MockedEthereumWallet({
         signer: SIGNER,
         signerAddress: SIGNER_ADDRESS,
       });
@@ -181,7 +181,7 @@ describe('Transfer', () => {
         requestInformation: generateRequestInformationData({ requestAccount: creator }),
       });
       const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: SIGNER,
         signerAddress: signerAddress,
       });
@@ -202,7 +202,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -230,7 +230,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -253,7 +253,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -275,7 +275,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -313,7 +313,7 @@ describe('Transfer', () => {
         requestInformation: generateRequestInformationData({ requestAccount: creator }),
       });
       const transfer = new TestTransfer(data);
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: SIGNER,
         signerAddress: signerAddress,
       });
@@ -334,7 +334,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, RPC_PROVIDER);
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -372,7 +372,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, RPC_PROVIDER);
-      const provider = new MockedEthereumProvider({
+      const provider = new MockedEthereumWallet({
         signer: signer,
         signerAddress: data.requestInformation?.requestAccount,
       });
@@ -400,7 +400,7 @@ describe('Transfer', () => {
       expect(transfer.requestInformation?.transactionHash).toBeUndefined();
       expect(transfer.requestInformation?.internalTransactionHash).toBeUndefined();
 
-      const providerWithSigner = new MockedEthereumProvider({
+      const providerWithSigner = new MockedEthereumWallet({
         signer: SIGNER,
         signerAddress: SIGNER_ADDRESS,
       });
@@ -424,7 +424,7 @@ describe('Transfer', () => {
 
         const transfer = new TestTransfer(transferData);
 
-        const providerWithSigner = new MockedEthereumProvider({
+        const providerWithSigner = new MockedEthereumWallet({
           signer: SIGNER,
           signerAddress: SIGNER_ADDRESS,
         });
@@ -683,7 +683,7 @@ describe('Transfer', () => {
 
     it('fails when no signer is available', async () => {
       const transfer = new TestTransfer(TRANSFER_DATA);
-      const provider = new MockedEthereumProvider({ signer: undefined });
+      const provider = new MockedEthereumWallet({ signer: undefined });
 
       await expect(transfer.withdraw(provider)).rejects.toThrow(
         'Cannot withdraw without connected wallet!',
@@ -695,7 +695,7 @@ describe('Transfer', () => {
         ...TRANSFER_DATA,
         sourceChain: generateChain({ identifier: 1 }),
       });
-      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      const provider = new MockedEthereumWallet({ chainId: 2, signer: SIGNER });
       provider.switchChainSafely = vi.fn().mockResolvedValue(true);
 
       await transfer.withdraw(provider);
@@ -708,7 +708,7 @@ describe('Transfer', () => {
         ...TRANSFER_DATA,
         sourceChain: generateChain({ identifier: 1 }),
       });
-      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      const provider = new MockedEthereumWallet({ chainId: 2, signer: SIGNER });
       provider.switchChainSafely = vi.fn().mockResolvedValue(false);
 
       await expect(transfer.withdraw(provider)).rejects.toThrow(
@@ -721,7 +721,7 @@ describe('Transfer', () => {
         ...TRANSFER_DATA,
         sourceChain: generateChain({ identifier: 1 }),
       });
-      const provider = new MockedEthereumProvider({ chainId: 2, signer: SIGNER });
+      const provider = new MockedEthereumWallet({ chainId: 2, signer: SIGNER });
       provider.switchChainSafely = undefined;
 
       await expect(transfer.withdraw(provider)).rejects.toThrow(
@@ -743,7 +743,7 @@ describe('Transfer', () => {
       });
       const transfer = new TestTransfer(data);
       const signer = new JsonRpcSigner(undefined, new JsonRpcProvider());
-      const provider = new MockedEthereumProvider({ chainId: 1, signer });
+      const provider = new MockedEthereumWallet({ chainId: 1, signer });
 
       await transfer.withdraw(provider);
 

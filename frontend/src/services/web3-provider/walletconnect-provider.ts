@@ -1,6 +1,6 @@
 import { hexValue } from 'ethers/lib/utils';
 
-import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
+import { EthereumWallet } from '@/services/web3-provider/ethereum-provider';
 import { WalletConnect } from '@/services/web3-provider/util-export';
 
 const BEAMER_PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || '';
@@ -46,7 +46,7 @@ export async function createWalletConnectProvider(rpcList: {
   return undefined;
 }
 
-export class WalletConnectProvider extends EthereumProvider<WalletConnect> {
+export class WalletConnectProvider extends EthereumWallet<WalletConnect> {
   constructor(_provider: WalletConnect) {
     super(_provider);
   }

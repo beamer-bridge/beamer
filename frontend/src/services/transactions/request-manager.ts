@@ -7,7 +7,7 @@ import { UInt256 } from '@/types/uint-256';
 import { RequestManager__factory } from '#contract-factories/RequestManager__factory.ts';
 import type { RequestManager } from '#contracts/RequestManager.ts';
 
-import type { IEthereumProvider } from '../web3-provider';
+import type { IEthereumWallet } from '../web3-provider';
 import {
   getConfirmationTimeBlocksForChain,
   getJsonRpcProvider,
@@ -100,7 +100,7 @@ export async function getRequestFee(
 }
 
 export async function sendRequestTransaction(
-  provider: IEthereumProvider,
+  provider: IEthereumWallet,
   amount: UInt256,
   targetChainIdentifier: number,
   requestManagerAddress: EthereumAddress,
@@ -371,7 +371,7 @@ export class RequestExpiredError extends Error {
 }
 
 export async function withdrawRequest(
-  provider: IEthereumProvider,
+  provider: IEthereumWallet,
   requestManagerAddress: EthereumAddress,
   requestIdentifier: string,
 ): Promise<void> {

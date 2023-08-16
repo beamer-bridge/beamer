@@ -1,58 +1,51 @@
 import type { Block, JsonRpcSigner, Network } from '@ethersproject/providers';
-import { Web3Provider } from '@ethersproject/providers';
+import { JsonRpcProvider, Web3Provider } from '@ethersproject/providers';
 import { hexValue } from 'ethers/lib/utils';
 import EventEmitter from 'events';
 import type { Ref, ShallowRef } from 'vue';
 import { ref, shallowRef, toRaw } from 'vue';
 
-import type { Eip1193Provider, IEthereumProvider } from '@/services/web3-provider/types';
+import type {
+  Eip1193Provider,
+  IEthereumProvider,
+  IEthereumWallet,
+} from '@/services/web3-provider/types';
 import type { Chain, Token } from '@/types/data';
 
-export abstract class BasicEthereumProvider<T extends Eip1193Provider>
+export async function createEthereumProvider(rpcUrl: string): Promise<IEthereumProvider> {
+  const provider = new EthereumProvider(new JsonRpcProvider(rpcUrl));
+  await provider.init();
+  return provider;
+}
+
+export class EthereumProvider<T extends Web3Provider | JsonRpcProvider>
   extends EventEmitter
   implements IEthereumProvider
 {
-  signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
-  signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
   chainId: Ref<number> = ref(1);
-  disconnectable = true;
-  isContractWallet = false;
 
-  protected web3Provider: Web3Provider;
-  protected externalProvider: T;
+  protected web3Provider: T;
 
   constructor(_provider: T) {
     super();
-    this.web3Provider = new Web3Provider(_provider, 'any');
-    this.externalProvider = _provider;
+    this.web3Provider = _provider;
   }
 
   async init(): Promise<void> {
     this.chainId.value = await this.getChainId();
-    await this.tryAccessingDefaultSigner();
-    this.listenToEvents();
   }
 
   async getLatestBlock(): Promise<Block> {
     return this.web3Provider.getBlock('latest');
   }
 
-  getProvider(): Web3Provider {
+  getProvider(): JsonRpcProvider {
     return this.web3Provider;
   }
 
   async getChainId(): Promise<number> {
     const { chainId } = await this.web3Provider.getNetwork();
     return chainId;
-  }
-
-  async tryAccessingDefaultSigner(): Promise<void> {
-    const accounts = await this.web3Provider.listAccounts();
-    if (accounts.length === 0) {
-      return this.disconnect();
-    }
-
-    this.setSigner(accounts[0]);
   }
 
   async waitForTransaction(transactionHash: string, confirmations?: number, timeout?: number) {
@@ -67,6 +60,39 @@ export abstract class BasicEthereumProvider<T extends Eip1193Provider>
     }
 
     return receipt.transactionHash;
+  }
+}
+
+export abstract class BasicEthereumWallet<T extends Eip1193Provider>
+  extends EthereumProvider<Web3Provider>
+  implements IEthereumWallet
+{
+  signer: ShallowRef<JsonRpcSigner | undefined> = shallowRef(undefined);
+  signerAddress: ShallowRef<string | undefined> = shallowRef(undefined);
+  disconnectable = true;
+  isContractWallet = false;
+
+  protected externalProvider: T;
+
+  constructor(_provider: T) {
+    const web3Provider = new Web3Provider(_provider, 'any');
+    super(web3Provider);
+    this.externalProvider = _provider;
+  }
+
+  async init(): Promise<void> {
+    await super.init();
+    await this.tryAccessingDefaultSigner();
+    this.listenToEvents();
+  }
+
+  async tryAccessingDefaultSigner(): Promise<void> {
+    const accounts = await this.web3Provider.listAccounts();
+    if (accounts.length === 0) {
+      return this.disconnect();
+    }
+
+    this.setSigner(accounts[0]);
   }
 
   setSigner(account: string): void {
@@ -96,9 +122,7 @@ export abstract class BasicEthereumProvider<T extends Eip1193Provider>
   }
 }
 
-export abstract class EthereumProvider<
-  T extends Eip1193Provider,
-> extends BasicEthereumProvider<T> {
+export abstract class EthereumWallet<T extends Eip1193Provider> extends BasicEthereumWallet<T> {
   async switchChainSafely(newChain: Chain): Promise<boolean> {
     let successful = true;
     if (newChain.identifier !== this.chainId.value) {

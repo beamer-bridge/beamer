@@ -6,12 +6,12 @@ import * as tokenService from '@/services/transactions/token';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/transactions/token');
 
 const PROVIDER = shallowRef(
-  new MockedEthereumProvider({
+  new MockedEthereumWallet({
     signerAddress: getRandomEthereumAddress(),
   }),
 );
@@ -45,7 +45,7 @@ describe('useTokenAllowance', () => {
     });
 
     it('is undefined when provided ethereum provider lacks an ethereum address', () => {
-      const provider = shallowRef(new MockedEthereumProvider());
+      const provider = shallowRef(new MockedEthereumWallet());
 
       const { allowance } = useTokenAllowance(provider, TOKEN, SOURCE_CHAIN);
 

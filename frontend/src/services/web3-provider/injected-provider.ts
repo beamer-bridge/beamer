@@ -1,8 +1,8 @@
 import type { ExternalProvider } from '@ethersproject/providers';
 import { getAddress, hexValue } from 'ethers/lib/utils';
 
-import { EthereumProvider } from '@/services/web3-provider/ethereum-provider';
-import type { Eip1193Provider, ISigner } from '@/services/web3-provider/types';
+import { EthereumWallet } from '@/services/web3-provider/ethereum-provider';
+import type { Eip1193Provider } from '@/services/web3-provider/types';
 import { detectEthereumProvider } from '@/services/web3-provider/util-export';
 
 export async function createInjectedProvider(): Promise<InjectedProvider | undefined> {
@@ -17,7 +17,7 @@ export async function createInjectedProvider(): Promise<InjectedProvider | undef
   return undefined;
 }
 
-export class InjectedProvider extends EthereumProvider<Eip1193Provider> implements ISigner {
+export class InjectedProvider extends EthereumWallet<Eip1193Provider> {
   constructor(_provider: Eip1193Provider) {
     super(_provider);
   }

@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 
 import Disconnect from '@/components/wallet/Disconnect.vue';
 import * as useWalletComposable from '@/composables/useWallet';
-import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
+import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/composables/useWallet');
 
@@ -14,8 +14,8 @@ const createWrapper = () => {
       plugins: [
         createTestingPinia({
           initialState: {
-            ethereumProvider: {
-              provider: new MockedEthereumProvider(),
+            ethereumWallet: {
+              provider: new MockedEthereumWallet(),
             },
           },
         }),

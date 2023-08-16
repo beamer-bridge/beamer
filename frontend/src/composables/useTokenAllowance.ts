@@ -2,13 +2,13 @@ import type { Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
 
 import { getTokenAllowance } from '@/services/transactions/token';
-import type { IEthereumProvider } from '@/services/web3-provider';
+import type { IEthereumWallet } from '@/services/web3-provider';
 import type { Chain, Token } from '@/types/data';
 import type { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
 
 export function useTokenAllowance(
-  provider: Ref<IEthereumProvider | undefined>,
+  provider: Ref<IEthereumWallet | undefined>,
   token: Ref<Token | undefined>,
   sourceChain: Ref<Chain | undefined>,
 ) {
