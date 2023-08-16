@@ -330,7 +330,7 @@ defineExpose({ v$ });
 const isSelectedAmountValid = computed(() => {
   return !v$.value.$validationGroups?.amount || !v$.value.$validationGroups.amount.$error;
 });
-provider;
+
 const setMaxTokenAmount = async () => {
   if (maxTransferableTokenBalance.value) {
     if (

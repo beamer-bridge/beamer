@@ -9,7 +9,7 @@ import type { TokenAmount } from '@/types/token-amount';
 
 export function useTokenBalance(
   provider: Ref<IEthereumProvider | undefined>,
-  accountAddress: Ref<string | undefined>,
+  accountAddress: Ref<EthereumAddress | undefined>,
   token: Ref<Token | undefined>,
 ) {
   const error = ref<string | undefined>(undefined);
