@@ -246,7 +246,8 @@ const { amount: requestFeeAmount, loading: requestFeeLoading } = useRequestFee(
 
 const { formattedBalance: formattedTokenBalance, balance } = useTokenBalance(
   provider,
-  computed(() => selectedToken?.value?.value ?? undefined),
+  signerAddress,
+  computed(() => selectedToken.value?.value ?? undefined),
 );
 
 const {

@@ -9,12 +9,12 @@ import type { TokenAmount } from '@/types/token-amount';
 
 export function useTokenBalance(
   provider: Ref<IEthereumProvider | undefined>,
+  accountAddress: Ref<string | undefined>,
   token: Ref<Token | undefined>,
 ) {
   const error = ref<string | undefined>(undefined);
   const balance: Ref<TokenAmount | undefined> = ref(undefined);
   const formattedBalance = computed(() => balance.value?.format());
-  const signerAddress = computed(() => provider.value?.signerAddress.value);
 
   let tokenContract: Contract;
 
@@ -26,10 +26,10 @@ export function useTokenBalance(
   async function updateTokenBalance(
     provider: IEthereumProvider,
     token: Token,
-    signerAddress: EthereumAddress,
+    accountAddress: EthereumAddress,
   ) {
     try {
-      balance.value = await getTokenBalance(provider, token, signerAddress);
+      balance.value = await getTokenBalance(provider, token, accountAddress);
     } catch (exception: unknown) {
       handleException(exception);
     }
@@ -44,15 +44,15 @@ export function useTokenBalance(
   function attachTokenBalanceListeners(
     provider: IEthereumProvider,
     token: Token,
-    signerAddress: EthereumAddress,
+    accountAddress: EthereumAddress,
   ) {
     try {
       tokenContract = listenOnTokenBalanceChange({
         provider: provider,
         token: token,
-        addressToListen: signerAddress,
-        onReduce: updateTokenBalance.bind(null, provider, token, signerAddress),
-        onIncrease: updateTokenBalance.bind(null, provider, token, signerAddress),
+        addressToListen: accountAddress,
+        onReduce: updateTokenBalance.bind(null, provider, token, accountAddress),
+        onIncrease: updateTokenBalance.bind(null, provider, token, accountAddress),
       });
     } catch (exception: unknown) {
       handleException(exception);
@@ -63,16 +63,16 @@ export function useTokenBalance(
     error.value = undefined;
     detachTokenBalanceListeners();
 
-    if (!provider.value || !token.value || !signerAddress.value) {
+    if (!provider.value || !token.value || !accountAddress.value) {
       balance.value = undefined;
       return;
     } else {
-      attachTokenBalanceListeners(provider.value, token.value, signerAddress.value);
-      updateTokenBalance(provider.value, token.value, signerAddress.value);
+      attachTokenBalanceListeners(provider.value, token.value, accountAddress.value);
+      updateTokenBalance(provider.value, token.value, accountAddress.value);
     }
   }
 
-  watch([token, provider, signerAddress], handleParamsChange, { immediate: true });
+  watch([token, provider, accountAddress], handleParamsChange, { immediate: true });
 
   return { balance, formattedBalance, error };
 }

@@ -9,6 +9,7 @@ import { MockedEthereumProvider } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/transactions/token');
 
+const ACCOUNT_ADDRESS = ref(getRandomEthereumAddress());
 const PROVIDER = shallowRef(
   new MockedEthereumProvider({
     signerAddress: getRandomEthereumAddress(),
@@ -21,21 +22,21 @@ describe('useTokenBalance', () => {
     it('is undefined when provided ethereum provider is not defined', () => {
       const provider = ref(undefined);
 
-      const { balance } = useTokenBalance(provider, TOKEN);
+      const { balance } = useTokenBalance(provider, ACCOUNT_ADDRESS, TOKEN);
 
       expect(balance.value).toBeUndefined();
     });
     it('is undefined when provided token is not defined', () => {
       const token = ref(undefined);
 
-      const { balance } = useTokenBalance(PROVIDER, token);
+      const { balance } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, token);
 
       expect(balance.value).toBeUndefined();
     });
-    it('is undefined when provided ethereum provider lacks an ethereum address', () => {
-      const provider = shallowRef(new MockedEthereumProvider());
+    it('is undefined when provided account address is not defined', () => {
+      const accountAddress = ref(undefined);
 
-      const { balance } = useTokenBalance(provider, TOKEN);
+      const { balance } = useTokenBalance(PROVIDER, accountAddress, TOKEN);
 
       expect(balance.value).toBeUndefined();
     });
@@ -44,7 +45,7 @@ describe('useTokenBalance', () => {
       Object.defineProperty(tokenService, 'getTokenBalance', {
         value: vi.fn().mockResolvedValue(TokenAmount.parse('1', token.value)),
       });
-      const { balance } = useTokenBalance(PROVIDER, token);
+      const { balance } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, token);
       await flushPromises();
 
       expect(balance.value).not.toBeUndefined();
@@ -60,7 +61,7 @@ describe('useTokenBalance', () => {
         value: vi.fn().mockResolvedValue(TokenAmount.parse('1', token.value)),
       });
 
-      const { formattedBalance } = useTokenBalance(PROVIDER, token);
+      const { formattedBalance } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, token);
       await flushPromises();
       expect(formattedBalance.value).not.toBeUndefined();
       expect(formattedBalance.value).not.toHaveLength(0);
@@ -69,7 +70,7 @@ describe('useTokenBalance', () => {
 
   describe('error', () => {
     it('is undefined when no errors occured', async () => {
-      const { error } = useTokenBalance(PROVIDER, TOKEN);
+      const { error } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, TOKEN);
       await flushPromises();
       expect(error.value).toBeUndefined();
     });
@@ -81,7 +82,7 @@ describe('useTokenBalance', () => {
         }),
       });
 
-      const { error } = useTokenBalance(PROVIDER, TOKEN);
+      const { error } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, TOKEN);
       await flushPromises();
       expect(error.value).toBe('Failed fetching token balance');
     });
@@ -92,7 +93,7 @@ describe('useTokenBalance', () => {
         }),
       });
 
-      const { error } = useTokenBalance(PROVIDER, TOKEN);
+      const { error } = useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, TOKEN);
       await flushPromises();
       expect(error.value).toBe('Failed attaching listeners on token balance');
     });
@@ -108,7 +109,7 @@ describe('useTokenBalance', () => {
       value: vi.fn().mockReturnValue(contractWithListeners),
     });
 
-    useTokenBalance(PROVIDER, token);
+    useTokenBalance(PROVIDER, ACCOUNT_ADDRESS, token);
 
     token.value = generateToken();
     await flushPromises();
