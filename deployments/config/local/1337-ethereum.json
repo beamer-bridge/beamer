@@ -1,9 +1,6 @@
 {
     "name": "ethereum",
     "chain_id": 1337,
-    "finality_period": 1,
-    "transfer_cost": 1000000000000000,
-    "target_weight_ppm": 500000,
     "l1_messenger": "EthereumL1Messenger",
     "l2_messenger": ["EthereumL2Messenger", "${resolver}"],
     "request_manager_arguments": {
@@ -11,10 +8,5 @@
         "claim_request_extension": 3600,
         "claim_period": 3600,
         "challenge_period_extension": 3600
-    },
-    "fees": {
-        "min_fee_ppm": 300000,
-        "lp_fee_ppm": 0,
-        "protocol_fee_ppm": 0
     }
 }

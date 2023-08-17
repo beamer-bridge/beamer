@@ -6,18 +6,10 @@
         "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1"
     ],
     "l2_messenger": "OptimismL2Messenger",
-    "finality_period": 604800,
-    "transfer_cost": 1000000000000000,
-    "target_weight_ppm": 500000,
     "request_manager_arguments": {
         "claim_stake": 0.0015,
         "claim_request_extension": 86400,
         "claim_period": 86400,
         "challenge_period_extension": 86400
-    },
-    "fees": {
-        "min_fee_ppm": 300000,
-        "lp_fee_ppm": 3000,
-        "protocol_fee_ppm": 0
     }
 }

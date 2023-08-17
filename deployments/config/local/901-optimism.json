@@ -3,18 +3,10 @@
     "chain_id": 901,
     "l1_messenger": ["OptimismL1Messenger", ${l1_messenger_args}],
     "l2_messenger": "OptimismL2Messenger",
-    "finality_period": 3600,
-    "transfer_cost": 1000000000000000,
-    "target_weight_ppm": 500000,
     "request_manager_arguments": {
         "claim_stake": 0.00047,
         "claim_request_extension": 3600,
         "claim_period": 3600,
         "challenge_period_extension": 3600
-    },
-    "fees": {
-        "min_fee_ppm": 300000,
-        "lp_fee_ppm": 0,
-        "protocol_fee_ppm": 0
     }
 }
