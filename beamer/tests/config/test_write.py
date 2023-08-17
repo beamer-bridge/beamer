@@ -9,7 +9,7 @@ from eth_utils import to_checksum_address
 
 import beamer.config.commands
 from beamer.artifacts import Deployment
-from beamer.config.state import ChainConfig
+from beamer.config.state import ChainConfig, TokenConfig
 
 from beamer.tests.config.util import read_config_state
 from beamer.tests.util import (
@@ -125,6 +125,50 @@ def test_config_write_request_manager(deployment_objects, deployer):
     assert request_manager.chains(1).finalityPeriod == 0
     assert request_manager.chains(1).targetWeightPPM == 0
     assert request_manager.chains(1).transferCost == 0
+
+
+def test_config_write_add_new_token(deployment_objects, deployer):
+    rpc_file, artifact, deployment = deployment_objects
+    current = read_config_state(rpc_file, artifact)
+    token_address = current.token_addresses["TST"]
+    token_config = current.request_manager.tokens["TST"]
+
+    # Remove TST
+    desired = current.to_desired_config()
+    desired.request_manager.tokens = {}
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+
+    current = read_config_state(rpc_file, artifact)
+    assert not current.token_addresses
+    assert not current.request_manager.tokens
+
+    # Add new token TST
+    desired = current.to_desired_config()
+    desired.request_manager.tokens[token_address] = token_config
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+
+    current = read_config_state(rpc_file, artifact)
+    assert current.token_addresses["TST"] == token_address
+    assert current.request_manager.tokens["TST"] == token_config
+
+    # Add new token without symbol()
+    token_no_symbol = deployment.chain.contracts["RequestManager"].address
+    token_no_symbol_config = TokenConfig(transfer_limit=1, eth_in_token=1)
+    desired = current.to_desired_config()
+    desired.request_manager.tokens[token_no_symbol] = token_no_symbol_config
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+
+    current = read_config_state(rpc_file, artifact)
+    assert token_no_symbol not in current.token_addresses
+    assert current.request_manager.tokens[token_no_symbol] == token_no_symbol_config
+
+    # Remove token where symbol is address
+    desired = current.to_desired_config()
+    desired.request_manager.tokens.pop(token_no_symbol)
+    _write_config_state(rpc_file, artifact, deployer, current, desired)
+
+    current = read_config_state(rpc_file, artifact)
+    assert token_no_symbol not in current.request_manager.tokens
 
 
 def test_config_write_fill_manager(deployment_objects, deployer):
