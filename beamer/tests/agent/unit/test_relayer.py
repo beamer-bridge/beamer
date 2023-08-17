@@ -4,7 +4,7 @@ import pytest
 from eth_account.account import Account
 from hexbytes import HexBytes
 
-from beamer.agent.relayer import run_relayer_for_tx
+from beamer.relayer import run_relayer_for_tx
 from beamer.typing import URL
 
 

@@ -11,7 +11,7 @@ import beamer.agent.config
 import beamer.contracts
 import beamer.util
 from beamer.agent.agent import Agent
-from beamer.agent.relayer import get_relayer_executable
+from beamer.relayer import get_relayer_executable
 
 log = structlog.get_logger(__name__)
 
