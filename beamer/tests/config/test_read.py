@@ -51,15 +51,34 @@ def test_config_read_request_manager(tmp_path, token, deployer):
     assert token_config.eth_in_token == 5
     assert config.token_addresses == {symbol: token.address}
 
+    # check token removal
+    request_manager.updateToken(token.address, 0, 0)
+    config = read_config_state(rpc_file, artifact)
+
+    assert config.block > old_block
+    assert symbol not in config.token_addresses
+    assert len(config.token_addresses) == 0
+    assert symbol not in config.request_manager.tokens
+    assert len(config.request_manager.tokens) == 0
+
     # check chain update
-    request_manager.updateChain(123, 6, 7, 8)
+    chain_id = 123
+    request_manager.updateChain(chain_id, 6, 7, 8)
 
     config = read_config_state(rpc_file, artifact)
     assert len(config.request_manager.chains) == 1
-    chain_config = config.request_manager.chains[123]
+    chain_config = config.request_manager.chains[chain_id]
     assert chain_config.finality_period == 6
     assert chain_config.transfer_cost == 7
     assert chain_config.target_weight_ppm == 8
+
+    # check chain removal
+    request_manager.updateChain(chain_id, 0, 0, 0)
+    config = read_config_state(rpc_file, artifact)
+
+    assert config.block > old_block
+    assert chain_id not in config.request_manager.chains
+    assert len(config.request_manager.chains) == 0
 
     # check LP addition
     lp = ape.accounts.test_accounts[0].address
