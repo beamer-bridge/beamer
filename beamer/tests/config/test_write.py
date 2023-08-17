@@ -16,6 +16,7 @@ from beamer.tests.util import (
     CommandFailed,
     deploy,
     get_repo_root,
+    make_address,
     run_command,
     write_keystore_file,
 )
@@ -111,7 +112,6 @@ def test_config_write_request_manager(deployment_objects, deployer):
     # Removal of a token.
     current = desired.to_config(ape.chain.blocks[-1].number)
     del desired.request_manager.tokens["TST"]
-    del desired.token_addresses["TST"]
 
     _write_config_state(rpc_file, artifact, deployer, current, desired)
     assert request_manager.tokens(token_address).transferLimit == 0
@@ -207,19 +207,21 @@ def test_error_on_stale_config(deployment_objects, deployer, caplog):
     assert "Found configuration update event since start block" in caplog.messages[0]
 
 
-def test_error_on_same_token_different_addresses(deployment_objects, deployer, caplog):
+@pytest.mark.parametrize("symbol", ["TST", "NEW"])
+def test_error_on_different_token_addresses(deployment_objects, deployer, caplog, symbol):
     caplog.set_level(logging.ERROR)
     rpc_file, artifact, _ = deployment_objects
     current = read_config_state(rpc_file, artifact)
     desired = current.to_desired_config()
-    desired.token_addresses["TST"] = to_checksum_address(
-        "0x" + current.token_addresses["TST"][-1:1:-1]
-    )
+    desired.token_addresses[symbol] = to_checksum_address(make_address())
 
     with pytest.raises(CommandFailed):
         _write_config_state(rpc_file, artifact, deployer, current, desired)
     assert len(caplog.messages) == 1
-    assert "Token symbol refers to different addresses" in caplog.messages[0]
+    assert (
+        "Token addresses mappings differ between current and desired configuration"
+        in caplog.messages[0]
+    )
 
 
 def test_no_update_if_same_config(deployment_objects, deployer):
