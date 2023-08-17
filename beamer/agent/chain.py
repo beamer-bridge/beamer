@@ -15,10 +15,10 @@ from web3.types import Timestamp, Wei
 
 from beamer.agent.models.claim import Claim
 from beamer.agent.models.request import Request
-from beamer.agent.relayer import run_relayer_for_tx
 from beamer.agent.state_machine import Context, process_event
 from beamer.chains import get_chain_descriptor
 from beamer.events import Event, EventFetcher
+from beamer.relayer import run_relayer_for_tx
 from beamer.typing import BlockNumber, ChainId
 from beamer.util import TransactionFailed, get_ERC20_abi, transact
 
