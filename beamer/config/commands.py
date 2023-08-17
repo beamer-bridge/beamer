@@ -60,11 +60,11 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
 
         case TokenUpdated():
             removal = event.transfer_limit == 0 and event.eth_in_token == 0
-
             token = w3.eth.contract(address=event.token_address, abi=get_ERC20_abi())
+
             try:
                 symbol = token.functions.symbol().call()
-            except ContractLogicError:
+            except (ContractLogicError, ValueError):
                 # If token symbol is not available, use address instead
                 symbol = event.token_address
 
@@ -80,7 +80,8 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
                 config.request_manager.tokens[symbol] = TokenConfig(
                     transfer_limit=event.transfer_limit, eth_in_token=event.eth_in_token
                 )
-                config.token_addresses[symbol] = event.token_address
+                if symbol != event.token_address:
+                    config.token_addresses[symbol] = event.token_address
 
         case LpAdded():
             if event.event_address == deployment.chain.contracts["RequestManager"].address:
@@ -239,7 +240,8 @@ def _generate_token_updates(
     # First check for removed tokens.
     for symbol in current_tokens:
         if symbol not in desired_tokens:
-            address = current_config.token_addresses[symbol]
+            # Either symbol is a token symbol or an address itself
+            address = current_config.token_addresses.get(symbol, symbol)
             # The token is disabled by setting its transfer limit to zero,
             # but we set also eth_in_token to zero.
             yield "RequestManager", "updateToken", address, 0, 0
@@ -248,7 +250,8 @@ def _generate_token_updates(
     for symbol, desired_token in desired_tokens.items():
         current_token = current_tokens.get(symbol)
         if current_token is None or current_token != desired_token:
-            address = desired_config.token_addresses[symbol]
+            # Either symbol is a token symbol or an address itself
+            address = desired_config.token_addresses.get(symbol, symbol)
             yield (
                 "RequestManager",
                 "updateToken",
@@ -293,21 +296,16 @@ def _generate_updates(
     yield from _generate_whitelist_updates(current_config, desired_config)
 
 
-def _ensure_same_tokens_have_same_addresses(
+def _ensure_same_token_addresses(
     current_config: Configuration, desired_config: DesiredConfiguration
 ) -> None:
-    common_symbols = set(current_config.token_addresses) & set(desired_config.token_addresses)
-    for symbol in common_symbols:
-        current_address = current_config.token_addresses[symbol]
-        desired_address = desired_config.token_addresses[symbol]
-        if current_address != desired_address:
-            log.error(
-                "Token symbol refers to different addresses",
-                symbol=symbol,
-                current_address=current_address,
-                desired_address=desired_address,
-            )
-            sys.exit(1)
+    if current_config.token_addresses != desired_config.token_addresses:
+        log.error(
+            "Token addresses mappings differ between current and desired configuration",
+            current=current_config.token_addresses,
+            desired=desired_config.token_addresses,
+        )
+        sys.exit(1)
 
 
 def _ensure_no_config_updates_since(
@@ -422,7 +420,7 @@ def write(
 
     _ensure_config_chain_id_matches_deployment_chain_id(current_config, deployment)
     _ensure_config_block_not_in_future(w3, current_config)
-    _ensure_same_tokens_have_same_addresses(current_config, desired_config)
+    _ensure_same_token_addresses(current_config, desired_config)
     _ensure_same_chain_ids(current_config, desired_config)
 
     # Current configuration is only valid for current_config.block.
