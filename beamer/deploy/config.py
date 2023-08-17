@@ -16,23 +16,12 @@ class _RequestManagerArgs:
 
 
 @dataclass
-class _Fees:
-    min_fee_ppm: int = field(metadata=schema(min=0))
-    lp_fee_ppm: int = field(metadata=schema(min=0))
-    protocol_fee_ppm: int = field(metadata=schema(min=0))
-
-
-@dataclass
 class Chain:
     name: str
     chain_id: ChainId = field(metadata=schema(min=1))
     l1_messenger: str | tuple[str | int, ...]
     l2_messenger: str | tuple[str | int, ...]
-    finality_period: int = field(metadata=schema(min=1))
-    transfer_cost: int = field(metadata=schema(min=0))
-    target_weight_ppm: int = field(metadata=schema(min=0))
     request_manager_arguments: _RequestManagerArgs
-    fees: _Fees
 
     @staticmethod
     def from_file(config_file: Path) -> "Chain":
