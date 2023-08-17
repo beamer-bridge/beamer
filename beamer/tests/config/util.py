@@ -12,14 +12,12 @@ def read_config_state(rpc_file, artifact):
         state_path = pathlib.Path(tmp_path) / "config.state"
         run_command(
             beamer.config.commands.read,
-            (
-                "--rpc-file",
-                rpc_file,
-                "--abi-dir",
-                f"{root}/contracts/.build/",
-                "--artifact",
-                artifact,
-                str(state_path),
-            ),
+            "--rpc-file",
+            rpc_file,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifact",
+            artifact,
+            str(state_path),
         )
         return Configuration.from_file(state_path)
