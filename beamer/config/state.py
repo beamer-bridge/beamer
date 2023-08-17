@@ -70,11 +70,14 @@ class _BaseConfiguration:
 
     @validator
     def _check_tokens(self) -> Generator:
-        # Make sure each token symbol has its entry in token_addresses.
+        # Make sure each key has its entry in token_addresses unless it's a checksum address.
         for name in self.request_manager.tokens:
-            if name not in self.token_addresses:
+            if name not in self.token_addresses and not is_checksum_address(name):
                 loc = get_alias(self).token_addresses
                 yield loc, f"missing address for token {name}"
+            if is_checksum_address(name) and name in self.token_addresses:
+                loc = get_alias(self).token_addresses
+                yield loc, f"symbol exists but not used in tokens for address {name}"
 
     @staticmethod
     def _convert_chain_ids(data: dict) -> None:
