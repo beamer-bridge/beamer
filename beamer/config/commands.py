@@ -39,11 +39,19 @@ def _replay_event(w3: Web3, deployment: Deployment, config: Configuration, event
     assert deployment.chain is not None
     match event:
         case ChainUpdated():
-            config.request_manager.chains[event.chain_id] = ChainConfig(
-                finality_period=event.finality_period,
-                target_weight_ppm=event.target_weight_ppm,
-                transfer_cost=event.transfer_cost,
+            removal = (
+                event.finality_period == 0
+                and event.target_weight_ppm == 0
+                and event.transfer_cost == 0
             )
+            if removal:
+                config.request_manager.chains.pop(event.chain_id, None)
+            else:
+                config.request_manager.chains[event.chain_id] = ChainConfig(
+                    finality_period=event.finality_period,
+                    target_weight_ppm=event.target_weight_ppm,
+                    transfer_cost=event.transfer_cost,
+                )
 
         case FeesUpdated():
             config.request_manager.lp_fee_ppm = event.lp_fee_ppm
