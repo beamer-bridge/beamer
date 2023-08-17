@@ -270,9 +270,9 @@ class CommandFailed(Exception):
     pass
 
 
-def run_command(*args):
+def run_command(cmd, *args):
     runner = CliRunner()
-    result = runner.invoke(*args)
+    result = runner.invoke(cmd, args, catch_exceptions=False)
     if result.exit_code:
         raise CommandFailed(result)
 
@@ -296,41 +296,37 @@ def deploy(deployer, destdir):
     root = get_repo_root()
     run_command(
         beamer.deploy.commands.deploy_base,
-        (
-            "--rpc-file",
-            rpc_file,
-            "--keystore-file",
-            keystore_file,
-            "--password",
-            password,
-            "--abi-dir",
-            f"{root}/contracts/.build/",
-            "--artifacts-dir",
-            artifacts_dir,
-            "--commit-check",
-            "no",
-            f"{chain_id}",
-        ),
+        "--rpc-file",
+        rpc_file,
+        "--keystore-file",
+        keystore_file,
+        "--password",
+        password,
+        "--abi-dir",
+        f"{root}/contracts/.build/",
+        "--artifacts-dir",
+        artifacts_dir,
+        "--commit-check",
+        "no",
+        f"{chain_id}",
     )
 
     run_command(
         beamer.deploy.commands.deploy,
-        (
-            "--rpc-file",
-            rpc_file,
-            "--keystore-file",
-            keystore_file,
-            "--password",
-            password,
-            "--abi-dir",
-            f"{root}/contracts/.build/",
-            "--artifacts-dir",
-            artifacts_dir,
-            "--commit-check",
-            "no",
-            "--deploy-mintable-token",
-            f"{root}/deployments/config/local/{chain_id}-ethereum.json",
-        ),
+        "--rpc-file",
+        rpc_file,
+        "--keystore-file",
+        keystore_file,
+        "--password",
+        password,
+        "--abi-dir",
+        f"{root}/contracts/.build/",
+        "--artifacts-dir",
+        artifacts_dir,
+        "--commit-check",
+        "no",
+        "--deploy-mintable-token",
+        f"{root}/deployments/config/local/{chain_id}-ethereum.json",
     )
 
     artifact = f"{artifacts_dir}/{chain_id}-ethereum.deployment.json"

@@ -166,15 +166,13 @@ def test_error_on_different_chain_ids(tmp_path, deployer, caplog):
     with pytest.raises(CommandFailed):
         run_command(
             beamer.config.commands.read,
-            (
-                "--rpc-file",
-                rpc_file,
-                "--abi-dir",
-                f"{root}/contracts/.build/",
-                "--artifact",
-                artifact,
-                str(path),
-            ),
+            "--rpc-file",
+            rpc_file,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifact",
+            artifact,
+            str(path),
         )
     assert len(caplog.messages) == 1
     assert "Configuration chain ID differs from the deployment chain ID" in caplog.messages[0]
@@ -193,15 +191,13 @@ def test_config_read_no_updates_found(tmp_path, deployer, caplog):
     ape.chain.mine()
     run_command(
         beamer.config.commands.read,
-        (
-            "--rpc-file",
-            rpc_file,
-            "--abi-dir",
-            f"{root}/contracts/.build/",
-            "--artifact",
-            artifact,
-            str(path),
-        ),
+        "--rpc-file",
+        rpc_file,
+        "--abi-dir",
+        f"{root}/contracts/.build/",
+        "--artifact",
+        artifact,
+        str(path),
     )
     assert "No configuration updates found" in caplog.messages[-2]
 

@@ -35,20 +35,18 @@ def _write_config_state(rpc_file, artifact, account, current_config, desired_con
         root = get_repo_root()
         run_command(
             beamer.config.commands.write,
-            (
-                "--rpc-file",
-                rpc_file,
-                "--abi-dir",
-                f"{root}/contracts/.build/",
-                "--artifact",
-                artifact,
-                "--keystore-file",
-                str(keystore_file),
-                "--password",
-                "test",
-                str(current_state_path),
-                str(desired_state_path),
-            ),
+            "--rpc-file",
+            rpc_file,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifact",
+            artifact,
+            "--keystore-file",
+            str(keystore_file),
+            "--password",
+            "test",
+            str(current_state_path),
+            str(desired_state_path),
         )
 
 
