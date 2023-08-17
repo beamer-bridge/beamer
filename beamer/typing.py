@@ -1,5 +1,6 @@
 from typing import NamedTuple, NewType
 
+from apischema.conversions import Conversion, deserializer, serializer
 from eth_typing import (  # NOQA pylint:disable=unused-import
     Address,
     BlockNumber,
@@ -21,6 +22,13 @@ class RequestId(_HexBytes):
 
 class FillId(_HexBytes):
     pass
+
+
+# Set up conversions so that instances of HexBytes (or its derived types)
+# are serialized as 0x-prefixed strings, and can be deserialized from them.
+for type_ in (HexBytes, RequestId, FillId):
+    serializer(Conversion(converter=type_.hex, source=type_, target=str))
+    deserializer(Conversion(converter=type_, source=str, target=type_))
 
 
 ChainId = NewType("ChainId", int)
