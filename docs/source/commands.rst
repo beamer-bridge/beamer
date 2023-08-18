@@ -7,6 +7,7 @@ The Beamer software currently supports these commands:
 * :ref:`command-config-read` reads contract configuration from the chain.
 * :ref:`command-config-write` writes contract configuration to the chain.
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
+* :ref:`command-check-initiate-l1-invalidations` issues L1 invalidations.
 
 .. _command-agent:
 
@@ -161,3 +162,49 @@ command will notify the user by sending everything either to Telegram or RocketC
      - Logging level, one of ``debug``, ``info``, ``warning``, ``error``, ``critical``.
        Default: ``error``.
 
+
+.. _command-check-initiate-l1-invalidations:
+
+``beamer check initiate-l1-invalidations``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``beamer check initiate-l1-invalidations [OPTIONS] PROOF_SOURCE PROOF_TARGET...``
+
+The command initiates L1 invalidations from ``PROOF_SOURCE`` to each
+``PROOF_TARGET`` (there must be at least one proof target, but also multiple ones
+can be specified). ``PROOF_SOURCE`` and ``PROOF_TARGET`` are chain IDs. By
+default, one invalidation will be sent per (source, target) pair, however this
+may be changed via the ``--count`` option. If the output file (specified via
+the ``--output`` option) already contains invalidations for a particular
+(source, target) pair, the command will only send as many new invalidations for
+the same pair as is necessary to reach the specified invalidation count per
+pair. This also means that if the number of invalidations found for a given
+pair is equal or greater to the count, no new invalidations will be sent.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory containing deployment artifact files.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
+
+   * - ``--output PATH``
+     - Path to store the invalidation info at, which can be later used for verification.
+
+   * - ``--count INTEGER``
+     - Number of invalidations to create, per (PROOF_SOURCE, PROOF_TARGET) pair.
+       Has to be greater or equal to 1. Default: 1.
