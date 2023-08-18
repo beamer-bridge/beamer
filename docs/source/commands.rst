@@ -1,10 +1,11 @@
 Command reference
 -----------------
 
-The Beamer software currently supports two commands: 
+The Beamer software currently supports these commands:
 
 * :ref:`command-agent` allows to run a Beamer agent.
 * :ref:`command-config-read` reads contract configuration from the chain.
+* :ref:`command-config-write` writes contract configuration to the chain.
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 
 .. _command-agent:
