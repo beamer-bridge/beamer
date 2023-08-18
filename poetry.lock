@@ -1289,22 +1289,22 @@ test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-x
 
 [[package]]
 name = "eth-ape"
-version = "0.6.15"
+version = "0.6.17"
 description = "Ape Ethereum Framework"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "eth-ape-0.6.15.tar.gz", hash = "sha256:2017a6d4972732ed8b84f6036831371011c2df9c31674f6b2098885393c7656d"},
-    {file = "eth_ape-0.6.15-py3-none-any.whl", hash = "sha256:39758682ba0bd09a04489e9b98484b3a682f09d801df71557b7301c689e2c5dc"},
+    {file = "eth-ape-0.6.17.tar.gz", hash = "sha256:d2baac932909c556681a7d57daab5f8233400199998fa13dac605b849f1328c3"},
+    {file = "eth_ape-0.6.17-py3-none-any.whl", hash = "sha256:1e04fbd625a16207b940b77d054c80705c12a229903373108795b8428c1a4a55"},
 ]
 
 [package.dependencies]
 click = ">=8.1.6,<9"
 eip712 = ">=0.2.1,<0.3"
-eth-abi = ">=4.0.0,<5"
+eth-abi = ">=4.1.0,<5"
 eth-account = ">=0.8,<0.9"
-eth-typing = ">=3.1,<4"
-eth-utils = ">=2.0.0,<3"
+eth-typing = ">=3.4,<4"
+eth-utils = ">=2.2.0,<3"
 ethpm-types = ">=0.5.3,<0.6"
 evm-trace = ">=0.1.0a22"
 hexbytes = ">=0.2.3,<1"
@@ -1317,7 +1317,7 @@ pandas = ">=1.3.0,<2"
 pluggy = ">=0.12,<2"
 py-geth = ">=3.13.0,<4"
 pydantic = ">=1.10.8,<2"
-PyGithub = ">=1.54,<2"
+PyGithub = ">=1.59,<2"
 pytest = ">=6.0,<8.0"
 python-dateutil = ">=2.8.2,<3"
 PyYAML = ">=5.0,<7"
@@ -1327,12 +1327,12 @@ SQLAlchemy = ">=1.4.35"
 tqdm = ">=4.62.3,<5.0"
 traitlets = ">=5.3.0"
 watchdog = ">=3.0,<4"
-web3 = {version = ">=6.6.1,<7", extras = ["tester"]}
+web3 = {version = ">=6.7.0,<7", extras = ["tester"]}
 
 [package.extras]
-dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.7.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=0.991,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
+dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.7.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.4.1,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=6.1.3,<7)", "myst-parser (>=1.0.0,<2)", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)"]
-lint = ["black (>=23.7.0,<24)", "flake8 (>=6.0.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=0.991,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
+lint = ["black (>=23.7.0,<24)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.4.1,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
 recommended-plugins = ["ape-alchemy", "ape-ens", "ape-etherscan", "ape-foundry", "ape-hardhat", "ape-infura", "ape-solidity", "ape-template", "ape-tokens", "ape-vyper"]
 release = ["setuptools", "twine (==3.8.0)", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-xdist"]
@@ -4726,4 +4726,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "dc6b00577c58cce968b88fd7ff9e7c90c891921a95dec728386f7349d6157b53"
+content-hash = "d9ea0d7a7aa403586d0da015eeffb7c0498ac726aac393a996d0cc0b18e90142"
