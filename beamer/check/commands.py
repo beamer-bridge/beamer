@@ -2,15 +2,18 @@ import json
 import random
 import sys
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import NamedTuple
 
 import apischema
 import click
 import structlog
 from apischema import schema
+from eth_account.account import LocalAccount
 from eth_utils import to_checksum_address
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
@@ -23,7 +26,7 @@ import beamer.contracts
 import beamer.util
 from beamer.contracts import ABIManager, obtain_contract
 from beamer.relayer import RelayerError, run_relayer_for_tx
-from beamer.typing import ChainId, FillId, RequestId, TokenAmount
+from beamer.typing import URL, ChainId, FillId, RequestId, TokenAmount
 from beamer.util import ChainIdParam, create_request_id, make_web3
 
 log = structlog.get_logger(__name__)
@@ -264,3 +267,214 @@ def initiate_l1_invalidations(
         sent=sent,
         total=len(invalidations),
     )
+
+
+# Status of an invalidation during the verification process.
+Status = Enum("Status", ("FAILED", "READY", "VERIFIED"))
+
+
+class Context(NamedTuple):
+    abi_manager: ABIManager
+    artifacts_dir: Path
+    account: LocalAccount
+    rpc_info: dict[ChainId, URL]
+
+
+def _obtain_request_manager(ctx: Context, chain_id: ChainId) -> Contract:
+    deployment = beamer.artifacts.load(ctx.artifacts_dir, chain_id)
+    url = ctx.rpc_info[chain_id]
+    w3 = make_web3(url, ctx.account)
+    assert w3.eth.chain_id == chain_id
+
+    return obtain_contract(w3, ctx.abi_manager, deployment, "RequestManager")
+
+
+def _verify_without_relaying(
+    ctx: Context, pair: tuple[ChainId, ChainId], invalidation: Invalidation
+) -> Status:
+    # First check the finalization timestamp.
+    if (
+        invalidation.finalization_timestamp is None
+        or datetime.utcnow() <= invalidation.finalization_timestamp
+    ):
+        log.error(
+            "Invalidation not yet finalized, skipping",
+            txhash=invalidation.txhash,
+            proof_source=pair[0],
+            proof_target=pair[1],
+        )
+        return Status.FAILED
+
+    # Check the request manager directly to see if it has been already verifed.
+    request_manager = _obtain_request_manager(ctx, invalidation.proof_target)
+    if request_manager.functions.isInvalidFill(
+        invalidation.request_id, invalidation.fill_id
+    ).call():
+        log.info(
+            "Invalidation verified successfully",
+            txhash=invalidation.txhash,
+            proof_source=pair[0],
+            proof_target=pair[1],
+        )
+        return Status.VERIFIED
+    return Status.READY
+
+
+def _relay_and_verify(
+    ctx: Context, pair: tuple[ChainId, ChainId], invalidation: Invalidation
+) -> bool:
+    deployment = beamer.artifacts.load(ctx.artifacts_dir, invalidation.proof_target)
+    txhash = invalidation.txhash
+    log.debug("Starting relayer", txhash=txhash)
+    try:
+        run_relayer_for_tx(
+            l1_rpc=ctx.rpc_info[deployment.base.chain_id],
+            l2_relay_from_rpc_url=ctx.rpc_info[invalidation.proof_source],
+            l2_relay_to_rpc_url=ctx.rpc_info[invalidation.proof_target],
+            account=ctx.account,
+            tx_hash=invalidation.txhash,
+        )
+    except RelayerError as exc:
+        log.error(
+            "Relayer failed", exc=exc, txhash=txhash, proof_source=pair[0], proof_target=pair[1]
+        )
+        return False
+
+    log.info("Relayer succeeded", thxash=txhash)
+
+    # Check the request manager, the invalidation should have arrived.
+    request_manager = _obtain_request_manager(ctx, invalidation.proof_target)
+    if request_manager.functions.isInvalidFill(
+        invalidation.request_id, invalidation.fill_id
+    ).call():
+        log.info(
+            "Invalidation verified successfully",
+            txhash=txhash,
+            proof_source=pair[0],
+            proof_target=pair[1],
+        )
+        return True
+
+    log.error(
+        "Invalidation failed after relaying",
+        txhash=txhash,
+        proof_source=pair[0],
+        proof_target=pair[1],
+    )
+    return False
+
+
+@check.command("verify-l1-invalidations")
+@click.option(
+    "--keystore-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    metavar="PATH",
+    help="Path to the keystore file.",
+)
+@click.password_option(
+    "--password",
+    type=str,
+    default="",
+    prompt=False,
+    help="The password needed to unlock the keystore file.",
+)
+@click.option(
+    "--rpc-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to the RPC config file.",
+)
+@click.option(
+    "--artifacts-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="The directory containing deployment artifacts.",
+)
+@click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
+@click.argument(
+    "file", type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path)
+)
+def verify_l1_invalidations(
+    keystore_file: Path,
+    password: str,
+    rpc_file: Path,
+    artifacts_dir: Path,
+    abi_dir: Path,
+    file: Path,
+) -> None:
+    """Verify L1 invalidations stored in FILE."""
+    beamer.util.setup_logging(log_level="DEBUG", log_json=False)
+
+    account = beamer.util.account_from_keyfile(keystore_file, password)
+    log.info("Loaded keystore file", address=account.address)
+
+    abi_manager = ABIManager(abi_dir)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
+    ctx = Context(
+        abi_manager=abi_manager, account=account, artifacts_dir=artifacts_dir, rpc_info=rpc_info
+    )
+
+    with file.open("rt") as f:
+        data = json.load(f)
+
+    # Group all invalidations by chain pair (proof_source, proof_target).
+    pairs = defaultdict(list)
+    for invalidation in apischema.deserialize(list[Invalidation], data):
+        pair = invalidation.proof_source, invalidation.proof_target
+        pairs[pair].append(invalidation)
+
+    # First, place each invalidation into one of the following bins:
+    # - failed:   invalidations that failed, e.g. due to not being finalized
+    # - ready:    invalidations that are finalized and ready for relaying
+    # - verified: invalidations that are already verified
+    failed = defaultdict(list)
+    ready = defaultdict(list)
+    verified = defaultdict(list)
+
+    while pairs:
+        pair, invalidations = pairs.popitem()
+        for invalidation in invalidations:
+            match _verify_without_relaying(ctx, pair, invalidation):
+                case Status.FAILED:
+                    failed[pair].append(invalidation)
+                case Status.READY:
+                    ready[pair].append(invalidation)
+                case Status.VERIFIED:
+                    verified[pair].append(invalidation)
+
+    # Now invoke the relayer for all invalidations that are ready,
+    # except those whose chain pair has already been verified.
+    while ready:
+        pair, invalidations = ready.popitem()
+        for invalidation in invalidations:
+            if pair in verified:
+                log.info(
+                    "Verified invalidation already exists for chain pair, skipping",
+                    txhash=invalidation.txhash,
+                    proof_source=pair[0],
+                    proof_target=pair[1],
+                )
+                continue
+
+            if _relay_and_verify(ctx, pair, invalidation):
+                verified[pair].append(invalidation)
+            else:
+                failed[pair].append(invalidation)
+
+    # If pair is present in both failed and verified, that's considered fine
+    # since different invalidations for the same pair can have sufficiently
+    # different finalization timestamps such that one is finalized and the
+    # other is not. As long as all chain pairs in failed are also in verified,
+    # we should report success.
+    unverified = set(failed) - set(verified)
+    if unverified:
+        log.error("Error(s) occurred during verification", unverified=unverified)
+        sys.exit(1)
+
+    log.info("Invalidations for all chain pairs successful", verified=len(verified))
