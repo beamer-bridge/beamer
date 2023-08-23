@@ -1,8 +1,22 @@
 # Changelog
 
+## v3.0.0 (2023-08-23)
+
+* agent: output exception reason from relayer
+* beamer: check: add new command `initiate-l1-invalidations` to automate deployment testing
+* beamer: config: remove tokens and chains from state file if reset
+* beamer: config: prohibit modification of `token_addresses` in desired state file
+* contracts: use `claim.fillId` in claim resolution
+* contracts: allow resetting chains during `RequestManager.updateChain()`
+* contracts: change `FillManager.invalidateFill()` interface, passing values to reconstruct request id
+* contracts: add V3 deployment artifacts
+* frontend: disable all tokens but USDC
+* relayer: use keystore and password instead of private key when calling relayer
+* relayer: use new contract addresses and ABIs
+
 ## v2.5.2 (2023-08-03)
 
-* frontend: switch to a differernt RPC for Polygon zkEVM
+* frontend: switch to a different RPC for Polygon zkEVM
 * frontend: increase request validity period to 24h
 * agent: emit a log entry when an OP proof is successful
 * agent: take the fill mutex before doing anything else when filling
