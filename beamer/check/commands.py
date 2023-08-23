@@ -6,7 +6,6 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from subprocess import CalledProcessError
 
 import apischema
 import click
@@ -23,7 +22,7 @@ import beamer.chains
 import beamer.contracts
 import beamer.util
 from beamer.contracts import ABIManager, obtain_contract
-from beamer.relayer import run_relayer_for_tx
+from beamer.relayer import RelayerError, run_relayer_for_tx
 from beamer.typing import ChainId, FillId, RequestId, TokenAmount
 from beamer.util import ChainIdParam, create_request_id, make_web3
 
@@ -235,7 +234,7 @@ def initiate_l1_invalidations(
                         tx_hash=invalidation.txhash,
                         prove_tx=True,
                     )
-                except (CalledProcessError, RuntimeError) as exc:
+                except RelayerError as exc:
                     log.error("Relayer failed", exc=exc)
                     time.sleep(30)
             timestamp = datetime.utcfromtimestamp(float(result))
