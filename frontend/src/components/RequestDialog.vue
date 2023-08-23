@@ -30,6 +30,9 @@
         You have a pending transaction, that needs to complete before being able to make a new
         transfer.
       </div>
+      <LowLiquidityAlert
+        v-else-if="!submitDisabled && isLowLiquidityAlertVisible"
+      ></LowLiquidityAlert>
       <div
         v-if="showInfiniteApprovalCheckbox"
         class="mb-7 flex flex-row items-center justify-center gap-2 pl-2"
@@ -68,11 +71,13 @@ import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
+import LowLiquidityAlert from '@/components/alerts/LowLiquidityAlert.vue';
 import ActionButton from '@/components/layout/ActionButton.vue';
 import Tooltip from '@/components/layout/Tooltip.vue';
 import RequestSourceInputs from '@/components/RequestSourceInputs.vue';
 import RequestTargetInputs from '@/components/RequestTargetInputs.vue';
 import Spinner from '@/components/Spinner.vue';
+import { useMaxFillableAmount } from '@/composables/useMaxFillableAmount';
 import { useToggleOnActivation } from '@/composables/useToggleOnActivation';
 import { useTokenAllowance } from '@/composables/useTokenAllowance';
 import { useTransferRequest } from '@/composables/useTransferRequest';
@@ -86,6 +91,7 @@ import type {
   ValidRequestSource,
   ValidRequestTarget,
 } from '@/types/form';
+import { TokenAmount } from '@/types/token-amount';
 
 const EMPTY_SOURCE_DATA: RequestSource = {
   amount: '',
@@ -112,6 +118,28 @@ const requestTarget: Ref<RequestTarget> = ref(EMPTY_TARGET_DATA);
 
 const requestSourceInputsRef = ref<{ v$: Validation }>();
 const requestTargetInputsRef = ref<{ v$: Validation }>();
+
+const targetToken = computed(() => {
+  const targetChain = requestTarget.value.targetChain;
+  const sourceToken = requestSource.value.token;
+
+  return targetChain && sourceToken
+    ? getTokenForChain(targetChain.value.identifier, sourceToken.label)
+    : undefined;
+});
+const targetChain = computed(() => requestTarget.value.targetChain?.value);
+const { amount: maxFillableAmount } = useMaxFillableAmount(targetChain, targetToken);
+
+const isLowLiquidityAlertVisible = computed(() => {
+  return targetToken.value &&
+    targetChain.value &&
+    maxFillableAmount.value &&
+    requestSource.value.amount.length
+    ? maxFillableAmount.value.uint256.lt(
+        TokenAmount.parse(requestSource.value.amount, targetToken.value).uint256,
+      )
+    : false;
+});
 
 const formValid = computed(() => {
   if (!requestSourceInputsRef.value || !requestTargetInputsRef.value) {
@@ -198,7 +226,7 @@ function resetFormValidation() {
 }
 
 watch(signerAddress, (currSignerAddress, prevSignerAddress) => {
-  // Contract providers should not prefill the target address as they need to be deployed separately per chain
+  // Contract wallets should not prefill the target address as they need to be deployed separately per chain
   if (provider.value && provider.value.isContractWallet) {
     return;
   }
