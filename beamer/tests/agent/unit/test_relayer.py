@@ -17,6 +17,6 @@ def test_redacted_private_key_log():
             account,
             HexBytes("2"),
         )
-    relayer_args = ex.cmd
+    relayer_args = ex.value.cmd
     idx = relayer_args.index("--password")
     assert relayer_args[idx + 1] == "<REDACTED>"
