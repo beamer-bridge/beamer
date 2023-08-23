@@ -9,9 +9,11 @@ import type { IEthereumWallet } from '@/services/web3-provider';
 import type { Chain, EthereumAddress, Token } from '@/types/data';
 import { TokenAmount } from '@/types/token-amount';
 import { UInt256 } from '@/types/uint-256';
+import { DEFAULT_REQUEST_EXPIRY_SECONDS } from '@/utils/constants';
 
 export function useTransferRequest() {
-  const VALIDITY_PERIOD_SECONDS = import.meta.env.VITE_REQUEST_EXPIRY_SECONDS || '1800';
+  const VALIDITY_PERIOD_SECONDS =
+    import.meta.env.VITE_REQUEST_EXPIRY_SECONDS || DEFAULT_REQUEST_EXPIRY_SECONDS;
 
   const create = async (options: {
     sourceChain: Chain;

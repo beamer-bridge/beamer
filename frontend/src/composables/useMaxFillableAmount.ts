@@ -1,10 +1,10 @@
 import type { Ref } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, shallowRef, watch } from 'vue';
 
 import { type IEthereumProvider, createEthereumProvider } from '@/services/web3-provider';
 import type { Chain, Token } from '@/types/data';
 import type { TokenAmount } from '@/types/token-amount';
-import { AGENT_ADDRESSES } from '@/utils/agentAddresses';
+import { getEnvBasedAgentAddresses } from '@/utils/agentAddresses';
 
 import { useTokenBalance } from './useTokenBalance';
 
@@ -12,7 +12,7 @@ export function useMaxFillableAmount(
   targetChain: Ref<Chain | undefined>,
   token: Ref<Token | undefined>,
 ) {
-  const provider: Ref<IEthereumProvider | undefined> = ref(undefined);
+  const provider: Ref<IEthereumProvider | undefined> = shallowRef(undefined);
   watch(
     targetChain,
     async (chain) =>
@@ -20,7 +20,7 @@ export function useMaxFillableAmount(
   );
 
   const balances: Ref<TokenAmount | undefined>[] = [];
-  for (const agent of AGENT_ADDRESSES) {
+  for (const agent of getEnvBasedAgentAddresses()) {
     const { balance } = useTokenBalance(provider, ref(agent), token);
     balances.push(balance);
   }

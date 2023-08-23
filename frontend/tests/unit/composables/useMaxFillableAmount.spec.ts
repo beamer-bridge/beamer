@@ -4,11 +4,13 @@ import { useMaxFillableAmount } from '@/composables/useMaxFillableAmount';
 import * as useTokenBalanceComposable from '@/composables/useTokenBalance';
 import * as web3ProviderService from '@/services/web3-provider';
 import { TokenAmount } from '@/types/token-amount';
-import { generateChain, generateToken } from '~/utils/data_generators';
+import * as agentAddresses from '@/utils/agentAddresses';
+import { generateChain, generateToken, getRandomEthereumAddress } from '~/utils/data_generators';
 import { MockedEthereumWallet } from '~/utils/mocks/ethereum-provider';
 
 vi.mock('@/services/web3-provider');
 vi.mock('@/composables/useTokenBalance');
+vi.mock('@/utils/agentAddresses');
 
 const TOKEN = ref(generateToken());
 const CHAIN = ref(generateChain());
@@ -18,6 +20,11 @@ describe('useMaxFillableAmount', () => {
     Object.defineProperties(web3ProviderService, {
       createEthereumProvider: {
         value: vi.fn().mockResolvedValue(new MockedEthereumWallet()),
+      },
+    });
+    Object.defineProperties(agentAddresses, {
+      getEnvBasedAgentAddresses: {
+        value: vi.fn().mockReturnValue([getRandomEthereumAddress()]),
       },
     });
   });
@@ -36,6 +43,9 @@ describe('useMaxFillableAmount', () => {
     });
 
     it('uses the maximum balance of the agents', () => {
+      Object.defineProperty(agentAddresses, 'getEnvBasedAgentAddresses', {
+        value: vi.fn().mockReturnValue([getRandomEthereumAddress(), getRandomEthereumAddress()]),
+      });
       Object.defineProperty(useTokenBalanceComposable, 'useTokenBalance', {
         value: vi
           .fn()

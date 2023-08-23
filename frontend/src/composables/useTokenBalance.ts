@@ -19,6 +19,7 @@ export function useTokenBalance(
   let tokenContract: Contract;
 
   function handleException(exception: unknown) {
+    console.error(exception);
     const errorMessage = (exception as { message?: string }).message;
     error.value = errorMessage ?? 'Unknown Failure!';
   }
