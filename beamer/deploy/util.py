@@ -44,7 +44,7 @@ def deploy_contract(
         args = constructor_spec[1:]
 
     abi = abi_manager.get_abi(name)
-    bytecode = abi_manager.get_bytecode(name)
+    bytecode = abi_manager.get_deployment_bytecode(name)
 
     log.info("Deploying contract", contract=name)
     ContractFactory = cast(Contract, web3.eth.contract(abi=abi, bytecode=bytecode))
