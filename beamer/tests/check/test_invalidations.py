@@ -1,15 +1,24 @@
 import itertools
 import json
+import logging
 from itertools import repeat
 from pathlib import Path
 
 import ape
 import apischema
 import pytest
+from freezegun import freeze_time
 
 import beamer.check.commands
 from beamer.check.commands import Invalidation
-from beamer.tests.util import deploy, get_repo_root, run_command, write_keystore_file
+from beamer.tests.util import (
+    CommandFailed,
+    deploy,
+    get_repo_root,
+    run_command,
+    write_keystore_file,
+)
+from beamer.typing import ChainId
 
 
 def _iter_transactions(w3, from_block, to_block):
@@ -18,19 +27,15 @@ def _iter_transactions(w3, from_block, to_block):
         yield from block.transactions
 
 
-@pytest.mark.parametrize("count", (1, 3))
-def test_initiate_l1_invalidations(tmp_path, deployer, count):
-    password = "test"
-    keystore_file = tmp_path / f"{deployer.address}.json"
-    write_keystore_file(keystore_file, deployer.private_key, password)
+def _load_invalidations(path: Path):
+    with path.open("rt") as f:
+        data = json.load(f)
 
-    rpc_file, artifact = deploy(deployer, tmp_path)
+    return apischema.deserialize(list[Invalidation], data)
 
+
+def _initiate(keystore_file, password, rpc_file, artifacts_dir, output, count, *chain_ids):
     root = get_repo_root()
-    output = tmp_path / "invalidations.json"
-    chain_id = ape.chain.chain_id
-    # We run the command with 2 proof targets: current chain and a dummy chain.
-    proof_targets = chain_id, 98765
     run_command(
         beamer.check.commands.initiate_l1_invalidations,
         "--keystore-file",
@@ -42,20 +47,36 @@ def test_initiate_l1_invalidations(tmp_path, deployer, count):
         "--abi-dir",
         f"{root}/contracts/.build/",
         "--artifacts-dir",
-        Path(artifact).parent,
+        artifacts_dir,
         "--output",
         output,
         "--count",
         count,
-        str(chain_id),
-        *map(str, proof_targets),
+        *map(str, chain_ids),
     )
-    with output.open("rt") as f:
-        data = json.load(f)
 
-    assert len(data) == count * len(proof_targets)
+
+@pytest.mark.parametrize("count", (1, 3))
+def test_initiate_invalidations(tmp_path, deployer, count):
+    password = "test"
+    keystore_file = tmp_path / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+
+    rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
+
+    output = tmp_path / "invalidations.json"
+    chain_id = ape.chain.chain_id
+    # We run the command with 2 proof targets: current chain and a dummy chain.
+    proof_targets = chain_id, 98765
+    _initiate(
+        keystore_file, password, rpc_file, artifacts_dir, output, count, chain_id, *proof_targets
+    )
+
+    invalidations = _load_invalidations(output)
+    assert len(invalidations) == count * len(proof_targets)
+
     w3 = ape.chain.provider.web3
-    invalidations = apischema.deserialize(list[Invalidation], data)
     targets = itertools.chain.from_iterable(repeat(x, count) for x in proof_targets)
     for invalidation, proof_target in zip(invalidations, targets):
         assert invalidation.proof_source == chain_id
@@ -69,47 +90,37 @@ def test_initiate_l1_invalidations(tmp_path, deployer, count):
         )
 
 
-def test_initiate_l1_invalidations_resume(tmp_path, deployer):
+def test_initiate_invalidations_resume(tmp_path, deployer):
     password = "test"
     keystore_file = tmp_path / f"{deployer.address}.json"
     write_keystore_file(keystore_file, deployer.private_key, password)
 
     rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
 
-    root = get_repo_root()
     output = tmp_path / "invalidations.json"
     chain_id = ape.chain.chain_id
 
     def send_invalidations(count, proof_targets):
         block_before = ape.chain.blocks[-1].number
         assert block_before is not None
-        run_command(
-            beamer.check.commands.initiate_l1_invalidations,
-            "--keystore-file",
+        _initiate(
             keystore_file,
-            "--password",
             password,
-            "--rpc-file",
             rpc_file,
-            "--abi-dir",
-            f"{root}/contracts/.build/",
-            "--artifacts-dir",
-            Path(artifact).parent,
-            "--output",
+            artifacts_dir,
             output,
-            "--count",
             count,
-            str(chain_id),
-            *map(str, proof_targets),
+            chain_id,
+            *proof_targets,
         )
+
         block_after = ape.chain.blocks[-1].number
         assert block_after is not None
 
-        with output.open("rt") as f:
-            data = json.load(f)
+        invalidations = _load_invalidations(output)
 
         w3 = ape.chain.provider.web3
-        invalidations = apischema.deserialize(list[Invalidation], data)
         txhashes = tuple(_iter_transactions(w3, block_before + 1, block_after))
         return invalidations, txhashes
 
@@ -147,3 +158,156 @@ def test_initiate_l1_invalidations_resume(tmp_path, deployer):
     invalidations, txhashes = send_invalidations(1, (31, 32))
     assert not txhashes
     assert len(invalidations) == 8
+
+
+def _verify(keystore_file, password, rpc_file, artifacts_dir, output):
+    chain_id = ChainId(ape.chain.chain_id)
+    deployment = beamer.artifacts.load(artifacts_dir, chain_id)
+    assert deployment.chain is not None
+    deployment_base = beamer.artifacts.load_base(artifacts_dir)
+    assert deployment_base.base is not None
+
+    env = dict(
+        ETHEREUM_L2_MESSENGER=deployment.chain.contracts["EthereumL2Messenger"].address,
+        RESOLVER=deployment_base.base.contracts["Resolver"].address,
+    )
+
+    root = get_repo_root()
+    run_command(
+        beamer.check.commands.verify_l1_invalidations,
+        "--keystore-file",
+        keystore_file,
+        "--password",
+        password,
+        "--rpc-file",
+        rpc_file,
+        "--abi-dir",
+        f"{root}/contracts/.build/",
+        "--artifacts-dir",
+        artifacts_dir,
+        str(output),
+        env=env,
+    )
+
+
+def test_verify_invalidation(tmp_path, deployer, caplog):
+    password = "test"
+    keystore_file = tmp_path / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+
+    rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
+
+    output = tmp_path / "invalidations.json"
+    chain_id = ChainId(ape.chain.chain_id)
+
+    # Initiate two invalidations from current chain to the same chain.
+    _initiate(keystore_file, password, rpc_file, artifacts_dir, output, 2, chain_id, chain_id)
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+    _verify(keystore_file, password, rpc_file, artifacts_dir, output)
+    assert any("Starting relayer" in msg for msg in caplog.messages)
+    assert any("Invalidation verified successfully" in msg for msg in caplog.messages)
+    assert any(
+        "Verified invalidation already exists for chain pair, skipping" in msg
+        for msg in caplog.messages
+    )
+
+    invalidation = _load_invalidations(output)[0]
+
+    deployment = beamer.artifacts.load(artifacts_dir, chain_id)
+    assert deployment.chain is not None
+
+    address = deployment.chain.contracts["RequestManager"].address
+    request_manager = ape.project.RequestManager.at(address)
+    assert request_manager.isInvalidFill(invalidation.request_id, invalidation.fill_id)
+
+
+def test_verify_same_invalidation_twice(tmp_path, deployer, caplog):
+    password = "test"
+    keystore_file = tmp_path / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+
+    rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
+
+    output = tmp_path / "invalidations.json"
+    chain_id = ChainId(ape.chain.chain_id)
+
+    # Initiate one invalidation from current chain to the same chain.
+    _initiate(keystore_file, password, rpc_file, artifacts_dir, output, 1, chain_id, chain_id)
+    _verify(keystore_file, password, rpc_file, artifacts_dir, output)
+
+    # Check that the second invocation doesn't start the relayer.
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+    _verify(keystore_file, password, rpc_file, artifacts_dir, output)
+    assert any("Invalidation verified successfully" in msg for msg in caplog.messages)
+    assert not any("Starting relayer" in msg for msg in caplog.messages)
+
+
+def test_verify_invalidation_before_finalization(tmp_path, deployer, caplog):
+    password = "test"
+    keystore_file = tmp_path / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+
+    rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
+
+    output = tmp_path / "invalidations.json"
+    chain_id = ChainId(ape.chain.chain_id)
+
+    # Initiate one invalidation from current chain to the same chain.
+    _initiate(keystore_file, password, rpc_file, artifacts_dir, output, 1, chain_id, chain_id)
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+    with pytest.raises(CommandFailed):
+        with freeze_time("1899-03-08"):
+            _verify(keystore_file, password, rpc_file, artifacts_dir, output)
+
+    assert any("Invalidation not yet finalized, skipping" in msg for msg in caplog.messages)
+    assert any("Error(s) occurred during verification" in msg for msg in caplog.messages)
+
+
+def test_verify_invalidation_when_relayer_fails(tmp_path, deployer, caplog):
+    password = "test"
+    keystore_file = tmp_path / f"{deployer.address}.json"
+    write_keystore_file(keystore_file, deployer.private_key, password)
+
+    rpc_file, artifact = deploy(deployer, tmp_path)
+    artifacts_dir = Path(artifact).parent
+
+    output = tmp_path / "invalidations.json"
+    chain_id = ChainId(ape.chain.chain_id)
+
+    # Initiate one invalidation from current chain to the same chain.
+    _initiate(keystore_file, password, rpc_file, artifacts_dir, output, 1, chain_id, chain_id)
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+
+    # Instead of using _verify, which prepares a proper environment for the relayer,
+    # here we're just going to use run_command directly and intentionally omit environment
+    # variables so that the relayer fails.
+    root = get_repo_root()
+    with pytest.raises(CommandFailed):
+        run_command(
+            beamer.check.commands.verify_l1_invalidations,
+            "--keystore-file",
+            keystore_file,
+            "--password",
+            password,
+            "--rpc-file",
+            rpc_file,
+            "--abi-dir",
+            f"{root}/contracts/.build/",
+            "--artifacts-dir",
+            artifacts_dir,
+            str(output),
+        )
+
+    assert any("Starting relayer" in msg for msg in caplog.messages)
+    assert any("Relayer failed" in msg for msg in caplog.messages)
+    assert any("Error(s) occurred during verification" in msg for msg in caplog.messages)
