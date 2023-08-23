@@ -10,7 +10,7 @@ import beamer.artifacts
 
 
 class ABIManager:
-    _CacheEntry = namedtuple("_CacheEntry", ("abi", "bytecode"))
+    _CacheEntry = namedtuple("_CacheEntry", ("abi", "deployment_bytecode"))
 
     def __init__(self, abi_dir: Path):
         self.abi_dir = abi_dir
@@ -23,19 +23,19 @@ class ABIManager:
             self._cache[name] = entry
         return entry.abi
 
-    def get_bytecode(self, name: str) -> str:
+    def get_deployment_bytecode(self, name: str) -> str:
         entry = self._cache.get(name)
         if entry is None:
             entry = self._load_entry(name)
             self._cache[name] = entry
-        return entry.bytecode
+        return entry.deployment_bytecode
 
     def _load_entry(self, name: str) -> _CacheEntry:
         path = self.abi_dir.joinpath(f"{name}.json")
         with path.open("rt") as f:
             data = json.load(f)
         return ABIManager._CacheEntry(
-            abi=data["abi"], bytecode=data["runtimeBytecode"]["bytecode"]
+            abi=data["abi"], deployment_bytecode=data["deploymentBytecode"]["bytecode"]
         )
 
 
