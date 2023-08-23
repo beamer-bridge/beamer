@@ -19,6 +19,29 @@ log = structlog.get_logger(__name__)
 _RELAYER_NAMES = {"linux": "relayer-node18-linux-x64", "darwin": "relayer-node18-macos-x64"}
 
 
+class RelayerError(Exception):
+    pass
+
+
+class RelayerCommandError(RelayerError):
+    def __init__(self, returncode: int, cmd: list[str], stdout: str, stderr: str) -> None:
+        self.returncode = returncode
+        self.cmd = cmd
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __repr__(self) -> str:
+        return (
+            f"RelayerCommandError({self.returncode}, {self.cmd}, "
+            f"stdout={self.stdout}, stderr={self.stderr})"
+        )
+
+
+class RelayerMissingTimestampError(RelayerError):
+    def __str__(self) -> str:
+        return "relayer failed to provide proof timestamp"
+
+
 def get_relayer_executable() -> Path:
     """Returns the path to the relayer executable.
     Callers must check that the executable exists before using it."""
@@ -87,14 +110,14 @@ def run_relayer_for_tx(
                 check=True,  # check throws an error right away
             )
         except subprocess.CalledProcessError as ex:
-            relayer_args = ex.args[1]
+            relayer_args = ex.cmd[:]
             idx = relayer_args.index("--password")
             relayer_args[idx + 1] = "<REDACTED>"
-            raise ex
+            raise RelayerCommandError(ex.returncode, relayer_args, ex.stdout, ex.stderr) from ex
         if prove_tx:
             timestamp_match = re.search(r"Proof timestamp: (\d+)", result.stdout)
             if timestamp_match is not None:
                 return timestamp_match.group(1)
-            raise RuntimeError("relayer failed to provide proof timestamp")
+            raise RelayerMissingTimestampError()
 
     return None
