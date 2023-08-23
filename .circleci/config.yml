@@ -11,7 +11,7 @@ orbs:
 parameters:
   action:
     type: enum
-    enum: [default, frontend-mainnet-deployment, frontend-testnet-deployment, frontend-shadow-deployment, publish-container-image]
+    enum: [default, frontend-mainnet-deployment, frontend-testnet-deployment, frontend-shadow-deployment, publish-container-image, publish-docs]
     default: default
 
 workflows:
@@ -78,4 +78,12 @@ workflows:
     jobs:
       - continuation/continue:
           parameters: '{ "publish-container-image": true }'
+          configuration_path: .circleci/workflows.yml
+
+  publish-docs:
+    when:
+      equal: [publish-docs, << pipeline.parameters.action >>]
+    jobs:
+      - continuation/continue:
+          parameters: '{ "docs-updated": true }'
           configuration_path: .circleci/workflows.yml
