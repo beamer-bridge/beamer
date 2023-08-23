@@ -2,18 +2,8 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
+      { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" },
+      { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" }
     ],
     "name": "OwnershipTransferred",
     "type": "event"
@@ -27,41 +17,17 @@
         "name": "sourceChainId",
         "type": "uint256"
       },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fillChainId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "requestId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "filler",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "fillId",
-        "type": "bytes32"
-      }
+      { "indexed": false, "internalType": "uint256", "name": "fillChainId", "type": "uint256" },
+      { "indexed": false, "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
+      { "indexed": false, "internalType": "address", "name": "filler", "type": "address" },
+      { "indexed": false, "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
     ],
     "name": "Resolution",
     "type": "event"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "callerChainId",
-        "type": "uint256"
-      },
+      { "internalType": "uint256", "name": "callerChainId", "type": "uint256" },
       { "internalType": "address", "name": "caller", "type": "address" },
       { "internalType": "address", "name": "messenger", "type": "address" }
     ],
@@ -80,11 +46,7 @@
   {
     "inputs": [
       { "internalType": "uint256", "name": "chainId", "type": "uint256" },
-      {
-        "internalType": "address",
-        "name": "requestManager",
-        "type": "address"
-      },
+      { "internalType": "address", "name": "requestManager", "type": "address" },
       { "internalType": "address", "name": "messenger", "type": "address" }
     ],
     "name": "addRequestManager",
@@ -94,11 +56,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "callerChainId",
-        "type": "uint256"
-      },
+      { "internalType": "uint256", "name": "callerChainId", "type": "uint256" },
       { "internalType": "uint256", "name": "", "type": "uint256" }
     ],
     "name": "callers",
@@ -125,11 +83,7 @@
       { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
       { "internalType": "bytes32", "name": "fillId", "type": "bytes32" },
       { "internalType": "uint256", "name": "fillChainId", "type": "uint256" },
-      {
-        "internalType": "uint256",
-        "name": "sourceChainId",
-        "type": "uint256"
-      },
+      { "internalType": "uint256", "name": "sourceChainId", "type": "uint256" },
       { "internalType": "address", "name": "filler", "type": "address" }
     ],
     "name": "resolve",
@@ -138,20 +92,10 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "sourceChainId",
-        "type": "uint256"
-      }
-    ],
+    "inputs": [{ "internalType": "uint256", "name": "sourceChainId", "type": "uint256" }],
     "name": "sourceChainInfos",
     "outputs": [
-      {
-        "internalType": "address",
-        "name": "requestManager",
-        "type": "address"
-      },
+      { "internalType": "address", "name": "requestManager", "type": "address" },
       { "internalType": "address", "name": "messenger", "type": "address" }
     ],
     "stateMutability": "view",

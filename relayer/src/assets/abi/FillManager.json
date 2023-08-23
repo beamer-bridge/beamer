@@ -88,9 +88,12 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "requestId", "type": "bytes32" },
-      { "internalType": "bytes32", "name": "fillId", "type": "bytes32" },
-      { "internalType": "uint256", "name": "sourceChainId", "type": "uint256" }
+      { "internalType": "uint256", "name": "sourceChainId", "type": "uint256" },
+      { "internalType": "address", "name": "targetTokenAddress", "type": "address" },
+      { "internalType": "address", "name": "targetReceiverAddress", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "uint96", "name": "nonce", "type": "uint96" },
+      { "internalType": "bytes32", "name": "fillId", "type": "bytes32" }
     ],
     "name": "invalidateFill",
     "outputs": [],
