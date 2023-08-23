@@ -70,3 +70,7 @@ def load(artifacts_dir: Path, chain_id: ChainId) -> Deployment:
     chain = deployment.chain or deployment.base
     assert chain.chain_id == chain_id
     return deployment
+
+
+def load_base(artifacts_dir: Path) -> Deployment:
+    return Deployment.from_file(artifacts_dir / "base.deployment.json")
