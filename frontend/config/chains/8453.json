@@ -10,5 +10,6 @@
     "symbol": "ETH",
     "decimals": 18
   },
-  "internalRpcUrl": "https://lb.drpc.org/ogrpc?network=base&dkey=AleMfnNlhUAHqriZhKxb8bkwB0C1MtYR7riBDs9_4c5n"
+  "internalRpcUrl": "https://lb.drpc.org/ogrpc?network=base&dkey=AleMfnNlhUAHqriZhKxb8bkwB0C1MtYR7riBDs9_4c5n",
+  "feeSubAddress": "0xa1cb1e0f51f75c51530584caB968dD1F84dE265e"
 }
