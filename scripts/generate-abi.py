@@ -79,11 +79,13 @@ def main(artifacts_dir: Path, output_path: Path, only_abi: bool) -> None:
     output_path.mkdir(exist_ok=True, parents=True)
     for contract_name, abi in generated_abis.items():
         abi_path = output_path / f"{contract_name}.json"
+        abi_data = json.loads(abi)
+        abi_data.pop("ast", None)
         if only_abi:
-            abi = json.loads(abi)["abi"]
-            abi = json.dumps({"abi": abi})
+            abi_data = abi_data["abi"]
+            abi_data = {"abi": abi_data}
         with open(abi_path, "w") as fp:
-            fp.write(abi)
+            json.dump(abi_data, fp)
 
 
 if __name__ == "__main__":
