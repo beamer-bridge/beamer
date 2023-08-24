@@ -31,10 +31,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@beamer-bridge/deployments@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@beamer-bridge/deployments/-/deployments-2.0.1.tgz#639861ca5656fa447444c699b3df78a96d88c6ec"
-  integrity sha512-3XoeC8R4MDVAFkCqxj39+cCiAIuQzubmSCmhFkP/4i2Zk6MojbNfq5RfAWwUAj7GDWHatPnEY9drFQ0l+eNrRA==
+"@beamer-bridge/deployments@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@beamer-bridge/deployments/-/deployments-3.0.1.tgz#3de2fa0895c204d87fba6f11889b6788bf35e50a"
+  integrity sha512-prEwJ5kPDGWx6OpsG0J8xDcaMZbsEdbs1hBCDviyKNH1Zyqns9pSRvHpVSQPNzn5vTKW2CKgvqjj9S82CH47oA==
 
 "@coinbase/wallet-sdk@3.7.1":
   version "3.7.1"
