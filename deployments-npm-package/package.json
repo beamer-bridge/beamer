@@ -1,6 +1,6 @@
 {
   "name": "@beamer-bridge/deployments",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "The beamer-bridge contract deployments & ABIs",
   "publishConfig": {
     "access": "public",
