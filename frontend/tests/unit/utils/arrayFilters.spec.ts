@@ -1,4 +1,4 @@
-import { removeMatchesByProperty } from '@/utils/arrayFilters';
+import { findMatchesByProperty, removeMatchesByProperty } from '@/utils/arrayFilters';
 
 describe('filters', () => {
   describe('removeMatchesByProperty()', () => {
@@ -28,6 +28,18 @@ describe('filters', () => {
       );
 
       expect(result).toEqual(arrayRemoveFrom);
+    });
+  });
+
+  describe('findMatchesByProperty()', () => {
+    it('only includes the objects from an array that are found in another array using property comparison', () => {
+      const arrayFindFrom = [{ id: 1 }, { id: 4 }];
+      const arrayCompareWith = [{ id: 4 }];
+      const comparisonProperty = 'id';
+
+      const result = findMatchesByProperty(arrayFindFrom, arrayCompareWith, comparisonProperty);
+
+      expect(result).toEqual([{ id: 4 }]);
     });
   });
 });

@@ -216,10 +216,13 @@ const { chainOptions } = useChainSelection(chains, ref([]));
 const selectedSourceChainTokens = computed(() =>
   getTokensForChain(selectedSourceChain.value?.value.identifier ?? -1),
 );
+const selectedTargetChainTokens = computed(() =>
+  getTokensForChain(props.targetChain?.value.identifier ?? -1),
+);
 
 const selectedToken = ref<SelectorOption<Token> | null>(null);
 const addTokenAvailable = computed(() => !!provider.value && !!selectedToken.value);
-const { tokenOptions } = useTokenSelection(selectedSourceChainTokens);
+const { tokenOptions } = useTokenSelection(selectedSourceChainTokens, selectedTargetChainTokens);
 
 const selectedTokenAmount = computed(() => {
   if (
@@ -355,6 +358,16 @@ const handleAddTokenClick = () => {
 watch(selectedToken, () => {
   if (selectedAmount.value) {
     v$.value.$touch();
+  }
+});
+watch(tokenOptions, (newTokenOptions) => {
+  if (
+    selectedToken.value &&
+    newTokenOptions.findIndex(
+      (option) => option.value.symbol === selectedToken.value?.value.symbol,
+    ) === -1
+  ) {
+    selectedToken.value = null;
   }
 });
 watch(inputValues, (value) => emits('update:modelValue', value));

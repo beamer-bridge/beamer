@@ -26,4 +26,18 @@ describe('useTokenSelection', () => {
     expect(tokenOptions.value).toHaveLength(1);
     expect(tokenOptions.value[0].value).toEqual(tokenTwo);
   });
+
+  it('applies an intersection filter on the token options when provided with an array of tokens', () => {
+    const tokenOne = generateToken();
+    const tokenTwo = generateToken();
+    const tokenThree = generateToken();
+    const tokens = ref([tokenOne, tokenTwo, tokenThree]);
+    const intersectWithTokens = ref([tokenOne, tokenTwo]);
+
+    const { tokenOptions } = useTokenSelection(tokens, intersectWithTokens);
+
+    expect(tokenOptions.value).toHaveLength(2);
+    expect(tokenOptions.value[0].value).toEqual(tokenOne);
+    expect(tokenOptions.value[1].value).toEqual(tokenTwo);
+  });
 });
