@@ -270,8 +270,8 @@ class CommandFailed(Exception):
     pass
 
 
-def run_command(cmd, *args):
-    runner = CliRunner()
+def run_command(cmd, *args, env=None):
+    runner = CliRunner(env=env)
     result = runner.invoke(cmd, args, catch_exceptions=False)
     if result.exit_code:
         raise CommandFailed(result)
