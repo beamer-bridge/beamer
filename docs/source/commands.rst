@@ -8,6 +8,7 @@ The Beamer software currently supports these commands:
 * :ref:`command-config-write` writes contract configuration to the chain.
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 * :ref:`command-check-initiate-l1-invalidations` issues L1 invalidations.
+* :ref:`command-check-verify-l1-invalidations` verifies L1 invalidations.
 
 .. _command-agent:
 
@@ -208,3 +209,41 @@ pair is equal or greater to the count, no new invalidations will be sent.
    * - ``--count INTEGER``
      - Number of invalidations to create, per (PROOF_SOURCE, PROOF_TARGET) pair.
        Has to be greater or equal to 1. Default: 1.
+
+
+.. _command-check-verify-l1-invalidations:
+
+``beamer check verify-l1-invalidations``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``beamer check verify-l1-invalidations [OPTIONS] FILE``
+
+The command verifies L1 invalidations contained in ``FILE``. In case of
+multiple invalidations for the same pair ``(proof_source, proof_target)``, if
+an invalidation is verified successfully, remaining invalidations for the same
+chain pair will be skipped as they are then not considered necessary. If a
+verification fails for any invalidation, for whatever reason, an error will be
+emitted and the process will continue with the next invalidation. The command
+will exit with a success code only if all chain pairs had at least one
+successful invalidation.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory containing deployment artifact files.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
