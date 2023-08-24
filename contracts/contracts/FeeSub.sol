@@ -130,12 +130,12 @@ contract FeeSub is Ownable {
         uint256 amount
     ) external onlyOwner {
         if (amount > 0 && minimumAmounts[tokenAddress] == 0) {
-            IERC20(tokenAddress).approve(
+            IERC20(tokenAddress).safeApprove(
                 address(requestManager),
                 type(uint256).max
             );
         } else if (amount == 0 && minimumAmounts[tokenAddress] != 0) {
-            IERC20(tokenAddress).approve(address(requestManager), 0);
+            IERC20(tokenAddress).safeApprove(address(requestManager), 0);
         }
         minimumAmounts[tokenAddress] = amount;
     }
