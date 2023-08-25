@@ -4405,13 +4405,13 @@ files = [
 
 [[package]]
 name = "web3"
-version = "6.8.0"
+version = "6.9.0"
 description = "web3.py"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "web3-6.8.0-py3-none-any.whl", hash = "sha256:cc383afaf4cfde9fd6c8934ec23c47035520129ee93e4e068520e565d31dee9e"},
-    {file = "web3-6.8.0.tar.gz", hash = "sha256:5db6ed63bca526a5542d9a84778c8b549199009b9f71079ff53a7b82dadf0d0b"},
+    {file = "web3-6.9.0-py3-none-any.whl", hash = "sha256:3bc95043ee9fc6ee0b13a4766d4975b9f7cae069db136430a3799ed18743e608"},
+    {file = "web3-6.9.0.tar.gz", hash = "sha256:cb454d0180e63ba1d83143dccf7c623581ba58e222edb006f48252d8a7b948e0"},
 ]
 
 [package.dependencies]
@@ -4729,4 +4729,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "33a1b044f649bf21ce4e26ecceae6dd461701b99b29c5671c7104a51672cd3c9"
+content-hash = "72d6d3df36f4ffefccebe043410cbc1891266db16dfdd4c7647c8c910ec4f2b2"
