@@ -1289,13 +1289,13 @@ test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-x
 
 [[package]]
 name = "eth-ape"
-version = "0.6.17"
+version = "0.6.18"
 description = "Ape Ethereum Framework"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "eth-ape-0.6.17.tar.gz", hash = "sha256:d2baac932909c556681a7d57daab5f8233400199998fa13dac605b849f1328c3"},
-    {file = "eth_ape-0.6.17-py3-none-any.whl", hash = "sha256:1e04fbd625a16207b940b77d054c80705c12a229903373108795b8428c1a4a55"},
+    {file = "eth-ape-0.6.18.tar.gz", hash = "sha256:ebc04365d830ab06a1595a22e8f9c263769a57a9eb1dfc7f4bec2db353ccbf0a"},
+    {file = "eth_ape-0.6.18-py3-none-any.whl", hash = "sha256:73e7533c64e23eaba33ecb48b3fbd9e423ffd088050cacb9c551fe66c1ceccf4"},
 ]
 
 [package.dependencies]
@@ -4729,4 +4729,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "4c382bc84faaba3a40caffe5729228bb7fbfeb6a61c9aa76a38ab826ca452593"
+content-hash = "8e632cf432635906c5c5495801063d5bd3825d8579ee819d00e87db8aa8ddc79"
