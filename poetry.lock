@@ -169,13 +169,13 @@ test = ["ape-arbitrum", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0
 
 [[package]]
 name = "ape-arbitrum"
-version = "0.6.1"
+version = "0.6.2"
 description = "ape-arbitrum: Ape Ecosystem Plugin for Arbitrum"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-arbitrum-0.6.1.tar.gz", hash = "sha256:8ec877288a6fd6239a6b51ef80eabcfc0207ea85b9af82cfd04ef7cbea1fa08b"},
-    {file = "ape_arbitrum-0.6.1-py3-none-any.whl", hash = "sha256:ba207add726b5ed48b2fdced22dae232ed1b92a76ca868167a50b4da9bca5207"},
+    {file = "ape-arbitrum-0.6.2.tar.gz", hash = "sha256:efa95d1815acc6ac092b0253cde83b3b3ae89d66a904d7f953181664745ae9b2"},
+    {file = "ape_arbitrum-0.6.2-py3-none-any.whl", hash = "sha256:be992287f5e38a1ac8c982e43f873d935734dd62c1faa0ed8f345cda2d7ab73f"},
 ]
 
 [package.dependencies]
@@ -4729,4 +4729,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "2d108698b478b60825dd5216a8aa74c40e5275db5e18939766f0d2572c7d94d0"
+content-hash = "4c382bc84faaba3a40caffe5729228bb7fbfeb6a61c9aa76a38ab826ca452593"
