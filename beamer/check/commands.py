@@ -7,14 +7,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import apischema
 import click
 import structlog
 from apischema import schema
 from eth_account.account import LocalAccount
-from eth_utils import to_checksum_address
+from eth_utils import to_checksum_address, to_wei
 from hexbytes import HexBytes
 from web3.constants import ADDRESS_ZERO
 from web3.contract import Contract, ContractConstructor
@@ -26,8 +26,8 @@ import beamer.contracts
 import beamer.util
 from beamer.contracts import ABIManager, obtain_contract
 from beamer.relayer import RelayerError, run_relayer_for_tx
-from beamer.typing import URL, ChainId, FillId, RequestId, TokenAmount
-from beamer.util import ChainIdParam, create_request_id, make_web3
+from beamer.typing import URL, ChainId, ClaimId, FillId, RequestId, TokenAmount
+from beamer.util import ChainIdParam, create_request_id, get_ERC20_abi, make_web3
 
 log = structlog.get_logger(__name__)
 
@@ -42,9 +42,9 @@ class Invalidation:
     finalization_timestamp: datetime | None
 
 
-def _transact(func: ContractConstructor | ContractFunction) -> TxReceipt:
+def _transact(func: ContractConstructor | ContractFunction, **kwargs: Any) -> TxReceipt:
     try:
-        receipt = beamer.util.transact(func)
+        receipt = beamer.util.transact(func, **kwargs)
     except beamer.util.TransactionFailed as exc:
         log.error("Transaction failed", exc=exc)
         sys.exit(1)
@@ -478,3 +478,246 @@ def verify_l1_invalidations(
         sys.exit(1)
 
     log.info("Invalidations for all chain pairs successful", verified=len(verified))
+
+
+@dataclass
+class Challenge:
+    request_chain: ChainId = field(metadata=schema(min=1))
+    fill_chain: ChainId = field(metadata=schema(min=1))
+    request_id: RequestId
+    claim_id: ClaimId | None
+    create_request_txhash: HexBytes
+    claim_request_txhash: HexBytes | None
+    challenge_claim_txhash: HexBytes | None
+    finalization_timestamp: datetime | None
+
+
+def _find_token(ctx: Context, chain_id: ChainId, symbol: str) -> Contract | None:
+    deployment = beamer.artifacts.load(ctx.artifacts_dir, chain_id)
+    assert deployment.chain is not None
+
+    url = ctx.rpc_info[chain_id]
+    w3 = make_web3(url, ctx.account)
+    assert w3.eth.chain_id == chain_id
+
+    request_manager = obtain_contract(w3, ctx.abi_manager, deployment, "RequestManager")
+    from_block = deployment.chain.contracts["RequestManager"].deployment_block
+    logs = request_manager.events.TokenUpdated.get_logs(fromBlock=from_block)  # type: ignore
+    for log in logs:
+        address = log.args["tokenAddress"]
+        token = w3.eth.contract(abi=get_ERC20_abi(), address=address)
+        if token.functions.symbol().call() == symbol:
+            return token
+    return None
+
+
+def _wait_for_agent_to_claim(ctx: Context, challenge: Challenge) -> None:
+    request_manager = _obtain_request_manager(ctx, challenge.request_chain)
+    transaction = request_manager.w3.eth.get_transaction(challenge.create_request_txhash)
+    from_block = transaction["blockNumber"]
+    argument_filters = dict(requestId=challenge.request_id)
+    log.debug(
+        "Waiting for agent to claim",
+        chain_id=challenge.request_chain,
+        request_id=challenge.request_id,
+    )
+    while True:
+        events = request_manager.events.ClaimMade.get_logs(  # type: ignore
+            fromBlock=from_block, argument_filters=argument_filters
+        )
+        if events:
+            assert len(events) == 1
+            break
+        time.sleep(1)
+
+    event = events[0]
+    challenge.claim_id = ClaimId(event.args["claimId"])
+    challenge.claim_request_txhash = event.transactionHash
+
+
+def _create_transfer_request(
+    ctx: Context, request_chain: ChainId, fill_chain: ChainId, symbol: str, target_token: Contract
+) -> Challenge:
+    request_manager = _obtain_request_manager(ctx, request_chain)
+    validity_period = request_manager.functions.MIN_VALIDITY_PERIOD().call()
+
+    source_token = _find_token(ctx, request_chain, symbol)
+    if source_token is None:
+        log.error("Could not find token", token=symbol, chain_id=request_chain)
+        sys.exit(1)
+
+    _transact(source_token.functions.approve(request_manager.address, 1))
+
+    func = request_manager.functions.createRequest(
+        fill_chain,
+        source_token.address,
+        target_token.address,
+        ctx.account.address,
+        TokenAmount(1),
+        validity_period,
+    )
+    receipt = _transact(func)
+    event = request_manager.events.RequestCreated().process_log(receipt["logs"][0])
+    request_id = RequestId(event.args["requestId"])
+    txhash = receipt.transactionHash.hex()  # type: ignore
+    log.info(
+        "Created transfer request",
+        request_chain=request_chain,
+        fill_chain=fill_chain,
+        txhash=txhash,
+    )
+
+    return Challenge(
+        request_chain=request_chain,
+        fill_chain=fill_chain,
+        request_id=request_id,
+        claim_id=None,
+        create_request_txhash=HexBytes(txhash),
+        claim_request_txhash=None,
+        challenge_claim_txhash=None,
+        finalization_timestamp=None,
+    )
+
+
+def _challenge_claim(ctx: Context, challenge: Challenge, stake: float) -> None:
+    request_manager = _obtain_request_manager(ctx, challenge.request_chain)
+    func = request_manager.functions.challengeClaim(challenge.claim_id)
+    receipt = _transact(func, value=to_wei(stake, "ether"))
+    txhash = receipt.transactionHash.hex()  # type: ignore
+    log.info(
+        "Challenged claim",
+        chain_id=challenge.request_chain,
+        claim_id=challenge.claim_id,
+        txhash=txhash,
+    )
+
+    block = request_manager.w3.eth.get_block(receipt["blockNumber"])
+    finality_period = request_manager.functions.chains(challenge.fill_chain).call()[0]
+    timestamp = datetime.utcfromtimestamp(block["timestamp"])
+    challenge.challenge_claim_txhash = HexBytes(txhash)
+    challenge.finalization_timestamp = timestamp + timedelta(seconds=finality_period)
+
+
+@check.command("initiate-challenges")
+@click.option(
+    "--keystore-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    metavar="PATH",
+    help="Path to the keystore file.",
+)
+@click.password_option(
+    "--password",
+    type=str,
+    default="",
+    prompt=False,
+    help="The password needed to unlock the keystore file.",
+)
+@click.option(
+    "--rpc-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to the RPC config file.",
+)
+@click.option(
+    "--artifacts-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="The directory containing deployment artifacts.",
+)
+@click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
+@click.option(
+    "--output",
+    type=click.Path(file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to store the challenge info at, which can be later used for verification.",
+)
+@click.option(
+    "symbol",
+    "--token",
+    type=str,
+    required=True,
+    help="Symbol of the token to be used for challenges (e.g. USDC).",
+)
+@click.option(
+    "--stake",
+    type=click.FloatRange(0.1),
+    default=0.1,
+    show_default=True,
+    help="Stake amount, in ETH.",
+)
+@click.argument("fill-chain", type=ChainIdParam())
+@click.argument("request-chain", type=ChainIdParam(), nargs=-1, required=True)
+def initiate_challenges(
+    keystore_file: Path,
+    password: str,
+    rpc_file: Path,
+    artifacts_dir: Path,
+    abi_dir: Path,
+    output: Path,
+    symbol: str,
+    stake: float,
+    fill_chain: ChainId,
+    request_chain: tuple[ChainId],
+) -> None:
+    """Create one transfer for each (REQUEST_CHAIN, FILL_CHAIN) pair and challenge
+    agent's claims on those transfers. REQUEST_CHAIN and FILL_CHAIN are chain IDs."""
+    beamer.util.setup_logging(log_level="DEBUG", log_json=False)
+
+    account = beamer.util.account_from_keyfile(keystore_file, password)
+    log.info("Loaded keystore file", address=account.address)
+
+    abi_manager = ABIManager(abi_dir)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
+
+    ctx = Context(
+        abi_manager=abi_manager, account=account, artifacts_dir=artifacts_dir, rpc_info=rpc_info
+    )
+    target_token = _find_token(ctx, fill_chain, symbol)
+    if target_token is None:
+        log.error("Could not find token", token=symbol, chain_id=fill_chain)
+        sys.exit(1)
+
+    if output.exists():
+        with output.open("rt") as f:
+            data = json.load(f)
+        challenges = apischema.deserialize(list[Challenge], data)
+    else:
+        challenges = []
+
+    existing_pairs = frozenset((ch.request_chain, ch.fill_chain) for ch in challenges)
+
+    # Step 1: for each request chain, make a transfer request to fill chain.
+    for chain_id in request_chain:
+        # Don't to anything if there's already a challenge for this
+        # (request_chain, fill_chain) pair.
+        if (chain_id, fill_chain) in existing_pairs:
+            continue
+
+        challenge = _create_transfer_request(ctx, chain_id, fill_chain, symbol, target_token)
+        challenges.append(challenge)
+
+        # Write the output immediately so that we have at least partial data in
+        # case an error occurs.
+        data = apischema.serialize(challenges)
+        with output.open("wt") as f:
+            json.dump(data, f, indent=4)
+
+    # Step 2: for each request, once a claim is done, issue a challenge.
+    for challenge in challenges:
+        if challenge.claim_request_txhash is None:
+            _wait_for_agent_to_claim(ctx, challenge)
+
+        if challenge.challenge_claim_txhash is None:
+            _challenge_claim(ctx, challenge, stake)
+
+        data = apischema.serialize(challenges)
+        with output.open("wt") as f:
+            json.dump(data, f, indent=4)
+
+    log.info("All challenges initiated succesfully")
