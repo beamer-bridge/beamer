@@ -9,9 +9,15 @@ import "zksync/IMailbox.sol";
 import "zksync/L2ContractHelper.sol";
 
 address constant L2_TO_L1_MESSENGER_SYSTEM_CONTRACT_ADDR = address(0x8008);
-address constant MAILBOX_FACET_ADDR = 0xb2097DBe4410B538a45574B1FCD767E2303c7867;
+// TODO remove
+// address constant MAILBOX_FACET_ADDR = 0xb2097DBe4410B538a45574B1FCD767E2303c7867;
+// uint256 constant REQUIRED_L1_TO_L2_GAS_PER_PUBDATA_LIMIT = 800;
 
 contract ZkSyncL1Messenger is IMessenger, RestrictedCalls {
+    Resolver public immutable resolver;
+    address public immutable l2MessengerAddress;
+    IMailbox public immutable mailbox;
+    uint256 public immutable l2GasPerPubdataByteLimit;
 
     // NOTE: The zkSync contract implements only the functionality for proving that a message belongs to a block
     // but does not guarantee that such a proof was used only once. That's why a contract that uses L2 -> L1
@@ -20,27 +26,84 @@ contract ZkSyncL1Messenger is IMessenger, RestrictedCalls {
     /// @dev Used to indicated that zkSync L2 -> L1 message was already processed
     mapping(uint256 => mapping(uint256 => bool)) public isL2ToL1MessageProcessed;
 
-    Resolver public immutable resolver;
-    address public immutable l2MessengerAddress;
+    /// Maps addresses to ETH deposits to be used for paying the base cost.
+    mapping(address depositor => uint256 deposit) public deposits;
 
-    constructor(address resolver_, address l2MessengerAddress_) {
+    constructor(
+        address resolver_,
+        address l2MessengerAddress_,
+        address mailboxAddress_,
+        uint256 l2GasPerPubdataByteLimit_)
+    {
         resolver = Resolver(resolver_);
         l2MessengerAddress = l2MessengerAddress_;
+        mailbox = IMailbox(mailboxAddress_);
     }
 
     function callAllowed(
         address caller,
         address courier
     ) external view returns (bool) {
-        // TODO
         return true;
+        // TODO
+        // return
+        //     courier == address(zkSyncMailbox) &&
+        //     caller == nativeMessenger.xDomainMessageSender();
+    }
+
+    function deposit() external payable {
+        deposits[msg.sender] += msg.value;
+    }
+
+    function _withdraw(address target) private {
+        uint256 amount = deposits[target];
+        require(amount > 0, "nothing to withdraw");
+
+        deposits[target] = 0;
+
+        (bool sent, ) = target.call{value: amount}("");
+        require(sent, "failed to send Ether");
+    }
+
+    function withdraw() public {
+        _withdraw(msg.sender);
     }
 
     function sendMessage(
-        address,
+        address target,
         bytes calldata message
     ) external restricted(block.chainid) {
-        // TODO
+        // 2. get current l1 gas price
+        uint256 l1GasPrice = tx.gasprice;
+
+        // TODO estimate l2 gas
+        // only easily possible via zks_estimateGasL1ToL2 rpc method.
+        // Find solution to provide it externally or calculate an estimate here in the contract
+        // the address of this contract needs to be aliased when estimating l2 gas!
+        uint256 l2GasLimit = 0;
+
+        uint256 baseCost = mailbox.l2TransactionBaseCost(
+            l1GasPrice,
+            l2GasLimit,
+            l2GasPerPubdataByteLimit
+        )
+
+        uint256 depositOrigin = deposits[tx.origin];
+        require(depositOrigin >= baseCost, "insufficient deposit");
+
+        deposits[tx.origin] = depositOrigin - baseCost;
+
+        mailbox.requestL2Transaction{value: baseCost}(
+            target,
+            0,
+            message,
+            l2GasLimit,
+            l2GasPerPubdataByteLimit, 
+            new bytes[](0),
+            tx.origin,
+        );
+
+        if (deposits[tx.origin] > 0) _withdraw(tx.origin);
     }
 
     function executeMessageFromL2(
@@ -55,7 +118,6 @@ contract ZkSyncL1Messenger is IMessenger, RestrictedCalls {
         // Merkle proof for the message
         bytes32[] calldata proof
     ) external {
-        IMailbox mailbox = IMailbox(MAILBOX_FACET_ADDR);
         L2Message memory l2Message = L2Message({sender: l2MessengerAddress, data: message, txNumberInBlock: l2TxNumberInBlock});
 
         bool success = mailbox.proveL2MessageInclusion(
