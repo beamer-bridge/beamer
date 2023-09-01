@@ -9,6 +9,7 @@ The Beamer software currently supports these commands:
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 * :ref:`command-check-initiate-l1-invalidations` issues L1 invalidations.
 * :ref:`command-check-verify-l1-invalidations` verifies L1 invalidations.
+* :ref:`command-check-initiate-challenges` issues challenges.
 
 .. _command-agent:
 
@@ -20,7 +21,7 @@ The ``agent`` command will run a Beamer agent and provide liquidity for the brid
 .. list-table::
    :header-rows: 1
 
-   * - Command-line option 
+   * - Command-line option
      - Description
 
    * - ``--account-path PATH``
@@ -214,7 +215,7 @@ pair is equal or greater to the count, no new invalidations will be sent.
 .. _command-check-verify-l1-invalidations:
 
 ``beamer check verify-l1-invalidations``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``beamer check verify-l1-invalidations [OPTIONS] FILE``
 
@@ -247,3 +248,54 @@ successful invalidation.
 
    * - ``--password TEXT``
      - The password needed to unlock the keystore file.
+
+
+.. _command-check-initiate-challenges:
+
+``beamer check initiate-challenges``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``beamer check initiate-challenges [OPTIONS] FILL_CHAIN REQUEST_CHAIN...``
+
+The command creates a transfer from each ``REQUEST_CHAIN`` to ``FILL_CHAIN``
+and challenges agent's claims on those transfers so that the agent is forced to
+prove its fills on L1. There must be at least one ``REQUEST_CHAIN``, but also
+multiple ones can be specified. 
+
+If the output file (specified via the ``--output`` option) already contains
+challenges for a particular (source, target) pair, the command will perform
+only actions that are necessary to complete the set of challenges. For example,
+if transfer requests, as well as and challenge transactions have already been
+done for all chain pairs, no additional transactions will be made.
+
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory containing deployment artifact files.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
+
+   * - ``--output PATH``
+     - Path to store the challenges info at, which can be later used for verification.
+
+   * - ``--stake FLOAT``
+     - Stake amount for each challenge, in ETH.
+       Has to be greater or equal to 0.1. Default: 0.1.
+
+   * - ``--token TEXT``
+     - Symbol of the token to be used for challenges (e.g. USDC).
