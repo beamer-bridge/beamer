@@ -11,5 +11,7 @@
     "decimals": 18
   },
   "internalRpcUrl": "https://lb.drpc.org/ogrpc?network=polygon-zkevm&dkey=AleMfnNlhUAHqriZhKxb8bkwB0C1MtYR7riBDs9_4c5n",
-  "feeSubAddress": "0xb0545DF5C69D7dB3F82768C0605b5C8d67cAaF8D"
+  "feeSubAddress": "0xb0545DF5C69D7dB3F82768C0605b5C8d67cAaF8D",
+  "disabled": true,
+  "disabled_reason": "Due to RPC connection issues with Polygon zkEVM, we decided to pause this network in order to protect user and LP funds."
 }
