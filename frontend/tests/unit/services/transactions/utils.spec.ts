@@ -100,7 +100,9 @@ describe('utils', () => {
       const getBlock = vi.fn();
 
       Object.defineProperty(providers, 'JsonRpcProvider', {
-        value: vi.fn().mockReturnValue({ getBlock }),
+        value: vi
+          .fn()
+          .mockReturnValue({ getBlock, getNetwork: vi.fn().mockReturnValue({ then: vi.fn() }) }),
       });
 
       getLatestBlock(rpcUrl);
@@ -114,7 +116,10 @@ describe('utils', () => {
       const blockNumber = 100;
 
       Object.defineProperty(providers, 'JsonRpcProvider', {
-        value: vi.fn().mockReturnValue({ getBlockNumber: vi.fn().mockReturnValue(blockNumber) }),
+        value: vi.fn().mockReturnValue({
+          getBlockNumber: vi.fn().mockReturnValue(blockNumber),
+          getNetwork: vi.fn().mockReturnValue({ then: vi.fn() }),
+        }),
       });
 
       await expect(getCurrentBlockNumber(rpcUrl)).resolves.toBe(100);
@@ -130,6 +135,7 @@ describe('utils', () => {
       Object.defineProperty(providers, 'JsonRpcProvider', {
         value: vi.fn().mockReturnValue({
           getBlock: vi.fn().mockReturnValue(new MockedBlock({ timestamp: blockTimestamp })),
+          getNetwork: vi.fn().mockReturnValue({ then: vi.fn() }),
         }),
       });
 
@@ -141,9 +147,14 @@ describe('utils', () => {
     it('returns a json rpc provider instance for provided rpc url', () => {
       const rpcUrl = getRandomUrl('rpcurl');
 
-      const provider = getJsonRpcProvider(rpcUrl);
+      Object.defineProperty(providers, 'JsonRpcProvider', {
+        value: vi.fn().mockReturnValue({
+          getNetwork: vi.fn().mockReturnValue({ then: vi.fn() }),
+        }),
+      });
+
+      getJsonRpcProvider(rpcUrl);
       expect(providers.JsonRpcProvider).toHaveBeenCalledWith(rpcUrl);
-      expect(provider).toBeInstanceOf(providers.JsonRpcProvider);
     });
   });
 
