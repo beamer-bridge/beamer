@@ -14,6 +14,11 @@ export const CONFIRMATION_TIME_BLOCKS: ConfirmationTimeMap = {
   1: 2,
 };
 
+export const DEFAULT_POLLING_INTERVAL_MILLISECONDS = 4000;
+export const POLLING_INTERVAL_MILLISECONDS: { [chainId: number]: number } = {
+  1101: 10000,
+};
+
 export function getSafeEventHandler(
   handler: CallableFunction,
   provider: Provider,
@@ -62,7 +67,14 @@ export async function getBlockTimestamp(rpcUrl: string, blockHash: string) {
 }
 
 export function getJsonRpcProvider(rpcUrl: string): JsonRpcProvider {
-  return new JsonRpcProvider(rpcUrl);
+  const provider = new JsonRpcProvider(rpcUrl);
+
+  provider.getNetwork().then((network) => {
+    provider.pollingInterval =
+      POLLING_INTERVAL_MILLISECONDS[network.chainId] || DEFAULT_POLLING_INTERVAL_MILLISECONDS;
+  });
+
+  return provider;
 }
 
 export function getReadOnlyContract<T>(
