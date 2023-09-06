@@ -92,5 +92,19 @@ export class RelayerProgram {
         await this.l2RelayerTo.finalizeStep.execute(l1TransactionHash);
       }
     }
+
+    console.log(`Verifying successful relay operation...`);
+    const relayParameters = await this.l2RelayerFrom.parseFillEventDataFromTxHash(
+      this.l2TransactionHash,
+    );
+    const success = await this.l2RelayerTo.checkSuccessOnRequestManager(
+      relayParameters.requestId,
+      relayParameters.fillId,
+    );
+    if (!success) {
+      throw new Error(
+        "Could not find a FillInvalidatedResolved or RequestResolved event on the destination RequestManager",
+      );
+    }
   }
 }
