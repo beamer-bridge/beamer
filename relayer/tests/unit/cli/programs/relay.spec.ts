@@ -1,11 +1,20 @@
+import { BigNumber } from "ethers";
+
 import type { ProgramOptions } from "@/cli/programs/relay";
 import { RelayerProgram } from "@/cli/programs/relay";
 import { getNetworkId } from "@/common/network";
-import type { ArbitrumRelayerService, PolygonZKEvmRelayerService } from "@/services";
+import type {
+  ArbitrumRelayerService,
+  PolygonZKEvmRelayerService,
+  RelayCallParams,
+} from "@/services";
 import { SERVICES } from "@/services/relayer/map";
 import {
   getAccountPassword,
   getKeystoreFilePath,
+  getRandomEthereumAddress,
+  getRandomNumber,
+  getRandomString,
   getRandomTransactionHash,
   getRandomUrl,
 } from "~/utils/data_generators";
@@ -23,6 +32,13 @@ const validOptions: ProgramOptions = {
 };
 
 const L1_CHAIN_ID = 1;
+
+const CALL_PARAMS: RelayCallParams = {
+  requestId: getRandomString(),
+  fillId: getRandomString(),
+  sourceChainId: BigNumber.from(getRandomNumber()),
+  filler: getRandomEthereumAddress(),
+};
 
 describe("RelayerProgram", () => {
   describe("validateArgs", () => {
@@ -112,11 +128,18 @@ describe("RelayerProgram", () => {
       jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
       jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
 
+      jest.spyOn(relayerFrom, "parseFillEventDataFromTxHash").mockResolvedValue(CALL_PARAMS);
+      jest.spyOn(relayerTo, "checkSuccessOnRequestManager").mockResolvedValue(true);
+
       await program.run();
 
       expect(relayerTo.prepareStep.execute).toHaveBeenCalled();
       expect(relayerFrom.relayTxToL1Step.execute).toHaveBeenCalled();
       expect(relayerTo.finalizeStep.execute).toHaveBeenCalled();
+      expect(relayerTo.checkSuccessOnRequestManager).toHaveBeenCalledWith(
+        CALL_PARAMS.requestId,
+        CALL_PARAMS.fillId,
+      );
     });
 
     it("ignores the `finalize` step when it is completed already", async () => {
@@ -140,12 +163,19 @@ describe("RelayerProgram", () => {
       jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
       jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(true);
 
+      jest.spyOn(relayerFrom, "parseFillEventDataFromTxHash").mockResolvedValue(CALL_PARAMS);
+      jest.spyOn(relayerTo, "checkSuccessOnRequestManager").mockResolvedValue(true);
+
       await program.run();
 
       expect(relayerTo.prepareStep.execute).toHaveBeenCalled();
       expect(relayerFrom.relayTxToL1Step.execute).toHaveBeenCalled();
       expect(relayerTo.finalizeStep.isCompleted).toHaveBeenCalled();
       expect(relayerTo.finalizeStep.execute).not.toHaveBeenCalled();
+      expect(relayerTo.checkSuccessOnRequestManager).toHaveBeenCalledWith(
+        CALL_PARAMS.requestId,
+        CALL_PARAMS.fillId,
+      );
     });
 
     it("ignores the `prepare` step when `relay` step is completed already", async () => {
@@ -172,12 +202,50 @@ describe("RelayerProgram", () => {
       jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
       jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
 
+      jest.spyOn(relayerFrom, "parseFillEventDataFromTxHash").mockResolvedValue(CALL_PARAMS);
+      jest.spyOn(relayerTo, "checkSuccessOnRequestManager").mockResolvedValue(true);
+
       await program.run();
 
       expect(relayerTo.prepareStep.execute).not.toHaveBeenCalled();
       expect(relayerFrom.relayTxToL1Step.execute).not.toHaveBeenCalled();
       expect(relayerFrom.relayTxToL1Step.recoverL1TransactionHash).toHaveBeenCalled();
       expect(relayerTo.finalizeStep.execute).toHaveBeenCalled();
+      expect(relayerTo.checkSuccessOnRequestManager).toHaveBeenCalledWith(
+        CALL_PARAMS.requestId,
+        CALL_PARAMS.fillId,
+      );
+    });
+
+    it("throws when event cannot be found on destination request manager", async () => {
+      const fromChainId = 1101;
+      const toChainId = 42161;
+      (getNetworkId as jest.Mock)
+        .mockResolvedValueOnce(fromChainId)
+        .mockResolvedValueOnce(toChainId)
+        .mockResolvedValueOnce(L1_CHAIN_ID);
+
+      const program = await RelayerProgram.createFromArgs(validOptions);
+      const relayerFrom = program.l2RelayerFrom as PolygonZKEvmRelayerService;
+      const relayerTo = program.l2RelayerTo as ArbitrumRelayerService;
+
+      jest.spyOn(relayerTo.prepareStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.prepareStep, "isCompleted").mockResolvedValue(false);
+      jest
+        .spyOn(relayerFrom.relayTxToL1Step, "execute")
+        .mockResolvedValue(getRandomTransactionHash());
+      jest.spyOn(relayerFrom.relayTxToL1Step, "isCompleted").mockResolvedValue(false);
+      jest.spyOn(relayerTo.finalizeStep, "execute").mockResolvedValue();
+      jest.spyOn(relayerTo.finalizeStep, "isCompleted").mockResolvedValue(false);
+
+      jest.spyOn(relayerFrom, "parseFillEventDataFromTxHash").mockResolvedValue(CALL_PARAMS);
+      jest.spyOn(relayerTo, "checkSuccessOnRequestManager").mockResolvedValue(false);
+
+      await expect(program.run()).rejects.toEqual(
+        new Error(
+          "Could not find a FillInvalidatedResolved or RequestResolved event on the destination RequestManager",
+        ),
+      );
     });
   });
 });
