@@ -14,6 +14,7 @@ Welcome to Beamer's documentation!
    contracts-api-reference.rst
    protocol.rst
    l1_resolution.rst
+   relayer.rst
    contributing.rst
    releasing.rst
    branching-strategy.rst
