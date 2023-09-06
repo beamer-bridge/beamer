@@ -226,6 +226,8 @@ proven via L1 resolutions to be the correct filler, he will earn 11 coins from t
 To avoid this challenge to go on forever, or reach a point where Bob no longer has the funds to out-stake challengers,
 Bob can trigger the ``L1 resolution``.
 
+.. _l1-resolutions:
+
 L1 resolutions
 ++++++++++++++
 
@@ -271,7 +273,7 @@ This is due to the fact, that any claim will be resolved correctly by the L1 res
     Bob ->> Rollup A: counter-challenges
     end
     Charles ->> Rollup A: challenges Bob's claim
-    note over Rollup A: Charles will win if we \nwait for end of challenge
+    note over Rollup A: Charles will win if we<br>wait for end of challenge
 
     Bob ->> L1: triggers L1 resolution
     L1 ->> Rollup A: sends fill proof
@@ -348,7 +350,7 @@ In any case, this condition will always be fulfilled if Bob fills the request be
     Bob ->> Rollup A: challenges Charles's claim
     Charles ->> Rollup A: counter-challenges
     end
-    note over Rollup A: Charles will win if we \nwait for end of challenge
+    note over Rollup A: Charles will win if we<br>wait for end of challenge
 
     Bob ->> Rollup B: fills request
     Rollup B ->> L1: registers fill proof
