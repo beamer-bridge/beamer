@@ -82,6 +82,7 @@ up() {
 e2e_test() {
     l2_rpc=http://localhost:8123
     password=""
+    resolver=$(jq -r '.base.Resolver.address' ${ARTIFACTS_DIR}/base.deployment.json)
 
     network_file="${CACHE_DIR}/network.json"
     echo Copying contract addresses to $network_file
@@ -98,6 +99,8 @@ e2e_test() {
     }
 EOF
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
+
+    export RESOLVER=$resolver
     e2e_test_relayer http://localhost:8545 $l2_rpc $network_file $KEYFILE $e2e_test_l2_txhash
     e2e_test_verify $ARTIFACTS_DIR $l2_rpc $ADDRESS $e2e_test_request_id
 }
