@@ -1,5 +1,6 @@
 .. _glossary:
 
+
 Glossary
 ========
 
@@ -119,3 +120,6 @@ Glossary
         The amount of tokens that is locked with the Beamer's smart contract on
         the source chain. The tokens are locked until the corresponding request
         is fulfilled and an agent sucessfully claims and withdraws the tokens.
+
+    PPM
+        Percentage in parts per million as unit.

@@ -35,7 +35,8 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.todo',
     'sphinxcontrib.mermaid',
-    'sphinxcontrib.soliditydomain'
+    'sphinxcontrib.soliditydomain',
+    'sphinxcontrib.icon'
 ]
 
 autodoc_default_options = { 'members': None, 'exclude-members': '<private>' }

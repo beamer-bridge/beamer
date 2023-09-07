@@ -1,11 +1,21 @@
-Configuration
-=============
+.. _running_agent:
 
 
-.. _config-agent:
+Running an Agent
+================
 
-Agent configuration
--------------------
+.. _running-agent-prerequisites:
+
+Prerequisites
+-------------
+
+There are two ways to run a Beamer agent: via :ref:`a container image <agent-container>`
+and :ref:`directly from source <agent-from-source>`.  
+
+.. _running-agent-configuration:
+
+Configuring the Agent
+---------------------
 
 An agent can be configured via a configuration file or command line options, or a
 combination of both. One can specify a TOML configuration file via the ``-c``/``--config``
@@ -127,146 +137,8 @@ address ``0x2644292EE5aed5c17BDcc6EDF1696ba802351cf6``, while the TST token cont
 on chain with ID ``22`` has address ``0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D``.
 
 
-Options reference
-~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-
-   * - Configuration section / key
-     - Description
-
-   * - ::
-
-        [account]
-        path = PATH
-
-     - Path to the account keyfile.
-
-   * - ::
-
-        [account]
-        password = PASSWORD
-
-     - The password needed to unlock the account.
-
-   * - ::
-
-        artifacts-dir = DIR
-
-     - The directory containing deployment artifact files.
-
-   * - ::
-
-        abi-dir = DIR
-
-     - The directory containing contract abi files.
-
-   * - ::
-
-        fill-wait-time = TIME
-
-     - Time in seconds to wait for a fill event before challenging a false claim.
-       Default: ``120``.
-
-   * - ::
-
-        confirmation-blocks = BLOCKS
-
-     - Number of confirmation blocks to consider the block ready for processing.
-       Default: ``0``.
-
-   * - ::
-
-        unsafe-fill-time = TIME
-
-     - Time in seconds before request expiry, during which the agent will consider it
-       unsafe to fill and ignore the request. Default: ``600``. For more info: :ref:`Unsafe Fill Time`
-
-   * - ::
-
-        log-level = LEVEL
-
-     - Logging level, one of ``debug``, ``info``, ``warning``, ``error``, ``critical``.
-       Default: ``info``.
-
-   * - ::
-
-        [metrics]
-        prometheus-port = PORT
-
-     - Provide Prometheus metrics on the specified port.
-
-   * - ::
-
-        source-chain = NAME
-
-     - Name of the source chain. Deprecated and will be removed.
-       No longer needed because the agent supports multiple chain pairs.
-
-
-   * - ::
-
-        target-chain = NAME
-
-     - Name of the target chain. Deprecated and will be removed.
-       No longer needed because the agent supports multiple chain pairs.
-
-   * - ::
-
-        [base-chain]
-        rpc-url = URL
-
-     - Associate a JSON-RPC endpoint URL with base chain.
-
-   * - ::
-
-        [chains.NAME]
-        rpc-url = URL
-
-     - Associate a JSON-RPC endpoint URL with chain NAME. May be given multiple times.
-       Example::
-
-        [chains.foo]
-        rpc-url = "http://foo.bar:8545"
-
-   * - ::
-
-        poll-period = TIME
-
-     - Time in seconds to wait between two consecutive RPC requests for new events.
-       The value applies to all chains that don't have the chain-specific poll period defined.
-       Default: ``5.0``.
-
-   * - ::
-
-        [chains.NAME]
-        poll-period = TIME
-
-     - Time in seconds to wait between two consecutive RPC requests for new events.
-       The value applies only to chain NAME, taking precedence over the global poll period.
-
-   * - ::
-
-        min-source-balance = ETH
-
-     - Minimum ETH balance on source chain to fill requests on target chain..
-       The value applies to all chains that don't have the chain-specific min-source-balance defined.
-       Default: ``0.1``.
-
-   * - ::
-
-        [chains.NAME]
-        min-source-balance = ETH
-
-     - Minimum ETH balance on chain NAME to fill requests originating from it.
-       The value applies only to chain NAME, taking precedence over the global min-source-balance.
-
-
-.. _config-health-check:
-
-Health Check configuration
---------------------------
+Configuring the Health Check
+----------------------------
 
 The :ref:`command-health-check` command is configured by a TOML configuration file 
 which is specified by the ``-c``/``--config`` option. 
@@ -334,111 +206,128 @@ The myidbot will reply with your chat-id. Copy that id and add it to the ``notif
 
 That's it! Now you should have all the keys necessary to send notifications to Telegram.
 
-Options reference
-~~~~~~~~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
+.. _running-agent-deployment-info:
 
-   * - Configuration section / key
-     - Description
+Getting the Contract Deployment Information
+-------------------------------------------
 
-   * - ::
+During the Beamer contracts' deployment process, a directory with deployment information is created.
+The directory typically looks like this::
 
-        agent-address = ADDRESS
+  deployments/
+  └── artifacts/
+    └── goerli/
+      ├── base.deployment.json
+      ├── 5-ethereum.deployment.json
+      ├── 420-optimism.deployment.json
+      ├── 421613-arbitrum.deployment.json
+      └── 84531-base.deployment.json
 
-     - Address of the agent account.
+The above shows contract `artifacts on Goerli`_.
 
-   * - ::
+The ``<chain-id>-<chain-name>.deployment.json`` files contain information on specific chain that the
+contracts have been deployed on, the contracts' addresses, as well as the block
+number at the time of deployment.
 
-        artifacts-dir = PATH
+The rest of the files contain contract ABI information which is needed by the agent.
 
-     - The directory that stores deployment artifact files.
+.. _artifacts on Goerli: https://github.com/beamer-bridge/beamer/tree/main/deployments/artifacts/goerli
 
-   * - ::
+.. _running-agent-starting:
 
-        abi-dir = PATH
+Starting an agent
+-----------------
 
-     - Path to the contract abi files directory.
+.. _agent-container:
 
-   * - ::
+Running an agent container
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        notification-system = SYSTEM
+To run an agent container simply do::
 
-     - The notification system to use, either ``telegram`` or ``rocketchat``.
+    docker run --name beamer_agent ghcr.io/beamer-bridge/beamer agent   --account-path <path> \
+                                                                        --account-password <password> \
+                                                                        --base-chain <l1-rpc-url> \
+                                                                        --chain source=<source-l2-rpc-url> \
+                                                                        --chain target=<target-l2-rpc-url> \
+                                                                        --artifacts-dir <artifacts-dir> \
+                                                                        --abi-dir <abi-dir> \
+                                                                        --source-chain source \
+                                                                        --target-chain target
 
-   * - ::
+.. _agent-from-source:
 
-        
-        [notification.rocketchat]
-        url = URL
+Running directly from source
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-     - URL of the RocketChat server where the notifications should be sent to.
+First clone the Beamer repository::
 
-   * - ::
+    git clone https://github.com/beamer-bridge/beamer.git
 
-        
-        [notification.rocketchat]
-        channel = NAME
+Make sure you have Python 3.10.x and
+`Poetry <https://python-poetry.org/>`_ installed.
 
-     - Name of the RocketChat channel where the notifications should be sent to.
+Enter the virtual environment::
 
-   * - ::
+    cd beamer
+    poetry shell
 
-        
-        [notification.telegram]
-        token = TOKEN
+and install ``beamer-agent``::
 
-     - Specifies the Telegram authentication token.
+    poetry install
 
-   * - ::
+While still inside the virtual environment, run::
 
-        
-        [notification.telegram]
-        chat-id = ID
+    beamer agent --account-path <path> \
+                 --account-password <password> \
+                 --base-chain <l1-rpc-url> \
+                 --chain source=<source-l2-rpc-url> \
+                 --chain target=<target-l2-rpc-url> \
+                 --artifacts-dir <artifacts-dir> \
+                 --abi-dir <abi-dir> \
+                 --source-chain source \
+                 --target-chain target
 
-     - The ID of the chat where the notification should be sent to.
+.. _running-agent-stopping:
 
-   * - ::
+Stopping an agent
+-----------------
 
-        
-        [notification.SYSTEM]
-        request-throttling-in-sec = TIME
+You may want to stop your agent when there is an update to the software.
 
-     - Throttles the notifications to the specified number of seconds.
+To describe how to update an agent, it is worth to have a look on Beamer's versioning scheme. As described in
+:ref:`development-branching`, each major version describes a different mainnet deployment thus a different set of contracts.
+Please note, that if you update your agent to a new major version, it will run on different contracts. Updating to a
+new major version requires different steps for you to safely transition to a new major contract version.
+A minor (e.g. 1.X.0 -> 1.Y.0) or a patch (e.g. 1.2.X -> 1.2.Y) version upgrade typically brings with it a
+set of fixes and it is recommended to switch to a newer version sooner rather than later.
+The difference between the minor and patch version updates is that the former may bring a
+change in command line options, configuration file settings or similar things where some user
+attention may be required, while the patch version update should be completely painless.
 
-   * - ::
+Update to a new agent release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        [chains.NAME]
-        rpc-url = URL
+Running your agent in a container, it is as easy as updating your image in the docker-compose.yml to the latest version.
+The repo https://github.com/beamer-bridge/run-your-own-agent is actively maintained and will provide you with the
+most up-to-date agent version. Alternatively you will find the latest version under
+https://github.com/beamer-bridge/beamer/releases.
 
-     - Associate a JSON-RPC endpoint URL with chain NAME. May be given multiple times.
-       Example::
+Update to a new major version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When updating to a new major version (i.e. X.0.0 -> Y.0.0) and thus to a new contract deployment, it is recommended to
+setup a fresh agent instance following the guidelines from https://github.com/beamer-bridge/run-your-own-agent. Please
+keep the old agent running and leave it temporarily untouched.
+As soon as the contracts are paused, the old agent should run for at least another 24 hours to ensure withdrawal of
+outstanding funds. The old agent can then be shut down safely.
 
-        [chains.foo]
-        rpc-url = "http://foo.bar:8545"
 
-   * - ::
+.. _running-agent-troubleshooting:
 
-        [chains.NAME]
-        explorer = URL
+Troubleshooting
+---------------
 
-     - Specifies the transaction URL path of a block explorer for the chain NAME.
-   
-   * - ::
+When there is a problem, you can get the logs via::
 
-        [chains.NAME]
-        chain-id = CHAIN_ID
-
-     - The chain id for chain NAME.
-
-   * - ::
-
-        [tokens]
-        NAME = [
-          [CHAIN_ID, TOKEN_ADDRESS],
-          [CHAIN_ID, TOKEN_ADDRESS]
-        ]
-
-     - Specifies the token NAME. For each chain a pair [CHAIN_ID, TOKEN_ADDRESS] is added to the list.
-
+    docker logs beamer_agent -f

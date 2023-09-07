@@ -1,10 +1,13 @@
+.. _faq:
+
+
 FAQ
 ===
 
 * What is Beamer Bridge?
 
   Beamer Bridge enables direct ERC20 asset transfers between any two EVM
-  compatible rollups, without transiting via Layer 1(L1).
+  compatible chain, without transiting via Layer 1(L1).
 
 * What are the advantages of Beamer?
 
@@ -18,11 +21,11 @@ FAQ
 
   * Easy Fees
 
-    Pay just 0.3% of the transfer amount. Charged upfront on the source rollup.
+    Pay just 0.3% of the transfer amount. Charged upfront on the source chain.
 
   * Super Simple
 
-    Sign just one transaction on the source rollup. That's it. You're done!
+    Sign just one transaction on the source chain. That's it. You're done!
 
   * Canonical Tokens
 
@@ -30,7 +33,7 @@ FAQ
 
   * Final
 
-    When you get your tokens on the destination rollups, they're 100% yours.
+    When you get your tokens on the destination chain, they're 100% yours.
 
   * Security of Ethereum L1
 
@@ -41,7 +44,7 @@ FAQ
   1. User initiates transaction to contract on Rollup 1, locking fees and assets
   2. Agent sends assets to user on Rollup 2
 
-  At this stage, the user is done and receives their assets on target rollup.
+  At this stage, the user is done and receives their assets on target chain.
 
   For agents
 
@@ -53,10 +56,10 @@ FAQ
   Beamer has not decided whether or not it will distribute tokens. Beamer's
   primary focus right now is building a seamless and secure bridge.
 
-* What is a rollup?
+* What is a chain?
 
-  A rollup performs transaction execution outside Layer 1 and then the data is
-  posted to layer 1 where consensus is reached. There are two types of rollups,
+  A chain performs transaction execution outside Layer 1 and then the data is
+  posted to layer 1 where consensus is reached. There are two types of chains,
   Zero-Knowledge (ZK) and Optimistic Rollups.
 
 * What is a "canonical token"?
@@ -67,7 +70,7 @@ FAQ
 * What is an agent?
 
   Agent is the term Beamer uses for the software run by liquidity providers to
-  observe the rollups, fill users' requests, and participate in challenges.
+  observe the chains, fill users' requests, and participate in challenges.
 
 * What are liquidity providers?
 
@@ -77,7 +80,7 @@ FAQ
 
 * What kind of tokens can we transfer on Beamer?
 
-  On Beamer, you are able to transfer ERC20 tokens across EVM-compatible rollups.
+  On Beamer, you are able to transfer ERC20 tokens across EVM-compatible chains.
 
 * How can I track my transfer?
 
@@ -85,12 +88,12 @@ FAQ
   also click "See transfer on the Explorer" to check the status of your
   transfer.
 
-  Alternatively, you can check your outgoing transfers on the respective rollup explorers.
+  Alternatively, you can check your outgoing transfers on the respective chain explorers.
 
 * What is the vision of this project?
 
   We offer an intuitive and seamless bridge solution that specializes in
-  cross-rollup transfers. Our goal is to provide a smooth user experience to
+  cross-chain transfers. Our goal is to provide a smooth user experience to
   make Ethereum more accessible and convince more people to join the ecosystem.
   Important for us: Beamer is a community-driven open-source project and will
   be based on collaborative efforts.
