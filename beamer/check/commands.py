@@ -723,3 +723,89 @@ def initiate_challenges(
             json.dump(data, f, indent=4)
 
     log.info("All challenges initiated succesfully")
+
+
+@check.command("verify-challenges")
+@click.option(
+    "--rpc-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to the RPC config file.",
+)
+@click.option(
+    "--artifacts-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="The directory containing deployment artifacts.",
+)
+@click.option(
+    "--abi-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    required=True,
+    help="Path to the directory with contract ABIs.",
+)
+@click.argument(
+    "file", type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path)
+)
+def verify_challenges(rpc_file: Path, artifacts_dir: Path, abi_dir: Path, file: Path) -> None:
+    """Verify challenges stored in FILE."""
+    beamer.util.setup_logging(log_level="DEBUG", log_json=False)
+
+    abi_manager = ABIManager(abi_dir)
+    rpc_info = beamer.util.load_rpc_info(rpc_file)
+    ctx = Context(
+        abi_manager=abi_manager, account=None, artifacts_dir=artifacts_dir, rpc_info=rpc_info
+    )
+
+    with file.open("rt") as f:
+        data = json.load(f)
+
+    challenges = apischema.deserialize(list[Challenge], data)
+
+    errors = 0
+    for challenge in challenges:
+        # First check the finalization timestamp.
+        if (
+            challenge.finalization_timestamp is None
+            or datetime.utcnow() <= challenge.finalization_timestamp
+        ):
+            log.error(
+                "Challenge not yet finalized, skipping",
+                txhash=challenge.challenge_claim_txhash,
+                request_chain=challenge.request_chain,
+                fill_chain=challenge.fill_chain,
+            )
+            errors += 1
+            continue
+
+        # Check whether L1 resolution was performed correctly.
+        request_manager = _obtain_request_manager(ctx, challenge.request_chain)
+        claim = request_manager.functions.claims(challenge.claim_id).call()
+        request = request_manager.functions.requests(challenge.request_id).call()
+        if (
+            request.withdrawClaimId == challenge.claim_id
+            and request.filler == claim.claimer
+            and request.fillId == claim.fillId
+        ):
+            log.info(
+                "Challenge verified successfully",
+                txhash=challenge.challenge_claim_txhash,
+                request_chain=challenge.request_chain,
+                fill_chain=challenge.fill_chain,
+            )
+        else:
+            log.error(
+                "Challenge verification failed",
+                txhash=challenge.challenge_claim_txhash,
+                request_chain=challenge.request_chain,
+                fill_chain=challenge.fill_chain,
+                request=request,
+                claim=claim,
+            )
+            errors += 1
+
+    if errors:
+        log.info("Failed to verify all challenges", errors=errors)
+        sys.exit(1)
+
+    log.info("All challenges verified successfully", verified=len(challenges))
