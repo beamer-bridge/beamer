@@ -46,7 +46,7 @@ def main() -> None:
         textwrap.dedent(
             """\
     Beamer contract addresses
-    =========================
+    -------------------------
     """
         )
     )
@@ -75,7 +75,7 @@ def _generate_section(section_name: str, explorer: str, contracts: dict) -> None
             url = explorer.format(address=address)
             yield name[0], f"`{address} <{url}>`__"
 
-    section_marker = "-" * len(section_name)
+    section_marker = "~" * len(section_name)
     print(f"\n{section_name}")
     print(f"{section_marker}\n")
     _generate_table(rows())
