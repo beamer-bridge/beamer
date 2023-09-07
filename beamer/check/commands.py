@@ -276,7 +276,7 @@ Status = Enum("Status", ("FAILED", "READY", "VERIFIED"))
 class Context(NamedTuple):
     abi_manager: ABIManager
     artifacts_dir: Path
-    account: LocalAccount
+    account: LocalAccount | None
     rpc_info: dict[ChainId, URL]
 
 
@@ -323,6 +323,7 @@ def _verify_without_relaying(
 def _relay_and_verify(
     ctx: Context, pair: tuple[ChainId, ChainId], invalidation: Invalidation
 ) -> bool:
+    assert ctx.account is not None
     deployment = beamer.artifacts.load(ctx.artifacts_dir, invalidation.proof_target)
     txhash = invalidation.txhash
     log.debug("Starting relayer", txhash=txhash)
@@ -538,6 +539,7 @@ def _wait_for_agent_to_claim(ctx: Context, challenge: Challenge) -> None:
 def _create_transfer_request(
     ctx: Context, request_chain: ChainId, fill_chain: ChainId, symbol: str, target_token: Contract
 ) -> Challenge:
+    assert ctx.account is not None
     request_manager = _obtain_request_manager(ctx, request_chain)
     validity_period = request_manager.functions.MIN_VALIDITY_PERIOD().call()
 
