@@ -57,6 +57,7 @@ Sphinx = "^7.2.5"
 furo = "^2023.9.10"
 sphinxcontrib-mermaid = "^0.9"
 sphinxcontrib-soliditydomain = {git = "https://github.com/beamer-bridge/sphinxcontrib-soliditydomain.git", rev = "main"}
+sphinx-icon = "^0.2.2"
 types-toml = "^0.10.8"
 
 [tool.poetry.scripts]
