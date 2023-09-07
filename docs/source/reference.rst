@@ -52,6 +52,7 @@ The Beamer software currently supports these commands:
 * :ref:`command-check-initiate-l1-invalidations` issues L1 invalidations.
 * :ref:`command-check-verify-l1-invalidations` verifies L1 invalidations.
 * :ref:`command-check-initiate-challenges` issues challenges.
+* :ref:`command-check-verify-challenges` verifies that challenges are resolved correctly.
 
 .. _command-agent:
 
@@ -338,6 +339,33 @@ done for all chain pairs, no additional transactions will be made.
 
    * - ``--token TEXT``
      - Symbol of the token to be used for challenges (e.g. USDC).
+
+
+.. _command-check-verify-challenges:
+
+``beamer check verify-challenges``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``beamer check verify-challenges [OPTIONS] FILE``
+
+The command verifies that each challenge stored in ``FILE`` was resolved correctly
+via L1.
+
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory containing deployment artifact files.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
 
 
 .. _reference-configuration:
