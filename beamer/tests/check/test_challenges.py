@@ -2,11 +2,13 @@ import json
 import logging
 import os
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 import ape
 import apischema
 import pytest
+from eth_typing import ChecksumAddress
 
 import beamer.check.commands
 from beamer.artifacts import Deployment
@@ -21,20 +23,29 @@ from beamer.tests.util import (
 )
 
 
-def _initiate(keystore_file, password, rpc_file, artifacts_dir, output, *chain_ids):
+@dataclass
+class _Context:
+    challenger: ChecksumAddress
+    challenger_keystore_file: Path
+    deployment: Deployment
+    artifacts_dir: Path
+    rpc_file: Path
+
+
+def _initiate(ctx, output, *chain_ids):
     root = get_repo_root()
     run_command(
         beamer.check.commands.initiate_challenges,
         "--keystore-file",
-        keystore_file,
+        ctx.challenger_keystore_file,
         "--password",
-        password,
+        "test",
         "--rpc-file",
-        rpc_file,
+        ctx.rpc_file,
         "--abi-dir",
         f"{root}/contracts/.build/",
         "--artifacts-dir",
-        artifacts_dir,
+        ctx.artifacts_dir,
         "--token",
         "TST",
         "--output",
@@ -43,29 +54,29 @@ def _initiate(keystore_file, password, rpc_file, artifacts_dir, output, *chain_i
     )
 
 
-def _start_agent(tmp_path, artifacts_dir, rpc_file, deployment, account):
+def _start_agent(ctx, tmp_path, account):
     password = "test"
     keystore_file = tmp_path / f"{account.address}.json"
     write_keystore_file(keystore_file, account.private_key, password)
 
-    deployment_base = beamer.artifacts.load_base(artifacts_dir)
+    deployment_base = beamer.artifacts.load_base(ctx.artifacts_dir)
     assert deployment_base.base is not None
 
     chain_id = ape.chain.chain_id
-    with open(rpc_file, "rt") as f:
+    with open(ctx.rpc_file, "rt") as f:
         rpc_url = json.load(f)[str(chain_id)]
 
     root = get_repo_root()
     env = os.environ.copy()
     env["RESOLVER"] = deployment_base.base.contracts["Resolver"].address
-    env["ETHEREUM_L2_MESSENGER"] = deployment.chain.contracts["EthereumL2Messenger"].address
+    env["ETHEREUM_L2_MESSENGER"] = ctx.deployment.chain.contracts["EthereumL2Messenger"].address
     env["BEAMER_ALLOW_UNLISTED_PAIRS"] = "1"
-    token_address = deployment.chain.contracts["MintableToken"].address
+    token_address = ctx.deployment.chain.contracts["MintableToken"].address
 
     config = f"""
     log-level = "debug"
     abi-dir = "{root}/contracts/.build/"
-    artifacts-dir = "{str(artifacts_dir)}"
+    artifacts-dir = "{str(ctx.artifacts_dir)}"
     fill-wait-time = 0
     confirmation-blocks = 0
 
@@ -90,7 +101,7 @@ def _start_agent(tmp_path, artifacts_dir, rpc_file, deployment, account):
     return subprocess.Popen(["beamer", "agent", "--config", str(config_path)], env=env)
 
 
-def test_initiate_challenges(tmp_path, deployer, caplog):
+def _prepare(tmp_path, deployer):
     (challenger,) = alloc_accounts(1)
     password = "test"
     challenger_keystore_file = tmp_path / f"{challenger.address}.json"
@@ -113,15 +124,23 @@ def test_initiate_challenges(tmp_path, deployer, caplog):
     request_manager.addAllowedLp(deployer.address)
     fill_manager = ape.project.FillManager.at(deployment.chain.contracts["FillManager"].address)
     fill_manager.addAllowedLp(deployer.address)
+    return _Context(
+        challenger=challenger,
+        challenger_keystore_file=challenger_keystore_file,
+        deployment=deployment,
+        artifacts_dir=artifacts_dir,
+        rpc_file=rpc_file,
+    )
 
-    proc = _start_agent(tmp_path, artifacts_dir, rpc_file, deployment, deployer)
+
+def test_initiate_challenges(tmp_path, deployer, caplog):
+    ctx = _prepare(tmp_path, deployer)
+    proc = _start_agent(ctx, tmp_path, deployer)
 
     output = tmp_path / "challenges.json"
     caplog.clear()
     caplog.set_level(logging.INFO)
-    _initiate(
-        challenger_keystore_file, password, rpc_file, artifacts_dir, output, chain_id, chain_id
-    )
+    _initiate(ctx, output, ape.chain.chain_id, ape.chain.chain_id)
     assert any("All challenges initiated succesfully" in msg for msg in caplog.messages)
     proc.kill()
 
@@ -135,14 +154,12 @@ def test_initiate_challenges(tmp_path, deployer, caplog):
     assert challenge.finalization_timestamp is not None
     assert challenge.challenge_claim_txhash is not None
     transaction = ape.chain.provider.web3.eth.get_transaction(challenge.challenge_claim_txhash)
-    assert transaction["from"] == challenger.address
+    assert transaction["from"] == ctx.challenger.address
 
     # Make sure the next run does not do anything, since the challenges have already been issued.
     caplog.clear()
     block_before = ape.chain.blocks[-1].number
-    _initiate(
-        challenger_keystore_file, password, rpc_file, artifacts_dir, output, chain_id, chain_id
-    )
+    _initiate(ctx, output, ape.chain.chain_id, ape.chain.chain_id)
     assert ape.chain.blocks[-1].number == block_before
     assert any("All challenges initiated succesfully" in msg for msg in caplog.messages)
 
