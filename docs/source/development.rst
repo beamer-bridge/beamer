@@ -1,9 +1,28 @@
-Beamer agent
-============
+.. _development:
 
+Development
+===========
 
-Basic requirements
-------------------
+.. _development-overview:
+
+Overview
+--------
+
+In this page, we will introduce following sections:
+
+1. ``Getting Started`` part will explain requirements to develop the agent.
+
+2. ``Agent Architecture and Implementation`` part will explain most used terms in agent and
+how they are connected in the architecture.
+
+3. ``Making a New Release`` part will explain how to create a new release.
+
+4. ``The branching strategy`` part will explain how you should handle your branches.
+
+.. _development-getting-started:
+
+Getting Started
+---------------
 
 * The agent must not block in any way. That is, it must not happen that the agent is stuck endlessly
   waiting on any operation, regardless of reasons. Typical common issues here are a slow RPC server
@@ -13,9 +32,10 @@ Basic requirements
   requests, claims, challenges etc.
 * The agent should avoid serializing anything to non-volatile storage.
 
+.. _development-agent:
 
-Agent architecture
-------------------
+Agent Architecture and Implementation
+-------------------------------------
 
 .. figure:: images/beamer-agent-architecture.png
 
@@ -29,7 +49,7 @@ For every transfer direction, we have an ``EventProcessor`` running on its own t
 
 
 EventMonitor
-------------
+~~~~~~~~~~~~
 
 ``EventMonitor`` listens for blockchain events emitted by given contracts, decodes the events
 into an internal event representation (event types in ``beamer.events``) and forwards decoded events
@@ -46,7 +66,7 @@ works independently of the other, allowing for very different speeds between the
 
 
 EventProcessor
---------------
+~~~~~~~~~~~~~~
 
 ``EventProcessor`` implements the Beamer protocol logic. It receives events from event monitors and
 stores them into a list. Events are filtered by source and target chains and are stored in 
@@ -55,7 +75,7 @@ a single list, in the order they arrived.
 .. note::
 
   Each event object, an instance of an event type from ``beamer.events``, has a
-  ``chain_id`` attribute that can be used to identify the chain that event came from.
+  ``event_chain_id`` attribute that can be used to identify the chain that event came from.
 
 The thread of ``EventProcessor`` will typically sleep until something interesting happens. Delivery of
 fresh events by one or both of the contract event monitors is just such a case, which triggers two
@@ -84,7 +104,7 @@ again the request tracker is used to access the requests.
 
 
 Request
--------
+~~~~~~~
 
 The ``Request`` object holds the information about a submitted request and the associated state.
 The state machine is depicted by the following figure.
@@ -112,7 +132,7 @@ The only states which will not produce an output in form of a transaction are ``
 ``claimed`` and ``withdrawn``.
 
 Claim
------
+~~~~~
 
 The ``Claim`` object holds information about a claim in the beamer protocol.
 
@@ -130,7 +150,7 @@ If an agent is not participating in a claim, that claim will transition into the
 .. _Unsafe Fill Time:
 
 Unsafe Fill Time
-----------------
+~~~~~~~~~~~~~~~~
 
 In order to lower the risk of filling a request that is too close to expiration, an agent has a notion of 
 `unsafe fill time`. This is the time window, expressed in seconds, before request expiration that the agent
@@ -151,3 +171,103 @@ If unsafe time increases, T2 moves to left, so the agent will fill fewer request
 
 If unsafe time decreases, T2 moves to right, so the agent will get an opportunity to fill more requests.
 
+
+.. _development-release:
+
+Making a new Release
+--------------------
+
+Making a new agent release
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Make sure to populate ``CHANGELOG.md`` and change the version number
+   (see `this commit <https://github.com/beamer-bridge/beamer/commit/440b7ddffc01d16482d78ff9f18a8830670795bc>`_ for example).
+#. Commit the changes above, create and merge the PR.
+#. Take note of the commit ID on the release branch (either ``main`` or one of the ``N.x`` branches,
+   depending on where you are releasing from). Tag that commit (e.g. ``git tag v0.1.8 COMMIT_ID``) and
+   push the tag to Github (e.g. ``git push origin tag v0.1.8``).
+
+    .. note:: The ID of the last commit on the release branch may be different from the ID of
+              the last commit on the PR branch, even in cases where those commits have identical changes.
+              Make sure to tag the commit on the release branch, not on the PR branch.
+
+#. Once the tag is pushed, manually trigger a new CI run on the branch containing the tagged commit,
+   to ensure that the built container image is tagged properly.
+#. The previous step will have created an agent Docker image, which you can use for final testing before the release.
+   If you encounter any release-blocking issues, fix them and restart the release process.
+#. Make a release on Github based on the pushed tag.
+   Copy the relevant ``CHANGELOG.md`` part to the release notes;
+   see `this page <https://github.com/beamer-bridge/beamer/releases/tag/v0.1.8>`_ for example.
+
+Making a new deployment npm package release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The *@beamer-bridge/deployments* package is a npm package that contains the
+deployment ABIs and addresses.
+It also contains a *git-commit-version.txt* file that contains the commit hash
+of the commit that was used to create the package.
+
+There are 2 different release pipelines for this package.
+
+Automatic
+"""""""""
+
+Whenever a PR changes something inside the deployments folder, a new dev release
+is created on the CI server and pushed to npm.
+
+Manual
+""""""
+
+Whenever we want or need to pin a new major version of the deployments ABIs and
+addresses, we need to manually update the *package.json* version and create a PR.
+Once the PR is merged into main, a new release with the specified version number
+is created on CI server and pushed to npm.
+
+On manual release we need to make sure that the package version we specify is
+higher than the current version on npm.Failure to do this will result in a failed
+npm release.
+
+
+.. _development-branching:
+
+The branching strategy
+----------------------
+
+Here are some guidelines on our usage of branches.
+
+**Create a new N.x branch whenever a new mainnet deployment is made.**
+Such a branch is called a *deployment branch*. This clearly separates different
+mainnet deployments and makes it easier to test agent and the frontend for a
+particular deployment. The new branch number N is always 1 greater than the
+number of the most recently created deployment branch.
+
+**The most recent deployment branch follows the main branch until someone
+decides to diverge from main.**
+This can be done as easily as::
+
+    git push origin main:N.x
+
+Note that this must result in a fast-forward of the ``N.x`` branch.
+
+**After a deployment branch diverges from main, further changes to the deployment branch
+require PRs to be made.**
+This is to ensure proper consideration and code review of the changes. In most cases it is
+expected to have commits from ``main`` cherry-picked to ``N.x``.
+
+**Try to diverge from main as late as possible.**
+Due to the above, once a deployment branch diverges from ``main``, it can become annoying
+to file PRs for even the smallest of changes. To lessen the pain, we should try to avoid
+needlessly diverging from ``main``.
+
+**Strive to do the changes on main first, then port to the deployment branch.**
+The ``main`` branch should be the first landing spot for changes, however, in cases
+where this is not possible or makes things harder, feel free to do it the other way
+around.
+
+**Agent releases are always made from a deployment branch.**
+This is due to the fact that a particular agent releases assumes a particular deployment.
+Also, agent releases are numbered in line with the deployment branch name.
+
+**Any contract changes committed to the main branch cause the current deployment branch
+to diverge from main.**
+At this point, the deployment branch stops following ``main`` and PRs are required.
