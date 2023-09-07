@@ -3,12 +3,14 @@ import logging
 import os
 import subprocess
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import ape
 import apischema
 import pytest
 from eth_typing import ChecksumAddress
+from freezegun import freeze_time
 
 import beamer.check.commands
 from beamer.artifacts import Deployment
@@ -51,6 +53,20 @@ def _initiate(ctx, output, *chain_ids):
         "--output",
         output,
         *map(str, chain_ids),
+    )
+
+
+def _verify(ctx, output):
+    root = get_repo_root()
+    run_command(
+        beamer.check.commands.verify_challenges,
+        "--rpc-file",
+        ctx.rpc_file,
+        "--abi-dir",
+        f"{root}/contracts/.build/",
+        "--artifacts-dir",
+        ctx.artifacts_dir,
+        str(output),
     )
 
 
@@ -98,7 +114,9 @@ def _start_agent(ctx, tmp_path, account):
 
     config_path = tmp_path / "agent.conf"
     config_path.write_text(config)
-    return subprocess.Popen(["beamer", "agent", "--config", str(config_path)], env=env)
+    return subprocess.Popen(
+        ["beamer", "agent", "--config", str(config_path)], env=env, stdout=subprocess.PIPE
+    )
 
 
 def _prepare(tmp_path, deployer):
@@ -196,3 +214,45 @@ def test_initiate_missing_token(tmp_path, deployer, caplog):
             str(chain_id),
         )
     assert any("Could not find token" in msg for msg in caplog.messages)
+
+
+def test_verify_challenges(tmp_path, deployer, caplog):
+    ctx = _prepare(tmp_path, deployer)
+    proc = _start_agent(ctx, tmp_path, deployer)
+
+    output = tmp_path / "challenges.json"
+    _initiate(ctx, output, ape.chain.chain_id, ape.chain.chain_id)
+
+    with output.open("rt") as f:
+        data = json.load(f)
+
+    challenges = apischema.deserialize(list[Challenge], data)
+    request_id = challenges[0].request_id.hex()
+
+    while line := proc.stdout.readline():
+        line = line.decode("utf-8")
+        if "state=withdrawn" in line and request_id in line:
+            break
+    proc.kill()
+
+    caplog.clear()
+    caplog.set_level(logging.INFO)
+    _verify(ctx, output)
+    assert any("All challenges verified successfully" in msg for msg in caplog.messages)
+
+
+def test_verify_challenges_not_finalized(tmp_path, deployer, caplog):
+    ctx = _prepare(tmp_path, deployer)
+    proc = _start_agent(ctx, tmp_path, deployer)
+
+    output = tmp_path / "challenges.json"
+    _initiate(ctx, output, ape.chain.chain_id, ape.chain.chain_id)
+    proc.send_signal(9)
+
+    caplog.clear()
+    caplog.set_level(logging.INFO)
+    with pytest.raises(CommandFailed):
+        with freeze_time(datetime.utcnow() - timedelta(minutes=10)):
+            _verify(ctx, output)
+    assert any("Challenge not yet finalized, skipping" in msg for msg in caplog.messages)
+    assert any("Failed to verify all challenges" in msg for msg in caplog.messages)
