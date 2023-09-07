@@ -61,12 +61,15 @@ e2e_test() {
     relayer=$(get_relayer_binary)
     l2_rpc=http://localhost:9545
     password=""
+    resolver=$(jq -r '.base.Resolver.address' ${ARTIFACTS_DIR}/base.deployment.json)
     
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
     echo Sending Proof
     
     e2e_test_op_proof http://localhost:8545 $l2_rpc $KEYFILE $e2e_test_l2_txhash
     echo L1 Resolve
+    
+    export RESOLVER=$resolver
     timeout 1m bash -c "until ${relayer} relay \
                                          --l1-rpc-url http://localhost:8545 \
                                          --l2-relay-to-rpc-url $l2_rpc \
@@ -83,6 +86,7 @@ e2e_test_fallback() {
     relayer=$(get_relayer_binary)
     l2_rpc=http://localhost:9545
     password=""
+    resolver=$(jq -r '.base.Resolver.address' ${ARTIFACTS_DIR}/base.deployment.json)
 
     export SOURCE_CHAIN_ID=123
     e2e_test_fill $ARTIFACTS_DIR $l2_rpc $KEYFILE "${password}"
@@ -91,6 +95,8 @@ e2e_test_fallback() {
     e2e_test_op_proof http://localhost:8545 $l2_rpc $KEYFILE $e2e_test_l2_txhash
     echo L1 Resolve
     sleep 15
+
+    export RESOLVER=$resolver
     # we need this relay call to fail
     if ${relayer} relay \
         --l1-rpc-url http://localhost:8545 \
