@@ -1290,13 +1290,13 @@ test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-x
 
 [[package]]
 name = "eth-ape"
-version = "0.6.17"
+version = "0.6.19"
 description = "Ape Ethereum Framework"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "eth-ape-0.6.17.tar.gz", hash = "sha256:d2baac932909c556681a7d57daab5f8233400199998fa13dac605b849f1328c3"},
-    {file = "eth_ape-0.6.17-py3-none-any.whl", hash = "sha256:1e04fbd625a16207b940b77d054c80705c12a229903373108795b8428c1a4a55"},
+    {file = "eth-ape-0.6.19.tar.gz", hash = "sha256:78001209dfdf8c7973c649b8cbba73d3399cd649aeee4223d0b29078ae997201"},
+    {file = "eth_ape-0.6.19-py3-none-any.whl", hash = "sha256:f6c5137a10edcc2a37a8f8736882e412b2fb3b326d00d8128538e73dc031f89b"},
 ]
 
 [package.dependencies]
@@ -1307,7 +1307,7 @@ eth-account = ">=0.8,<0.9"
 eth-typing = ">=3.4,<4"
 eth-utils = ">=2.2.0,<3"
 ethpm-types = ">=0.5.3,<0.6"
-evm-trace = ">=0.1.0a22"
+evm-trace = ">=0.1.0a23"
 hexbytes = ">=0.2.3,<1"
 ijson = ">=3.1.4,<4"
 importlib-metadata = "*"
@@ -1315,7 +1315,7 @@ ipython = ">=8.5.0,<9"
 lazyasd = ">=0.1.4"
 packaging = ">=23.0,<24"
 pandas = ">=1.3.0,<2"
-pluggy = ">=0.12,<2"
+pluggy = ">=1.3,<2"
 py-geth = ">=3.13.0,<4"
 pydantic = ">=1.10.8,<2"
 PyGithub = ">=1.59,<2"
@@ -1331,9 +1331,9 @@ watchdog = ">=3.0,<4"
 web3 = {version = ">=6.7.0,<7", extras = ["tester"]}
 
 [package.extras]
-dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.7.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.4.1,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
+dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.7.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=6.1.3,<7)", "myst-parser (>=1.0.0,<2)", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)"]
-lint = ["black (>=23.7.0,<24)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.4.1,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
+lint = ["black (>=23.7.0,<24)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
 recommended-plugins = ["ape-alchemy", "ape-ens", "ape-etherscan", "ape-foundry", "ape-hardhat", "ape-infura", "ape-solidity", "ape-template", "ape-tokens", "ape-vyper"]
 release = ["setuptools", "twine (==3.8.0)", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-xdist"]
@@ -1546,13 +1546,13 @@ test = ["PyGithub (>=1.54,<2.0)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsons
 
 [[package]]
 name = "evm-trace"
-version = "0.1.0a22"
+version = "0.1.0a24"
 description = "evm-trace: Ethereum Virtual Machine transaction tracing tool"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "evm-trace-0.1.0a22.tar.gz", hash = "sha256:5a1bc4ba6024b6311b757a130ee2a59741224bdc05186a8f768798cbcf40d6bc"},
-    {file = "evm_trace-0.1.0a22-py3-none-any.whl", hash = "sha256:f4db4ba993289c46d059511f1f4be1cae8452900704d8581b0b83f0bbd9624d1"},
+    {file = "evm-trace-0.1.0a24.tar.gz", hash = "sha256:0bc0cee185807b8e950d3d3009e5e8680e252054e11611694d632416c8b9d96a"},
+    {file = "evm_trace-0.1.0a24-py3-none-any.whl", hash = "sha256:34fbdfdef480066602d8dd8334fd72c6c7dab3d272c1371b7842bc2199918124"},
 ]
 
 [package.dependencies]
@@ -1563,8 +1563,8 @@ py-evm = ">=0.7.0a3,<0.8"
 pydantic = ">=1.10.1,<2"
 
 [package.extras]
-dev = ["IPython", "black (>=23.3.0,<24)", "commitizen", "eth-hash[pysha3]", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "twine", "types-setuptools", "wheel"]
-lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-setuptools"]
+dev = ["IPython", "black (>=23.7.0,<24)", "commitizen", "eth-hash[pysha3]", "flake8 (>=6.1.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.4.1,<2)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "twine", "types-setuptools", "wheel"]
+lint = ["black (>=23.7.0,<24)", "flake8 (>=6.1.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.4.1,<2)", "types-setuptools"]
 release = ["setuptools", "twine", "wheel"]
 test = ["eth-hash[pysha3]", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
 
@@ -2769,13 +2769,13 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-co
 
 [[package]]
 name = "pluggy"
-version = "1.2.0"
+version = "1.3.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849"},
-    {file = "pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"},
+    {file = "pluggy-1.3.0-py3-none-any.whl", hash = "sha256:d89c696a773f8bd377d18e5ecda92b7a3793cbe66c87060a6fb58c7b6e1061f7"},
+    {file = "pluggy-1.3.0.tar.gz", hash = "sha256:cf61ae8f126ac6f7c451172cf30e3e43d3ca77615509771b3a984a0730651e12"},
 ]
 
 [package.extras]
@@ -4754,4 +4754,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "9b97554411a56fb6e0ee579aecb9e50b04e295d812387e00a8ed8f7c6b7e5c0d"
+content-hash = "68d6da7e4734728329df821575293e53dbc32622737bf92cb737f982c941bdb9"
