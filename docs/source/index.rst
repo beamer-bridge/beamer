@@ -4,14 +4,14 @@ Beamer Bridge documentation
 
 Welcome! This is the official documentation for Beamer Bridge.
 
-Beamer is a bridging protocol lets you transfer your ERC20 tokens between supported L2 chains and 
+Beamer is a bridging protocol lets you transfer your ERC20 tokens between supported L2 chains and
 it also supports bridging to L1.
 
 Why Beamer?
 -----------
 
 * *Secure*: We don't use any liquidity pool or smart contract to deposit the liquidity. This effectively reduces to get hacked.
-* *Seamless*: Our `app <https://app.beamerbridge.com/>`_ is user-friendly and easy to use. 
+* *Seamless*: Our `app <https://app.beamerbridge.com/>`_ is user-friendly and easy to use.
 * *Fast*: Transfers are the fastest. You can check our speed comparison `here <https://twitter.com/BeamerBridge/status/1603043379331620865?s=20>`_.
 
 The Beamer Protocol

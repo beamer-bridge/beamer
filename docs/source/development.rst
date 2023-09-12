@@ -60,8 +60,8 @@ it is only being invoked by the contract event monitor, which runs inside a thre
 the entire agent. Therefore, even if a JSON-RPC server is very slow or the connection is otherwise
 unreliable, the agent as a whole will remain responsive.
 
-With the current implementation, we have an event monitor for every L2 chain, and each event monitor 
-has its own event fetcher, as can be seen in the figure above. Each pair ``(EventFetcher, EventMonitor)`` 
+With the current implementation, we have an event monitor for every L2 chain, and each event monitor
+has its own event fetcher, as can be seen in the figure above. Each pair ``(EventFetcher, EventMonitor)``
 works independently of the other, allowing for very different speeds between the L2 chains.
 
 
@@ -69,7 +69,7 @@ EventProcessor
 ~~~~~~~~~~~~~~
 
 ``EventProcessor`` implements the Beamer protocol logic. It receives events from event monitors and
-stores them into a list. Events are filtered by source and target chains and are stored in 
+stores them into a list. Events are filtered by source and target chains and are stored in
 a single list, in the order they arrived.
 
 .. note::
@@ -152,7 +152,7 @@ If an agent is not participating in a claim, that claim will transition into the
 Unsafe Fill Time
 ~~~~~~~~~~~~~~~~
 
-In order to lower the risk of filling a request that is too close to expiration, an agent has a notion of 
+In order to lower the risk of filling a request that is too close to expiration, an agent has a notion of
 `unsafe fill time`. This is the time window, expressed in seconds, before request expiration that the agent
 considers unsafe for doing a fill. Once an unfilled request enters the unsafe fill time, the agent will
 simply ignore the request.
@@ -164,7 +164,7 @@ option ``unsafe-fill-time``.
    :align: center
    :caption: Unsafe fill time
 
-In the graph, T1 is representing the request creation time, T2 is calculated using ``unsafe-fill-time`` 
+In the graph, T1 is representing the request creation time, T2 is calculated using ``unsafe-fill-time``
 option, and T3 is the request expiration.
 
 If unsafe time increases, T2 moves to left, so the agent will fill fewer requests.
