@@ -4,7 +4,7 @@
 Reference Documentation
 =======================
 
-Cross-chain message relayer
+Cross-chain Message Relayer
 ---------------------------
 
 This component is responsible for handling the cross-chain contract state updates. 
@@ -27,7 +27,7 @@ Typically, that is done by invoking the relayer at an appropriate moment, i.e. w
 
 For instructions on how to setup, compile and run the relayer, make sure you take a look at the `/relayer/README.md` file.
 
-Command reference
+Command Reference
 ~~~~~~~~~~~~~~~~~
 
 The relayer CLI currently supports the following commands:
@@ -116,8 +116,8 @@ The finality period starts only after the message was proven on L2.
 
 .. _reference-commandline:
 
-beamer Commandline Reference
-----------------------------
+beamer Command Reference
+------------------------
 
 The Beamer software currently supports these commands:
 
