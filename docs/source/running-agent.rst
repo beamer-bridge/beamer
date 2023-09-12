@@ -10,7 +10,7 @@ Prerequisites
 -------------
 
 There are two ways to run a Beamer agent: via :ref:`a container image <agent-container>`
-and :ref:`directly from source <agent-from-source>`.  
+and :ref:`directly from source <agent-from-source>`.
 
 .. _running-agent-configuration:
 
@@ -73,7 +73,7 @@ An example configuration::
     ]
 
 In addition to the configuration file, one can specify command-line options which then
-override settings from the configuration file. Details on available options can be found 
+override settings from the configuration file. Details on available options can be found
 in the :ref:`command-agent` command reference.
 
 
@@ -88,7 +88,7 @@ Chains
 ~~~~~~
 
 Chains can be defined via the command-line options or configuration file, or
-both. 
+both.
 
 
 Tokens
@@ -140,8 +140,8 @@ on chain with ID ``22`` has address ``0xAcF5e964b76773166F69d6E53C1f7A9114a8E01D
 Configuring the Health Check
 ----------------------------
 
-The :ref:`command-health-check` command is configured by a TOML configuration file 
-which is specified by the ``-c``/``--config`` option. 
+The :ref:`command-health-check` command is configured by a TOML configuration file
+which is specified by the ``-c``/``--config`` option.
 
 An example configuration::
 
@@ -197,11 +197,11 @@ If ``notification-system`` is set to ``telegram`` provide the following keys:
 * ``notification.telegram.token``: The Telegram bot token
 * ``notification.telegram.chat-id``: The Telegram chat id
 
-To get a Telegram bot token, you need to contact the `@BotFather <https://t.me/BotFather>`_ on Telegram and first create a 
+To get a Telegram bot token, you need to contact the `@BotFather <https://t.me/BotFather>`_ on Telegram and first create a
 bot that will receive the notifications. When in chat with the BotFather, type ``/newbot`` and follow the instructions. Once
 you've created the bot, the BotFather will give you a token. Copy that token and add it to the ``notification.telegram.token``.
 
-Now, start a chat with the bot you just created and send a message to it. After that forward that message to the @myidbot. 
+Now, start a chat with the bot you just created and send a message to it. After that forward that message to the @myidbot.
 The myidbot will reply with your chat-id. Copy that id and add it to the ``notification.telegram.chat-id`` key.
 
 That's it! Now you should have all the keys necessary to send notifications to Telegram.

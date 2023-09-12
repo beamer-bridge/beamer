@@ -7,22 +7,22 @@ Reference Documentation
 Cross-chain Message Relayer
 ---------------------------
 
-This component is responsible for handling the cross-chain contract state updates. 
+This component is responsible for handling the cross-chain contract state updates.
 
-It is mainly used by the Agent software when resolving requests as a result of a running challenge game 
+It is mainly used by the Agent software when resolving requests as a result of a running challenge game
 or for sending fill invalidation messages (L1 resolutions). However, it can also be used manually by running
 the CLI commands.
-If you haven't read about the role of :ref:`contracts-l1-resolution` in Beamer, make sure you get familiar 
+If you haven't read about the role of :ref:`contracts-l1-resolution` in Beamer, make sure you get familiar
 with this concept first.
 
 Every **request fill** action creates a **proof** on the request destination chain.
 Since these proofs are created on a different chain than the chain where the requests originated from,
-we need a way to transport these proofs from one chain to another in order to be able 
+we need a way to transport these proofs from one chain to another in order to be able
 to prove that a certain state is correct. This is where the cross-chain relayer comes into play.
 
-The agent utilizes these proofs if and when needed. 
+The agent utilizes these proofs if and when needed.
 In normal operation, agent's claims will not be challenged so the fill proofs are not needed, therefore the agent will not invoke the relayer.
-However, if a challenge game occurs, the agent has to make use of the proof to ensure it wins the game. 
+However, if a challenge game occurs, the agent has to make use of the proof to ensure it wins the game.
 Typically, that is done by invoking the relayer at an appropriate moment, i.e. when the proof becomes available for execution on Ethereum L1.
 
 For instructions on how to setup, compile and run the relayer, make sure you take a look at the `/relayer/README.md` file.
@@ -34,7 +34,7 @@ The relayer CLI currently supports the following commands:
 
 
 * :ref:`command-relay` relays a fill proof or a fill invalidation message from chain A to chain B.
-* | :ref:`command-prove-op-message` proves on L1 that a message exists on L2. 
+* | :ref:`command-prove-op-message` proves on L1 that a message exists on L2.
   | Used only for messages traveling from chains that are based on the *Optimism Bedrock* stack.
 
 
@@ -51,7 +51,7 @@ the :ref:`command-prove-op-message` command, for the same message that needs to 
 .. list-table::
    :header-rows: 1
 
-   * - Command-line option 
+   * - Command-line option
      - Description
 
    * - ``--l1-rpc-url URL``
@@ -92,7 +92,7 @@ The finality period starts only after the message was proven on L2.
 .. list-table::
    :header-rows: 1
 
-   * - Command-line option 
+   * - Command-line option
      - Description
 
    * - ``--l1-rpc-url URL``
@@ -185,10 +185,10 @@ The Beamer software currently supports these commands:
        Example::
 
          --chain foo=http://foo.bar:8545
-    
+
    * - ``--poll-period``
-     - Time in seconds which is waited before new events are fetched from the chains after 
-       the last fetch. If a value for a specific chain is provided in the config file, it 
+     - Time in seconds which is waited before new events are fetched from the chains after
+       the last fetch. If a value for a specific chain is provided in the config file, it
        takes precedence for this chain. Default: ``5.0``.
 
 
@@ -259,21 +259,21 @@ the desired configuration.
 ``beamer health``
 ~~~~~~~~~~~~~~~~~
 
-The ``health-check`` command scans the contracts for the emitted events and 
-analyzes whether there is a missed fill, unclaimed transaction or a challenge 
-game going on. In addition to this, if an ``agent-address`` is provided in the config 
-file, the final notification will also include the liquidity on all chains for all the 
-tokens specified inside the configuration file for the provided agent address. The 
+The ``health-check`` command scans the contracts for the emitted events and
+analyzes whether there is a missed fill, unclaimed transaction or a challenge
+game going on. In addition to this, if an ``agent-address`` is provided in the config
+file, the final notification will also include the liquidity on all chains for all the
+tokens specified inside the configuration file for the provided agent address. The
 command will notify the user by sending everything either to Telegram or RocketChat.
 
 .. list-table::
    :header-rows: 1
 
-   * - Command-line option 
+   * - Command-line option
      - Description
 
    * - ``--config PATH``
-     - Path to the config file with chains configuration. 
+     - Path to the config file with chains configuration.
        See :ref:`config-health-check` for available options.
 
    * - ``--log-level LEVEL``
@@ -376,7 +376,7 @@ successful invalidation.
 The command creates a transfer from each ``REQUEST_CHAIN`` to ``FILL_CHAIN``
 and challenges agent's claims on those transfers so that the agent is forced to
 prove its fills on L1. There must be at least one ``REQUEST_CHAIN``, but also
-multiple ones can be specified. 
+multiple ones can be specified.
 
 If the output file (specified via the ``--output`` option) already contains
 challenges for a particular (source, target) pair, the command will perform
@@ -624,7 +624,7 @@ Health-check configuration file
 
    * - ::
 
-        
+
         [notification.rocketchat]
         url = URL
 
@@ -632,7 +632,7 @@ Health-check configuration file
 
    * - ::
 
-        
+
         [notification.rocketchat]
         channel = NAME
 
@@ -640,7 +640,7 @@ Health-check configuration file
 
    * - ::
 
-        
+
         [notification.telegram]
         token = TOKEN
 
@@ -648,7 +648,7 @@ Health-check configuration file
 
    * - ::
 
-        
+
         [notification.telegram]
         chat-id = ID
 
@@ -656,7 +656,7 @@ Health-check configuration file
 
    * - ::
 
-        
+
         [notification.SYSTEM]
         request-throttling-in-sec = TIME
 
@@ -679,7 +679,7 @@ Health-check configuration file
         explorer = URL
 
      - Specifies the transaction URL path of a block explorer for the chain NAME.
-   
+
    * - ::
 
         [chains.NAME]
@@ -700,7 +700,7 @@ Health-check configuration file
 
 .. _reference-contract-parameters:
 
-Contracts API Reference 
+Contracts API Reference
 -----------------------
 
 .. autosolcontract:: FillManager
