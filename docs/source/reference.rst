@@ -625,7 +625,7 @@ Health-check configuration file
 .. _command-relay:
 
 ``relay``
-"""""""""
+~~~~~~~~~
 
 The ``relay`` command takes care of relaying a message from one chain to another (end-to-end).
 In cases where a message needs to be relayed from an "Optimism Bedrock"-like chain, then one first needs to run
