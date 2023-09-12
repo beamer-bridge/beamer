@@ -19,3 +19,4 @@ node_modules
 contracts/contracts/.cache
 contracts/.build/
 /deployments-npm-package/git-commit-version.txt
+docs/source/contracts-addresses.rst
