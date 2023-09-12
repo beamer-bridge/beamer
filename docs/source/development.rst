@@ -271,3 +271,127 @@ Also, agent releases are numbered in line with the deployment branch name.
 **Any contract changes committed to the main branch cause the current deployment branch
 to diverge from main.**
 At this point, the deployment branch stops following ``main`` and PRs are required.
+
+
+Testing a new deployment
+------------------------
+
+After deploying Beamer to a chain, it is critical to check the new deployment
+to make sure that not only the contracts work correctly, but also that the
+agent software works with the new deployment. To that end, there are two kinds
+of checks that need to be performed: L1 invalidations and challenges.
+
+L1 invalidations
+~~~~~~~~~~~~~~~~
+
+Checking whether L1 invalidations work correctly is done as follows:.
+
+#. Let ``X1``, ``X2``,... ``Xn`` be IDs of all chains that are supported by Beamer.
+   Also assume that one of those, ``C``, is the ID of the chain you just deployed to.
+
+   First, arrange for invalidations to be sent from ``C`` to all chains::
+
+     beamer check initiate-l1-invalidations --output invalidations.json C X1 X2 X3 ... Xn
+
+   Note that this command will issue multiple invalidations, by default one for
+   each chain pair ``(C, Xi)``.
+
+   Then, arrange for invalidations to be sent from each chain ``Xi`` to ``C``::
+
+     for x in X1 X2 ... Xn; do
+       beamer check initiate-l1-invalidations --output invalidations.json $x C
+     done
+
+   This is to make sure that the other direction also works.
+   Note that we use the same file, ``invalidations.json`` to collect all invalidations,
+   regardless of the directions.
+
+#. Verify invalidations::
+
+     beamer check verify-l1-invalidations invalidations.json
+
+   This will verify all invalidations from ``invalidations.json``. Due to the
+   fact that different chains may have different finalization periods, it is
+   possible that some invalidations succeed while others fail. This is expected
+   and you should be able to re-run the command later to check again. Once the
+   finalization period is over for every invalidation, the command should
+   successfully verify all of them. Typically, after a week all invalidations
+   should be finalized.
+
+
+Challenges
+~~~~~~~~~~
+
+Checking whether challenges are working correctly follows the same pattern
+as L1 invalidation checks, however, it is a bit more involved because an
+agent needs to be configured and running on all involved chains.
+
+The procedure is as follows:
+
+#. Let ``X1``, ``X2``,... ``Xn`` be IDs of all chains that are supported by Beamer.
+   Also assume that one of those, ``C``, is the ID of the chain you just deployed to.
+
+   First, make sure to have a deployed test token on each chain.
+
+.. note:: The test token `must` be an ERC20 token.
+
+   In general, it's easiest to just deploy ``MintableToken`` when deploying Beamer
+   (see ``--deploy-mintable-token`` option of the ``beamer deploy`` command).
+
+   From this point on, we will assume that ``MintableToken`` (``TST``) will be used.
+
+#. Make sure the test token is configured in the ``RequestManager`` contract on each chain.
+   This is done by calling ``RequestManager.updateToken()`` with the test token's address,
+   transfer limit that is greater than zero and ``ethInToken = 0``.
+
+#. Configure and start a single agent instance that monitors all ``X1`` ... ``Xn`` chains.
+   The test token address needs to be configured properly on each chain in the agent
+   configuration file and the agent needs to be whitelisted on all chains.
+
+.. note:: Make sure that the agent version you are going to use ships with a relayer
+   that is aware of all the chains, including the one you just deployed to.
+
+#. Fund the agent on each chain. This means that, on each chain, the agent needs to
+   have:
+
+   * at least 1 wei of the test token
+   * at least ``requestManager.claimStake()`` wei of ETH, for making a claim
+   * some smaller amount of ETH for transaction gas costs
+
+#. Fund the challenger on each chain. The next step will involve challenging
+   the agent with enough stake (0.1 ETH) to force L1 resolution. Therefore, on each
+   chain, the challenger needs to have:
+
+   * at least 0.1 ETH for the challenge stake
+   * some smaller amount of ETH for transaction gas costs
+
+#. Initiate a challenge game on each chain, with ``C`` as the fill chain (make sure to
+   use the funded challenger account when specifying the ``--keystore-file`` option)::
+
+     beamer check initiate-challenges --token TST --output challenges.json C X1 X2 X3 ... Xn
+
+   For each chain pair ``(C, Xi)``, this command will make a transfer request of ``TST`` 1 wei
+   from ``Xi`` to ``C``. It will wait for the agent to fill on ``C`` and then claim the request
+   on ``Xi``. Once the agent makes its claim on ``Xi``, the command will issue a challenge.
+
+   Then, initiate a challenge game on each chain, with ``C`` now being the source chain::
+
+     for x in X1 X2 ... Xn; do
+       beamer check initiate-challenges --token TST --output challenges.json $x C
+     done
+
+   This is to make sure that the other direction also works.
+   Note that we use the same file, ``challenges.json`` to collect all challenges,
+   regardless of the directions.
+
+#. Verify challenges::
+
+     beamer check verify-challenges challenges.json
+
+   This will verify all challenges from ``challenges.json``. Due to the fact
+   that different chains may have different finalization periods, it is
+   possible that some challenges succeed while others fail. This is expected
+   and you should be able to re-run the command later to check again. Once the
+   finalization period is over for every challenge, the command should
+   successfully verify all of them. Typically, after a week all challenge
+   games' results should be finalized.
