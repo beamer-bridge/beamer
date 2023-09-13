@@ -1,42 +1,52 @@
 {
   "mainnet": {
     "RequestManager": {
-      "address": "0x7faEa6562a6cE991149F0167baF283E9aAc7Dc50",
-      "startBlock": 16946579
+      "address": "0x4809091ee2a26d4e79776c8267666e971f786C5C",
+      "startBlock": 17913937
     },
     "FillManager": {
-      "address": "0xD5EF34B499b6d64817CC70C3b0B8D9f807F06C29",
-      "startBlock": 16946583
+      "address": "0xd300e93FE7A4dC6c4FBFBD7a954EFeFBDacbb83F",
+      "startBlock": 17913940
     }
   },
   "optimism": {
     "RequestManager": {
-      "address": "0x124198789EF8d82050E620De2b73332C3c6C2eD4",
-      "startBlock": 85123605
+      "address": "0x1c7dfaa422CACaA5b368fE22dB84B8329cf88e12",
+      "startBlock": 108213849
     },
     "FillManager": {
-      "address": "0x889aa3c5b5298d70613373F25Ef66Fede25B4de1",
-      "startBlock": 85123654
+      "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+      "startBlock": 108213856
     }
   },
   "arbitrum": {
     "RequestManager": {
-      "address": "0x13bAF73f48FCF6A8aAb8431CA3A38c624cdfd8F3",
-      "startBlock": 75564388
+      "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+      "startBlock": 121351107
     },
     "FillManager": {
-      "address": "0x27f72B9745CDE0fbAFe0A0d1119D75f4082bFc47",
-      "startBlock": 75564424
+      "address": "0xeF169821403D13345E2b24450601567Cd1d781A7",
+      "startBlock": 121351146
     }
   },
   "polygon-zkevm": {
     "RequestManager": {
-      "address": "0xa6FAEEE4DF263CaB9be09B747f4Be760940c884A",
-        "startBlock": 578936
+      "address": "0xc2f48bC4D8A42B82F801315696a92141f6F3413f",
+      "startBlock": 4463667
     },
     "FillManager": {
-      "address": "0x21F359D1869314175d84A18A6F5DEb94672C4996",
-        "startBlock": 578946
+      "address": "0xeF169821403D13345E2b24450601567Cd1d781A7",
+      "startBlock": 4463703
+    }
+  },
+  "base": {
+    "RequestManager": {
+      "address": "0x1c7dfaa422CACaA5b368fE22dB84B8329cf88e12",
+      "startBlock": 2618918
+    },
+    "FillManager": {
+      "address": "0x9208242FC2148A21737d73de036C6A5B1e934dB5",
+      "startBlock": 2618928
     }
   }
 }
