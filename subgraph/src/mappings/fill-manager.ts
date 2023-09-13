@@ -22,7 +22,6 @@ export function handleRequestFilled(event: RequestFilledEvent): void {
   fill.contractAddress = event.address
   const receipt = event.receipt
 
-  // console.log('no receipt')
   if (receipt) {
     for (let index = 0; index < receipt.logs.length; index++) {
       const _topic0 = receipt.logs[index].topics[0]
