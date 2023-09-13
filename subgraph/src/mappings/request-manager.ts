@@ -38,6 +38,9 @@ export function handleClaimMade(event: ClaimMade): void {
       request.activeClaims = request.activeClaims.plus(BigInt.fromI32(1));
     }
     request.save();
+  } else {
+    // save the claim, event if we for some reason can't find a request for it
+    claim.save();
   }
 }
 
@@ -130,7 +133,7 @@ export function handleRequestResolved(event: RequestResolved): void {
   const request = Request.load(event.params.requestId);
 
   if (request) {
-    const invalidFills = request.invalidFills ? request.invalidFills : [];
+    const invalidFills = request.invalidFills ?? [];
 
     for (let i = 0; i < invalidFills.length; i++) {
       const fillState = FillState.load(invalidFills[i]);
