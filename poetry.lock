@@ -317,13 +317,13 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdi
 
 [[package]]
 name = "ape-solidity"
-version = "0.6.8"
+version = "0.6.9"
 description = "Plugin for Ape Ethereum Framework for compiling Solidity contracts"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-solidity-0.6.8.tar.gz", hash = "sha256:aaf28e01f4dd366551f5e8c3624ca1c9612ef7afc2980a226cf9d098321c8e07"},
-    {file = "ape_solidity-0.6.8-py3-none-any.whl", hash = "sha256:f192cfb06836b57ac9b12dda59cac5f4463de62c3fb054774e9e5104b2e8b714"},
+    {file = "ape-solidity-0.6.9.tar.gz", hash = "sha256:c923809f4f3542e86b18cbeb325b08800461b4af38366a8950d26afc15431e35"},
+    {file = "ape_solidity-0.6.9-py3-none-any.whl", hash = "sha256:ccd58558fad2a0003d1e0c026b8bfb5e35ec1600aa06ba2c2260daa5c64a2299"},
 ]
 
 [package.dependencies]
@@ -334,11 +334,11 @@ py-solc-x = ">=1.1.0,<2"
 requests = "*"
 
 [package.extras]
-dev = ["IPython", "Sphinx (>=3.4.3,<4)", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine (==3.8)", "types-pkg-resources", "types-requests", "types-setuptools", "wheel"]
+dev = ["IPython", "Sphinx (>=3.4.3,<4)", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine (==3.8)", "types-pkg-resources", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=3.4.3,<4)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
 lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-pkg-resources", "types-requests", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine (==3.8)", "wheel"]
-test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
+test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-mock", "pytest-xdist"]
 
 [[package]]
 name = "apischema"
@@ -4779,4 +4779,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "da6726e42ae5dc6f207c585dbf374475a19f57de94ff0aa7c937eccfebfdd02c"
+content-hash = "2e404833709b38b516b93a616c1042837e67b39fe01c014ce567b2085add638a"
