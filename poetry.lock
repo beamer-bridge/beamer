@@ -1282,13 +1282,13 @@ test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-x
 
 [[package]]
 name = "eth-ape"
-version = "0.6.19"
+version = "0.6.20"
 description = "Ape Ethereum Framework"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "eth-ape-0.6.19.tar.gz", hash = "sha256:78001209dfdf8c7973c649b8cbba73d3399cd649aeee4223d0b29078ae997201"},
-    {file = "eth_ape-0.6.19-py3-none-any.whl", hash = "sha256:f6c5137a10edcc2a37a8f8736882e412b2fb3b326d00d8128538e73dc031f89b"},
+    {file = "eth-ape-0.6.20.tar.gz", hash = "sha256:33bf7fc278b2d03254acf8fc7d2073db22410de4e71db5e5d292d41a36b7e419"},
+    {file = "eth_ape-0.6.20-py3-none-any.whl", hash = "sha256:16d53ba2d30a6c680e18dfda7c36b8aef3473c33cdd1a55adf0e9648bf267def"},
 ]
 
 [package.dependencies]
@@ -1298,7 +1298,7 @@ eth-abi = ">=4.1.0,<5"
 eth-account = ">=0.8,<0.9"
 eth-typing = ">=3.4,<4"
 eth-utils = ">=2.2.0,<3"
-ethpm-types = ">=0.5.3,<0.6"
+ethpm-types = ">=0.5.6,<0.6"
 evm-trace = ">=0.1.0a23"
 hexbytes = ">=0.2.3,<1"
 ijson = ">=3.1.4,<4"
@@ -1319,13 +1319,14 @@ rich = ">=12.5.1,<13"
 SQLAlchemy = ">=1.4.35"
 tqdm = ">=4.62.3,<5.0"
 traitlets = ">=5.3.0"
+urllib3 = ">=1.26.16,<2"
 watchdog = ">=3.0,<4"
 web3 = {version = ">=6.7.0,<7", extras = ["tester"]}
 
 [package.extras]
-dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.7.0,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
+dev = ["Sphinx (>=6.1.3,<7)", "black (>=23.9.1,<24)", "commitizen (>=2.40,<2.41)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "myst-parser (>=1.0.0,<2)", "pandas-stubs (==1.2.0.62)", "pre-commit", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-watch", "pytest-xdist", "setuptools", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)", "twine (==3.8.0)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools", "wheel"]
 doc = ["Sphinx (>=6.1.3,<7)", "myst-parser (>=1.0.0,<2)", "sphinx-click (>=4.4.0,<5)", "sphinx-plausible (>=0.1.2,<0.2)", "sphinx-rtd-theme (>=1.2.0,<2)", "sphinxcontrib-napoleon (>=0.7)"]
-lint = ["black (>=23.7.0,<24)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
+lint = ["black (>=23.9.1,<24)", "flake8 (>=6.1.0,<7)", "flake8-breakpoint (>=1.1.0,<2)", "flake8-print (>=4.0.1,<5)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mdformat-pyproject (>=0.0.1)", "mypy (>=1.5.1,<2)", "pandas-stubs (==1.2.0.62)", "types-PyYAML", "types-SQLAlchemy (>=1.4.49)", "types-requests", "types-setuptools"]
 recommended-plugins = ["ape-alchemy", "ape-ens", "ape-etherscan", "ape-foundry", "ape-hardhat", "ape-infura", "ape-solidity", "ape-template", "ape-tokens", "ape-vyper"]
 release = ["setuptools", "twine (==3.8.0)", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "hypothesis-jsonschema (==0.19.0)", "pytest-cov (>=4.0.0,<5)", "pytest-mock", "pytest-xdist"]
@@ -4378,20 +4379,19 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "2.0.4"
+version = "1.26.16"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 files = [
-    {file = "urllib3-2.0.4-py3-none-any.whl", hash = "sha256:de7df1803967d2c2a98e4b11bb7d6bd9210474c46e8a0401514e3a42a75ebde4"},
-    {file = "urllib3-2.0.4.tar.gz", hash = "sha256:8d22f86aae8ef5e410d4f539fde9ce6b2113a001bb4d189e0aed70642d602b11"},
+    {file = "urllib3-1.26.16-py2.py3-none-any.whl", hash = "sha256:8d36afa7616d8ab714608411b4a3b13e58f463aee519024578e062e141dce20f"},
+    {file = "urllib3-1.26.16.tar.gz", hash = "sha256:8f135f6502756bde6b2a9b28989df5fbe87c9970cecaa69041edcce7f0589b14"},
 ]
 
 [package.extras]
-brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)"]
-secure = ["certifi", "cryptography (>=1.9)", "idna (>=2.0.0)", "pyopenssl (>=17.1.0)", "urllib3-secure-extra"]
-socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
-zstd = ["zstandard (>=0.18.0)"]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
+secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)", "urllib3-secure-extra"]
+socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "varint"
@@ -4779,4 +4779,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "e8b385beb6f194a37e5b37a9fe0144062c32b1e2a370f670273e4b84078a239a"
+content-hash = "dbff23deb38f2eabc7a45e6d28ab70731ebd9793ea64a3c9281d4ab6f8740b5c"
