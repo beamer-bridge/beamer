@@ -4665,13 +4665,13 @@ files = [
 
 [[package]]
 name = "xdg-base-dirs"
-version = "6.0.0"
+version = "6.0.1"
 description = "Variables defined by the XDG Base Directory Specification"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "xdg_base_dirs-6.0.0-py3-none-any.whl", hash = "sha256:71b878d3b6c80923a8ddd7c4fb25f9f694c6796aa79214c3fe32dd49a13dcc82"},
-    {file = "xdg_base_dirs-6.0.0.tar.gz", hash = "sha256:3bc8813e260a78acba2f718b48eb00b5ff82bd9f02688b54b9e4ccd8a65d42cc"},
+    {file = "xdg_base_dirs-6.0.1-py3-none-any.whl", hash = "sha256:63f6ebc1721ced2e86c340856e004ef829501a30a37e17079c52cfaf0e1741b9"},
+    {file = "xdg_base_dirs-6.0.1.tar.gz", hash = "sha256:b4c8f4ba72d1286018b25eea374ec6fbf4fddda3d4137edf50de95de53e195a6"},
 ]
 
 [[package]]
@@ -4779,4 +4779,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "92396845d75289118911e9482fa5b379f96af9cc9eb4fda4c26fa680b12eb936"
+content-hash = "e8b385beb6f194a37e5b37a9fe0144062c32b1e2a370f670273e4b84078a239a"

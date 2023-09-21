@@ -20,7 +20,7 @@ lru-dict = "^1.2.0"
 toml = "^0.10.2"
 atomics = "^1.0.2"
 apischema = "^0.18.0"
-xdg-base-dirs = "^6.0.0"
+xdg-base-dirs = "^6.0.1"
 typing-extensions = "^4.8.0"
 
 [tool.poetry.dev-dependencies]
