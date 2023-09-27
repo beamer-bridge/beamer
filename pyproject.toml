@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "beamer"
-version = "3.0.0"
+version = "3.0.1"
 description = "Bridging rollups with L1 guaranteed security"
 authors = ["Beamer Bridge Team <contact@beamerbridge.com>"]
 license = "MIT"

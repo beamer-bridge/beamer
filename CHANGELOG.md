@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.1 (2023-09-27)
+
+* frontend: use v3 contracts
+* frontend: filter out unsupported destination tokens
+* beamer: check: add new command `verify-l1-invalidations`
+* beamer: check: add new command `initiate-challenges`
+* beamer: check: add new command `verify-challenges`
+* relayer: add a README.md and documentation
+* relayer: wait until message has arrived on the destination RequestManager
+* docs: improve documentation structure
+* docs: document how to run L1 invalidation and challenge checks
+
 ## v3.0.0 (2023-08-23)
 
 * agent: output exception reason from relayer
