@@ -9,7 +9,7 @@ from pathlib import Path
 import ape
 import apischema
 import pytest
-from eth_typing import ChecksumAddress
+from ape.api.accounts import TestAccountAPI
 from freezegun import freeze_time
 
 import beamer.check.commands
@@ -27,7 +27,7 @@ from beamer.tests.util import (
 
 @dataclass
 class _Context:
-    challenger: ChecksumAddress
+    challenger: TestAccountAPI
     challenger_keystore_file: Path
     deployment: Deployment
     artifacts_dir: Path
