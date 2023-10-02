@@ -124,6 +124,8 @@ The Beamer software currently supports these commands:
 * :ref:`command-agent` allows to run a Beamer agent.
 * :ref:`command-config-read` reads contract configuration from the chain.
 * :ref:`command-config-write` writes contract configuration to the chain.
+* :ref:`command-deploy-base` deploys the ``Resolver`` contract on the base chain.
+* :ref:`command-deploy` deploys Beamer contracts on the specified L2 chains.
 * :ref:`command-health-check` analyzes the Beamer protocol and agent activity.
 * :ref:`command-check-initiate-l1-invalidations` issues L1 invalidations.
 * :ref:`command-check-verify-l1-invalidations` verifies L1 invalidations.
@@ -252,6 +254,91 @@ the desired configuration.
 
    * - ``--password TEXT``
      - The password needed to unlock the keystore file.
+
+
+.. _command-deploy-base:
+
+``beamer deploy-base``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``beamer deploy-base [OPTIONS] CHAIN_ID``
+
+The command reads contract ABI information and deploys the ``Resolver`` contract
+on the base (L1) chain specified by ``CHAIN_ID``.
+The resulting artifact will be stored as ``base.deployment.json`` under the specified
+``artifacts-dir``.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory to store deployment artifact files to.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
+
+   * - ``--commit-check BOOL``
+     - Whether to ensure that the HEAD commit is present on the remote. Default: ``yes``.
+
+
+.. _command-deploy:
+
+``beamer deploy``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``beamer deploy [OPTIONS] CHAIN_ID...``
+
+For each given ``CHAIN_ID``, this command deploys L2 Beamer contracts and sets up
+the trusted call chain that includes the previously deployed ``Resolver`` contract.
+
+.. note::
+   When doing a completely new deployment, it is mandatory to run ``deploy-base`` first
+   in order to deploy the ``Resolver`` contract and prepare the L1 information necessary
+   for this command (``base.deployment.json``).
+
+   For partial deployments, such as adding support for a new L2 chain, or updating an
+   existing L2 chain, running ``deploy-base`` is not necessary since this command is
+   simply going to reuse existing L1 deployment information.
+
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command-line option
+     - Description
+
+   * - ``--abi-dir DIR``
+     - The directory containing contract ABI files.
+
+   * - ``--artifacts-dir DIR``
+     - The directory to store deployment artifact files to.
+
+   * - ``--rpc-file``
+     - Path to the JSON file containing RPC information.
+
+   * - ``--keystore-file PATH``
+     - Path to the keystore file.
+
+   * - ``--password TEXT``
+     - The password needed to unlock the keystore file.
+
+   * - ``--commit-check BOOL``
+     - Whether to ensure that the HEAD commit is present on the remote. Default: ``yes``.
+
+   * - ``--deploy-mintable-token BOOL``
+     - Whether to deploy a test ERC20 token contract on each chain. Default: ``no``.
 
 
 .. _command-health-check:
