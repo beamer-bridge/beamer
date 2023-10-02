@@ -273,6 +273,111 @@ to diverge from main.**
 At this point, the deployment branch stops following ``main`` and PRs are required.
 
 
+Making a new contract deployment
+--------------------------------
+
+This section describes how to perform a completely new Beamer deployment, on mainnet.
+For testnet deployments, instructions below can be trivially adjusted.
+
+#. First, make an ``rpc.json`` file that specifies RPC URLs for each chain
+   you are going to deploy on, e.g.::
+
+    {
+        "1": "https://eth.drpc.org",
+        "10": "https://optimism.drpc.org",
+        "1101": "https://polygon-zkevm.drpc.org",
+        "42161": "https://arbitrum.drpc.org"
+    }
+
+   (this example is using public DRPC endpoints)
+
+#. In the root of the ``beamer-bridge`` repository, enter the development environment::
+
+    poetry shell
+
+#. Compile contracts::
+
+    ape compile
+
+#. Prepare a directory to store new deployment artifacts::
+
+    mkdir new-deployment
+
+#. Deploy the ``Resolver`` contract on L1 (Ethereum)::
+
+    beamer deploy-base \
+         --keystore-file $keyfile \
+         --password $password \
+         --abi-dir contracts/.build \
+         --artifacts-dir new-deployment \
+         --rpc-file rpc.json \
+         1
+
+
+   (substitute ``$keyfile`` and ``$password`` with the path to your keystore file and password, respectively)
+
+#. Deploy Beamer on all L2 chains specified under ``deployments/config/mainnet``::
+
+    beamer deploy \
+         --keystore-file $keyfile \
+         --password $password \
+         --abi-dir contracts/.build \
+         --artifacts-dir new-deployment \
+         --rpc-file rpc.json \
+         --deploy-mintable-token \
+         deployments/config/mainnet/*-*.json
+
+
+   (substitute ``$keyfile`` and ``$password`` with the path to your keystore file and password, respectively)
+
+
+Making a new partial deployment
+-------------------------------
+
+A partial deployment is one where the existing ``Resolver`` contract is reused,
+instead of deploying a new resolver, which would necessitate deploying all
+contracts anew. This is due to the fact that the resolver contract on the base
+chain (Ethereum L1) is a critical point in the trusted call chain and if it is
+updated, all the other L2 contracts have to be updated to point to the new
+resolver.
+
+For cases where one needs to just add support for another L2 chain, it is sufficient
+to invoke ``deploy`` with, crucially, the ``--artifacts-dir`` option pointing to an
+existing deployment. The artifacts directory should contain ``base.deployment.json``
+file with information about the existing resolver deployment.
+
+To illustrate, let's assume we're adding a support for a new L2 chain to an existing
+deployment. Further, let's assume the existing deployment's artifacts are stored
+under ``existing-deployment``.
+
+#. Create a deployment config file, e.g. ``112345-foo.json`` (deployment config files
+   are typically named ``chain_id-name.json``).
+   For examples, please see e.g. ``deployments/config/mainnet`` in the ``beamer-bridge``
+   repository.
+
+#. In the root of the ``beamer-bridge`` repository, enter the development environment::
+
+    poetry shell
+
+#. Compile contracts::
+
+    ape compile
+
+#. Deploy Beamer on the new chain::
+
+    beamer deploy \
+         --keystore-file $keyfile \
+         --password $password \
+         --abi-dir contracts/.build \
+         --artifacts-dir existing-deployment \
+         --rpc-file rpc.json \
+         --deploy-mintable-token \
+         112345-foo.json
+
+
+   (substitute ``$keyfile`` and ``$password`` with the path to your keystore file and password, respectively)
+
+
 Testing a new deployment
 ------------------------
 
