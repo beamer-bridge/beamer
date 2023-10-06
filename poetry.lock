@@ -256,24 +256,24 @@ test = ["ape-alchemy", "ape-ens", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "p
 
 [[package]]
 name = "ape-infura"
-version = "0.6.3"
+version = "0.6.4"
 description = "ape-infura: Infura Provider plugins for Ethereum-based networks"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-infura-0.6.3.tar.gz", hash = "sha256:7737278379e019907c9783d69f5c6918fef63e1d8830a0937789e83c37a63eb6"},
-    {file = "ape_infura-0.6.3-py3-none-any.whl", hash = "sha256:b9a80c7187ea9daafb761041a86f10ec8e066d2d0170f47b2c3ad3c2af419d16"},
+    {file = "ape-infura-0.6.4.tar.gz", hash = "sha256:263a79ff1007ab3a72584534cea16fe7427cd860f6bba422bcebacba3f17751d"},
+    {file = "ape_infura-0.6.4-py3-none-any.whl", hash = "sha256:472c5619f45de720e61310c630483cac94deaadc7c4fd274c45aaceabda6e970"},
 ]
 
 [package.dependencies]
-eth-ape = ">=0.6.5,<0.7"
+eth-ape = ">=0.6.19,<0.7"
 
 [package.extras]
-dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-setuptools", "wheel"]
+dev = ["IPython", "Sphinx (>=3.4.3,<4)", "ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "black (>=23.9.1,<24)", "commitizen", "flake8 (>=6.1.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.5.1,<2)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "setuptools-scm", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)", "twine", "types-setuptools", "websocket-client", "wheel"]
 doc = ["Sphinx (>=3.4.3,<4)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=19.2.0,<20)"]
-lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-setuptools"]
+lint = ["black (>=23.9.1,<24)", "flake8 (>=6.1.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.5.1,<2)", "types-setuptools"]
 release = ["setuptools", "setuptools-scm", "twine", "wheel"]
-test = ["ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
+test = ["ape-arbitrum", "ape-linea", "ape-optimism", "ape-polygon", "hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist", "websocket-client"]
 
 [[package]]
 name = "ape-optimism"
@@ -4779,4 +4779,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "1100f5be05f67c4fc5bb0eff966feabd917183525fde3c21a8931ed7b0945d1d"
+content-hash = "b82a7539e7dcfbde81e7b4065e49ddb49712c6f09df04ec56d900ff1bae90776"
