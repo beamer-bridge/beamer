@@ -297,21 +297,21 @@ test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdi
 
 [[package]]
 name = "ape-polygon-zkevm"
-version = "0.1.1"
+version = "0.6.0"
 description = "ape-polygon-zkevm: Ecosystem plugin for Polygon ZkEVM"
 optional = false
 python-versions = ">=3.8,<4"
 files = [
-    {file = "ape-polygon-zkevm-0.1.1.tar.gz", hash = "sha256:494fe6d541755e107c9274604f90b79731458ce98695762d85b5b510b2dc17d1"},
-    {file = "ape_polygon_zkevm-0.1.1-py3-none-any.whl", hash = "sha256:390d4881f1508868481e89018488ffa407e33ef5cbebc46c68a7225eb959531d"},
+    {file = "ape-polygon-zkevm-0.6.0.tar.gz", hash = "sha256:add9bda98f964addc68581771646c03b59d0dd939119863f663e1aa9997bcea5"},
+    {file = "ape_polygon_zkevm-0.6.0-py3-none-any.whl", hash = "sha256:a50ed499834d2c1ac84977f1cbe972daa3224d69fe56b43b69ee654b152d1703"},
 ]
 
 [package.dependencies]
 eth-ape = ">=0.6.0,<0.7"
 
 [package.extras]
-dev = ["IPython", "black (>=23.3.0,<24)", "commitizen", "flake8 (>=6.0.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "twine", "types-setuptools", "wheel"]
-lint = ["black (>=23.3.0,<24)", "flake8 (>=6.0.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.16)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=0.991,<1)", "types-setuptools"]
+dev = ["IPython", "black (>=23.9.1,<24)", "commitizen", "flake8 (>=6.1.0,<7)", "hypothesis (>=6.2.0,<7.0)", "ipdb", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.5.1,<2)", "pre-commit", "pytest (>=6.0)", "pytest-cov", "pytest-watch", "pytest-xdist", "setuptools", "twine", "types-setuptools", "wheel"]
+lint = ["black (>=23.9.1,<24)", "flake8 (>=6.1.0,<7)", "isort (>=5.10.1,<6)", "mdformat (>=0.7.17)", "mdformat-frontmatter (>=0.4.1)", "mdformat-gfm (>=0.3.5)", "mypy (>=1.5.1,<2)", "types-setuptools"]
 release = ["setuptools", "twine", "wheel"]
 test = ["hypothesis (>=6.2.0,<7.0)", "pytest (>=6.0)", "pytest-cov", "pytest-xdist"]
 
@@ -4779,4 +4779,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "b82a7539e7dcfbde81e7b4065e49ddb49712c6f09df04ec56d900ff1bae90776"
+content-hash = "b762c79f4f589264a5603c9be34c48d30c8bc9d51a5f7a3dc59ec1eaba9ac5b0"
