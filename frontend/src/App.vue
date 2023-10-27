@@ -8,7 +8,7 @@
       /></a>
     </div>
     <div class="pt-2 md:pt-2">
-      <div v-if="configurationLoaded">
+      <div v-if="configurationLoaded && !disabled">
         <router-view v-if="!isBlacklistedWallet" class="z-10" />
         <div
           v-else
@@ -16,6 +16,12 @@
         >
           Your address is on the blocked list.
         </div>
+      </div>
+      <div
+        v-else-if="disabled"
+        class="flex h-[90vh] w-full flex-col items-center justify-center px-4 text-center text-4xl text-red"
+      >
+        Bridging is currently paused.
       </div>
       <div
         v-else-if="configurationError"
@@ -49,7 +55,6 @@ import { onMounted } from 'vue';
 
 import type { Transfer } from '@/actions/transfers';
 import Footer from '@/components/Footer.vue';
-import Banner from '@/components/layout/Banner.vue';
 import Spinner from '@/components/Spinner.vue';
 import { useContinueInterruptedTransfers } from '@/composables/useContinueInterruptedTransfers';
 import useLoadConfiguration from '@/composables/useLoadConfiguration';
@@ -60,6 +65,8 @@ import { useTransferHistory } from '@/stores/transfer-history';
 import MatomoConsentPopup from './components/MatomoConsentPopup.vue';
 import { useClaimCountListeners } from './composables/useClaimCountListeners';
 import { useTransferNotifications } from './composables/useTransferNotifications';
+
+const disabled = import.meta.env.VITE_BRIDGING_DISABLED === 'true';
 
 const { setConfiguration } = useConfiguration();
 const { loadConfiguration, configurationLoaded, configurationError } =
