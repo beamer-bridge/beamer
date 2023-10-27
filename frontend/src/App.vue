@@ -2,7 +2,6 @@
   <div
     class="app-content flex min-h-screen w-full flex-col bg-gradient-to-b from-black to-teal font-sans text-white antialiased"
   >
-    <Banner></Banner>
     <div class="container mx-auto max-w-5xl">
       <a href="https://beamerbridge.com" target="_blank">
         <img class="mt-6 ml-6 w-[10rem] md:w-[15rem]" src="@/assets/images/logo.svg" alt="logo"
